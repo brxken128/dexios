@@ -11,7 +11,7 @@ mod erase;
 
 fn main() -> Result<()> {
     let matches = Command::new("dexios") // add verbose arg?
-    .version("1.4.0")
+    .version("1.5.0")
     .author("brxken128 <github.com/brxken128>")
     .about("Secure command-line encryption of files.")
     .arg_required_else_help(true)

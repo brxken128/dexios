@@ -1,10 +1,11 @@
-use std::{fs::{File, metadata}, io::{BufReader, Read}, process::exit};
+use std::{fs::{File, metadata}, io::{BufReader, Read, Write}, process::exit};
 use aes_gcm::{Key, Aes256Gcm, Nonce};
 use aes_gcm::aead::{Aead, NewAead};
 use anyhow::{Result, Ok, Context};
 use rand::{Rng, prelude::StdRng, SeedableRng, RngCore};
 use std::num::NonZeroU32;
 use question::{Answer, Question};
+use std::time::Instant;
 use crate::structs::*;
 
 pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
@@ -48,6 +49,8 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let mut salt: [u8; 256] = [0; 256];
     StdRng::from_entropy().fill_bytes(&mut salt);
 
+    let start_time = Instant::now();
+
     ring::pbkdf2::derive(ring::pbkdf2::PBKDF2_HMAC_SHA512, NonZeroU32::new(122880).unwrap(), &salt, &raw_key, &mut key);
 
     let nonce_bytes = rand::thread_rng().gen::<[u8; 12]>();
@@ -61,10 +64,14 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
 
     let data = DexiosFile{ salt: salt_base64, nonce: nonce_base64, data: encrypted_bytes_base64 };
     
-    let writer = File::create(output).context("Can't create output file")?;
+    let mut writer = File::create(output).context("Can't create output file")?;
     serde_json::to_writer(&writer, &data).context("Can't write to the output file")?;
+    writer.flush().context("Unable to flush output file")?;
+
+    let duration = start_time.elapsed();
 
     println!("Encryption successful - written to {}", output);
+    println!("That took {}s", duration.as_secs_f32());
 
     Ok(())
 }

@@ -15,5 +15,5 @@ It has been tested on Void Linux, but more platforms will be tested in the futur
 - [ ] Add a secure-erase function for the input/source file
 - [ ] Run some more tests, specifically on large files
 - [ ] Test keyfile functionality
-- [ ] Don't show stdin text when entering password inside of the terminal
+- [x] Don't show stdin text when entering password inside of the terminal
 - [ ] Add checks for output files so we don't overwrite any by mistake

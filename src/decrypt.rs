@@ -28,7 +28,7 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
         let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
         raw_key = input.as_bytes().to_vec();
     } else {
-        let file = File::open(input).context("Error opening keyfile")?;
+        let file = File::open(keyfile).context("Error opening keyfile")?;
         let mut reader = BufReader::new(file);
         let mut buffer = Vec::new(); // our file bytes
         reader.read_to_end(&mut buffer).context("Error reading keyfile")?;

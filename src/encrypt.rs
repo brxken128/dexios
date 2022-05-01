@@ -37,7 +37,7 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
             } else { println!("The passwords aren't the same, please try again."); }
         }
     } else {
-        let file = File::open(input).context("Error opening keyfile")?;
+        let file = File::open(keyfile).context("Error opening keyfile")?;
         let mut reader = BufReader::new(file);
         let mut buffer = Vec::new(); // our file bytes
         reader.read_to_end(&mut buffer).context("Error reading keyfile")?;

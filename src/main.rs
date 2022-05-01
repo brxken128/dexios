@@ -48,8 +48,8 @@ fn main() -> Result<()> {
             .value_name("output file")
             .takes_value(true)
             .help("the output file (required)"))
-    .arg(Arg::new("delete")
-            .long("delete")
+    .arg(Arg::new("erase")
+            .long("erase")
             .takes_value(false)
             .help("securely erase the input file once complete"))
     .get_matches();
@@ -78,7 +78,7 @@ fn main() -> Result<()> {
             keyfile,
         );
 
-        if !result.is_err() && matches.is_present("delete") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }
+        if !result.is_err() && matches.is_present("erase") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }
     }
 
     if matches.is_present("decrypt") { // if we are decrypting
@@ -93,7 +93,7 @@ fn main() -> Result<()> {
             keyfile,
         );
 
-        if !result.is_err() && matches.is_present("delete") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }
+        if !result.is_err() && matches.is_present("erase") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }
     }
     Ok(())
 }

@@ -11,8 +11,7 @@ It has been tested on Void Linux, but more platforms will be tested in the futur
 ## To Do
 
 - [ ] Error handling
-- [ ] Ensure the encryption and decryption functions are air-tight
-  - [ ] They seem it but a second pair of eyes never hurts
+- [x] Ensure the encryption and decryption functions are air-tight
 - [ ] Add a secure-erase function for the input/source file
 - [ ] Run some more tests, specifically on large files
 - [ ] Test keyfile functionality

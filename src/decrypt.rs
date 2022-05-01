@@ -56,7 +56,7 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let duration = start_time.elapsed();
 
     println!("Decryption successful - written to {}", output);
-    println!("That took {}s", duration.as_secs_f32());
+    println!("That took {:.2}s", duration.as_secs_f32());
 
     Ok(())
 }

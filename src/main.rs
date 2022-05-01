@@ -7,6 +7,7 @@ use anyhow::{Result, Ok, Context};
 mod encrypt;
 mod decrypt;
 mod structs;
+mod erase;
 
 fn main() -> Result<()> {
     let matches = Command::new("dexios") // add verbose arg?
@@ -47,6 +48,10 @@ fn main() -> Result<()> {
             .value_name("output file")
             .takes_value(true)
             .help("the output file (required)"))
+    .arg(Arg::new("delete")
+            .long("delete")
+            .takes_value(false)
+            .help("securely erase the input file once complete"))
     .get_matches();
 
     if !matches.is_present("encrypt") && !matches.is_present("decrypt") {
@@ -67,24 +72,28 @@ fn main() -> Result<()> {
             keyfile = matches.value_of("keyfile").context("No keyfile/invalid text provided")?;
         }
 
-        encrypt::encrypt_file(
+        let result = encrypt::encrypt_file(
             matches.value_of("input").context("No input file/invalid text provided")?,
             matches.value_of("output").context("No output file/invalid text provided")?,
             keyfile,
-        )?;
+        );
+
+        if !result.is_err() && matches.is_present("delete") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }
     }
 
-    if matches.is_present("decrypt") { // if we are encrypting
+    if matches.is_present("decrypt") { // if we are decrypting
         let mut keyfile = "";
         if matches.is_present("keyfile") {
             keyfile = matches.value_of("keyfile").context("No keyfile/invalid text provided")?;
         }
 
-        decrypt::decrypt_file(
+        let result = decrypt::decrypt_file(
             matches.value_of("input").context("No input file/invalid text provided")?,
             matches.value_of("output").context("No output file/invalid text provided")?,
             keyfile,
-        )?;
+        );
+
+        if !result.is_err() && matches.is_present("delete") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }
     }
     Ok(())
 }

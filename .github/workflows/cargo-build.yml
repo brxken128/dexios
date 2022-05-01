@@ -1,0 +1,27 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Clippy
+      run: cargo clippy --no-deps
+    - name: Check
+      run: cargo check --release
+    - name: Build
+      run: cargo build --release
+    - name: Strip
+      run: strip target/release/dexios
+    - name: Upload binrary as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: dexios
+        path: target/release/dexios

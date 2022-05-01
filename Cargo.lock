@@ -154,7 +154,7 @@ dependencies = [
 
 [[package]]
 name = "dexios"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -163,6 +163,7 @@ dependencies = [
  "colored",
  "rand",
  "ring",
+ "rpassword",
  "serde",
  "serde_json",
 ]
@@ -355,6 +356,18 @@ dependencies = [
  "spin",
  "untrusted",
  "web-sys",
+ "winapi",
+]
+
+[[package]]
+name = "rpassword"
+version = "6.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bf099a1888612545b683d2661a1940089f6c2e5a8e38979b2159da876bfd956"
+dependencies = [
+ "libc",
+ "serde",
+ "serde_json",
  "winapi",
 ]
 

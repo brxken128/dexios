@@ -2,7 +2,7 @@ use std::{fs::File, io::{BufReader, Read, Write}};
 use aes_gcm::{Key, Aes256Gcm, Nonce};
 use aes_gcm::aead::{Aead, NewAead};
 use anyhow::{Result, Ok, Context};
-use rand::Rng;
+use rand::{Rng, prelude::StdRng, SeedableRng, RngCore};
 use std::num::NonZeroU32;
 use crate::structs::*;
 use crate::misc_functions::*;
@@ -44,7 +44,10 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     }
 
     let mut key = [0u8; 32];
-    let salt = rand::thread_rng().gen::<[u8; 16]>();
+
+    let mut salt: [u8; 256] = [0; 256];
+    StdRng::from_entropy().fill_bytes(&mut salt);
+
     ring::pbkdf2::derive(ring::pbkdf2::PBKDF2_HMAC_SHA512, NonZeroU32::new(122880).unwrap(), &salt, &raw_key, &mut key);
 
     let nonce_bytes = rand::thread_rng().gen::<[u8; 12]>();

@@ -1,13 +1,22 @@
-use std::{fs::{File, metadata}, io::{BufReader, Read, Write}};
+use std::{fs::{File, metadata}, io::{BufReader, Read, Write}, process::exit};
 use aes_gcm::{Key, Aes256Gcm, Nonce};
 use aes_gcm::aead::{Aead, NewAead};
 use anyhow::{Result, Ok, Context};
 use std::num::NonZeroU32;
+use question::{Answer, Question};
 use crate::structs::*;
 
 pub fn decrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let mut use_keyfile = false;
     if !keyfile.is_empty() { use_keyfile = true; }
+
+    if metadata(output).is_ok() { // if the output file exists
+        let answer = Question::new("Output file already exists, would you like to overwrite?")
+            .default(Answer::YES)
+            .show_defaults()
+            .confirm();
+        if answer == Answer::NO { exit(0); } // if user doesn't want to continue
+    }
 
     let file = File::open(input).context("Unable to open input file")?;
     let mut reader = BufReader::new(file);
@@ -16,7 +25,6 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let raw_key;
     if !use_keyfile { // if we're not using a keyfile, read from stdin
         let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        println!("{input}");
         raw_key = input.as_bytes().to_vec();
     } else {
         let file = File::open(input).context("Error opening keyfile")?;
@@ -37,11 +45,10 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let encrypted_bytes = base64::decode(data_json.data).context("Error decoding the data's base64")?;
     let decrypted_bytes = cipher.decrypt(nonce, encrypted_bytes.as_slice()).expect("Unable to decrypt the data");
     
-    if metadata(output).is_err() { // if the file doesn't exist
-        let mut writer = File::create(output).context("Can't create output file")?;
-        writer.write_all(&decrypted_bytes).context("Can't write to the output file")?;
-    }
+    let mut writer = File::create(output).context("Can't create output file")?;
+    writer.write_all(&decrypted_bytes).context("Can't write to the output file")?;
 
+    println!("Decryption successful - written to {}", output);
 
     Ok(())
 }

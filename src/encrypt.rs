@@ -1,14 +1,23 @@
-use std::{fs::{File, metadata}, io::{BufReader, Read}};
+use std::{fs::{File, metadata}, io::{BufReader, Read}, process::exit};
 use aes_gcm::{Key, Aes256Gcm, Nonce};
 use aes_gcm::aead::{Aead, NewAead};
 use anyhow::{Result, Ok, Context};
 use rand::{Rng, prelude::StdRng, SeedableRng, RngCore};
 use std::num::NonZeroU32;
+use question::{Answer, Question};
 use crate::structs::*;
 
 pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let mut use_keyfile = false;
     if !keyfile.is_empty() { use_keyfile = true; }
+
+    if metadata(output).is_ok() { // if the output file exists
+        let answer = Question::new("Output file already exists, would you like to overwrite?")
+            .default(Answer::YES)
+            .show_defaults()
+            .confirm();
+        if answer == Answer::NO { exit(0); } // if user doesn't want to continue
+    }
 
     let file = File::open(input).context("Unable to open the input file")?;
     let mut reader = BufReader::new(file);
@@ -52,9 +61,10 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
 
     let data = DexiosFile{ salt: salt_base64, nonce: nonce_base64, data: encrypted_bytes_base64 };
     
-    if metadata(output).is_err() { // if the file doesn't exist
-        let writer = File::create(output).context("Can't create output file")?; // add error handling (e.g. can't create file)
-        serde_json::to_writer(&writer, &data).context("Can't write to the output file")?; // error = can't write to file
-    }
+    let writer = File::create(output).context("Can't create output file")?;
+    serde_json::to_writer(&writer, &data).context("Can't write to the output file")?;
+
+    println!("Encryption successful - written to {}", output);
+
     Ok(())
 }

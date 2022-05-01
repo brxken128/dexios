@@ -31,7 +31,7 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
 
     let mut key = [0u8; 32];
     let salt = base64::decode(data_json.salt)?; // error = error decoding salt b64
-    ring::pbkdf2::derive(ring::pbkdf2::PBKDF2_HMAC_SHA512, NonZeroU32::new(256).unwrap(), &salt, &raw_key, &mut key);
+    ring::pbkdf2::derive(ring::pbkdf2::PBKDF2_HMAC_SHA512, NonZeroU32::new(122880).unwrap(), &salt, &raw_key, &mut key);
 
     let nonce_bytes = base64::decode(data_json.nonce)?; // error = error decoding nonce b64
     let nonce = Nonce::from_slice(nonce_bytes.as_slice());

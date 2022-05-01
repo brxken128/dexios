@@ -1,4 +1,4 @@
-use std::{fs::File, io::{BufReader, Read}};
+use std::{fs::{File, metadata}, io::{BufReader, Read}};
 use aes_gcm::{Key, Aes256Gcm, Nonce};
 use aes_gcm::aead::{Aead, NewAead};
 use anyhow::{Result, Ok, Context};
@@ -52,8 +52,9 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
 
     let data = DexiosFile{ salt: salt_base64, nonce: nonce_base64, data: encrypted_bytes_base64 };
     
-    let writer = File::create(output).context("Can't create output file")?; // add error handling (e.g. can't create file)
-    serde_json::to_writer(&writer, &data).context("Can't write to the output file")?; // error = can't write to file
-
+    if metadata(output).is_err() { // if the file doesn't exist
+        let writer = File::create(output).context("Can't create output file")?; // add error handling (e.g. can't create file)
+        serde_json::to_writer(&writer, &data).context("Can't write to the output file")?; // error = can't write to file
+    }
     Ok(())
 }

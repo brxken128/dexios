@@ -1,4 +1,4 @@
-use std::{fs::File, io::{BufReader, Read, Write}};
+use std::{fs::{File, metadata}, io::{BufReader, Read, Write}};
 use aes_gcm::{Key, Aes256Gcm, Nonce};
 use aes_gcm::aead::{Aead, NewAead};
 use anyhow::{Result, Ok, Context};
@@ -37,8 +37,11 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let encrypted_bytes = base64::decode(data_json.data).context("Error decoding the data's base64")?;
     let decrypted_bytes = cipher.decrypt(nonce, encrypted_bytes.as_slice()).expect("Unable to decrypt the data");
     
-    let mut writer = File::create(output).context("Can't create output file")?; // add error handling (e.g. can't create file)
-    writer.write_all(&decrypted_bytes).context("Can't write to the output file")?; // error = unable to write to output file
+    if metadata(output).is_err() { // if the file doesn't exist
+        let mut writer = File::create(output).context("Can't create output file")?;
+        writer.write_all(&decrypted_bytes).context("Can't write to the output file")?;
+    }
+
 
     Ok(())
 }

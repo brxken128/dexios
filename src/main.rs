@@ -13,7 +13,7 @@ fn main() -> Result<()> {
     let matches = Command::new("dexios") // add verbose arg?
     .version("1.3.0")
     .author("brxken128 <github.com/brxken128>")
-    .about("Secure encryption of local files.")
+    .about("Secure command-line encryption of files.")
     .arg_required_else_help(true)
     .arg(Arg::new("encrypt")
             .short('e')

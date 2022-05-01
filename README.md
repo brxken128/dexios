@@ -6,6 +6,8 @@ Dexios is a command-line file encryption utility, suitable for encrypting files 
 
 It uses `AES-256-GCM` encryption with 256 iterations of `PBKDF2_HMAC_SHA512` to generate the encryption key.
 
+It has been tested on Void Linux, but more platforms will be tested in the future.
+
 ## To Do
 
 - [ ] Error handling

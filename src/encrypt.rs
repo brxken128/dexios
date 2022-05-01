@@ -1,11 +1,10 @@
-use std::{fs::File, io::{BufReader, Read, Write}};
+use std::{fs::File, io::{BufReader, Read}};
 use aes_gcm::{Key, Aes256Gcm, Nonce};
 use aes_gcm::aead::{Aead, NewAead};
 use anyhow::{Result, Ok, Context};
 use rand::{Rng, prelude::StdRng, SeedableRng, RngCore};
 use std::num::NonZeroU32;
 use crate::structs::*;
-use crate::misc_functions::*;
 
 pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let mut use_keyfile = false;
@@ -20,16 +19,10 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
 
     if !use_keyfile { // if we're not using a keyfile, read from stdin
         loop {
-            let mut input = String::new();
-            let mut input_validation = String::new();
-            print!("Enter your password: ");
-            std::io::stdout().flush()?;
-            std::io::stdin().read_line(&mut input).context("Error reading from stdin")?;
-            print!("Enter your password again: ");
-            std::io::stdout().flush()?;
-            std::io::stdin().read_line(&mut input_validation).context("Error reading from stdin")?;
+            let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
+            let input_validation = rpassword::prompt_password("Password (for validation): ").context("Unable to read password")?;
             if input == input_validation {
-                raw_key = strip_newline(&input).as_bytes().to_vec();
+                raw_key = input.as_bytes().to_vec();
                 break;
             } else { println!("The passwords aren't the same, please try again."); }
         }

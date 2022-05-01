@@ -4,7 +4,6 @@ use aes_gcm::aead::{Aead, NewAead};
 use anyhow::{Result, Ok, Context};
 use std::num::NonZeroU32;
 use crate::structs::*;
-use crate::misc_functions::*;
 
 pub fn decrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let mut use_keyfile = false;
@@ -16,11 +15,9 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
 
     let raw_key;
     if !use_keyfile { // if we're not using a keyfile, read from stdin
-        let mut input = String::new();
-        print!("Enter your password: ");
-        std::io::stdout().flush().context("Unable to flush stdout")?;
-        std::io::stdin().read_line(&mut input).context("Error reading from stdin")?;
-        raw_key = strip_newline(&input).as_bytes().to_vec();
+        let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
+        println!("{input}");
+        raw_key = input.as_bytes().to_vec();
     } else {
         let file = File::open(input).context("Error opening keyfile")?;
         let mut reader = BufReader::new(file);

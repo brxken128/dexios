@@ -7,11 +7,10 @@ use anyhow::{Result, Ok, Context};
 mod encrypt;
 mod decrypt;
 mod structs;
-mod misc_functions;
 
 fn main() -> Result<()> {
     let matches = Command::new("dexios") // add verbose arg?
-    .version("1.0.0")
+    .version("1.1.0")
     .author("brxken128 <github.com/brxken128>")
     .about("Secure encryption of local files.")
     .arg_required_else_help(true)

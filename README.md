@@ -18,4 +18,4 @@ For securely erasing the file, it's about as good as we will get. It doesn't fac
 - [ ] Run some more tests, specifically on large files
 - [ ] Test keyfile functionality
 - [x] Don't show stdin text when entering password inside of the terminal
-- [ ] Add checks for output files so we don't overwrite any by mistake
+- [x] Add checks for output files so we don't overwrite any by mistake

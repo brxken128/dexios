@@ -2,7 +2,7 @@ use std::process::exit;
 
 use clap::{Arg, Command};
 use colored::Colorize;
-use anyhow::{Result, Ok};
+use anyhow::{Result, Ok, Context};
 
 mod encrypt;
 mod decrypt;
@@ -65,12 +65,12 @@ fn main() -> Result<()> {
     if matches.is_present("encrypt") { // if we are encrypting
         let mut keyfile = "";
         if matches.is_present("keyfile") {
-            keyfile = matches.value_of("keyfile").unwrap();
+            keyfile = matches.value_of("keyfile").context("No keyfile/invalid text provided")?;
         }
 
         encrypt::encrypt_file(
-            matches.value_of("input").unwrap(),
-            matches.value_of("output").unwrap(),
+            matches.value_of("input").context("No input file/invalid text provided")?,
+            matches.value_of("output").context("No output file/invalid text provided")?,
             keyfile,
         )?;
     }
@@ -78,12 +78,12 @@ fn main() -> Result<()> {
     if matches.is_present("decrypt") { // if we are encrypting
         let mut keyfile = "";
         if matches.is_present("keyfile") {
-            keyfile = matches.value_of("keyfile").unwrap();
+            keyfile = matches.value_of("keyfile").context("No keyfile/invalid text provided")?;
         }
 
         decrypt::decrypt_file(
-            matches.value_of("input").unwrap(),
-            matches.value_of("output").unwrap(),
+            matches.value_of("input").context("No input file/invalid text provided")?,
+            matches.value_of("output").context("No output file/invalid text provided")?,
             keyfile,
         )?;
     }

@@ -78,7 +78,7 @@ fn main() -> Result<()> {
             keyfile,
         );
 
-        if !result.is_err() && matches.is_present("erase") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }
+        if result.is_ok() && matches.is_present("erase") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }
     }
 
     if matches.is_present("decrypt") { // if we are decrypting
@@ -93,7 +93,7 @@ fn main() -> Result<()> {
             keyfile,
         );
 
-        if !result.is_err() && matches.is_present("erase") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }
+        if result.is_ok() && matches.is_present("erase") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }
     }
     Ok(())
 }

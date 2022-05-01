@@ -23,10 +23,7 @@ pub fn secure_erase(input: &str) -> Result<()> {
     }
 
     // overwrite with zeros for good measure
-    let mut zeros: Vec<u8> = Vec::new();
-    for _ in 0..data.len() {
-        zeros.push(0);
-    }
+    let zeros: Vec<u8> = vec![0; data.len()];
     let file = File::create(input).context("Unable to open the input file")?;
     let mut writer = BufWriter::new(file);
     writer.write_all(&zeros).context("Unable to overwrite with zeros")?;

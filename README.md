@@ -10,8 +10,6 @@ It has been tested on Void Linux, but more platforms will be tested in the futur
 
 For securely erasing the file, it's about as good as we will get. It doesn't factor in how the host OS handles things, or the filesystems. It overwrites the file with many random bytes, and then with zeros, before truncating it and "removing" it with the OS.
 
--------
-
 ## Usage Examples
 
 To encrypt a file, and show the hash of the original (input) file for verification later on:
@@ -29,8 +27,6 @@ To encrypt a file, and erase the original file:
 To use a keyfile for encryption:
 
 `dexios -ek keyfile test.txt test.enc`
-
--------
 
 ## To Do
 

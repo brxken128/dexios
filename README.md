@@ -39,3 +39,6 @@ To use a keyfile for encryption:
 - [x] Add checks for output files so we don't overwrite any by mistake
 - [x] Hash the file before encryption and after decryption, so the user can confirm the data is *exactly* the same
 - [x] Use clap subcommands instead of arguments to make it easier to use
+- [ ] Optimise reading the input/output files, so less disk usage
+  - [ ] Find a way to encrypt **large** files (larger than the system's memory) - this is just another optimisation though
+  - [ ] Optimise memory usage in general too

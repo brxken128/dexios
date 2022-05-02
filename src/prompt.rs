@@ -9,8 +9,7 @@ pub fn get_answer(prompt: &str, default: bool) -> Result<bool> {
         switch = "(y/N)";
     }
 
-    let answer_bool;
-    loop {
+    let answer_bool = loop {
         print!("{prompt} {switch}: ");
         io::stdout().flush().context("Unable to flush stdout")?;
 
@@ -24,7 +23,7 @@ pub fn get_answer(prompt: &str, default: bool) -> Result<bool> {
             .chars()
             .next()
             .context("Unable to get first character of your answer")?;
-        answer_bool = match first_char {
+        break match first_char {
             '\n' => default,
             '\r' => default,
             'y' => true,
@@ -34,7 +33,6 @@ pub fn get_answer(prompt: &str, default: bool) -> Result<bool> {
                 continue;
             }
         };
-        break;
-    }
+    };
     Ok(answer_bool)
 }

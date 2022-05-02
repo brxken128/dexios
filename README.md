@@ -20,3 +20,4 @@ For securely erasing the file, it's about as good as we will get. It doesn't fac
 - [x] Don't show stdin text when entering password inside of the terminal
 - [x] Add checks for output files so we don't overwrite any by mistake
 - [x] Hash the file before encryption and after decryption, so the user can confirm the data is *exactly* the same
+- [ ] Use clap subcommands instead of arguments to make it easier to use

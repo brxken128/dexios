@@ -50,7 +50,7 @@ fn main() -> Result<()> {
                         .short('s')
                         .long("sha512sum")
                         .takes_value(false)
-                        .help("return a sha3-512 hash of the original file"),
+                        .help("return a sha3-512 hash of the encrypted file"),
                 ),
         )
         .subcommand(
@@ -90,15 +90,10 @@ fn main() -> Result<()> {
                         .short('s')
                         .long("sha512sum")
                         .takes_value(false)
-                        .help("return a sha3-512 hash of the original file"),
+                        .help("return a sha3-512 hash of the encrypted file"),
                 ),
         )
         .get_matches();
-
-    /*if matches.is_present("encrypt") && matches.is_present("decrypt") {
-        println!("{}", "Can't encrypt and decrypt, exiting.");
-        exit(1);
-    }*/
 
     match matches.subcommand() {
         Some(("encrypt", sub_matches)) => {

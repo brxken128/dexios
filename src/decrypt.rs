@@ -30,7 +30,6 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         }
     }
 
-
     if sha_sum {
         let mut file = File::open(input).context("Unable to open the input file")?;
         let mut hasher = Sha3_512::new();

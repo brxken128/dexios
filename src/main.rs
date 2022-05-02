@@ -7,6 +7,7 @@ mod encrypt;
 mod decrypt;
 mod structs;
 mod erase;
+mod prompt;
 
 fn main() -> Result<()> {
     let matches = Command::new("dexios") // add verbose arg?

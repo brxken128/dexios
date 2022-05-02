@@ -3,22 +3,19 @@ use aes_gcm::{Key, Aes256Gcm, Nonce};
 use aes_gcm::aead::{Aead, NewAead};
 use anyhow::{Result, Ok, Context};
 use std::num::NonZeroU32;
-use question::{Answer, Question};
 use std::time::Instant;
 use sha3::Sha3_512;
 use sha3::Digest;
 use crate::structs::*;
+use crate::prompt::*;
 
 pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> Result<()> {
     let mut use_keyfile = false;
     if !keyfile.is_empty() { use_keyfile = true; }
 
     if metadata(output).is_ok() { // if the output file exists
-        let answer = Question::new("Output file already exists, would you like to overwrite?")
-            .default(Answer::YES)
-            .show_defaults()
-            .confirm();
-        if answer == Answer::NO { exit(0); } // if user doesn't want to continue
+        let answer = get_answer("Output file already exists, would you like to overwrite?", true)?;
+        if !answer { exit(0); }
     }
 
     let file = File::open(input).context("Unable to open input file")?;

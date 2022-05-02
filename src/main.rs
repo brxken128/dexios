@@ -1,7 +1,6 @@
 use std::process::exit;
 
 use clap::{Arg, Command};
-use colored::Colorize;
 use anyhow::{Result, Ok, Context};
 
 mod encrypt;
@@ -11,7 +10,7 @@ mod erase;
 
 fn main() -> Result<()> {
     let matches = Command::new("dexios") // add verbose arg?
-    .version("1.6.0")
+    .version("1.6.1")
     .author("brxken128 <github.com/brxken128>")
     .about("Secure command-line encryption of files.")
     .arg_required_else_help(true)
@@ -60,15 +59,15 @@ fn main() -> Result<()> {
     .get_matches();
 
     if !matches.is_present("encrypt") && !matches.is_present("decrypt") {
-        println!("{}", "No task provided, exiting.".red());
+        println!("{}", "No task provided, exiting.");
         exit(1);
     }
     if matches.is_present("encrypt") && matches.is_present("decrypt") {
-        println!("{}", "Can't encrypt and decrypt, exiting.".red());
+        println!("{}", "Can't encrypt and decrypt, exiting.");
         exit(1);
     }
     if matches.value_of("input").is_none() || matches.value_of("output").is_none() {
-        println!("{}", "No input/output file specified, exiting.".red());
+        println!("{}", "No input/output file specified, exiting.");
         exit(1);
     }
     if matches.is_present("encrypt") { // if we are encrypting

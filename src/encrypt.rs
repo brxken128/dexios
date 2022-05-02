@@ -106,11 +106,8 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
     println!("Encryption successful - written to {}", output);
     println!("That took {:.2}s", duration.as_secs_f32());
     if sha_sum {
-        let mut file =
-            File::open(output).context("Unable to open the encrypted file for hashing")?;
         let mut hasher = Sha3_512::new();
-        std::io::copy(&mut file, &mut hasher)
-            .context("Unable to copy encrypted file bytes into sha512 hasher")?;
+        serde_json::to_writer(&mut hasher, &data).context("Can't write to the sha3-512 hasher")?;
         let hash = hasher.finalize();
         let hash_b64 = base64::encode(hash);
         println!("Hash of the encrypted file is: {}", hash_b64);

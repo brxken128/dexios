@@ -28,6 +28,5 @@ pub fn get_answer(prompt: &str, default: bool) -> Result<bool> {
         };
         break;
     }
-
     Ok(answer_bool)
 }

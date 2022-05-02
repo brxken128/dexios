@@ -1,15 +1,21 @@
-use std::{fs::File, io::{BufReader, Read, BufWriter, Write}};
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use rand::Rng;
+use std::{
+    fs::File,
+    io::{BufReader, BufWriter, Read, Write},
+};
 
 pub fn secure_erase(input: &str) -> Result<()> {
     let file = File::open(input).context("Unable to open the input file")?;
     let mut reader = BufReader::new(file);
     let mut data = Vec::new(); // our file bytes
-    reader.read_to_end(&mut data).context("Unable to read the input file")?;
+    reader
+        .read_to_end(&mut data)
+        .context("Unable to read the input file")?;
     drop(reader);
 
-    for _ in 0..16 { // overwrite the data 16 times with random bytes
+    for _ in 0..16 {
+        // overwrite the data 16 times with random bytes
         // generate enough random bytes in accordance to data's size
         let mut random_bytes: Vec<u8> = Vec::new();
         for _ in 0..data.len() {
@@ -18,7 +24,9 @@ pub fn secure_erase(input: &str) -> Result<()> {
 
         let file = File::create(input).context("Unable to open the input file")?;
         let mut writer = BufWriter::new(file);
-        writer.write_all(&random_bytes).context("Unable to overwrite with random bytes")?;
+        writer
+            .write_all(&random_bytes)
+            .context("Unable to overwrite with random bytes")?;
         writer.flush().context("Unable to flush random bytes")?;
     }
 
@@ -26,7 +34,9 @@ pub fn secure_erase(input: &str) -> Result<()> {
     let zeros: Vec<u8> = vec![0; data.len()];
     let file = File::create(input).context("Unable to open the input file")?;
     let mut writer = BufWriter::new(file);
-    writer.write_all(&zeros).context("Unable to overwrite with zeros")?;
+    writer
+        .write_all(&zeros)
+        .context("Unable to overwrite with zeros")?;
     writer.flush().context("Unable to flush zeros")?;
     drop(writer);
 
@@ -36,6 +46,6 @@ pub fn secure_erase(input: &str) -> Result<()> {
     drop(file);
 
     std::fs::remove_file(input).context("Unable to remove file")?;
-    
+
     Ok(())
 }

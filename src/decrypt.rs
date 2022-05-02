@@ -28,7 +28,11 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         let hash_b64 = base64::encode(hash);
         println!("Hash of the encrypted file is: {}", hash_b64);
         println!("Feel free to compare this to the original hash - it is not for security, but to ensure your file is exactly how it was in the first place.");
-        let answer = get_answer("Would you like to continue with the decryption?", true)?;
+
+        let answer = get_answer(
+            "Would you like to continue with the decryption?",
+            true,
+        )?;
         if !answer {
             exit(0);
         }

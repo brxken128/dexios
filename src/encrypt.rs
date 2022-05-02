@@ -106,13 +106,13 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
     println!("Encryption successful - written to {}", output);
     println!("That took {:.2}s", duration.as_secs_f32());
     if sha_sum {
-        let mut file = File::open(input).context("Unable to open the input file")?;
+        let mut file = File::open(output).context("Unable to open the encrypted file for hashing")?;
         let mut hasher = Sha3_512::new();
         std::io::copy(&mut file, &mut hasher)
-            .context("Unable to copy source file bytes into sha512 hasher")?;
+            .context("Unable to copy encrypted file bytes into sha512 hasher")?;
         let hash = hasher.finalize();
         let hash_b64 = base64::encode(hash);
-        println!("Hash of the source file is: {}", hash_b64);
+        println!("Hash of the encrypted file is: {}", hash_b64);
         println!("Write this down for later verification - it is not for security, but to ensure your file is exactly how it was in the first place.");
     }
 

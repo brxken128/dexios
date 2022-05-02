@@ -52,6 +52,11 @@ fn main() -> Result<()> {
             .long("erase")
             .takes_value(false)
             .help("securely erase the input file once complete"))
+    .arg(Arg::new("sha")
+            .short('s')
+            .long("sha512sum")
+            .takes_value(false)
+            .help("return a sha3-512 hash of the original file on encryption, and the decrypted file after decryption to ensure the data is the same"))
     .get_matches();
 
     if !matches.is_present("encrypt") && !matches.is_present("decrypt") {
@@ -76,6 +81,7 @@ fn main() -> Result<()> {
             matches.value_of("input").context("No input file/invalid text provided")?,
             matches.value_of("output").context("No output file/invalid text provided")?,
             keyfile,
+            matches.is_present("sha"),
         );
 
         if result.is_ok() && matches.is_present("erase") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }
@@ -91,6 +97,7 @@ fn main() -> Result<()> {
             matches.value_of("input").context("No input file/invalid text provided")?,
             matches.value_of("output").context("No output file/invalid text provided")?,
             keyfile,
+            matches.is_present("sha"),
         );
 
         if result.is_ok() && matches.is_present("erase") { erase::secure_erase(matches.value_of("input").context("No input file/invalid text provided")?)?; }

@@ -6,9 +6,11 @@ use rand::{Rng, prelude::StdRng, SeedableRng, RngCore};
 use std::num::NonZeroU32;
 use question::{Answer, Question};
 use std::time::Instant;
+use sha3::Sha3_512;
+use sha3::Digest;
 use crate::structs::*;
 
-pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
+pub fn encrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> Result<()> {
     let mut use_keyfile = false;
     if !keyfile.is_empty() { use_keyfile = true; }
 
@@ -24,6 +26,7 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let mut reader = BufReader::new(file);
     let mut data = Vec::new(); // our file bytes
     reader.read_to_end(&mut data).context("Unable to read the input file")?;
+    drop(reader);
 
     let raw_key;
 
@@ -67,11 +70,21 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let mut writer = File::create(output).context("Can't create output file")?;
     serde_json::to_writer(&writer, &data).context("Can't write to the output file")?;
     writer.flush().context("Unable to flush output file")?;
+    
 
     let duration = start_time.elapsed();
 
     println!("Encryption successful - written to {}", output);
     println!("That took {:.2}s", duration.as_secs_f32());
+    if sha_sum {
+        let mut file = File::open(input).context("Unable to open the input file")?;
+        let mut hasher = Sha3_512::new();
+        std::io::copy(&mut file, &mut hasher).context("Unable to copy source file bytes into sha512 hasher")?;
+        let hash = hasher.finalize();
+        let hash_b64 = base64::encode(hash);
+        println!("Hash of the source file is: {}", hash_b64);
+        println!("Write this down for later verification - it is not for security, but to ensure your file is exactly how it was in the first place.");
+    }
 
     Ok(())
 }

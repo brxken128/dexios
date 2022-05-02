@@ -5,9 +5,11 @@ use anyhow::{Result, Ok, Context};
 use std::num::NonZeroU32;
 use question::{Answer, Question};
 use std::time::Instant;
+use sha3::Sha3_512;
+use sha3::Digest;
 use crate::structs::*;
 
-pub fn decrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
+pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> Result<()> {
     let mut use_keyfile = false;
     if !keyfile.is_empty() { use_keyfile = true; }
 
@@ -47,16 +49,27 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str) -> Result<()> {
     let cipher_key = Key::from_slice(key.as_slice());
     let cipher = Aes256Gcm::new(cipher_key);
     let encrypted_bytes = base64::decode(data_json.data).context("Error decoding the data's base64")?;
-    let decrypted_bytes = cipher.decrypt(nonce, encrypted_bytes.as_slice()).expect("Unable to decrypt the data");
+    let decrypted_bytes = cipher.decrypt(nonce, encrypted_bytes.as_slice()).expect("Unable to decrypt the data - likely a wrong password.");
     
     let mut writer = File::create(output).context("Can't create output file")?;
     writer.write_all(&decrypted_bytes).context("Can't write to the output file")?;
     writer.flush().context("Unable to flush output file")?;
+    drop(writer);
 
     let duration = start_time.elapsed();
 
     println!("Decryption successful - written to {}", output);
     println!("That took {:.2}s", duration.as_secs_f32());
+
+    if sha_sum {
+        let mut file = File::open(output).context("Unable to open the output file")?;
+        let mut hasher = Sha3_512::new();
+        std::io::copy(&mut file, &mut hasher).context("Unable to copy source file bytes into sha512 hasher")?;
+        let hash = hasher.finalize();
+        let hash_b64 = base64::encode(hash);
+        println!("Hash of the source file is: {}", hash_b64);
+        println!("Feel free to compare this to the original hash - it is not for security, but to ensure your file is exactly how it was in the first place.");
+    }
 
     Ok(())
 }

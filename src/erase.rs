@@ -14,7 +14,7 @@ pub fn secure_erase(input: &str) -> Result<()> {
         .context("Unable to read the input file")?;
     drop(reader);
 
-    for _ in 0..16 {
+    for _ in 0..32 {
         // overwrite the data 16 times with random bytes
         // generate enough random bytes in accordance to data's size
         let mut random_bytes: Vec<u8> = Vec::new();

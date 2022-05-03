@@ -12,8 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Install Audit
-      run: cargo install cargo-audit
     - name: Audit
       run: cargo audit
     - name: Clippy

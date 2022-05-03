@@ -106,7 +106,6 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         let hash = hasher.finalize();
         let hash_b64 = base64::encode(hash);
         println!("Hash of the encrypted file is: {}", hash_b64);
-        println!("Write this down for later verification - it is not for security, but to ensure your file is exactly how it was in the first place.");
     }
 
     Ok(())

@@ -12,7 +12,7 @@ For securely erasing the file, it's about as good as we will get. It doesn't fac
 
 ## Building notes
 
-As mentioned in the AES-GCM crate, please enable certain flags while building. For example:
+As mentioned in the [AES-GCM crate docs](https://docs.rs/aes-gcm/latest/aes_gcm/index.html#performance-notes), please enable certain flags while building. For example:
 
 `RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3"`
 
@@ -50,3 +50,5 @@ To use a keyfile for encryption:
 - [ ] Optimise reading the input/output files, so less disk usage
   - [ ] Find a way to encrypt **large** files (larger than the system's memory) - this is just another optimisation though
   - [ ] Optimise memory usage in general too
+- [ ] Add some cargo tests
+  - [ ] Possibly with the `assert_cmd` crate

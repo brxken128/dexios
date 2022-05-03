@@ -4,7 +4,7 @@
 
 Dexios is a command-line file encryption utility, suitable for encrypting files before uploading them to a cloud-service. It is written entirely in rust and contains no unsafe code (some dependencies may contain unsafe code, but they have received the correct audits and are deemed secure).
 
-It uses `AES-256-GCM` encryption with `argon2i` to generate the encryption key.
+It uses `AES-256-GCM` encryption with `argon2id` to generate the encryption key.
 
 It has been tested on Void Linux, but more platforms will be tested in the future.
 

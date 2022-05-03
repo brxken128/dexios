@@ -26,7 +26,7 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         let answer = get_answer(
             "Output file already exists, would you like to overwrite?",
             true,
-        )?;
+        ).context("Unable to read provided answer")?;
         if !answer {
             exit(0);
         }

@@ -73,8 +73,14 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
 
     let start_time = Instant::now();
 
-    let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, Params::default());
-    argon2.hash_password_into(&raw_key, &salt, &mut key).expect("Unable to hash your password with argon2");
+    let argon2 = Argon2::new(
+        argon2::Algorithm::Argon2id,
+        argon2::Version::V0x13,
+        Params::default(),
+    );
+    argon2
+        .hash_password_into(&raw_key, &salt, &mut key)
+        .expect("Unable to hash your password with argon2");
 
     let nonce_bytes = rand::thread_rng().gen::<[u8; 12]>();
     let nonce = Nonce::from_slice(nonce_bytes.as_slice());

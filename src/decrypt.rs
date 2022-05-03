@@ -40,10 +40,7 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         let hash_b64 = base64::encode(hash);
         println!("Hash of the encrypted file is: {}", hash_b64);
 
-        let answer = get_answer(
-            "Would you like to continue with the decryption?",
-            true,
-        )?;
+        let answer = get_answer("Would you like to continue with the decryption?", true)?;
         if !answer {
             exit(0);
         }
@@ -74,8 +71,14 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
 
     let start_time = Instant::now();
 
-    let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, Params::default());
-    argon2.hash_password_into(&raw_key, &salt, &mut key).expect("Unable to hash your password with argon2");
+    let argon2 = Argon2::new(
+        argon2::Algorithm::Argon2id,
+        argon2::Version::V0x13,
+        Params::default(),
+    );
+    argon2
+        .hash_password_into(&raw_key, &salt, &mut key)
+        .expect("Unable to hash your password with argon2");
 
     let nonce_bytes =
         base64::decode(data_json.nonce).context("Error decoding the nonce's base64")?;

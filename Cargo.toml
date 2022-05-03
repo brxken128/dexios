@@ -1,6 +1,6 @@
 [package]
 name = "dexios"
-version = "1.9.4"
+version = "2.0.0"
 edition = "2021"
 description = "Secure command-line encryption of files."
 repository = "https://github.com/brxken128/dexios"

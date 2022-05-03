@@ -53,11 +53,10 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
     let data_json: DexiosFile =
         serde_json::from_reader(&mut reader).context("Unable to read JSON from input file")?;
 
-    let raw_key;
-    if !use_keyfile {
+    let raw_key = if !use_keyfile {
         // if we're not using a keyfile, read from stdin
         let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        raw_key = input.as_bytes().to_vec();
+        input.as_bytes().to_vec()
     } else {
         let file = File::open(keyfile).context("Error opening keyfile")?;
         let mut reader = BufReader::new(file);
@@ -65,8 +64,8 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         reader
             .read_to_end(&mut buffer)
             .context("Error reading keyfile")?;
-        raw_key = buffer.clone();
-    }
+        buffer.clone()
+    };
 
     let mut key = [0u8; 32];
     let salt = base64::decode(data_json.salt).context("Error decoding the salt's base64")?;

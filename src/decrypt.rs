@@ -3,9 +3,9 @@ use crate::structs::*;
 use aes_gcm::aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key, Nonce};
 use anyhow::{Context, Ok, Result};
+use argon2::Argon2;
 use sha3::Digest;
 use sha3::Sha3_512;
-use std::num::NonZeroU32;
 use std::time::Instant;
 use std::{
     fs::{metadata, File},
@@ -74,13 +74,8 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
 
     let start_time = Instant::now();
 
-    ring::pbkdf2::derive(
-        ring::pbkdf2::PBKDF2_HMAC_SHA512,
-        NonZeroU32::new(122880).unwrap(),
-        &salt,
-        &raw_key,
-        &mut key,
-    );
+    let argon2 = Argon2::default();
+    argon2.hash_password_into(&raw_key, &salt, &mut key).expect("Unable to hash your password with argon2");
 
     let nonce_bytes =
         base64::decode(data_json.nonce).context("Error decoding the nonce's base64")?;

@@ -37,7 +37,7 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
     if sha_sum {
         let mut hasher = Sha3_512::new();
         hasher
-            .write_all(&reader.buffer())
+            .write_all(reader.buffer())
             .context("Unable to write to the sha3-512 buffer")?;
         let hash = hasher.finalize();
         let hash_b64 = base64::encode(hash);

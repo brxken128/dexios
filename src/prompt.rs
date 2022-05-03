@@ -2,15 +2,14 @@ use anyhow::{Context, Result};
 use std::io::{self, stdin, Write};
 
 pub fn get_answer(prompt: &str, default: bool) -> Result<bool> {
-    let switch;
-    if default {
-        switch = "(Y/n)";
+    let switch =if default {
+        "(Y/n)";
     } else {
-        switch = "(y/N)";
-    }
+        "(y/N)";
+    };
 
     let answer_bool = loop {
-        print!("{prompt} {switch}: ");
+        print!("{prompt} {:?}: ", switch);
         io::stdout().flush().context("Unable to flush stdout")?;
 
         let mut answer = String::new();

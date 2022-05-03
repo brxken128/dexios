@@ -40,18 +40,14 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         .context("Unable to read the input file")?;
     drop(reader);
 
-    let raw_key;
-
-    if !use_keyfile {
-        // if we're not using a keyfile, read from stdin
+    let raw_key = if !use_keyfile {
         loop {
             let input =
                 rpassword::prompt_password("Password: ").context("Unable to read password")?;
             let input_validation = rpassword::prompt_password("Password (for validation): ")
                 .context("Unable to read password")?;
             if input == input_validation {
-                raw_key = input.as_bytes().to_vec();
-                break;
+                break input.as_bytes().to_vec();
             } else {
                 println!("The passwords aren't the same, please try again.");
             }
@@ -63,8 +59,8 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         reader
             .read_to_end(&mut buffer)
             .context("Error reading keyfile")?;
-        raw_key = buffer.clone();
-    }
+        buffer.clone()
+    };
 
     let mut key = [0u8; 32];
 

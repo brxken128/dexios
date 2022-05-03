@@ -36,12 +36,15 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
 
     if sha_sum {
         let mut hasher = Sha3_512::new();
-        hasher.write_all(&reader.buffer()).context("Unable to write to the sha3-512 buffer")?;
+        hasher
+            .write_all(&reader.buffer())
+            .context("Unable to write to the sha3-512 buffer")?;
         let hash = hasher.finalize();
         let hash_b64 = base64::encode(hash);
         println!("Hash of the encrypted file is: {}", hash_b64);
 
-        let answer = get_answer("Would you like to continue with the decryption?", true).context("Unable to read provided answer")?;
+        let answer = get_answer("Would you like to continue with the decryption?", true)
+            .context("Unable to read provided answer")?;
         if !answer {
             exit(0);
         }

@@ -101,8 +101,8 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
 
     let duration = start_time.elapsed();
 
-    println!("Encryption successful - written to {}", output);
-    println!("That took {:.2}s", duration.as_secs_f32());
+    println!("Encryption successful - written to {} [took {:.2}s]", output, duration.as_secs_f32());
+    
     if sha_sum {
         let mut hasher = Sha3_512::new();
         serde_json::to_writer(&mut hasher, &data).context("Can't write to the sha3-512 hasher")?;

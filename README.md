@@ -20,11 +20,11 @@ Change native to whichever CPU family/model you are going to be running the code
 
 ## Usage Examples
 
-To encrypt a file, and show the hash of the original (input) file for verification later on:
+To encrypt a file, and show the hash of the encrypted (output) file for verification later on:
 
 `dexios -es test.txt test.enc`
 
-To decrypt a file, and show the hash of the decrypted file (to compare with the hash generated above):
+To decrypt a file, and show the hash of the encrypted file beforehand (to compare with the hash generated above):
 
 `dexios -ds test.enc test.txt`
 

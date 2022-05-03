@@ -2,11 +2,7 @@ use anyhow::{Context, Result};
 use std::io::{self, stdin, Write};
 
 pub fn get_answer(prompt: &str, default: bool) -> Result<bool> {
-    let switch = if default {
-        "(Y/n)"
-    } else {
-        "(y/N)"
-    };
+    let switch = if default { "(Y/n)" } else { "(y/N)" };
 
     let answer_bool = loop {
         print!("{prompt} {:?}: ", switch);

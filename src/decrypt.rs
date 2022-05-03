@@ -33,11 +33,16 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
 
     let file = File::open(input).context("Unable to open the input file")?;
     let mut reader = BufReader::new(file);
+    let mut data = Vec::new(); // our file bytes
+    reader
+        .read_to_end(&mut data)
+        .context("Unable to read the input file")?;
+    drop(reader);
 
     if sha_sum {
         let mut hasher = Sha3_512::new();
         hasher
-            .write_all(reader.buffer())
+            .write_all(&data)
             .context("Unable to write to the sha3-512 buffer")?;
         let hash = hasher.finalize();
         let hash_b64 = base64::encode(hash);
@@ -51,7 +56,7 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
     }
 
     let data_json: DexiosFile =
-        serde_json::from_reader(&mut reader).context("Unable to read JSON from input file")?;
+        serde_json::from_slice(&data).context("Unable to read JSON from input file")?;
 
     let raw_key = if !use_keyfile {
         // if we're not using a keyfile, read from stdin

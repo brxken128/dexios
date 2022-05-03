@@ -92,6 +92,8 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         .decrypt(nonce, encrypted_bytes.as_slice())
         .expect("Unable to decrypt the data - likely a wrong password.");
 
+    drop(encrypted_bytes);
+
     let mut writer = File::create(output).context("Can't create output file")?;
     writer
         .write_all(&decrypted_bytes)

@@ -86,6 +86,9 @@ pub fn encrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
     let encrypted_bytes = cipher
         .encrypt(nonce, data.as_slice())
         .expect("Unable to encrypt the data");
+
+    drop(data);
+
     let encrypted_bytes_base64 = base64::encode(encrypted_bytes);
     let salt_base64 = base64::encode(salt);
     let nonce_base64 = base64::encode(nonce);

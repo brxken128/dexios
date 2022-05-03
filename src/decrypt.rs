@@ -31,25 +31,24 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         }
     }
 
+    let file = File::open(input).context("Unable to open the input file")?;
+    let mut reader = BufReader::new(file);
+
     if sha_sum {
-        let mut file = File::open(input).context("Unable to open the input file")?;
         let mut hasher = Sha3_512::new();
-        std::io::copy(&mut file, &mut hasher)
-            .context("Unable to copy encrypted file bytes into sha512 hasher")?;
+        hasher.write_all(&reader.buffer()).context("Unable to write to the sha3-512 buffer")?;
         let hash = hasher.finalize();
         let hash_b64 = base64::encode(hash);
         println!("Hash of the encrypted file is: {}", hash_b64);
 
-        let answer = get_answer("Would you like to continue with the decryption?", true)?;
+        let answer = get_answer("Would you like to continue with the decryption?", true).context("Unable to read provided answer")?;
         if !answer {
             exit(0);
         }
     }
 
-    let file = File::open(input).context("Unable to open the input file")?;
-    let mut reader = BufReader::new(file);
     let data_json: DexiosFile =
-        serde_json::from_reader(&mut reader).context("Unable to read JSON from input file")?; // error = invalid input file
+        serde_json::from_reader(&mut reader).context("Unable to read JSON from input file")?;
 
     let raw_key;
     if !use_keyfile {

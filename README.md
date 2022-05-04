@@ -1,5 +1,13 @@
 # Dexios
 
+- [Dexios](#dexios)
+  - [What is it?](#what-is-it)
+  - [Building notes](#building-notes)
+  - [Checksums](#checksums)
+    - [Performance](#performance)
+  - [Usage Examples](#usage-examples)
+  - [To Do](#to-do)
+
 ## What is it?
 
 Dexios is a command-line file encryption utility, suitable for encrypting files before uploading them to a cloud-service. It is written entirely in rust and contains no unsafe code (some dependencies may contain unsafe code, but they have received the correct audits and are deemed secure).

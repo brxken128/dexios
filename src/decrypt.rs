@@ -14,7 +14,7 @@ use std::{
     process::exit,
 };
 
-pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> Result<()> {
+pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool, skip: bool) -> Result<()> {
     let mut use_keyfile = false;
     if !keyfile.is_empty() {
         use_keyfile = true;
@@ -25,6 +25,7 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         let answer = get_answer(
             "Output file already exists, would you like to overwrite?",
             true,
+            skip,
         )?;
         if !answer {
             exit(0);
@@ -48,7 +49,7 @@ pub fn decrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool) -> 
         let hash_b64 = base64::encode(hash);
         println!("Hash of the encrypted file is: {}", hash_b64);
 
-        let answer = get_answer("Would you like to continue with the decryption?", true)
+        let answer = get_answer("Would you like to continue with the decryption?", true, skip)
             .context("Unable to read provided answer")?;
         if !answer {
             exit(0);

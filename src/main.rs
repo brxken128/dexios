@@ -51,6 +51,13 @@ fn main() -> Result<()> {
                         .long("sha512sum")
                         .takes_value(false)
                         .help("return a sha3-512 hash of the encrypted file"),
+                )
+                .arg(
+                    Arg::new("skip")
+                        .short('y')
+                        .long("skip")
+                        .takes_value(false)
+                        .help("skip all prompts"),
                 ),
         )
         .subcommand(
@@ -91,6 +98,13 @@ fn main() -> Result<()> {
                         .long("sha512sum")
                         .takes_value(false)
                         .help("return a sha3-512 hash of the encrypted file"),
+                )                
+                .arg(
+                    Arg::new("skip")
+                        .short('y')
+                        .long("skip")
+                        .takes_value(false)
+                        .help("skip all prompts"),
                 ),
         )
         .get_matches();
@@ -113,6 +127,7 @@ fn main() -> Result<()> {
                     .context("No output file/invalid text provided")?,
                 keyfile,
                 sub_matches.is_present("sha"),
+                sub_matches.is_present("skip"),
             );
             if result.is_ok() && sub_matches.is_present("erase") {
                 erase::secure_erase(
@@ -139,6 +154,7 @@ fn main() -> Result<()> {
                     .context("No output file/invalid text provided")?,
                 keyfile,
                 sub_matches.is_present("sha"),
+                sub_matches.is_present("skip"),
             );
             if result.is_ok() && sub_matches.is_present("erase") {
                 erase::secure_erase(

@@ -5,13 +5,13 @@ use aes_gcm::{Aes256Gcm, Key, Nonce};
 use anyhow::{Context, Ok, Result};
 use argon2::Argon2;
 use argon2::Params;
-use tiny_keccak::{KangarooTwelve, Hasher};
 use std::time::Instant;
 use std::{
     fs::{metadata, File},
     io::{BufReader, Read, Write},
     process::exit,
 };
+use tiny_keccak::{Hasher, KangarooTwelve};
 
 pub fn decrypt_file(
     input: &str,

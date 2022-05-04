@@ -6,13 +6,13 @@ use anyhow::{Context, Ok, Result};
 use argon2::Argon2;
 use argon2::Params;
 use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
-use tiny_keccak::{KangarooTwelve, Hasher};
 use std::time::Instant;
 use std::{
     fs::{metadata, File},
     io::{BufReader, Read, Write},
     process::exit,
 };
+use tiny_keccak::{Hasher, KangarooTwelve};
 
 pub fn encrypt_file(
     input: &str,
@@ -106,7 +106,7 @@ pub fn encrypt_file(
         nonce: nonce_base64,
         data: encrypted_bytes_base64,
     };
-    
+
     let mut writer = File::create(output).context("Can't create output file")?;
     serde_json::to_writer(&writer, &data).context("Can't write to the output file")?;
     writer.flush().context("Unable to flush output file")?;
@@ -127,7 +127,11 @@ pub fn encrypt_file(
         hasher.finalize(&mut hash);
         let hash_b64 = base64::encode(hash);
         let duration = start_time.elapsed();
-        println!("Hash of the encrypted file is: {} [took {:.2}s]", hash_b64, duration.as_secs_f32());
+        println!(
+            "Hash of the encrypted file is: {} [took {:.2}s]",
+            hash_b64,
+            duration.as_secs_f32()
+        );
     }
 
     Ok(())

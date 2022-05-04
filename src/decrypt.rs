@@ -5,8 +5,7 @@ use aes_gcm::{Aes256Gcm, Key, Nonce};
 use anyhow::{Context, Ok, Result};
 use argon2::Argon2;
 use argon2::Params;
-use sha3::Digest;
-use sha3::Sha3_512;
+use tiny_keccak::{KangarooTwelve, Hasher};
 use std::time::Instant;
 use std::{
     fs::{metadata, File},
@@ -47,11 +46,10 @@ pub fn decrypt_file(
     drop(reader);
 
     if sha_sum {
-        let mut hasher = Sha3_512::new();
-        hasher
-            .write_all(&data)
-            .context("Unable to write to the sha3-512 buffer")?;
-        let hash = hasher.finalize();
+        let mut hash = [0u8; 32];
+        let mut hasher = KangarooTwelve::new(&[]);
+        hasher.update(&data);
+        hasher.finalize(&mut hash);
         let hash_b64 = base64::encode(hash);
         println!("Hash of the encrypted file is: {}", hash_b64);
 

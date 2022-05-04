@@ -6,6 +6,8 @@ Dexios is a command-line file encryption utility, suitable for encrypting files 
 
 It uses `AES-256-GCM` encryption with `argon2id` to generate the encryption key.
 
+Hashing uses `KangarooTwelve` for verification, due to it's speed and security (very ideal for this use case).
+
 It has been tested on Void Linux, but more platforms will be tested in the future.
 
 For securely erasing the file, it's about as good as we will get. It doesn't factor in how the host OS handles things, or the filesystems. It overwrites the file with many random bytes, and then with zeros, before truncating it and "removing" it with the OS.

@@ -98,7 +98,7 @@ fn main() -> Result<()> {
                         .long("sha512sum")
                         .takes_value(false)
                         .help("return a sha3-512 hash of the encrypted file"),
-                )                
+                )
                 .arg(
                     Arg::new("skip")
                         .short('y')

@@ -15,7 +15,13 @@ use std::{
     process::exit,
 };
 
-pub fn encrypt_file(input: &str, output: &str, keyfile: &str, sha_sum: bool, skip: bool) -> Result<()> {
+pub fn encrypt_file(
+    input: &str,
+    output: &str,
+    keyfile: &str,
+    sha_sum: bool,
+    skip: bool,
+) -> Result<()> {
     let mut use_keyfile = false;
     if !keyfile.is_empty() {
         use_keyfile = true;

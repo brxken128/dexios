@@ -1,6 +1,6 @@
 [package]
 name = "dexios"
-version = "4.0.1"
+version = "5.0.0"
 edition = "2021"
 description = "Secure command-line encryption of files."
 repository = "https://github.com/brxken128/dexios"
@@ -17,5 +17,5 @@ base64 = "0.13.0"
 anyhow = "1.0.57"
 rand = "0.8.5"
 rpassword = "6.0.1"
-tiny-keccak = { version = "2.0", features = ["k12"] }
 argon2 = "0.4.0"
+blake3 = "1.3.1"

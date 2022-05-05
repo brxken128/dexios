@@ -12,7 +12,6 @@ use std::{
     io::{BufReader, Read, Write},
     process::exit,
 };
-use tiny_keccak::{Hasher, KangarooTwelve};
 
 pub fn encrypt_file(
     input: &str,
@@ -121,15 +120,11 @@ pub fn encrypt_file(
 
     if sha_sum {
         let start_time = Instant::now();
-        let mut hash = [0u8; 32];
-        let mut hasher = KangarooTwelve::new(&[]);
-        hasher.update(&serde_json::to_vec(&data).context("Unable to serialize data as a vector")?);
-        hasher.finalize(&mut hash);
-        let hash_b64 = base64::encode(hash);
+        let hash = blake3::hash(&serde_json::to_vec(&data).context("Unable to serialize data as a vector")?).to_hex();
         let duration = start_time.elapsed();
         println!(
             "Hash of the encrypted file is: {} [took {:.2}s]",
-            hash_b64,
+            hash,
             duration.as_secs_f32()
         );
     }

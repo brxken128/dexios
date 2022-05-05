@@ -120,10 +120,9 @@ pub fn encrypt_file(
 
     if sha_sum {
         let start_time = Instant::now();
-        let hash = blake3::hash(
-            &serde_json::to_vec(&data).context("Unable to serialize data as a vector")?,
-        )
-        .to_hex();
+        let mut hasher = blake3::Hasher::new();
+        serde_json::to_writer(hasher.by_ref(), &data)?;
+        let hash = hasher.finalize().to_hex();
         let duration = start_time.elapsed();
         println!(
             "Hash of the encrypted file is: {} [took {:.2}s]",

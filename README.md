@@ -45,6 +45,7 @@ The time was determined via `/usr/bin/time -f "%e"`
 | 3.2.8       | 44.37s      | 40.91s      |
 | 4.0.0       | 23.70s      | 30.43s      |
 | 5.0.0       | 22.48s      | 28.66s      |
+| 5.0.2       | 20.14s      | 21.26s      |
 
 ## Usage Examples
 
@@ -78,5 +79,5 @@ To use a keyfile for encryption:
 - [x] Optimise reading the input/output files, so less disk usage
   - [ ] Find a way to encrypt **large** files (larger than the system's memory) - this is just another optimisation though
   - [x] Optimise memory usage in general too
-- [ ] Further optimise the reading and handling of the data, especially in memory.
-  - [ ] Larger files in `hashing` mode will cause `dexios` to force quit, due to absurdly high memory usage. This is because the data is being copied in memory multiple times, instead of re-using the same buffer. I believe this needs a `Cursor` to resolve, and a patch will be released once I have found the best solution.
+- [x] Further optimise the reading and handling of the data, especially in memory.
+  - [x] Larger files in `hashing` mode will cause `dexios` to force quit, due to absurdly high memory usage. This is because the data is being copied in memory multiple times, instead of re-using the same buffer. I believe this needs a `Cursor` to resolve, and a patch will be released once I have found the best solution.

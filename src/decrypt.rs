@@ -36,17 +36,15 @@ pub fn decrypt_file(
         }
     }
 
-    let file = File::open(input).context("Unable to open the input file")?;
-    let mut reader = BufReader::new(file);
-    let mut data = Vec::new(); // our file bytes
-    reader
-        .read_to_end(&mut data)
-        .context("Unable to read the input file")?;
-    drop(reader);
+    let mut file = File::open(input).context("Unable to open the input file")?;
+    let mut data = Vec::new();
+    file.read_to_end(&mut data)?;
+    drop(file);
 
     if sha_sum {
         let start_time = Instant::now();
         let hash = blake3::hash(&data).to_hex();
+        
         let duration = start_time.elapsed();
         println!(
             "Hash of the encrypted file is: {} [took {:.2}s]",
@@ -67,6 +65,8 @@ pub fn decrypt_file(
 
     let data_json: DexiosFile =
         serde_json::from_slice(&data).context("Unable to read JSON from input file")?;
+
+    drop(data);
 
     let raw_key = if !use_keyfile {
         // if we're not using a keyfile, read from stdin

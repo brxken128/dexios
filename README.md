@@ -30,7 +30,11 @@ Change native to whichever CPU family/model you are going to be running the code
 
 Hashing mode uses `Blake3` for verification, due to it's speed, security and regular updates. (very ideal for this use case).
 
-This was originally `sha3-512` in versions 3.x.x and below, and was `KangarooTwelve` in 4.x.x (via the `tiny_keccak` crate) but since v5 it has been changed to Blake3 for a number of reasons. The `tiny_keccak` crate hasn't received updates in a long while, and is no longer actively maintained. The `k12` crate is ideal for this situation, but it is rather immature compared to some other hashing implementations, so `Blake3` will be our main hashing algorithm, and there are no plans to change this as of yet.
+This was originally `sha3-512` in versions 3.x.x and below, and was `KangarooTwelve` in 4.x.x (via the `tiny_keccak` crate) but since v5 it has been changed to Blake3 for a number of reasons.
+
+The `tiny_keccak` crate hasn't received updates in a long while, and is no longer actively maintained.
+
+The `k12` crate is ideal for this situation - but it is rather immature compared to some other hashing implementations, so `Blake3` will be our main hashing algorithm, and there are no plans to change this as of yet.
 
 Blake3 also offered some *marginal* performance benefits, but this could be due to a number of factors.
 

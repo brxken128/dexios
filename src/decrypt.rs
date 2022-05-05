@@ -48,7 +48,11 @@ pub fn decrypt_file(
         let start_time = Instant::now();
         let hash = blake3::hash(&data).to_hex();
         let duration = start_time.elapsed();
-        println!("Hash of the encrypted file is: {} [took {:.2}s]", hash, duration.as_secs_f32());
+        println!(
+            "Hash of the encrypted file is: {} [took {:.2}s]",
+            hash,
+            duration.as_secs_f32()
+        );
 
         let answer = get_answer(
             "Would you like to continue with the decryption?",

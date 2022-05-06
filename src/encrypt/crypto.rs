@@ -45,6 +45,8 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
     let encrypted_bytes = cipher
         .encrypt(nonce, data.as_slice())
         .expect("Unable to encrypt the data");
+    
+    drop(data);
 
     let encrypted_bytes_base64 = base64::encode(encrypted_bytes);
     let salt_base64 = base64::encode(salt);

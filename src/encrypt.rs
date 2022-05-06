@@ -3,17 +3,10 @@ use crate::encrypt::file::get_file_bytes;
 use crate::encrypt::file::write_json_to_file;
 use crate::encrypt::hashing::hash_data_blake3;
 use crate::prompt::*;
-use crate::structs::*;
-use aes_gcm::aead::{Aead, NewAead};
-use aes_gcm::{Aes256Gcm, Key, Nonce};
 use anyhow::{Context, Ok, Result};
-use argon2::Argon2;
-use argon2::Params;
-use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
 use std::time::Instant;
 use std::{
-    fs::{metadata, File},
-    io::{BufReader, Read, Write},
+    fs::metadata,
     process::exit,
 };
 

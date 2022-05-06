@@ -50,6 +50,7 @@ The time was determined via `/usr/bin/time -f "%e"`
 | 4.0.0       | 23.70s      | 30.43s      |
 | 5.0.0       | 22.48s      | 28.66s      |
 | 5.0.2       | 20.14s      | 21.26s      |
+| 5.0.9       | 19.31s      | 18.92s       |
 
 ## Usage Examples
 

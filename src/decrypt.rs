@@ -1,16 +1,19 @@
+use crate::decrypt::crypto::decrypt_bytes;
+use crate::decrypt::file::get_file_bytes;
+use crate::decrypt::file::write_bytes_to_file;
 use crate::prompt::*;
 use crate::structs::*;
-use aes_gcm::aead::{Aead, NewAead};
-use aes_gcm::{Aes256Gcm, Key, Nonce};
+
 use anyhow::{Context, Ok, Result};
-use argon2::Argon2;
-use argon2::Params;
+
 use std::time::Instant;
 use std::{
-    fs::{metadata, File},
-    io::{BufReader, Read, Write},
+
     process::exit,
 };
+use crate::decrypt::file::overwrite_check;
+mod file;
+mod crypto;
 
 pub fn decrypt_file(
     input: &str,
@@ -19,33 +22,18 @@ pub fn decrypt_file(
     sha_sum: bool,
     skip: bool,
 ) -> Result<()> {
-    let mut use_keyfile = false;
-    if !keyfile.is_empty() {
-        use_keyfile = true;
+
+    if !overwrite_check(output, skip)? {
+        exit(0);
     }
 
-    if metadata(output).is_ok() {
-        // if the output file exists
-        let answer = get_answer(
-            "Output file already exists, would you like to overwrite?",
-            true,
-            skip,
-        )?;
-        if !answer {
-            exit(0);
-        }
-    }
-
-    let mut file = File::open(input).context("Unable to open the input file")?;
-    let mut data = Vec::new();
-    file.read_to_end(&mut data)?;
-    drop(file);
-
+    let data = get_file_bytes(input)?;
+    
     if sha_sum {
         let start_time = Instant::now();
-        let hash = blake3::hash(&data).to_hex();
-
+        let hash = blake3::hash(&data).to_hex().to_string();
         let duration = start_time.elapsed();
+        
         println!(
             "Hash of the encrypted file is: {} [took {:.2}s]",
             hash,
@@ -63,58 +51,22 @@ pub fn decrypt_file(
         }
     }
 
+    
+    let raw_key = if !keyfile.is_empty() {
+        get_file_bytes(keyfile)?
+    } else {
+        let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
+        input.as_bytes().to_vec()
+    };
+
     let data_json: DexiosFile =
         serde_json::from_slice(&data).context("Unable to read JSON from input file")?;
 
-    drop(data);
-
-    let raw_key = if !use_keyfile {
-        // if we're not using a keyfile, read from stdin
-        let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        input.as_bytes().to_vec()
-    } else {
-        let file = File::open(keyfile).context("Error opening keyfile")?;
-        let mut reader = BufReader::new(file);
-        let mut buffer = Vec::new(); // our file bytes
-        reader
-            .read_to_end(&mut buffer)
-            .context("Error reading keyfile")?;
-        buffer.clone()
-    };
-
-    let mut key = [0u8; 32];
-    let salt = base64::decode(data_json.salt).context("Error decoding the salt's base64")?;
-
     let start_time = Instant::now();
 
-    let argon2 = Argon2::new(
-        argon2::Algorithm::Argon2id,
-        argon2::Version::V0x13,
-        Params::default(),
-    );
-    argon2
-        .hash_password_into(&raw_key, &salt, &mut key)
-        .expect("Unable to hash your password with argon2");
+    let decrypted_bytes = decrypt_bytes(data_json, raw_key)?;
 
-    let nonce_bytes =
-        base64::decode(data_json.nonce).context("Error decoding the nonce's base64")?;
-    let nonce = Nonce::from_slice(nonce_bytes.as_slice());
-    let cipher_key = Key::from_slice(key.as_slice());
-    let cipher = Aes256Gcm::new(cipher_key);
-    let encrypted_bytes =
-        base64::decode(data_json.data).context("Error decoding the data's base64")?;
-    let decrypted_bytes = cipher
-        .decrypt(nonce, encrypted_bytes.as_slice())
-        .expect("Unable to decrypt the data - likely a wrong password.");
-
-    drop(encrypted_bytes);
-
-    let mut writer = File::create(output).context("Can't create output file")?;
-    writer
-        .write_all(&decrypted_bytes)
-        .context("Can't write to the output file")?;
-    writer.flush().context("Unable to flush output file")?;
-    drop(writer);
+    write_bytes_to_file(output, decrypted_bytes)?;
 
     let duration = start_time.elapsed();
 

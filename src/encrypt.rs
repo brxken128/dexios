@@ -1,11 +1,11 @@
 use crate::encrypt::crypto::encrypt_bytes;
 use crate::encrypt::file::get_file_bytes;
+use crate::encrypt::file::overwrite_check;
 use crate::encrypt::file::write_json_to_file;
 use crate::encrypt::hashing::hash_data_blake3;
-use crate::prompt::*;
-use anyhow::{Context, Ok, Result};
+use anyhow::{Ok, Result};
 use std::time::Instant;
-use std::{fs::metadata, process::exit};
+use std::process::exit;
 
 mod crypto;
 mod file;
@@ -19,17 +19,8 @@ pub fn encrypt_file(
     sha_sum: bool,
     skip: bool,
 ) -> Result<()> {
-    if metadata(output).is_ok() {
-        // if the output file exists
-        let answer = get_answer(
-            "Output file already exists, would you like to overwrite?",
-            true,
-            skip,
-        )
-        .context("Unable to read provided answer")?;
-        if !answer {
-            exit(0);
-        }
+    if !overwrite_check(output, skip)? {
+        exit(0);
     }
 
     let raw_key = if !keyfile.is_empty() {

@@ -10,7 +10,7 @@ fn gen_salt() -> [u8; 256] {
     let mut salt: [u8; 256] = [0; 256];
     StdRng::from_entropy().fill_bytes(&mut salt);
 
-    return salt;
+    salt
 }
 
 fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
@@ -26,11 +26,11 @@ fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
         .hash_password_into(&raw_key, &salt, &mut key)
         .expect("Unable to hash your password with argon2");
 
-    return (key, salt);
+    (key, salt)
 }
 
 fn gen_nonce() -> [u8; 12] {
-    return rand::thread_rng().gen::<[u8; 12]>();
+    rand::thread_rng().gen::<[u8; 12]>()
 }
 
 pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
@@ -51,9 +51,9 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
     let salt_base64 = base64::encode(salt);
     let nonce_base64 = base64::encode(nonce);
 
-    return DexiosFile {
+    DexiosFile {
         salt: salt_base64,
         nonce: nonce_base64,
         data: encrypted_bytes_base64,
-    };
+    }
 }

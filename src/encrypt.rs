@@ -4,8 +4,8 @@ use crate::encrypt::file::overwrite_check;
 use crate::encrypt::file::write_json_to_file;
 use crate::encrypt::hashing::hash_data_blake3;
 use anyhow::{Ok, Result};
-use std::time::Instant;
 use std::process::exit;
+use std::time::Instant;
 
 mod crypto;
 mod file;

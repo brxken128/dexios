@@ -6,14 +6,11 @@ use crate::structs::*;
 
 use anyhow::{Context, Ok, Result};
 
-use std::time::Instant;
-use std::{
-
-    process::exit,
-};
 use crate::decrypt::file::overwrite_check;
-mod file;
+use std::process::exit;
+use std::time::Instant;
 mod crypto;
+mod file;
 
 pub fn decrypt_file(
     input: &str,
@@ -22,18 +19,17 @@ pub fn decrypt_file(
     sha_sum: bool,
     skip: bool,
 ) -> Result<()> {
-
     if !overwrite_check(output, skip)? {
         exit(0);
     }
 
     let data = get_file_bytes(input)?;
-    
+
     if sha_sum {
         let start_time = Instant::now();
         let hash = blake3::hash(&data).to_hex().to_string();
         let duration = start_time.elapsed();
-        
+
         println!(
             "Hash of the encrypted file is: {} [took {:.2}s]",
             hash,
@@ -51,7 +47,6 @@ pub fn decrypt_file(
         }
     }
 
-    
     let raw_key = if !keyfile.is_empty() {
         get_file_bytes(keyfile)?
     } else {

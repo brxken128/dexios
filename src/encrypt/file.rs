@@ -1,11 +1,10 @@
+use crate::prompt::get_answer;
 use anyhow::{Context, Ok, Result};
+use std::fs::metadata;
 use std::{
     fs::File,
     io::{BufReader, Read, Write},
 };
-use std::fs::metadata;
-use crate::prompt::get_answer;
-
 
 use crate::structs::DexiosFile;
 
@@ -29,12 +28,7 @@ pub fn write_json_to_file(name: &str, data: &DexiosFile) -> Result<()> {
 pub fn overwrite_check(name: &str, skip: bool) -> Result<bool> {
     let answer = if metadata(name).is_ok() {
         let prompt = format!("{} already exists, would you like to overwrite?", name);
-        get_answer(
-            &prompt,
-            true,
-            skip,
-        )
-            .context("Unable to read provided answer")?
+        get_answer(&prompt, true, skip).context("Unable to read provided answer")?
     } else {
         true
     };

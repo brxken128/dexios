@@ -1,17 +1,16 @@
+use crate::structs::DexiosFile;
 use aes_gcm::aead::generic_array::GenericArray;
 use aes_gcm::aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key};
 use argon2::Argon2;
 use argon2::Params;
 use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
-use crate::structs::DexiosFile;
-
 
 fn gen_salt() -> [u8; 256] {
     let mut salt: [u8; 256] = [0; 256];
     StdRng::from_entropy().fill_bytes(&mut salt);
 
-    return salt
+    return salt;
 }
 
 fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
@@ -27,7 +26,7 @@ fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
         .hash_password_into(&raw_key, &salt, &mut key)
         .expect("Unable to hash your password with argon2");
 
-    return (key, salt)
+    return (key, salt);
 }
 
 fn gen_nonce() -> [u8; 12] {
@@ -45,7 +44,7 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
     let encrypted_bytes = cipher
         .encrypt(nonce, data.as_slice())
         .expect("Unable to encrypt the data");
-    
+
     drop(data);
 
     let encrypted_bytes_base64 = base64::encode(encrypted_bytes);

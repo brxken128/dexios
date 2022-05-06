@@ -1,11 +1,10 @@
 use anyhow::{Context, Ok, Result};
 use std::{
-    fs::{File},
+    fs::File,
     io::{BufReader, Read, Write},
 };
 
 use crate::structs::DexiosFile;
-
 
 pub fn get_file_bytes(name: &str) -> Result<Vec<u8>> {
     let file = File::open(name).context("Unable to open file")?;

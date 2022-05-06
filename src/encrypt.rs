@@ -5,15 +5,12 @@ use crate::encrypt::hashing::hash_data_blake3;
 use crate::prompt::*;
 use anyhow::{Context, Ok, Result};
 use std::time::Instant;
-use std::{
-    fs::metadata,
-    process::exit,
-};
+use std::{fs::metadata, process::exit};
 
 mod crypto;
+mod file;
 mod hashing;
 mod password;
-mod file;
 
 pub fn encrypt_file(
     input: &str,

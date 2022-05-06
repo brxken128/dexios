@@ -1,7 +1,7 @@
 use anyhow::{Ok, Result};
 
-use std::io::Write;
 use crate::structs::DexiosFile;
+use std::io::Write;
 
 pub fn hash_data_blake3(data: DexiosFile) -> Result<String> {
     let mut hasher = blake3::Hasher::new();

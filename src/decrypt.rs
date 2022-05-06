@@ -44,7 +44,7 @@ pub fn decrypt_file(
     if sha_sum {
         let start_time = Instant::now();
         let hash = blake3::hash(&data).to_hex();
-        
+
         let duration = start_time.elapsed();
         println!(
             "Hash of the encrypted file is: {} [took {:.2}s]",

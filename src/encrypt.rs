@@ -1,3 +1,7 @@
+use crate::encrypt::crypto::encrypt_bytes;
+use crate::encrypt::file::get_file_bytes;
+use crate::encrypt::file::write_json_to_file;
+use crate::encrypt::hashing::hash_data_blake3;
 use crate::prompt::*;
 use crate::structs::*;
 use aes_gcm::aead::{Aead, NewAead};
@@ -13,6 +17,11 @@ use std::{
     process::exit,
 };
 
+mod crypto;
+mod hashing;
+mod password;
+mod file;
+
 pub fn encrypt_file(
     input: &str,
     output: &str,
@@ -20,11 +29,6 @@ pub fn encrypt_file(
     sha_sum: bool,
     skip: bool,
 ) -> Result<()> {
-    let mut use_keyfile = false;
-    if !keyfile.is_empty() {
-        use_keyfile = true;
-    }
-
     if metadata(output).is_ok() {
         // if the output file exists
         let answer = get_answer(
@@ -38,77 +42,19 @@ pub fn encrypt_file(
         }
     }
 
-    let file = File::open(input).context("Unable to open the input file")?;
-    let mut reader = BufReader::new(file);
-    let mut data = Vec::new(); // our file bytes
-    reader
-        .read_to_end(&mut data)
-        .context("Unable to read the input file")?;
-    drop(reader);
-
-    let raw_key = if !use_keyfile {
-        loop {
-            let input =
-                rpassword::prompt_password("Password: ").context("Unable to read password")?;
-            let input_validation = rpassword::prompt_password("Password (for validation): ")
-                .context("Unable to read password")?;
-            if input == input_validation && !input.is_empty() {
-                break input.as_bytes().to_vec();
-            } else if input.is_empty() {
-                println!("Password cannot be empty, please try again.");
-            } else {
-                println!("The passwords aren't the same, please try again.");
-            }
-        }
+    let raw_key = if !keyfile.is_empty() {
+        get_file_bytes(keyfile)?
     } else {
-        let file = File::open(keyfile).context("Error opening keyfile")?;
-        let mut reader = BufReader::new(file);
-        let mut buffer = Vec::new(); // our file bytes
-        reader
-            .read_to_end(&mut buffer)
-            .context("Error reading keyfile")?;
-        buffer.clone()
+        password::get_password_with_validation()?
     };
 
-    let mut key = [0u8; 32];
-
-    let mut salt: [u8; 256] = [0; 256];
-    StdRng::from_entropy().fill_bytes(&mut salt);
+    let file_contents = get_file_bytes(input)?;
 
     let start_time = Instant::now();
 
-    let argon2 = Argon2::new(
-        argon2::Algorithm::Argon2id,
-        argon2::Version::V0x13,
-        Params::default(),
-    );
-    argon2
-        .hash_password_into(&raw_key, &salt, &mut key)
-        .expect("Unable to hash your password with argon2");
+    let data = encrypt_bytes(file_contents, raw_key);
 
-    let nonce_bytes = rand::thread_rng().gen::<[u8; 12]>();
-    let nonce = Nonce::from_slice(nonce_bytes.as_slice());
-    let cipher_key = Key::from_slice(key.as_slice());
-    let cipher = Aes256Gcm::new(cipher_key);
-    let encrypted_bytes = cipher
-        .encrypt(nonce, data.as_slice())
-        .expect("Unable to encrypt the data");
-
-    drop(data);
-
-    let encrypted_bytes_base64 = base64::encode(encrypted_bytes);
-    let salt_base64 = base64::encode(salt);
-    let nonce_base64 = base64::encode(nonce);
-
-    let data = DexiosFile {
-        salt: salt_base64,
-        nonce: nonce_base64,
-        data: encrypted_bytes_base64,
-    };
-
-    let mut writer = File::create(output).context("Can't create output file")?;
-    serde_json::to_writer(&writer, &data).context("Can't write to the output file")?;
-    writer.flush().context("Unable to flush output file")?;
+    write_json_to_file(output, &data)?;
 
     let duration = start_time.elapsed();
 
@@ -120,9 +66,7 @@ pub fn encrypt_file(
 
     if sha_sum {
         let start_time = Instant::now();
-        let mut hasher = blake3::Hasher::new();
-        serde_json::to_writer(hasher.by_ref(), &data)?;
-        let hash = hasher.finalize().to_hex();
+        let hash = hash_data_blake3(data)?;
         let duration = start_time.elapsed();
         println!(
             "Hash of the encrypted file is: {} [took {:.2}s]",

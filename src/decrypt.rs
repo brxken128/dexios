@@ -57,6 +57,8 @@ pub fn decrypt_file(
     let data_json: DexiosFile =
         serde_json::from_slice(&data).context("Unable to read JSON from input file")?;
 
+    drop(data);
+
     let start_time = Instant::now();
 
     let decrypted_bytes = decrypt_bytes(data_json, raw_key)?;

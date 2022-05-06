@@ -89,3 +89,8 @@ To use a keyfile for encryption:
 - [ ] Refactor/split everything into semi-specialised files, to make the codebase more maintainable
 - [ ] Batch encrypt/decrypt via wildcards (e.g. *.txt)
 - [ ] Add benchmarking switch that doesn't write to the disk
+- [ ] Split absurdly large file into X byte blocks to allow encryption and decryption of really large files
+  - [ ] `DexiosFile` would be renamed `DexiosBlock`
+  - [ ] Each (large) file would contain multiple `DexiosBlock`s, each with their own nonce, salt and encrypted data.
+  - [ ] A reader could read X bytes of the buffer, encrypt, read more and repeat until the end - appending each block to the output file
+  - [ ] To decrypt, the reader would just read one block, decrypt, write the bytes to the output buffer and repeat

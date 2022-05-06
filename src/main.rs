@@ -9,7 +9,7 @@ mod structs;
 
 fn main() -> Result<()> {
     let matches = Command::new("dexios") // add verbose arg?
-        .version("5.0.6")
+        .version("5.0.7")
         .author("brxken128 <github.com/brxken128>")
         .about("Secure command-line encryption of files.")
         .subcommand_required(true)

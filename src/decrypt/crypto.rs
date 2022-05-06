@@ -30,7 +30,8 @@ fn get_information(data: &DexiosFile) -> Result<(Vec<u8>, Vec<u8>)> {
     Ok((salt, nonce_bytes))
 }
 
-pub fn decrypt_bytes(data: DexiosFile, raw_key: Vec<u8>) -> Result<Vec<u8>> {
+pub fn decrypt_bytes(data_box: Box<DexiosFile>, raw_key: Vec<u8>) -> Result<Vec<u8>> {
+    let data = *data_box;
     let (salt, nonce_bytes) = get_information(&data)?;
     let key = get_key(raw_key, salt);
 

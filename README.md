@@ -88,3 +88,4 @@ To use a keyfile for encryption:
   - [x] Larger files in `hashing` mode will cause `dexios` to force quit, due to absurdly high memory usage. This is because the data is being copied in memory multiple times, instead of re-using the same buffer. I believe this needs a `Cursor` to resolve, and a patch will be released once I have found the best solution.
 - [ ] Refactor/split everything into semi-specialised files, to make the codebase more maintainable
 - [ ] Batch encrypt/decrypt via wildcards (e.g. *.txt)
+- [ ] Add benchmarking switch that doesn't write to the disk

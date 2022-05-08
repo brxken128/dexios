@@ -13,7 +13,7 @@ fn gen_salt() -> [u8; 256] {
     salt
 }
 
-pub fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
+fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
     let mut key = [0u8; 32];
     let salt = gen_salt();
 
@@ -33,10 +33,11 @@ fn gen_nonce() -> [u8; 12] {
     rand::thread_rng().gen::<[u8; 12]>()
 }
 
-pub fn encrypt_bytes(data: Vec<u8>, key: [u8; 32], salt: [u8; 256]) -> DexiosFile {
+pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
     let nonce_bytes = gen_nonce();
     let nonce = GenericArray::from_slice(nonce_bytes.as_slice());
 
+    let (key, salt) = gen_key(raw_key);
     let cipher_key = Key::from_slice(key.as_slice());
 
     let cipher = Aes256Gcm::new(cipher_key);

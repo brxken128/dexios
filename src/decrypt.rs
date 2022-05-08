@@ -1,10 +1,8 @@
 use crate::decrypt::crypto::decrypt_bytes;
-use crate::decrypt::crypto::get_information;
 use crate::decrypt::file::get_file_bytes;
 use crate::decrypt::file::write_bytes_to_file;
 use crate::prompt::*;
 use crate::structs::*;
-use crate::decrypt::crypto::get_key;
 
 use anyhow::{Context, Ok, Result};
 
@@ -52,21 +50,19 @@ pub fn decrypt_file(
         }
     }
 
+    let raw_key = if !keyfile.is_empty() {
+        get_file_bytes(keyfile)?
+    } else {
+        let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
+        input.as_bytes().to_vec()
+    };
+
     let data_json: DexiosFile =
         serde_json::from_slice(&data).context("Unable to read JSON from input file")?;
     drop(data);
 
-    let (salt, nonce_bytes) = get_information(&data_json)?;
-
-    let key = if !keyfile.is_empty() {
-        get_key(get_file_bytes(keyfile)?, salt)
-    } else {
-        let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        get_key(input.as_bytes().to_vec(), salt)
-    };
-
     let decrypt_start_time = Instant::now();
-    let decrypted_bytes = decrypt_bytes(data_json, key, nonce_bytes)?;
+    let decrypted_bytes = decrypt_bytes(data_json, raw_key)?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! [took {:.2}s]",

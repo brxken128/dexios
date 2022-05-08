@@ -3,6 +3,7 @@ use crate::encrypt::file::get_file_bytes;
 use crate::encrypt::file::overwrite_check;
 use crate::encrypt::file::write_json_to_file;
 use crate::encrypt::hashing::hash_data_blake3;
+use crate::encrypt::crypto::gen_key;
 use anyhow::{Ok, Result};
 use std::process::exit;
 use std::time::Instant;
@@ -24,10 +25,10 @@ pub fn encrypt_file(
         exit(0);
     }
 
-    let raw_key = if !keyfile.is_empty() {
-        get_file_bytes(keyfile)?
+    let (key, salt) = if !keyfile.is_empty() {
+        gen_key(get_file_bytes(keyfile)?)
     } else {
-        password::get_password_with_validation()?
+        gen_key(password::get_password_with_validation()?)
     };
 
     let read_start_time = Instant::now();
@@ -36,7 +37,7 @@ pub fn encrypt_file(
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
     let encrypt_start_time = Instant::now();
-    let data = encrypt_bytes(file_contents, raw_key);
+    let data = encrypt_bytes(file_contents, key, salt);
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",

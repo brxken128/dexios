@@ -9,7 +9,7 @@ mod structs;
 
 fn main() -> Result<()> {
     let matches = Command::new("dexios")
-        .version("5.0.10")
+        .version("5.0.11")
         .author("brxken128 <github.com/brxken128>")
         .about("Secure command-line encryption of files.")
         .subcommand_required(true)
@@ -58,6 +58,13 @@ fn main() -> Result<()> {
                         .long("skip")
                         .takes_value(false)
                         .help("skip all prompts"),
+                )
+                .arg(
+                    Arg::new("bench")
+                        .short('b')
+                        .long("benchmark")
+                        .takes_value(false)
+                        .help("don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
                 ),
         )
         .subcommand(
@@ -128,6 +135,7 @@ fn main() -> Result<()> {
                 keyfile,
                 sub_matches.is_present("sha"),
                 sub_matches.is_present("skip"),
+                sub_matches.is_present("bench"),
             );
             if result.is_ok() && sub_matches.is_present("erase") {
                 erase::secure_erase(
@@ -155,6 +163,7 @@ fn main() -> Result<()> {
                 keyfile,
                 sub_matches.is_present("sha"),
                 sub_matches.is_present("skip"),
+                sub_matches.is_present("bench"),
             );
             if result.is_ok() && sub_matches.is_present("erase") {
                 erase::secure_erase(

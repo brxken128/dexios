@@ -18,6 +18,7 @@ pub fn encrypt_file(
     keyfile: &str,
     sha_sum: bool,
     skip: bool,
+    bench: bool,
 ) -> Result<()> {
     if !overwrite_check(output, skip)? {
         exit(0);
@@ -31,28 +32,34 @@ pub fn encrypt_file(
 
     let file_contents = get_file_bytes(input)?;
 
-    let start_time = Instant::now();
+    let encrypt_start_time = Instant::now();
 
     let data = encrypt_bytes(file_contents, raw_key);
 
-    write_json_to_file(output, &data)?;
-
-    let duration = start_time.elapsed();
+    let encrypt_duration = encrypt_start_time.elapsed();
 
     println!(
-        "Encryption successful - written to {} [took {:.2}s]",
-        output,
-        duration.as_secs_f32()
+        "Encryption successful! [took {:.2}s]",
+        encrypt_duration.as_secs_f32()
     );
 
+    if !bench {
+        let write_start_time = Instant::now();
+        write_json_to_file(output, &data)?;
+        let write_duration = write_start_time.elapsed();
+        println!("Wrote to {} [took {:.2}s", output, write_duration.as_secs_f32());
+    }
+
+
+
     if sha_sum {
-        let start_time = Instant::now();
+        let hash_start_time = Instant::now();
         let hash = hash_data_blake3(data)?;
-        let duration = start_time.elapsed();
+        let hash_duration = hash_start_time.elapsed();
         println!(
             "Hash of the encrypted file is: {} [took {:.2}s]",
             hash,
-            duration.as_secs_f32()
+            hash_duration.as_secs_f32()
         );
     }
 

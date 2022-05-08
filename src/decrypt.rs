@@ -18,6 +18,7 @@ pub fn decrypt_file(
     keyfile: &str,
     sha_sum: bool,
     skip: bool,
+    bench: bool,
 ) -> Result<()> {
     if !overwrite_check(output, skip)? {
         exit(0);
@@ -59,19 +60,23 @@ pub fn decrypt_file(
 
     drop(data);
 
-    let start_time = Instant::now();
+    let decrypt_start_time = Instant::now();
 
     let decrypted_bytes = decrypt_bytes(data_json, raw_key)?;
 
-    write_bytes_to_file(output, decrypted_bytes)?;
-
-    let duration = start_time.elapsed();
+    let decrypt_duration = decrypt_start_time.elapsed();
 
     println!(
-        "Decryption successful - written to {} [took {:.2}s]",
-        output,
-        duration.as_secs_f32()
+        "Decryption successful! [took {:.2}s]",
+        decrypt_duration.as_secs_f32()
     );
+
+    if !bench {
+        let write_start_time = Instant::now();
+        write_bytes_to_file(output, decrypted_bytes)?;
+        let write_duration = write_start_time.elapsed();
+        println!("Wrote to {} [took {:.2}s", output, write_duration.as_secs_f32());
+    }
 
     Ok(())
 }

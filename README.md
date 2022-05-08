@@ -86,11 +86,14 @@ To use a keyfile for encryption:
   - [x] Optimise memory usage in general too
 - [x] Further optimise the reading and handling of the data, especially in memory.
   - [x] Larger files in `hashing` mode will cause `dexios` to force quit, due to absurdly high memory usage. This is because the data is being copied in memory multiple times, instead of re-using the same buffer. I believe this needs a `Cursor` to resolve, and a patch will be released once I have found the best solution.
-- [ ] Refactor/split everything into semi-specialised files, to make the codebase more maintainable
+- [x] Refactor/split everything into semi-specialised files, to make the codebase more maintainable
 - [ ] Batch encrypt/decrypt via wildcards (e.g. *.txt)
-- [ ] Add benchmarking switch that doesn't write to the disk
-- [ ] Split absurdly large file into X byte blocks to allow encryption and decryption of really large files
-  - [ ] `DexiosFile` would be renamed `DexiosBlock`
-  - [ ] Each (large) file would contain multiple `DexiosBlock`s, each with their own nonce, salt and encrypted data.
-  - [ ] A reader could read X bytes of the buffer, encrypt, read more and repeat until the end - appending each block to the output file
-  - [ ] To decrypt, the reader would just read one block, decrypt, write the bytes to the output buffer and repeat
+  - [ ] encrypt:
+    - [ ] Use zip or tar file for output
+    - [ ] -m (multi) switch to specify glob input and
+    - [ ] encrypt each file individually and compress them to output file
+    - [ ] encrypt each file using a key obtained at the start of the process to only have to get/read it once
+  - [ ] decrypt = extract zip to tmp directory/read directly from zip? if possble
+    - [ ] decrypt each file using a key obtained at the start of the process to only have to get/read it once
+    - [ ] output to directory specified in `output` (with support for `.`)
+- [x] Add benchmarking switch that doesn't write to the disk

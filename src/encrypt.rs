@@ -47,7 +47,7 @@ pub fn encrypt_file(
         let write_start_time = Instant::now();
         write_json_to_file(output, &data)?;
         let write_duration = write_start_time.elapsed();
-        println!("Wrote to {} [took {:.2}s", output, write_duration.as_secs_f32());
+        println!("Wrote to {} [took {:.2}s]", output, write_duration.as_secs_f32());
     }
 
 

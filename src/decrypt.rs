@@ -24,7 +24,10 @@ pub fn decrypt_file(
         exit(0);
     }
 
+    let read_start_time = Instant::now();
     let data = get_file_bytes(input)?;
+    let read_duration = read_start_time.elapsed();
+    println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
     if sha_sum {
         let start_time = Instant::now();
@@ -57,15 +60,11 @@ pub fn decrypt_file(
 
     let data_json: DexiosFile =
         serde_json::from_slice(&data).context("Unable to read JSON from input file")?;
-
     drop(data);
 
     let decrypt_start_time = Instant::now();
-
     let decrypted_bytes = decrypt_bytes(data_json, raw_key)?;
-
     let decrypt_duration = decrypt_start_time.elapsed();
-
     println!(
         "Decryption successful! [took {:.2}s]",
         decrypt_duration.as_secs_f32()

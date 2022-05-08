@@ -30,14 +30,15 @@ pub fn encrypt_file(
         password::get_password_with_validation()?
     };
 
+    let read_start_time = Instant::now();
     let file_contents = get_file_bytes(input)?;
+    let read_duration = read_start_time.elapsed();
+    println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
+
 
     let encrypt_start_time = Instant::now();
-
     let data = encrypt_bytes(file_contents, raw_key);
-
     let encrypt_duration = encrypt_start_time.elapsed();
-
     println!(
         "Encryption successful! [took {:.2}s]",
         encrypt_duration.as_secs_f32()

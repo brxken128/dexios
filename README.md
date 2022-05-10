@@ -70,6 +70,14 @@ To use a keyfile for encryption:
 
 `dexios -ek keyfile test.txt test.enc`
 
+To encrypt all `.mp4` files in a directory, we can use `find`. This works a LOT better with a keyfile as you will have to input the password manually each time otherwise. It will append `.enc` to the end of your files. You can remove `-maxdepth 1` to make this run recursively.
+
+`find *.mp4 -type f -maxdepth 1 -exec dexios -esyk keyfile {} {}.enc \;`
+
+To encrypt all `.mp4` files in a directory, and remove the original files once encrypted:
+
+`find *.mp4 -type f -maxdepth 1 -exec dexios -esy --erase -k keyfile {} {}.enc \;`
+
 ## To Do
 
 - [x] Error handling
@@ -87,13 +95,4 @@ To use a keyfile for encryption:
 - [x] Further optimise the reading and handling of the data, especially in memory.
   - [x] Larger files in `hashing` mode will cause `dexios` to force quit, due to absurdly high memory usage. This is because the data is being copied in memory multiple times, instead of re-using the same buffer. I believe this needs a `Cursor` to resolve, and a patch will be released once I have found the best solution.
 - [x] Refactor/split everything into semi-specialised files, to make the codebase more maintainable
-- [ ] Batch encrypt/decrypt via wildcards (e.g. *.txt)
-  - [ ] encrypt:
-    - [ ] Use zip or tar file for output
-    - [ ] -m (multi) switch to specify glob input and
-    - [ ] encrypt each file individually and compress them to output file
-    - [ ] encrypt each file using a key obtained at the start of the process to only have to get/read it once
-  - [ ] decrypt = extract zip to tmp directory/read directly from zip? if possble
-    - [ ] decrypt each file using a key obtained at the start of the process to only have to get/read it once
-    - [ ] output to directory specified in `output` (with support for `.`)
 - [x] Add benchmarking switch that doesn't write to the disk

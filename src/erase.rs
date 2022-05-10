@@ -2,7 +2,8 @@ use anyhow::{Context, Result};
 use rand::Rng;
 use std::{
     fs::File,
-    io::{BufWriter, Write}, time::Instant,
+    io::{BufWriter, Write},
+    time::Instant,
 };
 
 pub fn secure_erase(input: &str) -> Result<()> {
@@ -45,7 +46,11 @@ pub fn secure_erase(input: &str) -> Result<()> {
 
     let duration = start_time.elapsed();
 
-    println!("Erased {} successfully [took {:.2}s]", input, duration.as_secs_f32());
+    println!(
+        "Erased {} successfully [took {:.2}s]",
+        input,
+        duration.as_secs_f32()
+    );
 
     Ok(())
 }

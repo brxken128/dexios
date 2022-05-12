@@ -18,9 +18,12 @@ pub fn get_file_bytes(name: &str) -> Result<Vec<u8>> {
     Ok(data)
 }
 
-pub fn write_json_to_file(name: &str, data: &DexiosFile) -> Result<()> {
+pub fn write_data_to_file(name: &str, data: &DexiosFile) -> Result<()> {
     let mut writer = File::create(name).context("Can't create output file")?;
-    serde_json::to_writer(&writer, data).context("Can't write to the output file")?;
+    //serde_json::to_writer(&writer, data).context("Can't write to the output file")?;
+    writer.write_all(&data.salt)?;
+    writer.write_all(&data.nonce)?;
+    writer.write_all(&data.data)?;
     writer.flush().context("Unable to flush output file")?;
     Ok(())
 }

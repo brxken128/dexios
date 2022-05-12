@@ -1,7 +1,7 @@
 use crate::encrypt::crypto::encrypt_bytes;
-use crate::encrypt::file::get_file_bytes;
-use crate::encrypt::file::overwrite_check;
-use crate::encrypt::file::write_data_to_file;
+use crate::file::get_file_bytes;
+use crate::file::overwrite_check;
+use crate::file::write_encrypted_data_to_file;
 use crate::hashing::hash_data_blake3;
 use anyhow::Context;
 use anyhow::{Ok, Result};
@@ -9,7 +9,6 @@ use std::process::exit;
 use std::time::Instant;
 
 mod crypto;
-mod file;
 mod password;
 
 pub fn encrypt_file(
@@ -52,7 +51,7 @@ pub fn encrypt_file(
 
     if !bench {
         let write_start_time = Instant::now();
-        write_data_to_file(output, &data)?;
+        write_encrypted_data_to_file(output, &data)?;
         let write_duration = write_start_time.elapsed();
         println!(
             "Wrote to {} [took {:.2}s]",

@@ -1,8 +1,8 @@
 use crate::decrypt::crypto::decrypt_bytes;
-use crate::decrypt::file::get_file_bytes;
-use crate::decrypt::file::get_keyfile_bytes;
-use crate::decrypt::file::overwrite_check;
-use crate::decrypt::file::write_bytes_to_file;
+use crate::file::get_file_bytes;
+use crate::file::get_encrypted_file_data;
+use crate::file::overwrite_check;
+use crate::file::write_bytes_to_file;
 use crate::hashing::hash_data_blake3;
 use crate::prompt::*;
 use crate::structs::*;
@@ -12,7 +12,6 @@ use anyhow::{Context, Ok, Result};
 use std::process::exit;
 use std::time::Instant;
 mod crypto;
-mod file;
 
 pub fn decrypt_file(
     input: &str,
@@ -27,7 +26,7 @@ pub fn decrypt_file(
     }
 
     let read_start_time = Instant::now();
-    let (salt, nonce, encrypted_data) = get_file_bytes(input)?;
+    let (salt, nonce, encrypted_data) = get_encrypted_file_data(input)?;
     let data = DexiosFile {
         salt,
         nonce,
@@ -59,7 +58,7 @@ pub fn decrypt_file(
 
     let raw_key = if !keyfile.is_empty() {
         println!("Reading key from {}", keyfile);
-        get_keyfile_bytes(keyfile)?
+        get_file_bytes(keyfile)?
     } else if std::env::var("DEXIOS_KEY").is_ok() {
         println!("Reading key from DEXIOS_KEY environment variable");
         std::env::var("DEXIOS_KEY")

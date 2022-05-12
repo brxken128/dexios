@@ -1,12 +1,12 @@
 use crate::decrypt::crypto::decrypt_bytes;
 use crate::decrypt::file::get_file_bytes;
+use crate::decrypt::file::overwrite_check;
 use crate::decrypt::file::write_bytes_to_file;
 use crate::prompt::*;
 use crate::structs::*;
 
 use anyhow::{Context, Ok, Result};
 
-use crate::decrypt::file::overwrite_check;
 use std::process::exit;
 use std::time::Instant;
 mod crypto;

@@ -24,7 +24,7 @@ fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
     );
     argon2
         .hash_password_into(&raw_key, &salt, &mut key)
-        .expect("Unable to hash your password with argon2");
+        .expect("Unable to hash your password with argon2id");
 
     (key, salt)
 }

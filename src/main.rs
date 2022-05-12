@@ -6,6 +6,7 @@ mod encrypt;
 mod erase;
 mod prompt;
 mod structs;
+mod hashing;
 
 fn main() -> Result<()> {
     let matches = Command::new("dexios")

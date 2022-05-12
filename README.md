@@ -5,6 +5,8 @@
   - [Building notes](#building-notes)
   - [Checksums](#checksums)
     - [Performance](#performance)
+  - [Environment Variables](#environment-variables)
+  - [Key Inputs](#key-inputs)
   - [Usage Examples](#usage-examples)
   - [To Do](#to-do)
 
@@ -52,6 +54,19 @@ The time was determined via `/usr/bin/time -f "%e"`
 | 5.0.2       | 20.14s      | 21.26s      |
 | 5.0.9       | 19.31s      | 18.92s       |
 
+
+## Environment Variables
+
+Dexios can read your key from an environment variable! Just set `DEXIOS_KEY` and it will automatically be detected and used. Due to using different salts and nonces for every encryption, there is no inherent risk in reusing keys - although it's not a good security practice.
+
+## Key Inputs
+
+The priority is as follows:
+
+1. First, Dexios will check for whether or not you have specified a keyfile (via `-k` or `--keyfile`)
+2. If no keyfile is detected, it will look for the `DEXIOS_KEY` environment variable
+3. If neither of the above are found, you will be shown a prompt to enter a password manually
+
 ## Usage Examples
 
 To encrypt a file, and show the hash of the encrypted (output) file for verification later on:
@@ -70,7 +85,7 @@ To use a keyfile for encryption:
 
 `dexios -ek keyfile test.txt test.enc`
 
-To encrypt all `.mp4` files in a directory, we can use `find`. This works a LOT better with a keyfile as you will have to input the password manually each time otherwise. It will append `.enc` to the end of your files. You can remove `-maxdepth 1` to make this run recursively.
+To encrypt all `.mp4` files in a directory, we can use `find`. This works a LOT better with a keyfile/environment variable key as you will have to input the password manually each time otherwise. It will append `.enc` to the end of your files. You can remove `-maxdepth 1` to make this run recursively.
 
 `find *.mp4 -type f -maxdepth 1 -exec dexios -esyk keyfile {} {}.enc \;`
 

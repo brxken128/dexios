@@ -24,7 +24,7 @@ fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
     );
     argon2
         .hash_password_into(&raw_key, &salt, &mut key)
-        .expect("Unable to hash your password with argon2");
+        .expect("Unable to hash your password with argon2id");
 
     (key, salt)
 }
@@ -47,13 +47,9 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
 
     drop(data);
 
-    let encrypted_bytes_base64 = base64::encode(encrypted_bytes);
-    let salt_base64 = base64::encode(salt);
-    let nonce_base64 = base64::encode(nonce);
-
     DexiosFile {
-        salt: salt_base64,
-        nonce: nonce_base64,
-        data: encrypted_bytes_base64,
+        salt,
+        nonce: nonce_bytes,
+        data: encrypted_bytes,
     }
 }

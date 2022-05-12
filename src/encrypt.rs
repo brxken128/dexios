@@ -1,15 +1,15 @@
 use crate::encrypt::crypto::encrypt_bytes;
 use crate::encrypt::file::get_file_bytes;
 use crate::encrypt::file::overwrite_check;
-use crate::encrypt::file::write_json_to_file;
-use crate::encrypt::hashing::hash_data_blake3;
+use crate::encrypt::file::write_data_to_file;
+use crate::hashing::hash_data_blake3;
+use anyhow::Context;
 use anyhow::{Ok, Result};
 use std::process::exit;
 use std::time::Instant;
 
 mod crypto;
 mod file;
-mod hashing;
 mod password;
 
 pub fn encrypt_file(
@@ -25,8 +25,15 @@ pub fn encrypt_file(
     }
 
     let raw_key = if !keyfile.is_empty() {
+        println!("Reading key from {}", keyfile);
         get_file_bytes(keyfile)?
+    } else if std::env::var("DEXIOS_KEY").is_ok() {
+        println!("Reading key from DEXIOS_KEY environment variable");
+        std::env::var("DEXIOS_KEY")
+            .context("Unable to read DEXIOS_KEY from environment variable")?
+            .into_bytes()
     } else {
+        println!("Reading key from stdin");
         password::get_password_with_validation()?
     };
 
@@ -45,7 +52,7 @@ pub fn encrypt_file(
 
     if !bench {
         let write_start_time = Instant::now();
-        write_json_to_file(output, &data)?;
+        write_data_to_file(output, &data)?;
         let write_duration = write_start_time.elapsed();
         println!(
             "Wrote to {} [took {:.2}s]",
@@ -56,7 +63,7 @@ pub fn encrypt_file(
 
     if sha_sum {
         let hash_start_time = Instant::now();
-        let hash = hash_data_blake3(data)?;
+        let hash = hash_data_blake3(&data)?;
         let hash_duration = hash_start_time.elapsed();
         println!(
             "Hash of the encrypted file is: {} [took {:.2}s]",

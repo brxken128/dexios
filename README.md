@@ -5,6 +5,9 @@
   - [Building notes](#building-notes)
   - [Checksums](#checksums)
     - [Performance](#performance)
+  - [Output file sizes](#output-file-sizes)
+  - [Environment Variables](#environment-variables)
+  - [Key Inputs](#key-inputs)
   - [Usage Examples](#usage-examples)
   - [To Do](#to-do)
 
@@ -42,6 +45,8 @@ Blake3 also offered some *marginal* performance benefits, but this could be due 
 
 Tests were ran on a system with a Ryzen 7 3700x and 16gb of 3000MHz RAM - running Void Linux. The file used was originally 3.5GiB, and it was stored on a Cruicial MX500 SSD.
 
+Version 6 removed JSON entirely, and dropped `base64`, which really shows in the performance metrics.
+
 The time was determined via `/usr/bin/time -f "%e"`
 
 | Version     | -esyk       | -dsyk       |
@@ -50,7 +55,26 @@ The time was determined via `/usr/bin/time -f "%e"`
 | 4.0.0       | 23.70s      | 30.43s      |
 | 5.0.0       | 22.48s      | 28.66s      |
 | 5.0.2       | 20.14s      | 21.26s      |
-| 5.0.9       | 19.31s      | 18.92s       |
+| 5.0.9       | 19.31s      | 18.92s      |
+| 6.0.0       | 11.74s      | 11.59s      |
+
+## Output file sizes
+
+In versions 5.x.x and below, the 3.5GiB test file was encrypted at 4.72GiB - this involved a lot of overhead for `base64` and a tiny amount with the JSON.
+
+As of version 6, JSON and `base64` has been dropped entirely. This has reduced the file size down to be *marginally* higher than our 3.5GiB test file (284 bytes higher, to be exact).
+
+## Environment Variables
+
+Dexios can read your key from an environment variable! Just set `DEXIOS_KEY` and it will automatically be detected and used. Due to using different salts and nonces for every encryption, there is no inherent risk in reusing keys - although it's not a good security practice.
+
+## Key Inputs
+
+The priority is as follows:
+
+1. First, Dexios will check for whether or not you have specified a keyfile (via `-k` or `--keyfile`)
+2. If no keyfile is detected, it will look for the `DEXIOS_KEY` environment variable
+3. If neither of the above are found, you will be shown a prompt to enter a password manually
 
 ## Usage Examples
 
@@ -70,7 +94,7 @@ To use a keyfile for encryption:
 
 `dexios -ek keyfile test.txt test.enc`
 
-To encrypt all `.mp4` files in a directory, we can use `find`. This works a LOT better with a keyfile as you will have to input the password manually each time otherwise. It will append `.enc` to the end of your files. You can remove `-maxdepth 1` to make this run recursively.
+To encrypt all `.mp4` files in a directory, we can use `find`. This works a LOT better with a keyfile/environment variable key as you will have to input the password manually each time otherwise. It will append `.enc` to the end of your files. You can remove `-maxdepth 1` to make this run recursively.
 
 `find *.mp4 -type f -maxdepth 1 -exec dexios -esyk keyfile {} {}.enc \;`
 

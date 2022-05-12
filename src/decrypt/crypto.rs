@@ -31,7 +31,7 @@ pub fn decrypt_bytes(data: DexiosFile, raw_key: Vec<u8>) -> Result<Vec<u8>> {
 
     let decrypted_bytes = cipher
         .decrypt(nonce, data.data.as_slice())
-        .expect("Unable to decrypt the data - likely a wrong password.");
+        .expect("Unable to decrypt the data - likely a wrong password or it's not a dexios-encrypted file.");
 
     Ok(decrypted_bytes)
 }

@@ -29,7 +29,6 @@ pub fn decrypt_bytes(data: DexiosFile, raw_key: Vec<u8>) -> Result<Vec<u8>> {
     let cipher_key = Key::from_slice(key.as_slice());
     let cipher = Aes256Gcm::new(cipher_key);
 
-
     let decrypted_bytes = cipher
         .decrypt(nonce, data.data.as_slice())
         .expect("Unable to decrypt the data - likely a wrong password.");

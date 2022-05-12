@@ -24,9 +24,15 @@ pub fn get_file_bytes(name: &str) -> Result<([u8; 256], [u8; 12], Vec<u8>)> {
     let mut nonce = [0u8; 12];
     let mut encrypted_data: Vec<u8> = Vec::new();
 
-    reader.read(&mut salt).context("Unable to read salt from the file")?;
-    reader.read(&mut nonce).context("Unable to read nonce from the file")?;
-    reader.read_to_end(&mut encrypted_data).context("Unable to read data from the file")?;
+    reader
+        .read(&mut salt)
+        .context("Unable to read salt from the file")?;
+    reader
+        .read(&mut nonce)
+        .context("Unable to read nonce from the file")?;
+    reader
+        .read_to_end(&mut encrypted_data)
+        .context("Unable to read data from the file")?;
 
     Ok((salt, nonce, encrypted_data))
 }

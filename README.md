@@ -5,6 +5,7 @@
   - [Building notes](#building-notes)
   - [Checksums](#checksums)
     - [Performance](#performance)
+  - [Output file sizes](#output-file-sizes)
   - [Environment Variables](#environment-variables)
   - [Key Inputs](#key-inputs)
   - [Usage Examples](#usage-examples)
@@ -44,6 +45,8 @@ Blake3 also offered some *marginal* performance benefits, but this could be due 
 
 Tests were ran on a system with a Ryzen 7 3700x and 16gb of 3000MHz RAM - running Void Linux. The file used was originally 3.5GiB, and it was stored on a Cruicial MX500 SSD.
 
+Version 6 removed JSON entirely, and dropped `base64`, which really shows in the performance metrics.
+
 The time was determined via `/usr/bin/time -f "%e"`
 
 | Version     | -esyk       | -dsyk       |
@@ -52,8 +55,14 @@ The time was determined via `/usr/bin/time -f "%e"`
 | 4.0.0       | 23.70s      | 30.43s      |
 | 5.0.0       | 22.48s      | 28.66s      |
 | 5.0.2       | 20.14s      | 21.26s      |
-| 5.0.9       | 19.31s      | 18.92s       |
+| 5.0.9       | 19.31s      | 18.92s      |
+| 6.0.0       | 11.74s      | 11.59s      |
 
+## Output file sizes
+
+In versions 5.x.x and below, the 3.5GiB test file was encrypted at 4.72GiB - this involved a lot of overhead for `base64` and a tiny amount with the JSON.
+
+As of version 6, JSON and `base64` has been dropped entirely. This has reduced the file size down to be *marginally* higher than our 3.5GiB test file (284 bytes higher, to be exact).
 
 ## Environment Variables
 

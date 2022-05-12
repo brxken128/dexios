@@ -6,7 +6,7 @@ use std::{
     io::{BufReader, Read, Write},
 };
 
-pub fn get_file_bytes(name: &str) -> Result<Vec<u8>> {
+pub fn get_keyfile_bytes(name: &str) -> Result<Vec<u8>> {
     let file = File::open(name).context("Unable to open file")?;
     let mut reader = BufReader::new(file);
     let mut data = Vec::new(); // our file bytes
@@ -14,6 +14,21 @@ pub fn get_file_bytes(name: &str) -> Result<Vec<u8>> {
         .read_to_end(&mut data)
         .context("Unable to read the file")?;
     Ok(data)
+}
+
+pub fn get_file_bytes(name: &str) -> Result<([u8; 256], [u8; 12], Vec<u8>)> {
+    let file = File::open(name).context("Unable to open file")?;
+    let mut reader = BufReader::new(file);
+
+    let mut salt = [0u8; 256];
+    let mut nonce = [0u8; 12];
+    let mut encrypted_data: Vec<u8> = Vec::new();
+
+    reader.read(&mut salt).context("Unable to read salt from the file")?;
+    reader.read(&mut nonce).context("Unable to read nonce from the file")?;
+    reader.read_to_end(&mut encrypted_data).context("Unable to read data from the file")?;
+
+    Ok((salt, nonce, encrypted_data))
 }
 
 pub fn write_bytes_to_file(name: &str, bytes: Vec<u8>) -> Result<()> {

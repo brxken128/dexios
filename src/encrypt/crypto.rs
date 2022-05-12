@@ -47,10 +47,6 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
 
     drop(data);
 
-    //let encrypted_bytes_base64 = base64::encode(encrypted_bytes);
-    //let salt_base64 = base64::encode(salt);
-    //let nonce_base64 = base64::encode(nonce);
-
     DexiosFile {
         salt: salt,
         nonce: nonce_bytes,

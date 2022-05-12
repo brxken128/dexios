@@ -3,6 +3,7 @@ use crate::encrypt::file::get_file_bytes;
 use crate::encrypt::file::overwrite_check;
 use crate::encrypt::file::write_json_to_file;
 use crate::encrypt::hashing::hash_data_blake3;
+use anyhow::Context;
 use anyhow::{Ok, Result};
 use std::process::exit;
 use std::time::Instant;
@@ -25,8 +26,13 @@ pub fn encrypt_file(
     }
 
     let raw_key = if !keyfile.is_empty() {
+        println!("Reading key from {}", keyfile);
         get_file_bytes(keyfile)?
+    } else if std::env::var("DEXIOS_KEY").is_ok() {
+        println!("Reading key from DEXIOS_KEY environment variable");
+        std::env::var("DEXIOS_KEY").context("Unable to read DEXIOS_KEY from environment variable")?.into_bytes()
     } else {
+        println!("Reading key from stdin");
         password::get_password_with_validation()?
     };
 

@@ -114,7 +114,7 @@ To encrypt all `.mp4` files in a directory, and remove the original files once e
 - [x] Hash the file before encryption and after decryption, so the user can confirm the data is *exactly* the same
 - [x] Use clap subcommands instead of arguments to make it easier to use
 - [x] Optimise reading the input/output files, so less disk usage
-  - [ ] Find a way to encrypt **large** files (larger than the system's memory) - this is just another optimisation though
+  - [ ] Find a way to encrypt **large** files (larger than the system's memory)
   - [x] Optimise memory usage in general too
 - [x] Further optimise the reading and handling of the data, especially in memory.
   - [x] Larger files in `hashing` mode will cause `dexios` to force quit, due to absurdly high memory usage. This is because the data is being copied in memory multiple times, instead of re-using the same buffer. I believe this needs a `Cursor` to resolve, and a patch will be released once I have found the best solution.
@@ -122,3 +122,8 @@ To encrypt all `.mp4` files in a directory, and remove the original files once e
 - [x] Add benchmarking switch that doesn't write to the disk
 - [ ] Manually `zeroize` sensitive data in RAM
 - [ ] Add nice error handling for AES-GCM functions
+- [ ] AES-GCM stream with [StreamLE31](https://docs.rs/aead/latest/aead/stream/struct.StreamLE31.html)
+  - [ ] Apply to all files if performance is the same
+  - [ ] Use a clap argument if performance is lowered (or automatically detect)
+    - [ ] It'll be primarily used for files larger than (system memory/2.2)
+    - [ ] Prompt something along the lines of "file larger than recommended for system memory, would you like to use stream encryption?" or "Using stream encryption because..."

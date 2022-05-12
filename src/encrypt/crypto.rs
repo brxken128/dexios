@@ -48,7 +48,7 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
     drop(data);
 
     DexiosFile {
-        salt: salt,
+        salt,
         nonce: nonce_bytes,
         data: encrypted_bytes,
     }

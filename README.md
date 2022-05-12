@@ -121,3 +121,4 @@ To encrypt all `.mp4` files in a directory, and remove the original files once e
 - [x] Refactor/split everything into semi-specialised files, to make the codebase more maintainable
 - [x] Add benchmarking switch that doesn't write to the disk
 - [ ] Manually `zeroize` sensitive data in RAM
+- [ ] Add nice error handling for AES-GCM functions

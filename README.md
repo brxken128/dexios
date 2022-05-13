@@ -89,11 +89,11 @@ The priority is as follows:
 
 To encrypt a file, and show the hash of the encrypted (output) file for verification later on:
 
-`dexios -es test.txt test.enc`
+`dexios -eH test.txt test.enc`
 
 To decrypt a file, and show the hash of the encrypted file beforehand (to compare with the hash generated above):
 
-`dexios -ds test.enc test.txt`
+`dexios -dH test.enc test.txt`
 
 To encrypt a file, and erase the original file:
 
@@ -105,11 +105,11 @@ To use a keyfile for encryption:
 
 To encrypt all `.mp4` files in a directory, we can use `find`. This works a LOT better with a keyfile/environment variable key as you will have to input the password manually each time otherwise. It will append `.enc` to the end of your files. You can remove `-maxdepth 1` to make this run recursively.
 
-`find *.mp4 -type f -maxdepth 1 -exec dexios -esyk keyfile {} {}.enc \;`
+`find *.mp4 -type f -maxdepth 1 -exec dexios -eyk keyfile {} {}.enc \;`
 
 To encrypt all `.mp4` files in a directory, and remove the original files once encrypted:
 
-`find *.mp4 -type f -maxdepth 1 -exec dexios -esy --erase -k keyfile {} {}.enc \;`
+`find *.mp4 -type f -maxdepth 1 -exec dexios -ey --erase -k keyfile {} {}.enc \;`
 
 ## To Do
 

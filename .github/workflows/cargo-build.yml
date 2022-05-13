@@ -12,24 +12,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
     - name: Audit
       run: cargo audit
   clippy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
     - name: Clippy
       run: cargo clippy --no-deps
   check:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
     - name: Check
       run: cargo check --release
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
     - name: Build
       run: cargo build --release
     - name: Strip

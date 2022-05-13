@@ -4,7 +4,7 @@ use crate::structs::DexiosFile;
 use aes_gcm::aead::generic_array::GenericArray;
 use aes_gcm::aead::{stream::EncryptorLE31, Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key};
-use anyhow::Ok;
+use anyhow::{Ok, Context};
 use anyhow::Result;
 use argon2::Argon2;
 use argon2::Params;
@@ -76,30 +76,30 @@ pub fn encrypt_bytes_stream(
     let mut stream = EncryptorLE31::from_aead(cipher, nonce);
 
     if !bench {
-        output.write_all(&salt)?;
-        output.write_all(&nonce_bytes)?;
+        output.write_all(&salt).context("Unable to write salt to the output file")?;
+        output.write_all(&nonce_bytes).context("Unable to write nonce to the output file")?;
     }
 
     let mut buffer = [0u8; 1024];
     loop {
-        let read_count = input.read(&mut buffer)?;
+        let read_count = input.read(&mut buffer).context("Unable to read from the input file")?;
         if read_count == 1024 {
             // buffer length
-            let encrypted_data = stream.encrypt_next(buffer.as_slice()).unwrap();
+            let encrypted_data = stream.encrypt_next(buffer.as_slice()).expect("Unable to encrypt block");
             if !bench {
-                output.write_all(&encrypted_data)?;
+                output.write_all(&encrypted_data).context("Unable to write to the output file")?;
             }
         } else {
             // if we read something less than 1024, and have hit the end of the file
-            let encrypted_data = stream.encrypt_last(&buffer[..read_count]).unwrap(); // only encrypt what's actually read
+            let encrypted_data = stream.encrypt_last(&buffer[..read_count]).expect("Unable to encrypt final block");
             if !bench {
-                output.write_all(&encrypted_data)?;
+                output.write_all(&encrypted_data).context("Unable to write to the output file")?;
             }
             break;
         }
     }
     if !bench {
-        output.flush()?;
+        output.flush().context("Unable to flush the output file")?;
     }
     Ok(())
 }

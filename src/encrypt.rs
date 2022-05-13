@@ -35,6 +35,10 @@ pub fn encrypt_file(
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
+    println!(
+        "Encrypting {} in normal mode (this may take a while)",
+        input
+    );
     let encrypt_start_time = Instant::now();
     let data = encrypt_bytes(file_contents, raw_key);
     let encrypt_duration = encrypt_start_time.elapsed();

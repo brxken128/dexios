@@ -61,6 +61,10 @@ pub fn decrypt_file(
 
     let raw_key = get_user_key(keyfile)?;
 
+    println!(
+        "Decrypting {} in normal mode (this may take a while)",
+        input
+    );
     let decrypt_start_time = Instant::now();
     let decrypted_bytes = decrypt_bytes(data, raw_key)?;
     let decrypt_duration = decrypt_start_time.elapsed();

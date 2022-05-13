@@ -11,7 +11,7 @@ pub fn get_user_key(keyfile: &str) -> Result<Vec<u8>> {
             .context("Unable to read DEXIOS_KEY from environment variable")?
             .into_bytes()
     } else {
-        println!("Reading key from stdin");
+        println!("Reading key from the terminal");
         let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
         input.as_bytes().to_vec()
     })

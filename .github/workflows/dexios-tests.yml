@@ -8,25 +8,31 @@ on:
 env:
   CARGO_TERM_COLOR: always
 jobs:
-  test:
+  hash-mode:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: Install Dexios
       run: cargo install --git https://github.com/brxken128/dexios
-    - name: Grab 100MB Test File
-      run: wget https://speed.hetzner.de/100MB.bin
+    - name: Generate test file
+      run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in hash mode
       run: dexios -eHyk keyfile 100MB.bin 100MB.enc 
     - name: Decrypt in hash mode
       run: dexios -dHyk keyfile 100MB.enc 100MB.bin
+  stream-mode:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Dexios
+      run: cargo install --git https://github.com/brxken128/dexios
+    - name: Generate test file
+      run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
+    - name: Generate keyfile
+      run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in stream mode
       run: dexios -esyk keyfile 100MB.bin 100MB.enc
     - name: Decrypt in stream mode
       run: dexios -dsyk keyfile 100MB.enc 100MB.bin
-    - name: Encrypt with erase
-      run: dexios -eyk keyfile --erase 100MB.bin 100MB.enc
-    - name: Remove leftover files
-      run: rm 100MB.enc

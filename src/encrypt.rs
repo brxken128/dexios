@@ -26,8 +26,6 @@ pub fn encrypt_file(
         exit(0);
     }
 
-    // add a check for "output file is larger than recommended, would you like to use stream encryption?"
-
     let raw_key = get_user_key(keyfile)?;
 
     let read_start_time = Instant::now();

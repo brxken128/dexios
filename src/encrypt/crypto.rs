@@ -91,7 +91,7 @@ pub fn encrypt_bytes_stream(
             }
         } else {
             // if we read something less than 1024, and have hit the end of the file
-            let encrypted_data = stream.encrypt_last(buffer.as_slice()).unwrap();
+            let encrypted_data = stream.encrypt_last(&buffer[..read_count]).unwrap(); // only encrypt what's actually read
             if !bench {
                 output.write_all(&encrypted_data)?;
             }

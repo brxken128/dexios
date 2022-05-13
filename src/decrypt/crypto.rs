@@ -63,29 +63,22 @@ pub fn decrypt_bytes_stream(
     let cipher = Aes256Gcm::new(cipher_key);
     let mut stream = DecryptorLE31::from_aead(cipher, nonce);
 
-    let total_blocks = (input.metadata().unwrap().len() - 264) / 1040;
     let mut buffer = [0u8; 1024 + 16]; // 16 bytes is the length of the GCM tag
-    let mut block = 0;
 
-    while block < (total_blocks - 1) {
-        // -1 to stop before the end
+    loop {
         let read_count = input.read(&mut buffer)?;
-        if read_count == (1024 + 16) {
-            // if it read the right amount
-            let decrypted_data = stream.decrypt_next(buffer.as_slice()).unwrap();
+        if read_count == (1024+16) {
+            let encrypted_data = stream.decrypt_next(buffer.as_slice()).unwrap();
             if !bench {
-                output.write_all(&decrypted_data)?;
+                output.write_all(&encrypted_data)?;
             }
-            block += 1;
-        }
-    }
-
-    let read_count = input.read(&mut buffer)?;
-    if read_count == (1024 + 16) {
-        let decrypted_data = stream.decrypt_last(buffer.as_slice()).unwrap();
-        if !bench {
-            output.write_all(&decrypted_data)?;
-            output.flush()?;
+        } else { // if we read something less than 1040, and have hit the end of the file
+            let encrypted_data = stream.decrypt_last(&buffer[..read_count]).unwrap();
+            if !bench {
+                output.write_all(&encrypted_data)?;
+                output.flush()?;
+            }
+            break;
         }
     }
 

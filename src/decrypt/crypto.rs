@@ -68,15 +68,23 @@ pub fn decrypt_bytes_stream(
     loop {
         let read_count = input.read(&mut buffer)?;
         if read_count == (1024 + 16) {
-            let encrypted_data = stream.decrypt_next(buffer.as_slice()).expect("Unable to decrypt block");
+            let encrypted_data = stream
+                .decrypt_next(buffer.as_slice())
+                .expect("Unable to decrypt block");
             if !bench {
-                output.write_all(&encrypted_data).context("Unable to write to the output file")?;
+                output
+                    .write_all(&encrypted_data)
+                    .context("Unable to write to the output file")?;
             }
         } else {
             // if we read something less than 1040, and have hit the end of the file
-            let encrypted_data = stream.decrypt_last(&buffer[..read_count]).expect("Unable to decrypt final block");
+            let encrypted_data = stream
+                .decrypt_last(&buffer[..read_count])
+                .expect("Unable to decrypt final block");
             if !bench {
-                output.write_all(&encrypted_data).context("Unable to write to the output file")?;
+                output
+                    .write_all(&encrypted_data)
+                    .context("Unable to write to the output file")?;
                 output.flush().context("Unable to flush the output file")?;
             }
             break;

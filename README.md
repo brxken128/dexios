@@ -60,7 +60,7 @@ Version 6 removed JSON entirely, and dropped `base64`, which really shows in the
 
 The time was determined via `/usr/bin/time -f "%e"`
 
-| Version     | -esyk       | -dsyk       |
+| Version     | -eHyk       | -dHyk       |
 | ----------- | ----------- | ----------- |
 | 3.2.8       | 44.37s      | 40.91s      |
 | 4.0.0       | 23.70s      | 30.43s      |

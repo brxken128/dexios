@@ -67,12 +67,13 @@ pub fn decrypt_bytes_stream(
 
     loop {
         let read_count = input.read(&mut buffer)?;
-        if read_count == (1024+16) {
+        if read_count == (1024 + 16) {
             let encrypted_data = stream.decrypt_next(buffer.as_slice()).unwrap();
             if !bench {
                 output.write_all(&encrypted_data)?;
             }
-        } else { // if we read something less than 1040, and have hit the end of the file
+        } else {
+            // if we read something less than 1040, and have hit the end of the file
             let encrypted_data = stream.decrypt_last(&buffer[..read_count]).unwrap();
             if !bench {
                 output.write_all(&encrypted_data)?;

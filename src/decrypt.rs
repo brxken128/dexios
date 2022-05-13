@@ -99,7 +99,10 @@ pub fn decrypt_file_stream(
     let mut input_file = File::open(input).context("Unable to open file")?;
     let mut output_file = File::create(output).context("Unable to open file")?;
 
-    println!("Decrypting {} in stream mode (this may take a while)", input);
+    println!(
+        "Decrypting {} in stream mode (this may take a while)",
+        input
+    );
     let decrypt_start_time = Instant::now();
     decrypt_bytes_stream(&mut input_file, &mut output_file, raw_key, bench)?;
     let decrypt_duration = decrypt_start_time.elapsed();

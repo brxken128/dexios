@@ -38,6 +38,8 @@ Streaming functions do not support hashing mode, and the argument will be ignore
 
 Files encrypted in streaming mode will need to subsequently be decrypted in streaming mode. **The streaming/non-streaming modes are not interchangable.**
 
+Streaming mode can be enabled with `-s`.
+
 ## Checksums
 
 Hashing mode uses `Blake3` for verification, due to it's speed, security and regular updates. (very ideal for this use case).
@@ -103,6 +105,10 @@ To use a keyfile for encryption:
 
 `dexios -ek keyfile test.txt test.enc`
 
+To encrypt a **large** file:
+
+`dexios -esk keyfile test.txt test.enc`
+
 To encrypt all `.mp4` files in a directory, we can use `find`. This works a LOT better with a keyfile/environment variable key as you will have to input the password manually each time otherwise. It will append `.enc` to the end of your files. You can remove `-maxdepth 1` to make this run recursively.
 
 `find *.mp4 -type f -maxdepth 1 -exec dexios -eyk keyfile {} {}.enc \;`
@@ -134,7 +140,7 @@ To encrypt all `.mp4` files in a directory, and remove the original files once e
 - [x] AES-GCM stream with [StreamLE31](https://docs.rs/aead/latest/aead/stream/struct.StreamLE31.html)
   - [x] Use a clap argument
     - [x] It'll be primarily used for files larger than (system memory/2.2)
-    - [x] Prompt something along the lines of "file larger than recommended for system memory, would you like to use stream encryption?" or "Using stream encryption because..."
 - [ ] Unify rng (maybe OsRng?)
 - [ ] Add a check for when the keyfile exists, but it has no data
 - [ ] Prevent the output file from even being created in bench+stream mode
+- [ ] Add print for "encrypting in normal mode"

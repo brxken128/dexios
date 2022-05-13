@@ -1,7 +1,11 @@
+use std::fs::File;
+
 use crate::structs::DexiosFile;
 use aes_gcm::aead::generic_array::GenericArray;
 use aes_gcm::aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key};
+use anyhow::Ok;
+use anyhow::Result;
 use argon2::Argon2;
 use argon2::Params;
 use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
@@ -13,7 +17,7 @@ fn gen_salt() -> [u8; 256] {
     salt
 }
 
-fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
+pub fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
     let mut key = [0u8; 32];
     let salt = gen_salt();
 
@@ -52,4 +56,9 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
         nonce: nonce_bytes,
         data: encrypted_bytes,
     }
+}
+
+pub fn encrypt_bytes_stream(input: &mut File, output: &mut File, raw_key: Vec<u8>) -> Result<()> {
+
+    Ok(())
 }

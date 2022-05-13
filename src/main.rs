@@ -134,7 +134,7 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
-            let result = encrypt::encrypt_file(
+            let result = encrypt::encrypt_file_stream(
                 sub_matches
                     .value_of("input")
                     .context("No input file/invalid text provided")?,

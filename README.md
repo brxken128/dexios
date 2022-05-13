@@ -28,7 +28,9 @@ For securely erasing the file, it's about as good as we will get. It doesn't fac
 
 To install Dexios, there are two main options.
 
-Firstly, you can install via `cargo` with `cargo install dexios`, or you may download the binary from the release page (make sure you mark it as executable, otherwise it won't run!).
+Firstly, you can install via `cargo` with `cargo install dexios`, or you may download the binary from the release page (make sure you mark it as executable, otherwise it won't run!). 
+
+To use `cargo` for installing, ensure you have `gcc` installed on your system.
 
 For better performance, you may install via `cargo` with the command `RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3" cargo install dexios`.
 
@@ -39,6 +41,8 @@ As mentioned in the [AES-GCM crate docs](https://docs.rs/aes-gcm/latest/aes_gcm/
 `RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3"`
 
 Change native to whichever CPU family/model you are going to be running the code on, if it's going to be ran on a different machine.
+
+`gcc` is required for building.
 
 ## Stream Encryption
 

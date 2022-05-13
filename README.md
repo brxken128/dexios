@@ -2,6 +2,7 @@
 
 - [Dexios](#dexios)
   - [What is it?](#what-is-it)
+  - [Installing notes](#installing-notes)
   - [Building notes](#building-notes)
   - [Stream Encryption](#stream-encryption)
   - [Choosing a Key](#choosing-a-key)
@@ -22,6 +23,14 @@ It uses `AES-256-GCM` encryption with `argon2id` to generate the encryption key.
 It has been tested on Void Linux, but more platforms will be tested in the future.
 
 For securely erasing the file, it's about as good as we will get. It doesn't factor in how the host OS handles things, or the filesystems. It overwrites the file with many random bytes, and then with zeros, before truncating it and "removing" it with the OS.
+
+## Installing notes
+
+To install Dexios, there are two main options.
+
+Firstly, you can install via `cargo` with `cargo install dexios`, or you may download the binary from the release page (make sure you mark it as executable, otherwise it won't run!).
+
+For better performance, you may install via `cargo` with the command `RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3" cargo install dexios`.
 
 ## Building notes
 
@@ -154,4 +163,5 @@ To encrypt all `.mp4` files in a directory, and remove the original files once e
 - [ ] Unify rng (maybe OsRng?)
 - [ ] Add a check for when the keyfile exists, but it has no data
 - [ ] Prevent the output file from even being created in bench+stream mode
-- [ ] Add print for "encrypting in normal mode"
+- [x] Add print for "encrypting in normal mode"
+- [ ] Move this huge README to a Github Wiki

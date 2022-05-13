@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install Dexios
-      run: cargo install dexios
+      run: cargo install --git https://github.com/brxken128/dexios
     - name: Grab 100MB Test File
       run: wget https://speed.hetzner.de/100MB.bin
     - name: Encrypt in hash mode

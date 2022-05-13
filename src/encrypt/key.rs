@@ -1,5 +1,5 @@
-use anyhow::{Context, Ok, Result};
 use crate::file::get_file_bytes;
+use anyhow::{Context, Ok, Result};
 
 fn get_password_with_validation() -> Result<Vec<u8>> {
     Ok(loop {

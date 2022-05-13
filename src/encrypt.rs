@@ -1,4 +1,5 @@
 use crate::encrypt::crypto::encrypt_bytes;
+use crate::encrypt::crypto::encrypt_bytes_stream;
 use crate::encrypt::key::get_user_key;
 use crate::file::get_file_bytes;
 use crate::file::overwrite_check;
@@ -9,8 +10,6 @@ use anyhow::{Ok, Result};
 use std::fs::File;
 use std::process::exit;
 use std::time::Instant;
-
-use crate::encrypt::crypto::encrypt_bytes_stream;
 
 mod crypto;
 mod key;

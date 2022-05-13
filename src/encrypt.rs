@@ -81,11 +81,12 @@ pub fn encrypt_file_stream(
 
     let raw_key = get_user_key(keyfile)?;
 
-    let mut input = File::open(input).context("Unable to open file")?;
-    let mut output = File::create(output).context("Unable to open output file")?;
-
+    let mut input_file = File::open(input).context("Unable to open file")?;
+    let mut output_file = File::create(output).context("Unable to open output file")?;
+    
+    println!("Encrypting {} in stream mode (this may take a while)", input);
     let encrypt_start_time = Instant::now();
-    encrypt_bytes_stream(&mut input, &mut output, raw_key, bench)?;
+    encrypt_bytes_stream(&mut input_file, &mut output_file, raw_key, bench)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",

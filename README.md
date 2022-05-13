@@ -127,3 +127,4 @@ To encrypt all `.mp4` files in a directory, and remove the original files once e
   - [ ] Use a clap argument if performance is lowered (or automatically detect)
     - [ ] It'll be primarily used for files larger than (system memory/2.2)
     - [ ] Prompt something along the lines of "file larger than recommended for system memory, would you like to use stream encryption?" or "Using stream encryption because..."
+- [ ] Unify rng (maybe OsRng?)

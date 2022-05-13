@@ -1,4 +1,4 @@
-name: Rust
+name: Build and Upload
 
 on:
   push:

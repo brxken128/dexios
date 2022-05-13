@@ -1,4 +1,4 @@
-name: Rust
+name: Dexios Tests
 
 on:
   pull_request:

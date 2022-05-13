@@ -73,7 +73,7 @@ pub fn encrypt_bytes_stream(
     let cipher_key = Key::from_slice(key.as_slice());
 
     let cipher = Aes256Gcm::new(cipher_key);
-    let mut stream = EncryptorLE31::from_aead(cipher, &nonce);
+    let mut stream = EncryptorLE31::from_aead(cipher, nonce);
 
     if !bench {
         output.write_all(&salt)?;

@@ -36,7 +36,7 @@ Stream encryption and decryption are ideal for **large** files - things that won
 
 Streaming functions do not support hashing mode, and the argument will be ignored if you pass it. This is due to the file likely not fitting into RAM, which is necessary to calculate the hash.
 
-Files encrypted in streaming mode will need to subsequently be decrypted in streaming mode. The streaming/non-streaming modes are not interchangable.
+Files encrypted in streaming mode will need to subsequently be decrypted in streaming mode. **The streaming/non-streaming modes are not interchangable.**
 
 ## Checksums
 

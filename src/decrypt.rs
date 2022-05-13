@@ -1,7 +1,7 @@
 use crate::decrypt::crypto::decrypt_bytes;
 use crate::decrypt::crypto::decrypt_bytes_stream;
+use crate::decrypt::key::get_user_key;
 use crate::file::get_encrypted_file_data;
-use crate::file::get_file_bytes;
 use crate::file::overwrite_check;
 use crate::file::write_bytes_to_file;
 use crate::hashing::hash_data_blake3;
@@ -14,6 +14,7 @@ use std::fs::File;
 use std::process::exit;
 use std::time::Instant;
 mod crypto;
+mod key;
 
 pub fn decrypt_file(
     input: &str,
@@ -58,19 +59,7 @@ pub fn decrypt_file(
         }
     }
 
-    let raw_key = if !keyfile.is_empty() {
-        println!("Reading key from {}", keyfile);
-        get_file_bytes(keyfile)?
-    } else if std::env::var("DEXIOS_KEY").is_ok() {
-        println!("Reading key from DEXIOS_KEY environment variable");
-        std::env::var("DEXIOS_KEY")
-            .context("Unable to read DEXIOS_KEY from environment variable")?
-            .into_bytes()
-    } else {
-        println!("Reading key from stdin");
-        let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        input.as_bytes().to_vec()
-    };
+    let raw_key = get_user_key(keyfile)?;
 
     let decrypt_start_time = Instant::now();
     let decrypted_bytes = decrypt_bytes(data, raw_key)?;
@@ -105,19 +94,7 @@ pub fn decrypt_file_stream(
         exit(0);
     }
 
-    let raw_key = if !keyfile.is_empty() {
-        println!("Reading key from {}", keyfile);
-        get_file_bytes(keyfile)?
-    } else if std::env::var("DEXIOS_KEY").is_ok() {
-        println!("Reading key from DEXIOS_KEY environment variable");
-        std::env::var("DEXIOS_KEY")
-            .context("Unable to read DEXIOS_KEY from environment variable")?
-            .into_bytes()
-    } else {
-        println!("Reading key from stdin");
-        let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        input.as_bytes().to_vec()
-    };
+    let raw_key = get_user_key(keyfile)?;
 
     let mut input_file = File::open(input).context("Unable to open file")?;
     let mut output_file = File::create(output).context("Unable to open file")?;

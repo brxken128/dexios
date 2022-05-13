@@ -16,9 +16,10 @@ jobs:
       with:
           toolchain: stable
     - name: Audit
-    - uses: actions-rs/cargo@v1
+      uses: actions-rs/cargo@v1
       with:
         command: audit
+
   clippy:
     runs-on: ubuntu-latest
     steps:
@@ -27,10 +28,11 @@ jobs:
       with:
           toolchain: stable
     - name: Clippy
-    - uses: actions-rs/cargo@v1
+      uses: actions-rs/cargo@v1
       with:
         command: clippy
         args: --no-deps
+
   check:
     runs-on: ubuntu-latest
     steps:
@@ -39,10 +41,11 @@ jobs:
       with:
           toolchain: stable
     - name: Check
-    - uses: actions-rs/cargo@v1
+      uses: actions-rs/cargo@v1
       with:
         command: check
         args: --release
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -51,7 +54,7 @@ jobs:
       with:
           toolchain: stable
     - name: Build
-    - uses: actions-rs/cargo@v1
+      uses: actions-rs/cargo@v1
       with:
         command: build
         args: --release

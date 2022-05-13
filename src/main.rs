@@ -48,11 +48,11 @@ fn main() -> Result<()> {
                         .help("securely erase the input file once complete"),
                 )
                 .arg(
-                    Arg::new("sha")
-                        .short('s')
-                        .long("sha512sum")
+                    Arg::new("hash")
+                        .short('H')
+                        .long("hash")
                         .takes_value(false)
-                        .help("return a sha3-512 hash of the encrypted file"),
+                        .help("return a blake3 hash of the encrypted file"),
                 )
                 .arg(
                     Arg::new("skip")
@@ -67,6 +67,13 @@ fn main() -> Result<()> {
                         .long("benchmark")
                         .takes_value(false)
                         .help("don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
+                )
+                .arg(
+                    Arg::new("stream")
+                        .short('s')
+                        .long("stream")
+                        .takes_value(false)
+                        .help("use stream encryption (ideal for large files)"),
                 ),
         )
         .subcommand(
@@ -102,11 +109,11 @@ fn main() -> Result<()> {
                         .help("securely erase the input file once complete"),
                 )
                 .arg(
-                    Arg::new("sha")
-                        .short('s')
-                        .long("sha512sum")
+                    Arg::new("hash")
+                        .short('H')
+                        .long("hash")
                         .takes_value(false)
-                        .help("return a sha3-512 hash of the encrypted file"),
+                        .help("return a blake3 hash of the encrypted file"),
                 )
                 .arg(
                     Arg::new("skip")
@@ -134,18 +141,33 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
-            let result = encrypt::encrypt_file_stream(
-                sub_matches
-                    .value_of("input")
-                    .context("No input file/invalid text provided")?,
-                sub_matches
-                    .value_of("output")
-                    .context("No output file/invalid text provided")?,
-                keyfile,
-                sub_matches.is_present("sha"),
-                sub_matches.is_present("skip"),
-                sub_matches.is_present("bench"),
-            );
+            let result = if sub_matches.is_present("stream") { // if we're streaming or not
+                encrypt::encrypt_file_stream(
+                    sub_matches
+                        .value_of("input")
+                        .context("No input file/invalid text provided")?,
+                    sub_matches
+                        .value_of("output")
+                        .context("No output file/invalid text provided")?,
+                    keyfile,
+                    sub_matches.is_present("skip"),
+                    sub_matches.is_present("bench"),
+                )
+            } else {
+                encrypt::encrypt_file(
+                    sub_matches
+                        .value_of("input")
+                        .context("No input file/invalid text provided")?,
+                    sub_matches
+                        .value_of("output")
+                        .context("No output file/invalid text provided")?,
+                    keyfile,
+                    sub_matches.is_present("hash"),
+                    sub_matches.is_present("skip"),
+                    sub_matches.is_present("bench"),
+                )
+            };
+
             if result.is_ok() && sub_matches.is_present("erase") {
                 erase::secure_erase(
                     sub_matches
@@ -170,7 +192,7 @@ fn main() -> Result<()> {
                     .value_of("output")
                     .context("No output file/invalid text provided")?,
                 keyfile,
-                sub_matches.is_present("sha"),
+                sub_matches.is_present("hash"),
                 sub_matches.is_present("skip"),
                 sub_matches.is_present("bench"),
             );

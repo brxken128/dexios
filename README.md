@@ -4,6 +4,7 @@
   - [What is it?](#what-is-it)
   - [Building notes](#building-notes)
   - [Stream Encryption](#stream-encryption)
+  - [Choosing a Key](#choosing-a-key)
   - [Checksums](#checksums)
     - [Performance](#performance)
   - [Output file sizes](#output-file-sizes)
@@ -39,6 +40,16 @@ Streaming functions do not support hashing mode, and the argument will be ignore
 Files encrypted in streaming mode will need to subsequently be decrypted in streaming mode. **The streaming/non-streaming modes are not interchangable.**
 
 Streaming mode can be enabled with `-s`.
+
+## Choosing a Key
+
+Use a strong password, if you're planning to use an entered one.
+
+`dd` can provide a suitable keyfile if you'd prefer a higher level of security:
+
+`dd if=/dev/urandom of=keyfile bs=1 count=4096` for a 4kb random keyfile
+
+If you lose your file's key/keyfile, there is no recovering the encrypted data. This is not unique to Dexios - it's the nature of encryption as a whole.
 
 ## Checksums
 

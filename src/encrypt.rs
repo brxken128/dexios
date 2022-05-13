@@ -1,4 +1,5 @@
 use crate::encrypt::crypto::encrypt_bytes;
+use crate::encrypt::key::get_user_key;
 use crate::file::get_file_bytes;
 use crate::file::overwrite_check;
 use crate::file::write_encrypted_data_to_file;
@@ -9,10 +10,10 @@ use std::fs::File;
 use std::process::exit;
 use std::time::Instant;
 
-use self::crypto::encrypt_bytes_stream;
+use crate::encrypt::crypto::encrypt_bytes_stream;
 
 mod crypto;
-mod password;
+mod key;
 
 pub fn encrypt_file(
     input: &str,
@@ -28,18 +29,7 @@ pub fn encrypt_file(
 
     // add a check for "output file is larger than recommended, would you like to use stream encryption?"
 
-    let raw_key = if !keyfile.is_empty() {
-        println!("Reading key from {}", keyfile);
-        get_file_bytes(keyfile)?
-    } else if std::env::var("DEXIOS_KEY").is_ok() {
-        println!("Reading key from DEXIOS_KEY environment variable");
-        std::env::var("DEXIOS_KEY")
-            .context("Unable to read DEXIOS_KEY from environment variable")?
-            .into_bytes()
-    } else {
-        println!("Reading key from stdin");
-        password::get_password_with_validation()?
-    };
+    let raw_key = get_user_key(keyfile)?;
 
     let read_start_time = Instant::now();
     let file_contents = get_file_bytes(input)?;
@@ -90,18 +80,7 @@ pub fn encrypt_file_stream(
         exit(0);
     }
 
-    let raw_key = if !keyfile.is_empty() {
-        println!("Reading key from {}", keyfile);
-        get_file_bytes(keyfile)?
-    } else if std::env::var("DEXIOS_KEY").is_ok() {
-        println!("Reading key from DEXIOS_KEY environment variable");
-        std::env::var("DEXIOS_KEY")
-            .context("Unable to read DEXIOS_KEY from environment variable")?
-            .into_bytes()
-    } else {
-        println!("Reading key from stdin");
-        password::get_password_with_validation()?
-    };
+    let raw_key = get_user_key(keyfile)?;
 
     let mut input = File::open(input).context("Unable to open file")?;
     let mut output = File::create(output).context("Unable to open output file")?;

@@ -138,3 +138,4 @@ To encrypt all `.mp4` files in a directory, and remove the original files once e
     - [ ] Prompt something along the lines of "file larger than recommended for system memory, would you like to use stream encryption?" or "Using stream encryption because..."
 - [ ] Unify rng (maybe OsRng?)
 - [ ] Add a check for when the keyfile exists, but it has no data
+- [ ] Prevent the output file from even being created in bench+stream mode

@@ -5,10 +5,9 @@ use crate::file::write_encrypted_data_to_file;
 use crate::hashing::hash_data_blake3;
 use anyhow::Context;
 use anyhow::{Ok, Result};
+use std::fs::File;
 use std::process::exit;
 use std::time::Instant;
-use std::fs::File;
- 
 
 use self::crypto::encrypt_bytes_stream;
 

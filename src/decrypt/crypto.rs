@@ -6,12 +6,12 @@ use anyhow::Result;
 
 use aes_gcm::aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key, Nonce};
+use anyhow::Context;
 use anyhow::Ok;
 use argon2::Argon2;
+use argon2::Params;
 use std::io::Read;
 use std::io::Write;
-use anyhow::Context;
-use argon2::Params;
 
 fn get_key(raw_key: Vec<u8>, salt: [u8; 256]) -> [u8; 32] {
     let mut key = [0u8; 32];
@@ -35,14 +35,19 @@ pub fn decrypt_bytes(data: DexiosFile, raw_key: Vec<u8>) -> Result<Vec<u8>> {
     let cipher_key = Key::from_slice(key.as_slice());
     let cipher = Aes256Gcm::new(cipher_key);
 
-    let decrypted_bytes = cipher
-        .decrypt(nonce, data.data.as_slice())
-        .expect("Unable to decrypt the data - likely a wrong password or it's not a dexios-encrypted file.");
+    let decrypted_bytes = cipher.decrypt(nonce, data.data.as_slice()).expect(
+        "Unable to decrypt the data - likely a wrong password or it's not a dexios-encrypted file.",
+    );
 
     Ok(decrypted_bytes)
 }
 
-pub fn decrypt_bytes_stream(input: &mut File, output: &mut File, raw_key: Vec<u8>, bench: bool) -> Result<()> {
+pub fn decrypt_bytes_stream(
+    input: &mut File,
+    output: &mut File,
+    raw_key: Vec<u8>,
+    bench: bool,
+) -> Result<()> {
     let mut salt = [0u8; 256];
     let mut nonce = [0u8; 8];
     input
@@ -57,17 +62,22 @@ pub fn decrypt_bytes_stream(input: &mut File, output: &mut File, raw_key: Vec<u8
     let cipher_key = Key::from_slice(key.as_slice());
     let cipher = Aes256Gcm::new(cipher_key);
     let mut stream = DecryptorLE31::from_aead(cipher, nonce);
-    
-    let mut buffer = [0u8; 1024+16]; // 16 bytes is the length of the GCM tag
+
+    let mut buffer = [0u8; 1024 + 16]; // 16 bytes is the length of the GCM tag
 
     loop {
         let read_count = input.read(&mut buffer)?;
         if read_count == 1024 {
             let encrypted_data = stream.decrypt_next(buffer.as_slice()).unwrap();
-            if !bench { output.write_all(&encrypted_data)?; }
-        } else { // if we read something less than 1024, and have hit the end of the file
+            if !bench {
+                output.write_all(&encrypted_data)?;
+            }
+        } else {
+            // if we read something less than 1024, and have hit the end of the file
             let encrypted_data = stream.decrypt_last(buffer.as_slice()).unwrap();
-            if !bench { output.write_all(&encrypted_data)?; }
+            if !bench {
+                output.write_all(&encrypted_data)?;
+            }
             break;
         }
     }

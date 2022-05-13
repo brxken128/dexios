@@ -148,7 +148,8 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
-            let result = if sub_matches.is_present("stream") { // if we're streaming or not
+            let result = if sub_matches.is_present("stream") {
+                // if we're streaming or not
                 encrypt::encrypt_file_stream(
                     sub_matches
                         .value_of("input")

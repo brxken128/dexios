@@ -9,10 +9,7 @@ use crate::hashing::hash_data_blake3;
 use crate::prompt::get_answer;
 use crate::structs::DexiosFile;
 use anyhow::{Context, Ok, Result};
-use std::{
-    fs::File,
-};
-
+use std::fs::File;
 
 use std::process::exit;
 use std::time::Instant;

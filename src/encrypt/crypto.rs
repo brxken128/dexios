@@ -2,15 +2,15 @@ use std::fs::File;
 
 use crate::structs::DexiosFile;
 use aes_gcm::aead::generic_array::GenericArray;
-use aes_gcm::aead::{Aead, NewAead, stream::EncryptorLE31};
+use aes_gcm::aead::{stream::EncryptorLE31, Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key};
 use anyhow::Ok;
 use anyhow::Result;
 use argon2::Argon2;
 use argon2::Params;
-use std::io::Write;
-use std::io::Read;
 use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
+use std::io::Read;
+use std::io::Write;
 
 fn gen_salt() -> [u8; 256] {
     let mut salt: [u8; 256] = [0; 256];
@@ -60,7 +60,12 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
     }
 }
 
-pub fn encrypt_bytes_stream(input: &mut File, output: &mut File, raw_key: Vec<u8>, bench: bool) -> Result<()> {
+pub fn encrypt_bytes_stream(
+    input: &mut File,
+    output: &mut File,
+    raw_key: Vec<u8>,
+    bench: bool,
+) -> Result<()> {
     let nonce_bytes = rand::thread_rng().gen::<[u8; 8]>(); // only 8 because the last 4 the 32-bit AEAD counters
     let nonce = GenericArray::from_slice(nonce_bytes.as_slice());
 
@@ -81,10 +86,15 @@ pub fn encrypt_bytes_stream(input: &mut File, output: &mut File, raw_key: Vec<u8
         let read_count = input.read(&mut buffer)?;
         if read_count == 1024 {
             let encrypted_data = stream.encrypt_next(buffer.as_slice()).unwrap();
-            if !bench { output.write_all(&encrypted_data)?; }
-        } else { // if we read something less than 1024, and have hit the end of the file
+            if !bench {
+                output.write_all(&encrypted_data)?;
+            }
+        } else {
+            // if we read something less than 1024, and have hit the end of the file
             let encrypted_data = stream.encrypt_last(buffer.as_slice()).unwrap();
-            if !bench { output.write_all(&encrypted_data)?; }
+            if !bench {
+                output.write_all(&encrypted_data)?;
+            }
             break;
         }
     }

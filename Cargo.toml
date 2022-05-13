@@ -1,8 +1,12 @@
 [package]
 name = "dexios"
 version = "6.3.4"
+authors = ["brxken128"]
+readme = "README.md"
 edition = "2021"
 description = "Secure command-line encryption of files."
+keywords = ["encryption", "utility", "file", "command-line", "secure"]
+rust-version = "1.57"
 repository = "https://github.com/brxken128/dexios"
 license = "BSD-2-Clause"
 

@@ -3,6 +3,7 @@
 - [Dexios](#dexios)
   - [What is it?](#what-is-it)
   - [Building notes](#building-notes)
+  - [Stream Encryption](#stream-encryption)
   - [Checksums](#checksums)
     - [Performance](#performance)
   - [Output file sizes](#output-file-sizes)
@@ -28,6 +29,14 @@ As mentioned in the [AES-GCM crate docs](https://docs.rs/aes-gcm/latest/aes_gcm/
 `RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3"`
 
 Change native to whichever CPU family/model you are going to be running the code on, if it's going to be ran on a different machine.
+
+## Stream Encryption
+
+Stream encryption and decryption are ideal for **large** files - things that won't fit into RAM on their own.
+
+Streaming functions do not support hashing mode, and the argument will be ignored if you pass it. This is due to the file likely not fitting into RAM, which is necessary to calculate the hash.
+
+Files encrypted in streaming mode will need to subsequently be decrypted in streaming mode. The streaming/non-streaming modes are not interchangable.
 
 ## Checksums
 

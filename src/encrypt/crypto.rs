@@ -66,7 +66,7 @@ pub fn encrypt_bytes_stream(
     raw_key: Vec<u8>,
     bench: bool,
 ) -> Result<()> {
-    let nonce_bytes = rand::thread_rng().gen::<[u8; 8]>(); // only 8 because the last 4 the 32-bit AEAD counters
+    let nonce_bytes = rand::thread_rng().gen::<[u8; 8]>(); // only 8 because the last 4 are for the 32-bit AEAD counters
     let nonce = GenericArray::from_slice(nonce_bytes.as_slice());
 
     let (key, salt) = gen_key(raw_key);

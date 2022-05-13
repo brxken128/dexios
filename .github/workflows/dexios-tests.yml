@@ -16,15 +16,17 @@ jobs:
       run: cargo install --git https://github.com/brxken128/dexios
     - name: Grab 100MB Test File
       run: wget https://speed.hetzner.de/100MB.bin
+    - name: Generate keyfile
+      run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in hash mode
-      run: dexios -eHy 100MB.bin 100MB.enc 
+      run: dexios -eHyk keyfile 100MB.bin 100MB.enc 
     - name: Decrypt in hash mode
-      run: dexios -dHy 100MB.enc 100MB.bin
+      run: dexios -dHyk keyfile 100MB.enc 100MB.bin
     - name: Encrypt in stream mode
-      run: dexios -esy 100MB.bin 100MB.enc
+      run: dexios -esyk keyfile 100MB.bin 100MB.enc
     - name: Decrypt in stream mode
-      run: dexios -dsy 100MB.enc 100MB.bin
+      run: dexios -dsyk keyfile 100MB.enc 100MB.bin
     - name: Encrypt with erase
-      run: dexios -ey --erase 100MB.bin 100MB.enc
+      run: dexios -eyk keyfile --erase 100MB.bin 100MB.enc
     - name: Remove leftover files
       run: rm 100MB.enc

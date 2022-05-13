@@ -86,7 +86,6 @@ pub fn decrypt_bytes_stream(
             output.flush()?;
         }
     }
-    
 
     Ok(())
 }

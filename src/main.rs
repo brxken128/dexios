@@ -128,6 +128,13 @@ fn main() -> Result<()> {
                         .long("benchmark")
                         .takes_value(false)
                         .help("don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
+                )
+                .arg(
+                    Arg::new("stream")
+                        .short('s')
+                        .long("stream")
+                        .takes_value(false)
+                        .help("use stream decryption (ideal for large files)"),
                 ),
         )
         .get_matches();
@@ -184,18 +191,33 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
-            let result = decrypt::decrypt_file(
-                sub_matches
-                    .value_of("input")
-                    .context("No input file/invalid text provided")?,
-                sub_matches
-                    .value_of("output")
-                    .context("No output file/invalid text provided")?,
-                keyfile,
-                sub_matches.is_present("hash"),
-                sub_matches.is_present("skip"),
-                sub_matches.is_present("bench"),
-            );
+            let result = if sub_matches.is_present("stream") {
+                decrypt::decrypt_file_stream(
+                    sub_matches
+                        .value_of("input")
+                        .context("No input file/invalid text provided")?,
+                    sub_matches
+                        .value_of("output")
+                        .context("No output file/invalid text provided")?,
+                    keyfile,
+                    sub_matches.is_present("skip"),
+                    sub_matches.is_present("bench"),
+                )
+            } else {
+                decrypt::decrypt_file(
+                    sub_matches
+                        .value_of("input")
+                        .context("No input file/invalid text provided")?,
+                    sub_matches
+                        .value_of("output")
+                        .context("No output file/invalid text provided")?,
+                    keyfile,
+                    sub_matches.is_present("hash"),
+                    sub_matches.is_present("skip"),
+                    sub_matches.is_present("bench"),
+                )
+            };
+
             if result.is_ok() && sub_matches.is_present("erase") {
                 erase::secure_erase(
                     sub_matches

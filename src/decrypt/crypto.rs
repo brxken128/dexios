@@ -67,9 +67,11 @@ pub fn decrypt_bytes_stream(
     let mut buffer = [0u8; 1024 + 16]; // 16 bytes is the length of the GCM tag
     let mut block = 0;
 
-    while block < (total_blocks-1) { // -1 to stop before the end
+    while block < (total_blocks - 1) {
+        // -1 to stop before the end
         let read_count = input.read(&mut buffer)?;
-        if read_count == (1024+16) { // if it read the right amount
+        if read_count == (1024 + 16) {
+            // if it read the right amount
             let decrypted_data = stream.decrypt_next(buffer.as_slice()).unwrap();
             if !bench {
                 output.write_all(&decrypted_data)?;
@@ -79,7 +81,7 @@ pub fn decrypt_bytes_stream(
     }
 
     let read_count = input.read(&mut buffer)?;
-    if read_count == (1024+16) {
+    if read_count == (1024 + 16) {
         let decrypted_data = stream.decrypt_last(buffer.as_slice()).unwrap();
         if !bench {
             output.write_all(&decrypted_data)?;

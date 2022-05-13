@@ -83,7 +83,8 @@ pub fn encrypt_bytes_stream(
     let mut buffer = [0u8; 1024];
     loop {
         let read_count = input.read(&mut buffer)?;
-        if read_count == 1024 { // buffer length
+        if read_count == 1024 {
+            // buffer length
             let encrypted_data = stream.encrypt_next(buffer.as_slice()).unwrap();
             if !bench {
                 output.write_all(&encrypted_data)?;

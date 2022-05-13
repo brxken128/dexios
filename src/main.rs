@@ -39,7 +39,7 @@ fn main() -> Result<()> {
                         .long("keyfile")
                         .value_name("file")
                         .takes_value(true)
-                        .help("use a keyfile for encryption"),
+                        .help("use a keyfile instead of a password"),
                 )
                 .arg(
                     Arg::new("erase")
@@ -100,7 +100,7 @@ fn main() -> Result<()> {
                         .long("keyfile")
                         .value_name("file")
                         .takes_value(true)
-                        .help("use a keyfile for encryption"),
+                        .help("use a keyfile instead of a password"),
                 )
                 .arg(
                     Arg::new("erase")

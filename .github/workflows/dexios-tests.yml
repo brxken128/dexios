@@ -1,6 +1,8 @@
 name: Dexios Tests
 
 on:
+  workflow_dispatch:
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 env:

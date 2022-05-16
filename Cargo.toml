@@ -1,6 +1,6 @@
 [package]
 name = "dexios"
-version = "6.3.6"
+version = "6.3.7"
 authors = ["brxken128"]
 readme = "README.md"
 edition = "2021"
@@ -14,7 +14,7 @@ license = "BSD-2-Clause"
 
 [dependencies]
 aes-gcm = { version = "0.9.4", features = ["stream"] }
-clap = "3.1.18"
+clap = { version = "3.1.18", features = ["cargo"] }
 anyhow = "1.0.57"
 rand = "0.8.5"
 rpassword = "6.0.1"

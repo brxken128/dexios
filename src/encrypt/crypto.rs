@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use crate::structs::DexiosFile;
+use crate::global::DexiosFile;
 use aes_gcm::aead::generic_array::GenericArray;
 use aes_gcm::aead::{stream::EncryptorLE31, Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key};

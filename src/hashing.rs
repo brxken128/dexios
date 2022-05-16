@@ -1,6 +1,6 @@
 use anyhow::{Ok, Result};
 
-use crate::structs::DexiosFile;
+use crate::global::DexiosFile;
 
 pub fn hash_data_blake3(data: &DexiosFile) -> Result<String> {
     let mut hasher = blake3::Hasher::new();

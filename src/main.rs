@@ -7,7 +7,7 @@ mod erase;
 mod file;
 mod hashing;
 mod prompt;
-mod structs;
+mod global;
 
 fn main() -> Result<()> {
     let matches = Command::new("dexios")

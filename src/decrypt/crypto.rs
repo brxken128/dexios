@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use crate::structs::DexiosFile;
+use crate::global::DexiosFile;
 use aes_gcm::aead::stream::DecryptorLE31;
 use anyhow::Result;
 

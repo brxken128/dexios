@@ -7,7 +7,6 @@ Versions 6 and will receive security updates, and they will be backported depend
 | Version | Supported          |
 | ------- | ------------------ |
 | 6.x.x   | ✅                 |
-| 5.1.x   | :x:                |
 | 5.0.x   | :x:                |
 | 4.0.x   | :x:                |
 | < 4.0   | :x:                |

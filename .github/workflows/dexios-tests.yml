@@ -8,7 +8,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
 jobs:
-  hash-mode:
+  memory-mode:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -19,9 +19,9 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in hash mode
-      run: dexios -eHyk keyfile 100MB.bin 100MB.enc 
+      run: dexios -emHyk keyfile 100MB.bin 100MB.enc 
     - name: Decrypt in hash mode
-      run: dexios -dHyk keyfile 100MB.enc 100MB.bin
+      run: dexios -dmHyk keyfile 100MB.enc 100MB.bin
   stream-mode:
     runs-on: ubuntu-latest
     steps:
@@ -33,6 +33,6 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in stream mode
-      run: dexios -esyk keyfile 100MB.bin 100MB.enc
+      run: dexios -esHyk keyfile 100MB.bin 100MB.enc
     - name: Decrypt in stream mode
-      run: dexios -dsyk keyfile 100MB.enc 100MB.bin
+      run: dexios -dsHyk keyfile 100MB.enc 100MB.bin

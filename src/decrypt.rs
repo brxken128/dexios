@@ -6,8 +6,8 @@ use crate::file::overwrite_check;
 use crate::file::write_bytes_to_file;
 use crate::hashing::hash_data_blake3;
 
-use crate::prompt::get_answer;
 use crate::global::DexiosFile;
+use crate::prompt::get_answer;
 use anyhow::{Context, Ok, Result};
 use std::fs::File;
 

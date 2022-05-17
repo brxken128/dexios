@@ -1,5 +1,5 @@
-use crate::prompt::get_answer;
 use crate::global::DexiosFile;
+use crate::prompt::get_answer;
 use anyhow::{Context, Ok, Result};
 use std::fs::metadata;
 use std::{

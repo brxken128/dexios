@@ -87,7 +87,7 @@ pub fn encrypt_bytes_stream(
 
     let mut hasher = blake3::Hasher::new();
     let mut buffer = [0u8; BLOCK_SIZE];
-    
+
     loop {
         let read_count = input
             .read(&mut buffer)
@@ -126,10 +126,7 @@ pub fn encrypt_bytes_stream(
     }
     if hash {
         let hash = hasher.finalize().to_hex().to_string();
-        println!(
-            "Hash of the encrypted file is: {}",
-            hash,
-        );
+        println!("Hash of the encrypted file is: {}", hash,);
     }
     Ok(())
 }

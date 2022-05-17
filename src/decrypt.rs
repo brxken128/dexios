@@ -99,8 +99,6 @@ pub fn decrypt_file_stream(
         exit(0);
     }
 
-    let raw_key = get_user_key(keyfile)?;
-
     let mut input_file = File::open(input).context("Unable to open file")?;
     let file_size = input_file.metadata().unwrap().len();
 
@@ -112,6 +110,8 @@ pub fn decrypt_file_stream(
     }
 
     let mut output_file = File::create(output).context("Unable to open file")?;
+
+    let raw_key = get_user_key(keyfile)?;
 
     println!(
         "Decrypting {} in stream mode (this may take a while)",

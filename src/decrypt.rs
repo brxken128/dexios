@@ -91,6 +91,7 @@ pub fn decrypt_file_stream(
     input: &str,
     output: &str,
     keyfile: &str,
+    hash_mode: bool,
     skip: bool,
     bench: bool,
 ) -> Result<()> {
@@ -108,7 +109,7 @@ pub fn decrypt_file_stream(
         input
     );
     let decrypt_start_time = Instant::now();
-    decrypt_bytes_stream(&mut input_file, &mut output_file, raw_key, bench)?;
+    decrypt_bytes_stream(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! [took {:.2}s]",

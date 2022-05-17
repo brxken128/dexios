@@ -74,6 +74,7 @@ pub fn encrypt_file_stream(
     input: &str,
     output: &str,
     keyfile: &str,
+    hash_mode: bool,
     skip: bool,
     bench: bool,
 ) -> Result<()> {
@@ -91,7 +92,7 @@ pub fn encrypt_file_stream(
         input
     );
     let encrypt_start_time = Instant::now();
-    encrypt_bytes_stream(&mut input_file, &mut output_file, raw_key, bench)?;
+    encrypt_bytes_stream(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",

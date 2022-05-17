@@ -47,6 +47,7 @@ pub fn decrypt_bytes_stream(
     output: &mut File,
     raw_key: Vec<u8>,
     bench: bool,
+    hash: bool,
 ) -> Result<()> {
     let mut salt = [0u8; 256];
     let mut nonce = [0u8; 8];
@@ -63,32 +64,47 @@ pub fn decrypt_bytes_stream(
     let cipher = Aes256Gcm::new(cipher_key);
     let mut stream = DecryptorLE31::from_aead(cipher, nonce);
 
+    let mut hasher = blake3::Hasher::new();
     let mut buffer = [0u8; BLOCK_SIZE + 16]; // 16 bytes is the length of the GCM tag
 
     loop {
         let read_count = input.read(&mut buffer)?;
         if read_count == (BLOCK_SIZE + 16) {
-            let encrypted_data = stream
+            let decrypted_data = stream
                 .decrypt_next(buffer.as_slice())
                 .expect("Unable to decrypt block");
             if !bench {
                 output
-                    .write_all(&encrypted_data)
+                    .write_all(&decrypted_data)
                     .context("Unable to write to the output file")?;
+            }
+            if hash {
+                hasher.update(&buffer);
             }
         } else {
             // if we read something less than 1040, and have hit the end of the file
-            let encrypted_data = stream
+            let decrypted_data = stream
                 .decrypt_last(&buffer[..read_count])
                 .expect("Unable to decrypt final block");
             if !bench {
                 output
-                    .write_all(&encrypted_data)
+                    .write_all(&decrypted_data)
                     .context("Unable to write to the output file")?;
                 output.flush().context("Unable to flush the output file")?;
             }
+            if hash {
+                hasher.update(&buffer[..read_count]);
+            }
             break;
         }
+    }
+
+    if hash {
+        let hash = hasher.finalize().to_hex().to_string();
+        println!(
+            "Hash of the encrypted file is: {}",
+            hash,
+        );
     }
 
     Ok(())

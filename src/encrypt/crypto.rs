@@ -65,6 +65,7 @@ pub fn encrypt_bytes_stream(
     output: &mut File,
     raw_key: Vec<u8>,
     bench: bool,
+    hash: bool,
 ) -> Result<()> {
     let nonce_bytes = rand::thread_rng().gen::<[u8; 8]>(); // only 8 because the last 4 are for the 32-bit AEAD counters
     let nonce = GenericArray::from_slice(nonce_bytes.as_slice());
@@ -84,7 +85,9 @@ pub fn encrypt_bytes_stream(
             .context("Unable to write nonce to the output file")?;
     }
 
+    let mut hasher = blake3::Hasher::new();
     let mut buffer = [0u8; BLOCK_SIZE];
+    
     loop {
         let read_count = input
             .read(&mut buffer)
@@ -99,6 +102,9 @@ pub fn encrypt_bytes_stream(
                     .write_all(&encrypted_data)
                     .context("Unable to write to the output file")?;
             }
+            if hash {
+                hasher.update(&encrypted_data);
+            }
         } else {
             // if we read something less than BLOCK_SIZE, and have hit the end of the file
             let encrypted_data = stream
@@ -109,11 +115,21 @@ pub fn encrypt_bytes_stream(
                     .write_all(&encrypted_data)
                     .context("Unable to write to the output file")?;
             }
+            if hash {
+                hasher.update(&encrypted_data);
+            }
             break;
         }
     }
     if !bench {
         output.flush().context("Unable to flush the output file")?;
+    }
+    if hash {
+        let hash = hasher.finalize().to_hex().to_string();
+        println!(
+            "Hash of the encrypted file is: {}",
+            hash,
+        );
     }
     Ok(())
 }

@@ -184,6 +184,7 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     keyfile,
+                    sub_matches.is_present("hash"),
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
                 )
@@ -227,6 +228,7 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     keyfile,
+                    sub_matches.is_present("hash"),
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
                 )

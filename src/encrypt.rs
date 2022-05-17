@@ -89,7 +89,7 @@ pub fn encrypt_file_stream(
     let file_size = input_file.metadata().unwrap().len();
 
     if file_size < BLOCK_SIZE.try_into().unwrap() {
-        println!("Input file size is less than the stream block size - redirecting to memory mode.");
+        println!("Input file size is less than the stream block size - redirecting to memory mode");
         return encrypt_file(input, output, keyfile, hash_mode, skip, bench)
     }
 

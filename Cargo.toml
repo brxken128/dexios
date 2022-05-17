@@ -1,6 +1,6 @@
 [package]
 name = "dexios"
-version = "6.4.7"
+version = "6.4.8"
 authors = ["brxken128"]
 readme = "README.md"
 edition = "2021"

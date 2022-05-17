@@ -104,7 +104,8 @@ pub fn decrypt_file_stream(
     let mut input_file = File::open(input).context("Unable to open file")?;
     let file_size = input_file.metadata().unwrap().len();
 
-    if file_size < ((BLOCK_SIZE + 16) - 264).try_into().unwrap() { // +16 to equal a full encrypted block, -264 to account for salt and nonce
+    // +16 for GCM tag, -264 to account for salt and nonce, +4 for the extra 4 bytes of nonce stored with each block
+    if file_size < ((BLOCK_SIZE + 16 + 4) - 264).try_into().unwrap() {
         println!("Encrypted data size is less than the stream block size - redirecting to memory mode");
         return decrypt_file(input, output, keyfile, hash_mode, skip, bench)
     }

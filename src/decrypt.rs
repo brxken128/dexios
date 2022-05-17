@@ -5,7 +5,7 @@ use crate::file::get_encrypted_file_data;
 use crate::file::overwrite_check;
 use crate::file::write_bytes_to_file;
 use crate::hashing::hash_data_blake3;
-
+use crate::global::BLOCK_SIZE;
 use crate::global::DexiosFile;
 use crate::prompt::get_answer;
 use anyhow::{Context, Ok, Result};
@@ -102,6 +102,13 @@ pub fn decrypt_file_stream(
     let raw_key = get_user_key(keyfile)?;
 
     let mut input_file = File::open(input).context("Unable to open file")?;
+    let file_size = input_file.metadata().unwrap().len();
+
+    if file_size < BLOCK_SIZE.try_into().unwrap() {
+        println!("Input file size is less than the stream block size - redirecting to memory mode.");
+        return decrypt_file(input, output, keyfile, hash_mode, skip, bench)
+    }
+
     let mut output_file = File::create(output).context("Unable to open file")?;
 
     println!(

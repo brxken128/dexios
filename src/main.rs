@@ -73,7 +73,14 @@ fn main() -> Result<()> {
                         .short('s')
                         .long("stream")
                         .takes_value(false)
-                        .help("use stream encryption (ideal for large files)"),
+                        .help("use stream encryption - default"),
+                )
+                .arg(
+                    Arg::new("legacy")
+                        .short('l')
+                        .long("legacy")
+                        .takes_value(false)
+                        .help("load the file into memory before encrypting"),
                 ),
         )
         .subcommand(
@@ -134,7 +141,14 @@ fn main() -> Result<()> {
                         .short('s')
                         .long("stream")
                         .takes_value(false)
-                        .help("use stream decryption (ideal for large files)"),
+                        .help("use stream decryption - default"),
+                )
+                .arg(
+                    Arg::new("legacy")
+                        .short('l')
+                        .long("legacy")
+                        .takes_value(false)
+                        .help("load the file into memory before encrypting"),
                 ),
         )
         .get_matches();
@@ -148,20 +162,7 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
-            let result = if sub_matches.is_present("stream") {
-                // if we're streaming or not
-                encrypt::encrypt_file_stream(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
-                    keyfile,
-                    sub_matches.is_present("skip"),
-                    sub_matches.is_present("bench"),
-                )
-            } else {
+            let result = if sub_matches.is_present("legacy") {
                 encrypt::encrypt_file(
                     sub_matches
                         .value_of("input")
@@ -171,6 +172,18 @@ fn main() -> Result<()> {
                         .context("No output file/invalid text provided")?,
                     keyfile,
                     sub_matches.is_present("hash"),
+                    sub_matches.is_present("skip"),
+                    sub_matches.is_present("bench"),
+                )
+            } else {
+                encrypt::encrypt_file_stream(
+                    sub_matches
+                        .value_of("input")
+                        .context("No input file/invalid text provided")?,
+                    sub_matches
+                        .value_of("output")
+                        .context("No output file/invalid text provided")?,
+                    keyfile,
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
                 )
@@ -192,19 +205,7 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
-            let result = if sub_matches.is_present("stream") {
-                decrypt::decrypt_file_stream(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
-                    keyfile,
-                    sub_matches.is_present("skip"),
-                    sub_matches.is_present("bench"),
-                )
-            } else {
+            let result = if sub_matches.is_present("legacy") {
                 decrypt::decrypt_file(
                     sub_matches
                         .value_of("input")
@@ -214,6 +215,18 @@ fn main() -> Result<()> {
                         .context("No output file/invalid text provided")?,
                     keyfile,
                     sub_matches.is_present("hash"),
+                    sub_matches.is_present("skip"),
+                    sub_matches.is_present("bench"),
+                )
+            } else {
+                decrypt::decrypt_file_stream(
+                    sub_matches
+                        .value_of("input")
+                        .context("No input file/invalid text provided")?,
+                    sub_matches
+                        .value_of("output")
+                        .context("No output file/invalid text provided")?,
+                    keyfile,
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
                 )

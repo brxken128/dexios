@@ -62,7 +62,7 @@ pub fn decrypt_file(
     let raw_key = get_user_key(keyfile)?;
 
     println!(
-        "Decrypting {} in legacy mode (this may take a while)",
+        "Decrypting {} in memory mode (this may take a while)",
         input
     );
     let decrypt_start_time = Instant::now();

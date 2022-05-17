@@ -34,7 +34,7 @@ pub fn encrypt_file(
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
     println!(
-        "Encrypting {} in legacy mode (this may take a while)",
+        "Encrypting {} in memory mode (this may take a while)",
         input
     );
     let encrypt_start_time = Instant::now();

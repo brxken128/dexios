@@ -76,9 +76,9 @@ fn main() -> Result<()> {
                         .help("use stream encryption - default"),
                 )
                 .arg(
-                    Arg::new("legacy")
-                        .short('l')
-                        .long("legacy")
+                    Arg::new("memory")
+                        .short('m')
+                        .long("memory")
                         .takes_value(false)
                         .help("load the file into memory before encrypting"),
                 ),
@@ -144,9 +144,9 @@ fn main() -> Result<()> {
                         .help("use stream decryption - default"),
                 )
                 .arg(
-                    Arg::new("legacy")
-                        .short('l')
-                        .long("legacy")
+                    Arg::new("memory")
+                        .short('m')
+                        .long("memory")
                         .takes_value(false)
                         .help("load the file into memory before encrypting"),
                 ),
@@ -162,7 +162,7 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
-            let result = if sub_matches.is_present("legacy") {
+            let result = if sub_matches.is_present("memory") {
                 encrypt::encrypt_file(
                     sub_matches
                         .value_of("input")
@@ -206,7 +206,7 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
-            let result = if sub_matches.is_present("legacy") {
+            let result = if sub_matches.is_present("memory") {
                 decrypt::decrypt_file(
                     sub_matches
                         .value_of("input")

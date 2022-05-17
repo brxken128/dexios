@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use crate::global::DexiosFile;
+use crate::global::{DexiosFile, BLOCK_SIZE};
 use aes_gcm::aead::generic_array::GenericArray;
 use aes_gcm::aead::{stream::EncryptorLE31, Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key};
@@ -84,12 +84,12 @@ pub fn encrypt_bytes_stream(
             .context("Unable to write nonce to the output file")?;
     }
 
-    let mut buffer = [0u8; 1024];
+    let mut buffer = [0u8; BLOCK_SIZE];
     loop {
         let read_count = input
             .read(&mut buffer)
             .context("Unable to read from the input file")?;
-        if read_count == 1024 {
+        if read_count == BLOCK_SIZE {
             // buffer length
             let encrypted_data = stream
                 .encrypt_next(buffer.as_slice())
@@ -100,7 +100,7 @@ pub fn encrypt_bytes_stream(
                     .context("Unable to write to the output file")?;
             }
         } else {
-            // if we read something less than 1024, and have hit the end of the file
+            // if we read something less than BLOCK_SIZE, and have hit the end of the file
             let encrypted_data = stream
                 .encrypt_last(&buffer[..read_count])
                 .expect("Unable to encrypt final block");

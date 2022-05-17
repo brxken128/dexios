@@ -4,4 +4,4 @@ pub struct DexiosFile {
     pub data: Vec<u8>,
 }
 
-pub const BLOCK_SIZE: i32 = 1048576; // 1024*1024
+pub const BLOCK_SIZE: usize = 1048576; // 1024*1024

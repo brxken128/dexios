@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use crate::global::DexiosFile;
+use crate::global::{DexiosFile, BLOCK_SIZE};
 use aes_gcm::aead::stream::DecryptorLE31;
 use anyhow::Result;
 
@@ -63,11 +63,11 @@ pub fn decrypt_bytes_stream(
     let cipher = Aes256Gcm::new(cipher_key);
     let mut stream = DecryptorLE31::from_aead(cipher, nonce);
 
-    let mut buffer = [0u8; 1024 + 16]; // 16 bytes is the length of the GCM tag
+    let mut buffer = [0u8; BLOCK_SIZE + 16]; // 16 bytes is the length of the GCM tag
 
     loop {
         let read_count = input.read(&mut buffer)?;
-        if read_count == (1024 + 16) {
+        if read_count == (BLOCK_SIZE + 16) {
             let encrypted_data = stream
                 .decrypt_next(buffer.as_slice())
                 .expect("Unable to decrypt block");

@@ -1,6 +1,6 @@
 use crate::decrypt::crypto::decrypt_bytes;
 use crate::decrypt::crypto::decrypt_bytes_stream;
-use crate::decrypt::key::get_user_key;
+use crate::key::get_user_key_decrypt;
 use crate::file::get_encrypted_file_data;
 use crate::file::overwrite_check;
 use crate::file::write_bytes_to_file;
@@ -14,7 +14,6 @@ use std::fs::File;
 use std::process::exit;
 use std::time::Instant;
 mod crypto;
-mod key;
 
 pub fn decrypt_file(
     input: &str,
@@ -59,7 +58,7 @@ pub fn decrypt_file(
         }
     }
 
-    let raw_key = get_user_key(keyfile)?;
+    let raw_key = get_user_key_decrypt(keyfile)?;
 
     println!(
         "Decrypting {} in memory mode (this may take a while)",
@@ -111,7 +110,7 @@ pub fn decrypt_file_stream(
 
     let mut output_file = File::create(output).context("Unable to open file")?;
 
-    let raw_key = get_user_key(keyfile)?;
+    let raw_key = get_user_key_decrypt(keyfile)?;
 
     println!(
         "Decrypting {} in stream mode (this may take a while)",

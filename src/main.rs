@@ -8,6 +8,7 @@ mod file;
 mod global;
 mod hashing;
 mod prompt;
+mod key;
 
 fn main() -> Result<()> {
     let matches = Command::new("dexios")

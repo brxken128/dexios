@@ -1,6 +1,6 @@
 use crate::encrypt::crypto::encrypt_bytes;
 use crate::encrypt::crypto::encrypt_bytes_stream;
-use crate::encrypt::key::get_user_key;
+use crate::key::get_user_key_encrypt;
 use crate::file::get_file_bytes;
 use crate::file::overwrite_check;
 use crate::file::write_encrypted_data_to_file;
@@ -13,7 +13,6 @@ use std::process::exit;
 use std::time::Instant;
 
 mod crypto;
-mod key;
 
 pub fn encrypt_file(
     input: &str,
@@ -27,7 +26,7 @@ pub fn encrypt_file(
         exit(0);
     }
 
-    let raw_key = get_user_key(keyfile)?;
+    let raw_key = get_user_key_encrypt(keyfile)?;
 
     let read_start_time = Instant::now();
     let file_contents = get_file_bytes(input)?;
@@ -93,7 +92,7 @@ pub fn encrypt_file_stream(
 
     let mut output_file = File::create(output).context("Unable to open output file")?;
 
-    let raw_key = get_user_key(keyfile)?;
+    let raw_key = get_user_key_encrypt(keyfile)?;
 
     println!(
         "Encrypting {} in stream mode (this may take a while)",

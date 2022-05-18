@@ -20,7 +20,7 @@ fn gen_salt() -> [u8; 256] {
     salt
 }
 
-fn gen_key(raw_key: Secret<Vec<u8>>) -> (Secret<[u8; 32]>, [u8; 256]) {
+fn gen_key(raw_key: Secret<Vec<u8>>) -> Result<(Secret<[u8; 32]>, [u8; 256])> {
     let mut key = [0u8; 32];
     let salt = gen_salt();
 
@@ -29,11 +29,14 @@ fn gen_key(raw_key: Secret<Vec<u8>>) -> (Secret<[u8; 32]>, [u8; 256]) {
         argon2::Version::V0x13,
         Params::default(),
     );
-    argon2
-        .hash_password_into(raw_key.expose_secret(), &salt, &mut key)
-        .expect("Unable to hash your password with argon2id");
+    let result = argon2
+        .hash_password_into(raw_key.expose_secret(), &salt, &mut key);
 
-    (Secret::new(key), salt)
+    if result.is_err() {
+        return Err(anyhow!("Error while hashing your password with argon2id"));
+    }
+
+    Ok((Secret::new(key), salt))
 }
 
 fn gen_nonce() -> [u8; 12] {
@@ -44,7 +47,7 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> Result<DexiosFi
     let nonce_bytes = gen_nonce();
     let nonce = GenericArray::from_slice(nonce_bytes.as_slice());
 
-    let (key, salt) = gen_key(raw_key);
+    let (key, salt) = gen_key(raw_key)?;
     let cipher_key = Key::from_slice(key.expose_secret());
 
     let cipher = Aes256Gcm::new(cipher_key);
@@ -74,7 +77,7 @@ pub fn encrypt_bytes_stream(
     let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
     let nonce = GenericArray::from_slice(&nonce_bytes); // truncate to correct size
 
-    let (key, salt) = gen_key(raw_key);
+    let (key, salt) = gen_key(raw_key)?;
     let cipher_key = Key::from_slice(key.expose_secret());
 
     let cipher = Aes256Gcm::new(cipher_key);

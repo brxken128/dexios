@@ -83,7 +83,7 @@ pub fn encrypt_file_stream(
     }
 
     let mut input_file = File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
-    let file_size = input_file.metadata().with_context(|| format!("Unable to open input file: {}", input))?.len();
+    let file_size = input_file.metadata().with_context(|| format!("Unable to get input file metadata: {}", input))?.len();
 
     if file_size <= BLOCK_SIZE.try_into().unwrap() {
         println!("Input file size is less than the stream block size - redirecting to memory mode");

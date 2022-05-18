@@ -15,7 +15,7 @@ use std::io::Read;
 use anyhow::anyhow;
 use std::io::Write;
 
-fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; 256]) -> Secret<[u8; 32]> {
+fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; 256]) -> Result<Secret<[u8; 32]>> {
     let mut key = [0u8; 32];
 
     let argon2 = Argon2::new(
@@ -23,15 +23,18 @@ fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; 256]) -> Secret<[u8; 32]> {
         argon2::Version::V0x13,
         Params::default(),
     );
-    argon2
-        .hash_password_into(raw_key.expose_secret(), &salt, &mut key)
-        .expect("Unable to hash your password with argon2id");
+    let result = argon2
+        .hash_password_into(raw_key.expose_secret(), &salt, &mut key);
 
-    Secret::new(key)
+    if result.is_err() {
+        return Err(anyhow!("Error while hashing your password with argon2id"));
+    }
+
+    Ok(Secret::new(key))
 }
 
 pub fn decrypt_bytes(data: DexiosFile, raw_key: Secret<Vec<u8>>) -> Result<Vec<u8>> {
-    let key = get_key(raw_key, data.salt);
+    let key = get_key(raw_key, data.salt)?;
 
     let nonce = Nonce::from_slice(data.nonce.as_slice());
     let cipher_key = Key::from_slice(key.expose_secret());
@@ -62,7 +65,7 @@ pub fn decrypt_bytes_stream(
         .read(&mut nonce)
         .context("Unable to read nonce from the file")?;
 
-    let key = get_key(raw_key, salt);
+    let key = get_key(raw_key, salt)?;
     let nonce = Nonce::from_slice(nonce.as_slice());
     let cipher_key = Key::from_slice(key.expose_secret());
     let cipher = Aes256Gcm::new(cipher_key);

@@ -8,8 +8,8 @@ use std::{
 
 pub fn secure_erase(input: &str) -> Result<()> {
     let start_time = Instant::now();
-    let file = File::open(input).context("Unable to open the input file")?;
-    let data = file.metadata()?;
+    let file = File::open(input).with_context(|| format!("Unable to open file: {}", input))?;
+    let data = file.metadata().with_context(|| format!("Unable to get input file metadata: {}", input))?;
 
     for _ in 0..32 {
         // overwrite the data 16 times with random bytes
@@ -19,30 +19,30 @@ pub fn secure_erase(input: &str) -> Result<()> {
             random_bytes.push(rand::thread_rng().gen::<[u8; 1]>()[0]);
         }
 
-        let file = File::create(input).context("Unable to open the input file")?;
+        let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
         let mut writer = BufWriter::new(file);
         writer
             .write_all(&random_bytes)
-            .context("Unable to overwrite with random bytes")?;
-        writer.flush().context("Unable to flush random bytes")?;
+            .with_context(|| format!("Unable to overwrite with random bytes: {}", input))?;
+        writer.flush().with_context(|| format!("Unable to flush file: {}", input))?;
     }
 
     // overwrite with zeros for good measure
     let zeros: Vec<u8> = vec![0; data.len().try_into().unwrap()];
-    let file = File::create(input).context("Unable to open the input file")?;
+    let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
     let mut writer = BufWriter::new(file);
     writer
         .write_all(&zeros)
-        .context("Unable to overwrite with zeros")?;
-    writer.flush().context("Unable to flush zeros")?;
+        .with_context(|| format!("Unable to overwrite with zeros: {}", input))?;
+    writer.flush().with_context(|| format!("Unable to flush file: {}", input))?;
     drop(writer);
 
     // keep this at the end
     let file = File::create(input).context("Unable to open the input file")?;
-    file.set_len(0).context("Unable to truncate file")?;
+    file.set_len(0).with_context(|| format!("Unable to truncate file: {}", input))?;
     drop(file);
 
-    std::fs::remove_file(input).context("Unable to remove file")?;
+    std::fs::remove_file(input).with_context(|| format!("Unable to remove file: {}", input))?;
 
     let duration = start_time.elapsed();
 

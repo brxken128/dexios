@@ -10,7 +10,7 @@ use std::{
 pub fn get_file_bytes(name: &str) -> Result<Vec<u8>> {
     let file = File::open(name).with_context(|| format!("Unable to open file: {}", name))?;
     let mut reader = BufReader::new(file);
-    let mut data = Vec::new(); // our file bytes
+    let mut data = Vec::new();
     reader
         .read_to_end(&mut data)
         .with_context(|| format!("Unable to read file: {}", name))?;

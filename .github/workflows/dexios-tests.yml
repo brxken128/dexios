@@ -38,6 +38,8 @@ jobs:
       with:
         name: dexios
         path: target/release/dexios
+    - name: Make Binary Executable
+      run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
     - name: Generate test file
       run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
     - name: Generate keyfile
@@ -56,6 +58,8 @@ jobs:
       with:
         name: dexios
         path: target/release/dexios
+    - name: Make Binary Executable
+      run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
     - name: Generate test file
       run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
     - name: Generate keyfile
@@ -74,6 +78,8 @@ jobs:
       with:
         name: dexios
         path: target/release/dexios
+    - name: Make Binary Executable
+      run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
     - name: Generate test file
       run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
     - name: Generate keyfile
@@ -92,6 +98,8 @@ jobs:
       with:
         name: dexios
         path: target/release/dexios
+    - name: Make Binary Executable
+      run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
     - name: Generate test file
       run: dd if=/dev/urandom of=1GB.bin bs=1M count=1000
     - name: Generate keyfile
@@ -109,6 +117,8 @@ jobs:
       with:
         name: dexios
         path: target/release/dexios
+    - name: Make Binary Executable
+      run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
     - name: Generate test file
       run: dd if=/dev/urandom of=1KB.bin bs=1 count=1024
     - name: Generate keyfile

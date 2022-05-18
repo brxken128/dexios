@@ -74,7 +74,8 @@ fn main() -> Result<()> {
                         .short('s')
                         .long("stream")
                         .takes_value(false)
-                        .help("use stream encryption - default"),
+                        .help("use stream encryption - default")
+                        .conflicts_with("memory"),
                 )
                 .arg(
                     Arg::new("memory")
@@ -142,7 +143,8 @@ fn main() -> Result<()> {
                         .short('s')
                         .long("stream")
                         .takes_value(false)
-                        .help("use stream decryption - default"),
+                        .help("use stream decryption - default")
+                        .conflicts_with("memory"),
                 )
                 .arg(
                     Arg::new("memory")

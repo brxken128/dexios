@@ -91,6 +91,9 @@ pub fn encrypt_bytes_stream(
     }
 
     let mut hasher = blake3::Hasher::new();
+    hasher.update(&salt);
+    hasher.update(&nonce_bytes);
+
     let mut buffer = [0u8; BLOCK_SIZE];
 
     loop {

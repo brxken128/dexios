@@ -43,9 +43,9 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in hash mode
-      run: /home/runner/work/dexios/dexios/target/release/dexios -emHyk keyfile 100MB.bin 100MB.enc 
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -emHyk keyfile 100MB.bin 100MB.enc 
     - name: Decrypt in hash mode
-      run: /home/runner/work/dexios/dexios/target/release/dexios -dmHyk keyfile 100MB.enc 100MB.bin
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dmHyk keyfile 100MB.enc 100MB.bin
   stream-mode:
     needs: build
     runs-on: ubuntu-latest
@@ -61,9 +61,9 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in stream mode
-      run: /home/runner/work/dexios/dexios/target/release/dexios -esHyk keyfile 100MB.bin 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -esHyk keyfile 100MB.bin 100MB.enc
     - name: Decrypt in stream mode
-      run: /home/runner/work/dexios/dexios/target/release/dexios -dsHyk keyfile 100MB.enc 100MB.bin
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dsHyk keyfile 100MB.enc 100MB.bin
   erase:
     needs: build
     runs-on: ubuntu-latest
@@ -79,9 +79,9 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt and erase afterwards
-      run: /home/runner/work/dexios/dexios/target/release/dexios -eHy --erase -k keyfile 100MB.bin 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHy --erase -k keyfile 100MB.bin 100MB.enc
     - name: Decrypt and erase afterwards
-      run: /home/runner/work/dexios/dexios/target/release/dexios -dHy --erase -k keyfile 100MB.enc 100MB.bin
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHy --erase -k keyfile 100MB.enc 100MB.bin
   large-file:
     needs: build
     runs-on: ubuntu-latest
@@ -97,9 +97,9 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt 1GB file
-      run: /home/runner/work/dexios/dexios/target/release/dexios -eHyk keyfile 1GB.bin 1GB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 1GB.bin 1GB.enc
     - name: Decrypt 1GB file
-      run: /home/runner/work/dexios/dexios/target/release/dexios -dHyk keyfile 1GB.enc 1GB.bin
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 1GB.enc 1GB.bin
   small-file:
     needs: build
     runs-on: ubuntu-latest
@@ -114,6 +114,6 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt 1KB file
-      run: /home/runner/work/dexios/dexios/target/release/dexios -eHyk keyfile 1KB.bin 1KB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 1KB.bin 1KB.enc
     - name: Decrypt 1KB file
-      run: /home/runner/work/dexios/dexios/target/release/dexios -dHyk keyfile 1KB.enc 1KB.bin
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 1KB.enc 1KB.bin

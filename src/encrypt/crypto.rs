@@ -9,9 +9,9 @@ use anyhow::{Context, Ok};
 use argon2::Argon2;
 use argon2::Params;
 use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
+use secrecy::{ExposeSecret, Secret};
 use std::io::Read;
 use std::io::Write;
-use secrecy::{Secret, ExposeSecret};
 
 fn gen_salt() -> [u8; 256] {
     let mut salt: [u8; 256] = [0; 256];

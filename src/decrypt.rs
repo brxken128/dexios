@@ -1,12 +1,12 @@
 use crate::decrypt::crypto::decrypt_bytes;
 use crate::decrypt::crypto::decrypt_bytes_stream;
-use crate::key::get_user_key_decrypt;
 use crate::file::get_encrypted_file_data;
 use crate::file::overwrite_check;
 use crate::file::write_bytes_to_file;
-use crate::hashing::hash_data_blake3;
-use crate::global::BLOCK_SIZE;
 use crate::global::DexiosFile;
+use crate::global::BLOCK_SIZE;
+use crate::hashing::hash_data_blake3;
+use crate::key::get_user_key_decrypt;
 use crate::prompt::get_answer;
 use anyhow::{Context, Ok, Result};
 use std::fs::File;
@@ -104,8 +104,10 @@ pub fn decrypt_file_stream(
     // +16 for GCM tag, +264 to account for salt and nonce, +4 for the extra 4 bytes of nonce stored with each block
     // +20 to ensure there's another gcm tag and 4 bytes of nonce
     if file_size <= (BLOCK_SIZE + 16 + 4 + 264).try_into().unwrap() {
-        println!("Encrypted data size is less than the stream block size - redirecting to memory mode");
-        return decrypt_file(input, output, keyfile, hash_mode, skip, bench)
+        println!(
+            "Encrypted data size is less than the stream block size - redirecting to memory mode"
+        );
+        return decrypt_file(input, output, keyfile, hash_mode, skip, bench);
     }
 
     let mut output_file = File::create(output).context("Unable to open file")?;

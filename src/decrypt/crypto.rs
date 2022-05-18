@@ -10,8 +10,8 @@ use anyhow::Context;
 use anyhow::Ok;
 use argon2::Argon2;
 use argon2::Params;
+use secrecy::{ExposeSecret, Secret};
 use std::io::Read;
-use secrecy::{Secret, ExposeSecret};
 use std::io::Write;
 
 fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; 256]) -> Secret<[u8; 32]> {

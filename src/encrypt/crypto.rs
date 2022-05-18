@@ -16,7 +16,6 @@ use secrecy::{Secret, ExposeSecret};
 fn gen_salt() -> [u8; 256] {
     let mut salt: [u8; 256] = [0; 256];
     StdRng::from_entropy().fill_bytes(&mut salt);
-
     salt
 }
 
@@ -37,7 +36,7 @@ fn gen_key(raw_key: Secret<Vec<u8>>) -> (Secret<[u8; 32]>, [u8; 256]) {
 }
 
 fn gen_nonce() -> [u8; 12] {
-    rand::thread_rng().gen::<[u8; 12]>()
+    StdRng::from_entropy().gen::<[u8; 12]>()
 }
 
 pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> DexiosFile {
@@ -68,8 +67,8 @@ pub fn encrypt_bytes_stream(
     bench: bool,
     hash: bool,
 ) -> Result<()> {
-    let nonce_bytes = rand::thread_rng().gen::<[u8; 8]>(); // only 8 because the last 4 are for the 32-bit AEAD counters
-    let nonce = GenericArray::from_slice(nonce_bytes.as_slice());
+    let nonce_bytes = gen_nonce();
+    let nonce = GenericArray::from_slice(&nonce_bytes[..8]); // truncate to correct size
 
     let (key, salt) = gen_key(raw_key);
     let cipher_key = Key::from_slice(key.expose_secret());

@@ -4,6 +4,7 @@ use crate::global::{DexiosFile, BLOCK_SIZE};
 use aes_gcm::aead::generic_array::GenericArray;
 use aes_gcm::aead::{stream::EncryptorLE31, Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key};
+use anyhow::anyhow;
 use anyhow::Result;
 use anyhow::{Context, Ok};
 use argon2::Argon2;
@@ -12,7 +13,6 @@ use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
 use secrecy::{ExposeSecret, Secret};
 use std::io::Read;
 use std::io::Write;
-use anyhow::anyhow;
 
 fn gen_salt() -> [u8; 256] {
     let mut salt: [u8; 256] = [0; 256];
@@ -29,8 +29,7 @@ fn gen_key(raw_key: Secret<Vec<u8>>) -> Result<(Secret<[u8; 32]>, [u8; 256])> {
         argon2::Version::V0x13,
         Params::default(),
     );
-    let result = argon2
-        .hash_password_into(raw_key.expose_secret(), &salt, &mut key);
+    let result = argon2.hash_password_into(raw_key.expose_secret(), &salt, &mut key);
 
     if result.is_err() {
         return Err(anyhow!("Error while hashing your password with argon2id"));
@@ -51,8 +50,7 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> Result<DexiosFi
     let cipher_key = Key::from_slice(key.expose_secret());
 
     let cipher = Aes256Gcm::new(cipher_key);
-    let encrypted_bytes = cipher
-        .encrypt(nonce, data.as_slice());
+    let encrypted_bytes = cipher.encrypt(nonce, data.as_slice());
 
     if encrypted_bytes.is_err() {
         return Err(anyhow!("Unable to encrypt the data"));
@@ -101,9 +99,8 @@ pub fn encrypt_bytes_stream(
             .context("Unable to read from the input file")?;
         if read_count == BLOCK_SIZE {
             // buffer length
-            let encrypted_data = stream
-                .encrypt_next(buffer.as_slice());
-            
+            let encrypted_data = stream.encrypt_next(buffer.as_slice());
+
             if encrypted_data.is_err() {
                 return Err(anyhow!("Unable to encrypt the data"));
             }
@@ -119,13 +116,12 @@ pub fn encrypt_bytes_stream(
             }
         } else {
             // if we read something less than BLOCK_SIZE, and have hit the end of the file
-            let encrypted_data = stream
-                .encrypt_last(&buffer[..read_count]);
-            
+            let encrypted_data = stream.encrypt_last(&buffer[..read_count]);
+
             if encrypted_data.is_err() {
                 return Err(anyhow!("Unable to encrypt the final block of data"));
             }
-            
+
             let encrypted_data = encrypted_data.unwrap();
             if !bench {
                 output

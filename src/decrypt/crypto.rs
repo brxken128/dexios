@@ -6,13 +6,13 @@ use anyhow::Result;
 
 use aes_gcm::aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key, Nonce};
+use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Ok;
 use argon2::Argon2;
 use argon2::Params;
 use secrecy::{ExposeSecret, Secret};
 use std::io::Read;
-use anyhow::anyhow;
 use std::io::Write;
 
 fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; 256]) -> Result<Secret<[u8; 32]>> {
@@ -23,8 +23,7 @@ fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; 256]) -> Result<Secret<[u8; 32]>
         argon2::Version::V0x13,
         Params::default(),
     );
-    let result = argon2
-        .hash_password_into(raw_key.expose_secret(), &salt, &mut key);
+    let result = argon2.hash_password_into(raw_key.expose_secret(), &salt, &mut key);
 
     if result.is_err() {
         return Err(anyhow!("Error while hashing your password with argon2id"));
@@ -43,7 +42,9 @@ pub fn decrypt_bytes(data: DexiosFile, raw_key: Secret<Vec<u8>>) -> Result<Vec<u
     let decrypted_bytes = cipher.decrypt(nonce, data.data.as_slice());
 
     if decrypted_bytes.is_err() {
-        return Err(anyhow!("Unable to decrypt the data. Maybe it's a wrong key, or it's not an encrypted file."));
+        return Err(anyhow!(
+            "Unable to decrypt the data. Maybe it's a wrong key, or it's not an encrypted file."
+        ));
     }
 
     Ok(decrypted_bytes.unwrap())
@@ -77,9 +78,8 @@ pub fn decrypt_bytes_stream(
     loop {
         let read_count = input.read(&mut buffer)?;
         if read_count == (BLOCK_SIZE + 16) {
-            let decrypted_data = stream
-                .decrypt_next(buffer.as_slice());
-            
+            let decrypted_data = stream.decrypt_next(buffer.as_slice());
+
             if decrypted_data.is_err() {
                 return Err(anyhow!("Unable to decrypt the data"));
             }
@@ -95,13 +95,12 @@ pub fn decrypt_bytes_stream(
             }
         } else {
             // if we read something less than 1040, and have hit the end of the file
-            let decrypted_data = stream
-                .decrypt_last(&buffer[..read_count]);
-            
+            let decrypted_data = stream.decrypt_last(&buffer[..read_count]);
+
             if decrypted_data.is_err() {
                 return Err(anyhow!("Unable to decrypt the final block of data"));
             }
-    
+
             let decrypted_data = decrypted_data.unwrap();
             if !bench {
                 output

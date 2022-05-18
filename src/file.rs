@@ -36,27 +36,42 @@ pub fn get_encrypted_file_data(name: &str) -> Result<([u8; 256], [u8; 12], Vec<u
         .with_context(|| format!("Unable to read data from file: {}", name))?;
 
     if salt_size != 256 || nonce_size != 12 {
-        return Err(anyhow::anyhow!("Input file ({}) does not contain the correct amount of information", name))
+        return Err(anyhow::anyhow!(
+            "Input file ({}) does not contain the correct amount of information",
+            name
+        ));
     }
 
     Ok((salt, nonce, encrypted_data))
 }
 
 pub fn write_encrypted_data_to_file(name: &str, data: &DexiosFile) -> Result<()> {
-    let mut writer = File::create(name).with_context(|| format!("Unable to create output file: {}", name))?;
-    writer.write_all(&data.salt).with_context(|| format!("Unable to write salt to output file: {}", name))?;
-    writer.write_all(&data.nonce).with_context(|| format!("Unable to write nonce to output file: {}", name))?;
-    writer.write_all(&data.data).with_context(|| format!("Unable to write data to output file: {}", name))?;
-    writer.flush().with_context(|| format!("Unable to flush the output file: {}", name))?;
+    let mut writer =
+        File::create(name).with_context(|| format!("Unable to create output file: {}", name))?;
+    writer
+        .write_all(&data.salt)
+        .with_context(|| format!("Unable to write salt to output file: {}", name))?;
+    writer
+        .write_all(&data.nonce)
+        .with_context(|| format!("Unable to write nonce to output file: {}", name))?;
+    writer
+        .write_all(&data.data)
+        .with_context(|| format!("Unable to write data to output file: {}", name))?;
+    writer
+        .flush()
+        .with_context(|| format!("Unable to flush the output file: {}", name))?;
     Ok(())
 }
 
 pub fn write_bytes_to_file(name: &str, bytes: Vec<u8>) -> Result<()> {
-    let mut writer = File::create(name).with_context(|| format!("Unable to create output file: {}", name))?;
+    let mut writer =
+        File::create(name).with_context(|| format!("Unable to create output file: {}", name))?;
     writer
         .write_all(&bytes)
         .with_context(|| format!("Unable to write to the output file: {}", name))?;
-    writer.flush().with_context(|| format!("Unable to flush the output file: {}", name))?;
+    writer
+        .flush()
+        .with_context(|| format!("Unable to flush the output file: {}", name))?;
     Ok(())
 }
 

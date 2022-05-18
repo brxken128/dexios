@@ -11,9 +11,10 @@ use anyhow::Ok;
 use argon2::Argon2;
 use argon2::Params;
 use std::io::Read;
+use secrecy::{Secret, ExposeSecret};
 use std::io::Write;
 
-fn get_key(raw_key: Vec<u8>, salt: [u8; 256]) -> [u8; 32] {
+fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; 256]) -> [u8; 32] {
     let mut key = [0u8; 32];
 
     let argon2 = Argon2::new(
@@ -22,13 +23,13 @@ fn get_key(raw_key: Vec<u8>, salt: [u8; 256]) -> [u8; 32] {
         Params::default(),
     );
     argon2
-        .hash_password_into(&raw_key, &salt, &mut key)
+        .hash_password_into(raw_key.expose_secret(), &salt, &mut key)
         .expect("Unable to hash your password with argon2id");
 
     key
 }
 
-pub fn decrypt_bytes(data: DexiosFile, raw_key: Vec<u8>) -> Result<Vec<u8>> {
+pub fn decrypt_bytes(data: DexiosFile, raw_key: Secret<Vec<u8>>) -> Result<Vec<u8>> {
     let key = get_key(raw_key, data.salt);
 
     let nonce = Nonce::from_slice(data.nonce.as_slice());
@@ -45,7 +46,7 @@ pub fn decrypt_bytes(data: DexiosFile, raw_key: Vec<u8>) -> Result<Vec<u8>> {
 pub fn decrypt_bytes_stream(
     input: &mut File,
     output: &mut File,
-    raw_key: Vec<u8>,
+    raw_key: Secret<Vec<u8>>,
     bench: bool,
     hash: bool,
 ) -> Result<()> {

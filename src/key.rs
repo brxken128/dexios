@@ -1,5 +1,7 @@
 use crate::file::get_file_bytes;
 use anyhow::{Context, Ok, Result};
+use secrecy::SecretVec;
+use secrecy::Secret;
 
 fn get_password_with_validation() -> Result<Vec<u8>> {
     Ok(loop {
@@ -17,33 +19,33 @@ fn get_password_with_validation() -> Result<Vec<u8>> {
     })
 }
 
-pub fn get_user_key_encrypt(keyfile: &str) -> Result<Vec<u8>> {
+pub fn get_user_key_encrypt(keyfile: &str) -> Result<Secret<Vec<u8>>> {
     Ok(if !keyfile.is_empty() {
         println!("Reading key from {}", keyfile);
-        get_file_bytes(keyfile)?
+        SecretVec::new(get_file_bytes(keyfile)?)
     } else if std::env::var("DEXIOS_KEY").is_ok() {
         println!("Reading key from DEXIOS_KEY environment variable");
-        std::env::var("DEXIOS_KEY")
+        SecretVec::new(std::env::var("DEXIOS_KEY")
             .context("Unable to read DEXIOS_KEY from environment variable")?
-            .into_bytes()
+            .into_bytes())
     } else {
         println!("Reading key from the terminal");
-        get_password_with_validation()?
+        SecretVec::new(get_password_with_validation()?)
     })
 }
 
-pub fn get_user_key_decrypt(keyfile: &str) -> Result<Vec<u8>> {
+pub fn get_user_key_decrypt(keyfile: &str) -> Result<Secret<Vec<u8>>> {
     Ok(if !keyfile.is_empty() {
         println!("Reading key from {}", keyfile);
-        get_file_bytes(keyfile)?
+        SecretVec::new(get_file_bytes(keyfile)?)
     } else if std::env::var("DEXIOS_KEY").is_ok() {
         println!("Reading key from DEXIOS_KEY environment variable");
-        std::env::var("DEXIOS_KEY")
+        SecretVec::new(std::env::var("DEXIOS_KEY")
             .context("Unable to read DEXIOS_KEY from environment variable")?
-            .into_bytes()
+            .into_bytes())
     } else {
         println!("Reading key from the terminal");
         let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        input.as_bytes().to_vec()
+        SecretVec::new(input.as_bytes().to_vec())
     })
 }

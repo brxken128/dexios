@@ -11,6 +11,7 @@ use argon2::Params;
 use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
 use std::io::Read;
 use std::io::Write;
+use secrecy::{Secret, ExposeSecret};
 
 fn gen_salt() -> [u8; 256] {
     let mut salt: [u8; 256] = [0; 256];
@@ -19,7 +20,7 @@ fn gen_salt() -> [u8; 256] {
     salt
 }
 
-fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
+fn gen_key(raw_key: Secret<Vec<u8>>) -> ([u8; 32], [u8; 256]) {
     let mut key = [0u8; 32];
     let salt = gen_salt();
 
@@ -29,7 +30,7 @@ fn gen_key(raw_key: Vec<u8>) -> ([u8; 32], [u8; 256]) {
         Params::default(),
     );
     argon2
-        .hash_password_into(&raw_key, &salt, &mut key)
+        .hash_password_into(raw_key.expose_secret(), &salt, &mut key)
         .expect("Unable to hash your password with argon2id");
 
     (key, salt)
@@ -39,7 +40,7 @@ fn gen_nonce() -> [u8; 12] {
     rand::thread_rng().gen::<[u8; 12]>()
 }
 
-pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
+pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> DexiosFile {
     let nonce_bytes = gen_nonce();
     let nonce = GenericArray::from_slice(nonce_bytes.as_slice());
 
@@ -63,7 +64,7 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Vec<u8>) -> DexiosFile {
 pub fn encrypt_bytes_stream(
     input: &mut File,
     output: &mut File,
-    raw_key: Vec<u8>,
+    raw_key: Secret<Vec<u8>>,
     bench: bool,
     hash: bool,
 ) -> Result<()> {

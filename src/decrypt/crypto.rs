@@ -120,7 +120,7 @@ pub fn decrypt_bytes_stream(
 
     if hash {
         let hash = hasher.finalize().to_hex().to_string();
-        println!("Hash of the encrypted file is: {}", hash,);
+        println!("Hash of the encrypted file is: {}. If this doesn't match with the original, something very bad has happened.", hash);
     }
 
     Ok(())

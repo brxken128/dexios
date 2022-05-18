@@ -5,7 +5,7 @@ use aes_gcm::aead::stream::DecryptorLE31;
 use anyhow::Result;
 
 use aes_gcm::aead::{Aead, NewAead};
-use aes_gcm::{Aes256Gcm, Key, Nonce};
+use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Ok;

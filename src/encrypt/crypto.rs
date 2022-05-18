@@ -1,9 +1,8 @@
 use std::fs::File;
 
 use crate::global::{DexiosFile, BLOCK_SIZE, SALT_LEN};
-use aes_gcm::aead::generic_array::GenericArray;
 use aes_gcm::aead::{stream::EncryptorLE31, Aead, NewAead};
-use aes_gcm::{Aes256Gcm, Key};
+use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
 use anyhow::Result;
 use anyhow::{Context, Ok};
@@ -44,7 +43,7 @@ fn gen_nonce() -> [u8; 12] {
 
 pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> Result<DexiosFile> {
     let nonce_bytes = gen_nonce();
-    let nonce = GenericArray::from_slice(nonce_bytes.as_slice());
+    let nonce = Nonce::from_slice(nonce_bytes.as_slice());
 
     let (key, salt) = gen_key(raw_key)?;
     let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
@@ -77,7 +76,7 @@ pub fn encrypt_bytes_stream(
     hash: bool,
 ) -> Result<()> {
     let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
-    let nonce = GenericArray::from_slice(&nonce_bytes); // truncate to correct size
+    let nonce = Nonce::from_slice(&nonce_bytes); // truncate to correct size
 
     let (key, salt) = gen_key(raw_key)?;
     let cipher = Aes256Gcm::new_from_slice(key.expose_secret());

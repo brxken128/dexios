@@ -30,7 +30,7 @@ fn gen_key(raw_key: Secret<Vec<u8>>) -> Result<(Secret<[u8; 32]>, [u8; SALT_LEN]
     );
     let result = argon2.hash_password_into(raw_key.expose_secret(), &salt, &mut key);
     drop(raw_key);
-    
+
     if result.is_err() {
         return Err(anyhow!("Error while hashing your password with argon2id"));
     }
@@ -51,7 +51,7 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> Result<DexiosFi
     drop(key);
 
     if cipher.is_err() {
-        return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+        return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
     }
 
     let cipher = cipher.unwrap();
@@ -86,7 +86,7 @@ pub fn encrypt_bytes_stream(
     drop(key);
 
     if cipher.is_err() {
-        return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+        return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
     }
 
     let cipher = cipher.unwrap();

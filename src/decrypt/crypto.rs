@@ -41,7 +41,7 @@ pub fn decrypt_bytes(data: DexiosFile, raw_key: Secret<Vec<u8>>) -> Result<Vec<u
     drop(key);
 
     if cipher.is_err() {
-        return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+        return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
     }
 
     let cipher = cipher.unwrap();
@@ -79,7 +79,7 @@ pub fn decrypt_bytes_stream(
     drop(key);
 
     if cipher.is_err() {
-        return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+        return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
     }
 
     let cipher = cipher.unwrap();

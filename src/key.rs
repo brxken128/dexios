@@ -12,7 +12,7 @@ fn get_password_with_validation() -> Result<Vec<u8>> {
 
         if input == input_validation && !input.is_empty() {
             input_validation.zeroize();
-            break input.into_bytes()
+            break input.into_bytes();
         } else if input.is_empty() {
             println!("Password cannot be empty, please try again.");
         } else {

@@ -47,7 +47,8 @@ pub fn secure_erase(input: &str) -> Result<()> {
     let mut file = File::create(input).context("Unable to open the input file")?;
     file.set_len(0)
         .with_context(|| format!("Unable to truncate file: {}", input))?;
-    file.flush().with_context(|| format!("Unable to flush file: {}", input))?;
+    file.flush()
+        .with_context(|| format!("Unable to flush file: {}", input))?;
     drop(file);
 
     std::fs::remove_file(input).with_context(|| format!("Unable to remove file: {}", input))?;

@@ -98,7 +98,8 @@ pub fn decrypt_file_stream(
         exit(0);
     }
 
-    let mut input_file = File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
+    let mut input_file =
+        File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
     let file_size = input_file
         .metadata()
         .with_context(|| format!("Unable to get input file metadata: {}", input))?
@@ -113,7 +114,8 @@ pub fn decrypt_file_stream(
         return decrypt_file(input, output, keyfile, hash_mode, skip, bench);
     }
 
-    let mut output_file = File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
+    let mut output_file =
+        File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 
     let raw_key = get_user_key_decrypt(keyfile)?;
 

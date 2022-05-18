@@ -93,7 +93,7 @@ pub fn decrypt_bytes_stream(
             let decrypted_data = stream.decrypt_next(buffer.as_slice());
 
             if decrypted_data.is_err() {
-                return Err(anyhow!("Unable to decrypt the data"));
+                return Err(anyhow!("Unable to decrypt the data. Maybe it's a wrong key, or it's not an encrypted file."));
             }
 
             let decrypted_data = decrypted_data.unwrap();
@@ -110,7 +110,7 @@ pub fn decrypt_bytes_stream(
             let decrypted_data = stream.decrypt_last(&buffer[..read_count]);
 
             if decrypted_data.is_err() {
-                return Err(anyhow!("Unable to decrypt the final block of data"));
+                return Err(anyhow!("Unable to decrypt the final block of data. Maybe it's a wrong key, or it's not an encrypted file."));
             }
 
             let decrypted_data = decrypted_data.unwrap();

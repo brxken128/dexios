@@ -2,15 +2,17 @@ use crate::file::get_file_bytes;
 use anyhow::{Context, Ok, Result};
 use secrecy::Secret;
 use secrecy::SecretVec;
+use secrecy::Zeroize;
 
 fn get_password_with_validation() -> Result<Vec<u8>> {
     Ok(loop {
         let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        let input_validation = rpassword::prompt_password("Password (for validation): ")
+        let mut input_validation = rpassword::prompt_password("Password (for validation): ")
             .context("Unable to read password")?;
 
         if input == input_validation && !input.is_empty() {
-            break input.as_bytes().to_vec();
+            input_validation.zeroize();
+            break input.into_bytes()
         } else if input.is_empty() {
             println!("Password cannot be empty, please try again.");
         } else {
@@ -50,6 +52,6 @@ pub fn get_user_key_decrypt(keyfile: &str) -> Result<Secret<Vec<u8>>> {
     } else {
         println!("Reading key from the terminal");
         let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        SecretVec::new(input.as_bytes().to_vec())
+        SecretVec::new(input.into_bytes())
     })
 }

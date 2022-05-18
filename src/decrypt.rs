@@ -98,10 +98,10 @@ pub fn decrypt_file_stream(
         exit(0);
     }
 
-    let mut input_file = File::open(input).context("Unable to open input file")?;
+    let mut input_file = File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
     let file_size = input_file
         .metadata()
-        .context("Unable to get input file metadata")?
+        .with_context(|| format!("Unable to get input file metadata: {}", input))?
         .len();
 
     // +16 for GCM tag, +SALT_LEN to account for salt, +4 for the extra 4 bytes of nonce stored with each block
@@ -113,7 +113,7 @@ pub fn decrypt_file_stream(
         return decrypt_file(input, output, keyfile, hash_mode, skip, bench);
     }
 
-    let mut output_file = File::create(output).context("Unable to open file")?;
+    let mut output_file = File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 
     let raw_key = get_user_key_decrypt(keyfile)?;
 

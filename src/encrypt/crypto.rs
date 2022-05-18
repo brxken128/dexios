@@ -47,11 +47,13 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> Result<DexiosFi
     let nonce = GenericArray::from_slice(nonce_bytes.as_slice());
 
     let (key, salt) = gen_key(raw_key)?;
-    let cipher_key = Key::from_slice(key.expose_secret());
+    let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
+    
+    if cipher.is_err() {
+        return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+    }
 
-    let cipher = Aes256Gcm::new(cipher_key);
-    drop(cipher_key);
-
+    let cipher = cipher.unwrap();
     let encrypted_bytes = cipher.encrypt(nonce, data.as_slice());
 
     if encrypted_bytes.is_err() {
@@ -78,10 +80,13 @@ pub fn encrypt_bytes_stream(
     let nonce = GenericArray::from_slice(&nonce_bytes); // truncate to correct size
 
     let (key, salt) = gen_key(raw_key)?;
-    let cipher_key = Key::from_slice(key.expose_secret());
+    let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
+    
+    if cipher.is_err() {
+        return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+    }
 
-    let cipher = Aes256Gcm::new(cipher_key);
-    drop(cipher_key);
+    let cipher = cipher.unwrap();
 
     let mut stream = EncryptorLE31::from_aead(cipher, nonce);
 

@@ -14,7 +14,7 @@ use std::io::Read;
 use secrecy::{Secret, ExposeSecret};
 use std::io::Write;
 
-fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; 256]) -> [u8; 32] {
+fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; 256]) -> Secret<[u8; 32]> {
     let mut key = [0u8; 32];
 
     let argon2 = Argon2::new(
@@ -26,14 +26,14 @@ fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; 256]) -> [u8; 32] {
         .hash_password_into(raw_key.expose_secret(), &salt, &mut key)
         .expect("Unable to hash your password with argon2id");
 
-    key
+    Secret::new(key)
 }
 
 pub fn decrypt_bytes(data: DexiosFile, raw_key: Secret<Vec<u8>>) -> Result<Vec<u8>> {
     let key = get_key(raw_key, data.salt);
 
     let nonce = Nonce::from_slice(data.nonce.as_slice());
-    let cipher_key = Key::from_slice(key.as_slice());
+    let cipher_key = Key::from_slice(key.expose_secret());
     let cipher = Aes256Gcm::new(cipher_key);
 
     let decrypted_bytes = cipher.decrypt(nonce, data.data.as_slice()).expect(
@@ -61,7 +61,7 @@ pub fn decrypt_bytes_stream(
 
     let key = get_key(raw_key, salt);
     let nonce = Nonce::from_slice(nonce.as_slice());
-    let cipher_key = Key::from_slice(key.as_slice());
+    let cipher_key = Key::from_slice(key.expose_secret());
     let cipher = Aes256Gcm::new(cipher_key);
     let mut stream = DecryptorLE31::from_aead(cipher, nonce);
 

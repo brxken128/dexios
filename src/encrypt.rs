@@ -38,7 +38,7 @@ pub fn encrypt_file(
         input
     );
     let encrypt_start_time = Instant::now();
-    let data = encrypt_bytes(file_contents, raw_key);
+    let data = encrypt_bytes(file_contents, raw_key)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",
@@ -82,15 +82,15 @@ pub fn encrypt_file_stream(
         exit(0);
     }
 
-    let mut input_file = File::open(input).context("Unable to open file")?;
-    let file_size = input_file.metadata().unwrap().len();
+    let mut input_file = File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
+    let file_size = input_file.metadata().with_context(|| format!("Unable to open input file: {}", input))?.len();
 
     if file_size <= BLOCK_SIZE.try_into().unwrap() {
         println!("Input file size is less than the stream block size - redirecting to memory mode");
-        return encrypt_file(input, output, keyfile, hash_mode, skip, bench);
+        return encrypt_file(input, output, keyfile, hash_mode, skip, bench)
     }
 
-    let mut output_file = File::create(output).context("Unable to open output file")?;
+    let mut output_file = File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 
     let raw_key = get_user_key_encrypt(keyfile)?;
 

@@ -198,6 +198,8 @@ fn main() -> Result<()> {
                         .context("No input file/invalid text provided")?,
                 )?;
             }
+
+            return result;
         }
         Some(("decrypt", sub_matches)) => {
             let mut keyfile = "";
@@ -242,6 +244,8 @@ fn main() -> Result<()> {
                         .context("No input file/invalid text provided")?,
                 )?;
             }
+
+            return result;
         }
         _ => (),
     }

@@ -12,6 +12,7 @@ use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
 use secrecy::{ExposeSecret, Secret};
 use std::io::Read;
 use std::io::Write;
+use anyhow::anyhow;
 
 fn gen_salt() -> [u8; 256] {
     let mut salt: [u8; 256] = [0; 256];
@@ -39,7 +40,7 @@ fn gen_nonce() -> [u8; 12] {
     StdRng::from_entropy().gen::<[u8; 12]>()
 }
 
-pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> DexiosFile {
+pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> Result<DexiosFile> {
     let nonce_bytes = gen_nonce();
     let nonce = GenericArray::from_slice(nonce_bytes.as_slice());
 
@@ -48,16 +49,19 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> DexiosFile {
 
     let cipher = Aes256Gcm::new(cipher_key);
     let encrypted_bytes = cipher
-        .encrypt(nonce, data.as_slice())
-        .expect("Unable to encrypt the data");
+        .encrypt(nonce, data.as_slice());
+
+    if encrypted_bytes.is_err() {
+        return Err(anyhow!("Unable to encrypt the data"));
+    }
 
     drop(data);
 
-    DexiosFile {
+    Ok(DexiosFile {
         salt,
         nonce: nonce_bytes,
-        data: encrypted_bytes,
-    }
+        data: encrypted_bytes.unwrap(),
+    })
 }
 
 pub fn encrypt_bytes_stream(
@@ -95,8 +99,13 @@ pub fn encrypt_bytes_stream(
         if read_count == BLOCK_SIZE {
             // buffer length
             let encrypted_data = stream
-                .encrypt_next(buffer.as_slice())
-                .expect("Unable to encrypt block");
+                .encrypt_next(buffer.as_slice());
+            
+            if encrypted_data.is_err() {
+                return Err(anyhow!("Unable to encrypt the data"));
+            }
+
+            let encrypted_data = encrypted_data.unwrap();
             if !bench {
                 output
                     .write_all(&encrypted_data)
@@ -108,8 +117,13 @@ pub fn encrypt_bytes_stream(
         } else {
             // if we read something less than BLOCK_SIZE, and have hit the end of the file
             let encrypted_data = stream
-                .encrypt_last(&buffer[..read_count])
-                .expect("Unable to encrypt final block");
+                .encrypt_last(&buffer[..read_count]);
+            
+            if encrypted_data.is_err() {
+                return Err(anyhow!("Unable to encrypt the final block of data"));
+            }
+            
+            let encrypted_data = encrypted_data.unwrap();
             if !bench {
                 output
                     .write_all(&encrypted_data)

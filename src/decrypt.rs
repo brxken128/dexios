@@ -98,8 +98,8 @@ pub fn decrypt_file_stream(
         exit(0);
     }
 
-    let mut input_file = File::open(input).context("Unable to open file")?;
-    let file_size = input_file.metadata().unwrap().len();
+    let mut input_file = File::open(input).context("Unable to open input file")?;
+    let file_size = input_file.metadata().context("Unable to open input file")?.len();
 
     // +16 for GCM tag, +264 to account for salt and nonce, +4 for the extra 4 bytes of nonce stored with each block
     // +20 to ensure there's another gcm tag and 4 bytes of nonce

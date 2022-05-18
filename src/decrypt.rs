@@ -1,6 +1,5 @@
 use crate::decrypt::crypto::decrypt_bytes;
 use crate::decrypt::crypto::decrypt_bytes_stream;
-use crate::hashing::hash_data_blake3_stream;
 use crate::file::get_encrypted_file_data;
 use crate::file::overwrite_check;
 use crate::file::write_bytes_to_file;
@@ -111,26 +110,6 @@ pub fn decrypt_file_stream(
             "Encrypted data size is less than the stream block size - redirecting to memory mode"
         );
         return decrypt_file(input, output, keyfile, hash_mode, skip, bench);
-    }
-
-    if hash_mode {
-        let start_time = Instant::now();
-        let hash = hash_data_blake3_stream(&mut input_file)?;
-        let duration = start_time.elapsed();
-        println!(
-            "Hash of the encrypted file is: {} [took {:.2}s]",
-            hash,
-            duration.as_secs_f32()
-        );
-
-        let answer = get_answer(
-            "Would you like to continue with the decryption?",
-            true,
-            skip,
-        )?;
-        if !answer {
-            exit(0);
-        }
     }
 
     let mut output_file = File::create(output).context("Unable to open file")?;

@@ -32,8 +32,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
     - name: Retrieve Dexios
+      uses: actions/checkout@v3
       with:
         name: dexios
         path: target/release/dexios
@@ -51,8 +51,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
     - name: Retrieve Dexios
+      uses: actions/checkout@v3
       with:
         name: dexios
         path: target/release/dexios
@@ -70,8 +70,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
     - name: Retrieve Dexios
+      uses: actions/checkout@v3
       with:
         name: dexios
         path: target/release/dexios
@@ -89,8 +89,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
     - name: Retrieve Dexios
+      uses: actions/checkout@v3
       with:
         name: dexios
         path: target/release/dexios
@@ -108,8 +108,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
     - name: Retrieve Dexios
+      uses: actions/checkout@v3
       with:
         name: dexios
         path: target/release/dexios

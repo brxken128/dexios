@@ -29,7 +29,8 @@ fn gen_key(raw_key: Secret<Vec<u8>>) -> Result<(Secret<[u8; 32]>, [u8; SALT_LEN]
         Params::default(),
     );
     let result = argon2.hash_password_into(raw_key.expose_secret(), &salt, &mut key);
-
+    drop(raw_key);
+    
     if result.is_err() {
         return Err(anyhow!("Error while hashing your password with argon2id"));
     }

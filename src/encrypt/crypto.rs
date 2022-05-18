@@ -53,6 +53,8 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> Result<DexiosFi
     }
 
     let cipher = cipher.unwrap();
+    drop(key);
+
     let encrypted_bytes = cipher.encrypt(nonce, data.as_slice());
 
     if encrypted_bytes.is_err() {
@@ -86,6 +88,7 @@ pub fn encrypt_bytes_stream(
     }
 
     let cipher = cipher.unwrap();
+    drop(key);
 
     let mut stream = EncryptorLE31::from_aead(cipher, nonce);
 

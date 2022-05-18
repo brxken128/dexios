@@ -37,6 +37,7 @@ pub fn decrypt_bytes(data: DexiosFile, raw_key: Secret<Vec<u8>>) -> Result<Vec<u
 
     let nonce = Nonce::from_slice(data.nonce.as_slice());
     let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
+    drop(key);
 
     if cipher.is_err() {
         return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
@@ -79,6 +80,8 @@ pub fn decrypt_bytes_stream(
     }
 
     let cipher = cipher.unwrap();
+    drop(key);
+
     let mut stream = DecryptorLE31::from_aead(cipher, nonce);
 
     let mut hasher = blake3::Hasher::new();

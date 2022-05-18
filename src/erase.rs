@@ -13,8 +13,7 @@ pub fn secure_erase(input: &str) -> Result<()> {
         .metadata()
         .with_context(|| format!("Unable to get input file metadata: {}", input))?;
 
-    for _ in 0..32 {
-        // overwrite the data 16 times with random bytes
+    for _ in 0..64 {
         // generate enough random bytes in accordance to data's size
         let mut random_bytes: Vec<u8> = Vec::new();
         for _ in 0..data.len() {

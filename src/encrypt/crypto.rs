@@ -67,8 +67,8 @@ pub fn encrypt_bytes_stream(
     bench: bool,
     hash: bool,
 ) -> Result<()> {
-    let nonce_bytes = gen_nonce();
-    let nonce = GenericArray::from_slice(&nonce_bytes[..8]); // truncate to correct size
+    let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
+    let nonce = GenericArray::from_slice(&nonce_bytes); // truncate to correct size
 
     let (key, salt) = gen_key(raw_key);
     let cipher_key = Key::from_slice(key.expose_secret());

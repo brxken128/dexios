@@ -47,13 +47,13 @@ pub fn encrypt_bytes(data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> Result<DexiosFi
 
     let (key, salt) = gen_key(raw_key)?;
     let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
-    
+    drop(key);
+
     if cipher.is_err() {
         return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
     }
 
     let cipher = cipher.unwrap();
-    drop(key);
 
     let encrypted_bytes = cipher.encrypt(nonce, data.as_slice());
 
@@ -82,13 +82,13 @@ pub fn encrypt_bytes_stream(
 
     let (key, salt) = gen_key(raw_key)?;
     let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
-    
+    drop(key);
+
     if cipher.is_err() {
         return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
     }
 
     let cipher = cipher.unwrap();
-    drop(key);
 
     let mut stream = EncryptorLE31::from_aead(cipher, nonce);
 

@@ -12,7 +12,7 @@ pub fn secure_erase(input: &str) -> Result<()> {
     let data = file
         .metadata()
         .with_context(|| format!("Unable to get input file metadata: {}", input))?;
-
+        
     for _ in 0..64 {
         // generate enough random bytes in accordance to data's size
         let mut random_bytes: Vec<u8> = Vec::new();
@@ -32,12 +32,13 @@ pub fn secure_erase(input: &str) -> Result<()> {
     }
 
     // overwrite with zeros for good measure
-    let zeros: Vec<u8> = vec![0; data.len().try_into().unwrap()];
     let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
     let mut writer = BufWriter::new(file);
-    writer
-        .write_all(&zeros)
-        .with_context(|| format!("Unable to overwrite with zeros: {}", input))?;
+    for _ in 0..data.len() {
+        writer
+            .write(&[0])
+            .with_context(|| format!("Unable to overwrite with zeros: {}", input))?;
+    }
     writer
         .flush()
         .with_context(|| format!("Unable to flush file: {}", input))?;

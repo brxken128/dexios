@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use crate::global::{DexiosFile, BLOCK_SIZE};
+use crate::global::{DexiosFile, BLOCK_SIZE, SALT_LEN};
 use aes_gcm::aead::generic_array::GenericArray;
 use aes_gcm::aead::{stream::EncryptorLE31, Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Key};
@@ -14,13 +14,13 @@ use secrecy::{ExposeSecret, Secret};
 use std::io::Read;
 use std::io::Write;
 
-fn gen_salt() -> [u8; 256] {
-    let mut salt: [u8; 256] = [0; 256];
+fn gen_salt() -> [u8; SALT_LEN] {
+    let mut salt: [u8; SALT_LEN] = [0; SALT_LEN];
     StdRng::from_entropy().fill_bytes(&mut salt);
     salt
 }
 
-fn gen_key(raw_key: Secret<Vec<u8>>) -> Result<(Secret<[u8; 32]>, [u8; 256])> {
+fn gen_key(raw_key: Secret<Vec<u8>>) -> Result<(Secret<[u8; 32]>, [u8; SALT_LEN])> {
     let mut key = [0u8; 32];
     let salt = gen_salt();
 

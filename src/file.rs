@@ -1,4 +1,4 @@
-use crate::global::DexiosFile;
+use crate::global::{DexiosFile, SALT_LEN};
 use crate::prompt::get_answer;
 use anyhow::{Context, Ok, Result};
 use std::fs::metadata;
@@ -17,11 +17,11 @@ pub fn get_file_bytes(name: &str) -> Result<Vec<u8>> {
     Ok(data)
 }
 
-pub fn get_encrypted_file_data(name: &str) -> Result<([u8; 256], [u8; 12], Vec<u8>)> {
+pub fn get_encrypted_file_data(name: &str) -> Result<([u8; SALT_LEN], [u8; 12], Vec<u8>)> {
     let file = File::open(name).with_context(|| format!("Unable to open input file: {}", name))?;
     let mut reader = BufReader::new(file);
 
-    let mut salt = [0u8; 256];
+    let mut salt = [0u8; SALT_LEN];
     let mut nonce = [0u8; 12];
     let mut encrypted_data: Vec<u8> = Vec::new();
 
@@ -35,7 +35,7 @@ pub fn get_encrypted_file_data(name: &str) -> Result<([u8; 256], [u8; 12], Vec<u
         .read_to_end(&mut encrypted_data)
         .with_context(|| format!("Unable to read data from file: {}", name))?;
 
-    if salt_size != 256 || nonce_size != 12 {
+    if salt_size != SALT_LEN || nonce_size != 12 {
         return Err(anyhow::anyhow!(
             "Input file ({}) does not contain the correct amount of information",
             name

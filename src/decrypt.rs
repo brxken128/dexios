@@ -5,6 +5,7 @@ use crate::file::overwrite_check;
 use crate::file::write_bytes_to_file;
 use crate::global::DexiosFile;
 use crate::global::BLOCK_SIZE;
+use crate::global::SALT_LEN;
 use crate::hashing::hash_data_blake3;
 use crate::key::get_user_key_decrypt;
 use crate::prompt::get_answer;
@@ -103,9 +104,9 @@ pub fn decrypt_file_stream(
         .context("Unable to get input file metadata")?
         .len();
 
-    // +16 for GCM tag, +264 to account for salt and nonce, +4 for the extra 4 bytes of nonce stored with each block
-    // +20 to ensure there's another gcm tag and 4 bytes of nonce
-    if file_size <= (BLOCK_SIZE + 16 + 4 + 264).try_into().unwrap() {
+    // +16 for GCM tag, +SALT_LEN to account for salt, +4 for the extra 4 bytes of nonce stored with each block
+    // +8 to account for nonce itself
+    if file_size <= (BLOCK_SIZE + 16 + 4 + 8 + SALT_LEN).try_into().unwrap() {
         println!(
             "Encrypted data size is less than the stream block size - redirecting to memory mode"
         );

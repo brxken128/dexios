@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use crate::global::{DexiosFile, BLOCK_SIZE};
+use crate::global::{DexiosFile, BLOCK_SIZE, SALT_LEN};
 use aes_gcm::aead::stream::DecryptorLE31;
 use anyhow::Result;
 
@@ -15,7 +15,7 @@ use secrecy::{ExposeSecret, Secret};
 use std::io::Read;
 use std::io::Write;
 
-fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; 256]) -> Result<Secret<[u8; 32]>> {
+fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; SALT_LEN]) -> Result<Secret<[u8; 32]>> {
     let mut key = [0u8; 32];
 
     let argon2 = Argon2::new(
@@ -57,7 +57,7 @@ pub fn decrypt_bytes_stream(
     bench: bool,
     hash: bool,
 ) -> Result<()> {
-    let mut salt = [0u8; 256];
+    let mut salt = [0u8; SALT_LEN];
     let mut nonce = [0u8; 8];
     input
         .read(&mut salt)

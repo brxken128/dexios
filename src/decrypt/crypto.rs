@@ -38,6 +38,7 @@ pub fn decrypt_bytes(data: DexiosFile, raw_key: Secret<Vec<u8>>) -> Result<Vec<u
     let nonce = Nonce::from_slice(data.nonce.as_slice());
     let cipher_key = Key::from_slice(key.expose_secret());
     let cipher = Aes256Gcm::new(cipher_key);
+    drop(cipher_key);
 
     let decrypted_bytes = cipher.decrypt(nonce, data.data.as_slice());
 
@@ -70,6 +71,7 @@ pub fn decrypt_bytes_stream(
     let nonce = Nonce::from_slice(nonce.as_slice());
     let cipher_key = Key::from_slice(key.expose_secret());
     let cipher = Aes256Gcm::new(cipher_key);
+    drop(cipher_key);
     let mut stream = DecryptorLE31::from_aead(cipher, nonce);
 
     let mut hasher = blake3::Hasher::new();

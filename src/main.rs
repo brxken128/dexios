@@ -36,6 +36,7 @@ fn main() -> Result<()> {
                     sub_matches.is_present("hash"),
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
+                    sub_matches.is_present("password"),
                 )
             } else {
                 encrypt::stream_mode(
@@ -49,6 +50,7 @@ fn main() -> Result<()> {
                     sub_matches.is_present("hash"),
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
+                    sub_matches.is_present("password"),
                 )
             };
 
@@ -94,6 +96,7 @@ fn main() -> Result<()> {
                     sub_matches.is_present("hash"),
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
+                    sub_matches.is_present("password"),
                 )
             } else {
                 decrypt::stream_mode(
@@ -107,6 +110,7 @@ fn main() -> Result<()> {
                     sub_matches.is_present("hash"),
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
+                    sub_matches.is_present("password"),
                 )
             };
 

@@ -23,12 +23,13 @@ pub fn memory_mode(
     hash_mode: bool,
     skip: bool,
     bench: bool,
+    password: bool,
 ) -> Result<()> {
     if !overwrite_check(output, skip)? {
         exit(0);
     }
 
-    let raw_key = get_user_key(keyfile, true)?;
+    let raw_key = get_user_key(keyfile, true, password)?;
 
     let read_start_time = Instant::now();
     let file_contents = get_bytes(input)?;
@@ -81,6 +82,7 @@ pub fn stream_mode(
     hash_mode: bool,
     skip: bool,
     bench: bool,
+    password: bool,
 ) -> Result<()> {
     if !overwrite_check(output, skip)? {
         exit(0);
@@ -99,13 +101,13 @@ pub fn stream_mode(
             .context("Unable to parse stream block size as u64")?
     {
         println!("Input file size is less than the stream block size - redirecting to memory mode");
-        return memory_mode(input, output, keyfile, hash_mode, skip, bench);
+        return memory_mode(input, output, keyfile, hash_mode, skip, bench, password);
     }
 
     let mut output_file =
         File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 
-    let raw_key = get_user_key(keyfile, true)?;
+    let raw_key = get_user_key(keyfile, true, password)?;
 
     println!(
         "Encrypting {} in stream mode (this may take a while)",

@@ -81,6 +81,14 @@ pub fn get_matches() -> clap::ArgMatches {
                         .long("memory")
                         .takes_value(false)
                         .help("load the file into memory before encrypting"),
+                )
+                .arg(
+                    Arg::new("password")
+                        .short('p')
+                        .long("password")
+                        .takes_value(false)
+                        .help("interactively ask for your password")
+                        .conflicts_with("keyfile"),
                 ),
         )
         .subcommand(
@@ -154,6 +162,14 @@ pub fn get_matches() -> clap::ArgMatches {
                         .long("memory")
                         .takes_value(false)
                         .help("load the file into memory before encrypting"),
+                )
+                .arg(
+                    Arg::new("password")
+                        .short('p')
+                        .long("password")
+                        .takes_value(false)
+                        .help("interactively ask for your password")
+                        .conflicts_with("keyfile"),
                 ),
         )
         .subcommand(

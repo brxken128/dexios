@@ -24,6 +24,7 @@ pub fn memory_mode(
     hash_mode: bool,
     skip: bool,
     bench: bool,
+    password: bool,
 ) -> Result<()> {
     if !overwrite_check(output, skip)? {
         exit(0);
@@ -54,7 +55,7 @@ pub fn memory_mode(
         }
     }
 
-    let raw_key = get_user_key(keyfile, false)?;
+    let raw_key = get_user_key(keyfile, false, password)?;
 
     println!(
         "Decrypting {} in memory mode (this may take a while)",
@@ -91,6 +92,7 @@ pub fn stream_mode(
     hash_mode: bool,
     skip: bool,
     bench: bool,
+    password: bool,
 ) -> Result<()> {
     if !overwrite_check(output, skip)? {
         exit(0);
@@ -113,13 +115,13 @@ pub fn stream_mode(
         println!(
             "Encrypted data size is less than the stream block size - redirecting to memory mode"
         );
-        return memory_mode(input, output, keyfile, hash_mode, skip, bench);
+        return memory_mode(input, output, keyfile, hash_mode, skip, bench, password);
     }
 
     let mut output_file =
         File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 
-    let raw_key = get_user_key(keyfile, false)?;
+    let raw_key = get_user_key(keyfile, false, password)?;
 
     println!(
         "Decrypting {} in stream mode (this may take a while)",

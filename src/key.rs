@@ -32,11 +32,11 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
 // if neither of the above are true, ask the user for their specified key
 // if validation is true, call get_password_with_validation and require it be entered twice
 // if not, just get the key once
-pub fn get_user_key(keyfile: &str, validation: bool) -> Result<Secret<Vec<u8>>> {
+pub fn get_user_key(keyfile: &str, validation: bool, password: bool) -> Result<Secret<Vec<u8>>> {
     Ok(if !keyfile.is_empty() {
         println!("Reading key from {}", keyfile);
         get_bytes(keyfile)? // already a secret
-    } else if std::env::var("DEXIOS_KEY").is_ok() {
+    } else if std::env::var("DEXIOS_KEY").is_ok() && !password {
         println!("Reading key from DEXIOS_KEY environment variable");
         SecretVec::new(
             std::env::var("DEXIOS_KEY")

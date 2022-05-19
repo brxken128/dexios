@@ -43,7 +43,8 @@ pub fn get_user_key(keyfile: &str, validation: bool) -> Result<Secret<Vec<u8>>> 
         if validation {
             SecretVec::new(get_password_with_validation()?)
         } else {
-            let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
+            let input =
+                rpassword::prompt_password("Password: ").context("Unable to read password")?;
             SecretVec::new(input.into_bytes())
         }
     })

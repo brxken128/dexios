@@ -1,11 +1,11 @@
 use crate::encrypt::crypto::encrypt_bytes_memory_mode;
 use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
-use crate::prompt::overwrite_check;
 use crate::file::write_encrypted_data;
 use crate::global::BLOCK_SIZE;
 use crate::hashing::hash_data_blake3;
 use crate::key::get_user_key;
+use crate::prompt::overwrite_check;
 use anyhow::Context;
 use anyhow::{Ok, Result};
 use std::fs::File;

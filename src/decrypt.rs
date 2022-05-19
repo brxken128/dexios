@@ -125,8 +125,9 @@ pub fn stream_mode(
     decrypt_bytes_stream(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
-        "Decryption successful! [took {:.2}s]",
-        decrypt_duration.as_secs_f32()
+        "Decryption successful! File saved as {} [took {:.2}s]",
+        output,
+        decrypt_duration.as_secs_f32(),
     );
 
     Ok(())

@@ -111,8 +111,9 @@ pub fn stream_mode(
     encrypt_bytes_stream(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
-        "Encryption successful! [took {:.2}s]",
-        encrypt_duration.as_secs_f32()
+        "Encryption successful! File saved as {} [took {:.2}s]",
+        input,
+        encrypt_duration.as_secs_f32(),
     );
 
     Ok(())

@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use rand::{Rng, RngCore};
+use rand::RngCore;
 use std::{
     fs::File,
     io::{BufWriter, Write},

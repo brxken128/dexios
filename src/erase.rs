@@ -19,7 +19,6 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     println!("Erasing {} with {} passes (this may take a while)", input, passes);
 
     for _ in 0..passes {
-        // generate enough random bytes in accordance to data's size
         for _ in 0..data.len() / 128 {
             let mut buf = Vec::with_capacity(128);
             rand::thread_rng().fill_bytes(&mut buf);

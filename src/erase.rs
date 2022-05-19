@@ -16,7 +16,10 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
     let mut writer = BufWriter::new(file);
 
-    println!("Erasing {} with {} passes (this may take a while)", input, passes);
+    println!(
+        "Erasing {} with {} passes (this may take a while)",
+        input, passes
+    );
 
     for _ in 0..passes {
         for _ in 0..data.len() / 128 {

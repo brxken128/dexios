@@ -6,14 +6,14 @@ use std::{
     time::Instant,
 };
 
-pub fn secure_erase(input: &str) -> Result<()> {
+pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     let start_time = Instant::now();
     let file = File::open(input).with_context(|| format!("Unable to open file: {}", input))?;
     let data = file
         .metadata()
         .with_context(|| format!("Unable to get input file metadata: {}", input))?;
 
-    for _ in 0..64 {
+    for _ in 0..passes {
         // generate enough random bytes in accordance to data's size
         let mut random_bytes: Vec<u8> = Vec::new();
         for _ in 0..data.len() {

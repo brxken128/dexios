@@ -45,8 +45,12 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::new("erase")
                         .long("erase")
-                        .takes_value(false)
-                        .help("securely erase the input file once complete"),
+                        .value_name("# of passes")
+                        .takes_value(true)
+                        .require_equals(true)
+                        .help("securely erase the input file once complete")
+                        .min_values(0)
+                        .default_missing_value("16"),
                 )
                 .arg(
                     Arg::new("hash")
@@ -114,8 +118,12 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::new("erase")
                         .long("erase")
-                        .takes_value(false)
-                        .help("securely erase the input file once complete"),
+                        .value_name("# of passes")
+                        .takes_value(true)
+                        .require_equals(true)
+                        .help("securely erase the input file once complete")
+                        .min_values(0)
+                        .default_missing_value("16"),
                 )
                 .arg(
                     Arg::new("hash")
@@ -194,11 +202,17 @@ fn main() -> Result<()> {
             };
 
             if result.is_ok() && sub_matches.is_present("erase") {
-                erase::secure_erase(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                )?;
+                let passes = sub_matches.value_of("erase").unwrap().parse();
+                if passes.is_err() {
+                    return Err(anyhow::anyhow!("Unable to read number of passes provided - this file will not be erased."));
+                } else {
+                    erase::secure_erase(
+                        sub_matches
+                            .value_of("input")
+                            .context("No input file/invalid text provided")?,
+                            passes.unwrap(),
+                    )?;
+                }
             }
 
             return result;
@@ -240,11 +254,17 @@ fn main() -> Result<()> {
             };
 
             if result.is_ok() && sub_matches.is_present("erase") {
-                erase::secure_erase(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                )?;
+                let passes = sub_matches.value_of("erase").unwrap().parse();
+                if passes.is_err() {
+                    return Err(anyhow::anyhow!("Unable to read number of passes provided - this file will not be erased."));
+                } else {
+                    erase::secure_erase(
+                        sub_matches
+                            .value_of("input")
+                            .context("No input file/invalid text provided")?,
+                            passes.unwrap(),
+                    )?;
+                }
             }
 
             return result;

@@ -28,6 +28,12 @@ Please report any vulnerabilities as a Github issue - we believe all issues shou
 | 4.0.x   | :x:                |
 | < 4.0   | :x:                |
 
+## Images
+
+Here is a screenshot of Dexios in action! The performance is great, and the checksums match meaning the file is exactly the same as it was before encryption.
+
+![Dexios in action](https://github.com/brxken128/dexios/wiki/assets/dexios-in-action.png)
+
 ## More Information
 
 Please view the [Github Wiki](https://github.com/brxken128/dexios/wiki) to find all the information related to this project.

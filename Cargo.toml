@@ -1,7 +1,7 @@
 [package]
 name = "dexios"
 version = "7.2.8"
-authors = ["brxken128"]
+authors = ["brxken128 <brxken128@tutanota.com>"]
 readme = "README.md"
 edition = "2021"
 description = "Secure, fast and authenticated command-line encryption of files with modern ciphers and an audited encryption backend."

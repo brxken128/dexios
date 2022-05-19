@@ -101,7 +101,11 @@ pub fn stream_mode(
 
     // +16 for GCM tag, +SALT_LEN to account for salt, +4 for the extra 4 bytes of nonce stored with each block
     // +8 to account for nonce itself
-    if file_size <= (BLOCK_SIZE + 24 + SALT_LEN).try_into().context("Unable to parse stream block size as u64")? {
+    if file_size
+        <= (BLOCK_SIZE + 24 + SALT_LEN)
+            .try_into()
+            .context("Unable to parse stream block size as u64")?
+    {
         println!(
             "Encrypted data size is less than the stream block size - redirecting to memory mode"
         );

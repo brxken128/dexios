@@ -11,6 +11,7 @@ mod key;
 mod prompt;
 mod cli;
 
+#[allow(clippy::too_many_lines)]
 fn main() -> Result<()> {
     let matches = cli::get_matches();
 

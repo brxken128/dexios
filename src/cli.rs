@@ -1,5 +1,6 @@
 use clap::{Arg, Command};
 
+#[allow(clippy::too_many_lines)]
 pub fn get_matches() -> clap::ArgMatches {
     Command::new("dexios")
         .version(clap::crate_version!())

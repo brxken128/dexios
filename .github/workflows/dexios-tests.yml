@@ -88,6 +88,10 @@ jobs:
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHy --erase -k keyfile 100MB.bin 100MB.enc
     - name: Decrypt and erase afterwards
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHy --erase -k keyfile 100MB.enc 100MB.bin
+    - name: Generate test file
+      run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
+    - name: Erase file (standalone mode)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios erase 100MB.bin
   large-file:
     needs: build
     runs-on: ubuntu-latest

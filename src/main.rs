@@ -204,13 +204,15 @@ fn main() -> Result<()> {
             if result.is_ok() && sub_matches.is_present("erase") {
                 let passes = sub_matches.value_of("erase").unwrap().parse();
                 if passes.is_err() {
-                    return Err(anyhow::anyhow!("Unable to read number of passes provided - this file will not be erased."));
+                    return Err(anyhow::anyhow!(
+                        "Unable to read number of passes provided - this file will not be erased."
+                    ));
                 } else {
                     erase::secure_erase(
                         sub_matches
                             .value_of("input")
                             .context("No input file/invalid text provided")?,
-                            passes.unwrap(),
+                        passes.unwrap(),
                     )?;
                 }
             }
@@ -256,13 +258,15 @@ fn main() -> Result<()> {
             if result.is_ok() && sub_matches.is_present("erase") {
                 let passes = sub_matches.value_of("erase").unwrap().parse();
                 if passes.is_err() {
-                    return Err(anyhow::anyhow!("Unable to read number of passes provided - this file will not be erased."));
+                    return Err(anyhow::anyhow!(
+                        "Unable to read number of passes provided - this file will not be erased."
+                    ));
                 } else {
                     erase::secure_erase(
                         sub_matches
                             .value_of("input")
                             .context("No input file/invalid text provided")?,
-                            passes.unwrap(),
+                        passes.unwrap(),
                     )?;
                 }
             }

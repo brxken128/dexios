@@ -13,19 +13,18 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
         .metadata()
         .with_context(|| format!("Unable to get input file metadata: {}", input))?;
 
-    let file =
-    File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
+    let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
     let mut writer = BufWriter::new(file);
 
     for _ in 0..passes {
         // generate enough random bytes in accordance to data's size
-        for _ in 0..data.len()/128 {
+        for _ in 0..data.len() / 128 {
             let mut buf = Vec::with_capacity(128);
             rand::thread_rng().fill_bytes(&mut buf);
             writer
                 .write_all(&buf)
                 .with_context(|| format!("Unable to overwrite with random bytes: {}", input))?;
-        } 
+        }
 
         writer
             .flush()

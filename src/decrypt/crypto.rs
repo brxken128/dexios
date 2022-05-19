@@ -36,7 +36,7 @@ fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; SALT_LEN]) -> Result<Secret<[u8;
 pub fn decrypt_bytes(
     salt: [u8; 16],
     nonce: [u8; 12],
-    data: Vec<u8>,
+    data: &[u8],
     raw_key: Secret<Vec<u8>>,
 ) -> Result<Vec<u8>> {
     let key = get_key(raw_key, salt)?;
@@ -51,7 +51,7 @@ pub fn decrypt_bytes(
 
     let cipher = cipher.unwrap();
 
-    let decrypted_bytes = cipher.decrypt(nonce, data.as_slice());
+    let decrypted_bytes = cipher.decrypt(nonce, data);
 
     if decrypted_bytes.is_err() {
         return Err(anyhow!(

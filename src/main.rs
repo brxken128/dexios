@@ -225,12 +225,11 @@ fn main() -> Result<()> {
 
             if result.is_ok() && sub_matches.is_present("erase") {
                 let result = sub_matches.value_of("erase").unwrap().parse();
-                let passes = match result {
-                    Ok(passes) => passes,
-                    _ => {
-                        println!("Unable to read number of passes provided - using the default.");
-                        16
-                    }
+                let passes = if let Ok(result) = result {
+                    result
+                } else {
+                    println!("Unable to read number of passes provided - using the default.");
+                    16
                 };
 
                 erase::secure_erase(
@@ -281,12 +280,11 @@ fn main() -> Result<()> {
 
             if result.is_ok() && sub_matches.is_present("erase") {
                 let result = sub_matches.value_of("erase").unwrap().parse();
-                let passes = match result {
-                    Ok(passes) => passes,
-                    _ => {
-                        println!("Unable to read number of passes provided - using the default.");
-                        16
-                    }
+                let passes = if let Ok(result) = result {
+                    result
+                } else {
+                    println!("Unable to read number of passes provided - using the default.");
+                    16
                 };
 
                 erase::secure_erase(
@@ -302,12 +300,11 @@ fn main() -> Result<()> {
         Some(("erase", sub_matches)) => {
             let passes = if sub_matches.is_present("passes") {
                 let result = sub_matches.value_of("passes").unwrap().parse::<i32>();
-                match result {
-                    Ok(passes) => passes,
-                    _ => {
-                        println!("Unable to read number of passes provided - using the default.");
-                        16
-                    }
+                if let Ok(result) = result {
+                    result
+                } else {
+                    println!("Unable to read number of passes provided - using the default.");
+                    16
                 }
             } else {
                 println!("Number of passes not provided - using the default.");

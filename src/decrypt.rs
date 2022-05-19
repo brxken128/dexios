@@ -59,7 +59,7 @@ pub fn decrypt_file(
         input
     );
     let decrypt_start_time = Instant::now();
-    let decrypted_bytes = decrypt_bytes(salt, nonce, encrypted_data, raw_key)?;
+    let decrypted_bytes = decrypt_bytes(salt, nonce, &encrypted_data, raw_key)?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! [took {:.2}s]",

@@ -1,7 +1,5 @@
 use crate::global::SALT_LEN;
-use crate::prompt::get_answer;
 use anyhow::{Context, Ok, Result};
-use std::fs::metadata;
 use std::{
     fs::File,
     io::{BufReader, Read, Write},

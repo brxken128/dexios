@@ -14,6 +14,16 @@ Or you can download a pre-compiled binary from [the releases page](https://githu
 
 Please report any vulnerabilities as a Github issue - we believe all issues should be known, and they are likely to get resolved very quickly this way. Thank you.
 
+## Supported Versions
+
+| Version | Supported          |
+| ------- | ------------------ |
+| 7.x.x   | :white_check_mark: |
+| 6.x.x   | :white_check_mark: |
+| 5.0.x   | :x:                |
+| 4.0.x   | :x:                |
+| < 4.0   | :x:                |
+
 ## More Information
 
 Please view the [Github Wiki](https://github.com/brxken128/dexios/wiki) to find all the information related to this project.

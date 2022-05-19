@@ -10,6 +10,10 @@ You can install Dexios through cargo, with
 
 Or you can download a pre-compiled binary from [the releases page](https://github.com/brxken128/dexios/releases)!
 
+## Update Status
+
+Dexios will receive frequent updates, and they are always tested before being released. Starting with v7.0.0, there should be no breaking changes made to anything - this means your files will be backwards-compatible, and always supported.
+
 ## Reporting a Vulnerability
 
 Please report any vulnerabilities as a Github issue - we believe all issues should be known, and they are likely to get resolved very quickly this way. Thank you.

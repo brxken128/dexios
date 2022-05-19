@@ -68,11 +68,11 @@ pub fn write_encrypted_data_to_file(
     Ok(())
 }
 
-pub fn write_bytes_to_file(name: &str, bytes: Vec<u8>) -> Result<()> {
+pub fn write_bytes_to_file(name: &str, bytes: &[u8]) -> Result<()> {
     let mut writer =
         File::create(name).with_context(|| format!("Unable to create output file: {}", name))?;
     writer
-        .write_all(&bytes)
+        .write_all(bytes)
         .with_context(|| format!("Unable to write to the output file: {}", name))?;
     writer
         .flush()

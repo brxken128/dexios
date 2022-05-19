@@ -23,8 +23,7 @@ pub fn get_answer(prompt: &str, default: bool, skip: bool) -> Result<bool> {
             .next()
             .context("Unable to get first character of your answer")?;
         break match first_char {
-            '\n' => default,
-            '\r' => default,
+            '\n' | '\r' => default,
             'y' => true,
             'n' => false,
             _ => {

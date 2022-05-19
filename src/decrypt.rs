@@ -68,7 +68,7 @@ pub fn decrypt_file(
 
     if !bench {
         let write_start_time = Instant::now();
-        write_bytes_to_file(output, decrypted_bytes)?;
+        write_bytes_to_file(output, &decrypted_bytes)?;
         let write_duration = write_start_time.elapsed();
         println!(
             "Wrote to {} [took {:.2}s]",

@@ -9,6 +9,7 @@ keywords = ["encryption", "utility", "file", "command-line", "secure"]
 categories = ["cryptography", "command-line-utilities"]
 rust-version = "1.57"
 repository = "https://github.com/brxken128/dexios"
+documentation = "https://github.com/brxken128/dexios/wiki"
 license = "BSD-2-Clause"
 
 [dependencies]

@@ -295,7 +295,7 @@ fn main() -> Result<()> {
             return result;
         }
         Some(("erase", sub_matches)) => {
-            let passes = sub_matches.value_of("erase").unwrap().parse();
+            let passes = sub_matches.value_of("passes").unwrap().parse();
             if passes.is_err() {
                 return Err(anyhow::anyhow!(
                     "Unable to read number of passes provided - this file will not be erased."

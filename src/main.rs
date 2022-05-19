@@ -53,7 +53,7 @@ fn main() -> Result<()> {
             };
 
             if result.is_ok() && sub_matches.is_present("erase") {
-                let result = sub_matches.value_of("erase").unwrap().parse();
+                let result = sub_matches.value_of("erase").context("No amount of passes specified")?.parse();
                 let passes = if let Ok(value) = result {
                     value
                 } else {
@@ -108,7 +108,7 @@ fn main() -> Result<()> {
             };
 
             if result.is_ok() && sub_matches.is_present("erase") {
-                let result = sub_matches.value_of("erase").unwrap().parse();
+                let result = sub_matches.value_of("erase").context("No amount of passes specified")?.parse();
                 let passes = if let Ok(value) = result {
                     value
                 } else {
@@ -128,7 +128,7 @@ fn main() -> Result<()> {
         }
         Some(("erase", sub_matches)) => {
             let passes = if sub_matches.is_present("passes") {
-                let result = sub_matches.value_of("passes").unwrap().parse::<i32>();
+                let result = sub_matches.value_of("passes").context("No amount of passes specified")?.parse::<i32>();
                 if let Ok(value) = result {
                     value
                 } else {

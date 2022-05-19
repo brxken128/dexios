@@ -39,13 +39,11 @@ pub fn get_user_key(keyfile: &str, validation: bool) -> Result<Secret<Vec<u8>>> 
                 .context("Unable to read DEXIOS_KEY from environment variable")?
                 .into_bytes(),
         )
-    } else {
-        if validation {
+    } else if validation {
             SecretVec::new(get_password_with_validation()?)
-        } else {
-            let input =
-                rpassword::prompt_password("Password: ").context("Unable to read password")?;
-            SecretVec::new(input.into_bytes())
-        }
+    } else {
+        let input =
+            rpassword::prompt_password("Password: ").context("Unable to read password")?;
+        SecretVec::new(input.into_bytes())
     })
 }

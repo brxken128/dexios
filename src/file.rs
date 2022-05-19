@@ -45,7 +45,12 @@ pub fn get_encrypted_file_data(name: &str) -> Result<([u8; SALT_LEN], [u8; 12], 
     Ok((salt, nonce, encrypted_data))
 }
 
-pub fn write_encrypted_data_to_file(name: &str, salt: &[u8; 16], nonce: &[u8; 12], data: &Vec<u8>) -> Result<()> {
+pub fn write_encrypted_data_to_file(
+    name: &str,
+    salt: &[u8; 16],
+    nonce: &[u8; 12],
+    data: &Vec<u8>,
+) -> Result<()> {
     let mut writer =
         File::create(name).with_context(|| format!("Unable to create output file: {}", name))?;
     writer

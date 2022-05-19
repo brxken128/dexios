@@ -6,6 +6,7 @@ readme = "README.md"
 edition = "2021"
 description = "Secure command-line encryption of files."
 keywords = ["encryption", "utility", "file", "command-line", "secure"]
+categories = ["encryption", "command-line-utilities"]
 rust-version = "1.57"
 repository = "https://github.com/brxken128/dexios"
 license = "BSD-2-Clause"

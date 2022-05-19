@@ -23,8 +23,8 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     );
 
     for _ in 0..passes {
-        for _ in 0..data.len() / 128 {
-            let mut buf = Vec::with_capacity(128);
+        for _ in 0..data.len() / 512 {
+            let mut buf = Vec::with_capacity(512);
             rand::thread_rng().fill_bytes(&mut buf);
             writer
                 .write_all(&buf)

@@ -162,6 +162,27 @@ fn main() -> Result<()> {
                         .help("load the file into memory before encrypting"),
                 ),
         )
+        .subcommand(
+            Command::new("erase")
+                .about("erase a file completely")
+                .arg(
+                    Arg::new("input")
+                        .value_name("input")
+                        .takes_value(true)
+                        .required(true)
+                        .help("the file to erase"),
+                )
+                .arg(
+                    Arg::new("passes")
+                        .long("passes")
+                        .value_name("# of passes")
+                        .takes_value(true)
+                        .require_equals(true)
+                        .help("specify the number of passes (default is 16)")
+                        .min_values(0)
+                        .default_missing_value("16"),
+                ),
+        )
         .get_matches();
 
     match matches.subcommand() {
@@ -272,6 +293,21 @@ fn main() -> Result<()> {
             }
 
             return result;
+        }
+        Some(("erase", sub_matches)) => {
+            let passes = sub_matches.value_of("erase").unwrap().parse();
+                if passes.is_err() {
+                    return Err(anyhow::anyhow!(
+                        "Unable to read number of passes provided - this file will not be erased."
+                    ));
+                } else {
+                    erase::secure_erase(
+                        sub_matches
+                            .value_of("input")
+                            .context("No input file/invalid text provided")?,
+                        passes.unwrap(),
+                    )?;
+                }
         }
         _ => (),
     }

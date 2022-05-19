@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use rand::Rng;
+use rand::{Rng, RngCore};
 use std::{
     fs::File,
     io::{BufWriter, Write},
@@ -13,19 +13,20 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
         .metadata()
         .with_context(|| format!("Unable to get input file metadata: {}", input))?;
 
+    let file =
+    File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
+    let mut writer = BufWriter::new(file);
+
     for _ in 0..passes {
         // generate enough random bytes in accordance to data's size
-        let mut random_bytes: Vec<u8> = Vec::new();
-        for _ in 0..data.len() {
-            random_bytes.push(rand::thread_rng().gen::<[u8; 1]>()[0]);
-        }
+        for _ in 0..data.len()/128 {
+            let mut buf = Vec::with_capacity(128);
+            rand::thread_rng().fill_bytes(&mut buf);
+            writer
+                .write_all(&buf)
+                .with_context(|| format!("Unable to overwrite with random bytes: {}", input))?;
+        } 
 
-        let file =
-            File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
-        let mut writer = BufWriter::new(file);
-        writer
-            .write_all(&random_bytes)
-            .with_context(|| format!("Unable to overwrite with random bytes: {}", input))?;
         writer
             .flush()
             .with_context(|| format!("Unable to flush file: {}", input))?;

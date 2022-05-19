@@ -48,7 +48,7 @@ fn main() -> Result<()> {
                         .value_name("# of passes")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("securely erase the input file once complete")
+                        .help("securely erase the input file once complete (default is 16 passes)")
                         .min_values(0)
                         .default_missing_value("16"),
                 )
@@ -121,7 +121,7 @@ fn main() -> Result<()> {
                         .value_name("# of passes")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("securely erase the input file once complete")
+                        .help("securely erase the input file once complete (default is 16 passes)")
                         .min_values(0)
                         .default_missing_value("16"),
                 )

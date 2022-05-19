@@ -35,11 +35,11 @@ Dexios itself does not have support for encrypting multiple files, but you can d
 ```
 To encrypt all `.mp4` files in a directory, and remove the original files once encrypted:
 
-`find *.mp4 -type f -maxdepth 1 -exec dexios -ey --erase -k keyfile {} {}.enc \;`
+find *.mp4 -type f -maxdepth 1 -exec dexios -ey --erase -k keyfile {} {}.enc \;
 
 To decrypt all `.mp4.enc` files in a directory, and remove the `.enc` suffix:
 
-`find . -type f -iname "*.mp4.enc" -exec sh -c 'dexios -dk keyfile "$0" "${0%.enc}"' {} \;`
+find . -type f -iname "*.mp4.enc" -exec sh -c 'dexios -dk keyfile "$0" "${0%.enc}"' {} \;
 ```
 
 ## Update Status

@@ -1,6 +1,6 @@
-use std::result::Result::Ok;
 use anyhow::{Context, Result};
 use clap::{Arg, Command};
+use std::result::Result::Ok;
 
 mod decrypt;
 mod encrypt;
@@ -230,7 +230,7 @@ fn main() -> Result<()> {
                     _ => {
                         println!("Unable to read number of passes provided - using the default.");
                         16
-                    },
+                    }
                 };
 
                 erase::secure_erase(
@@ -286,7 +286,7 @@ fn main() -> Result<()> {
                     _ => {
                         println!("Unable to read number of passes provided - using the default.");
                         16
-                    },
+                    }
                 };
 
                 erase::secure_erase(
@@ -307,7 +307,7 @@ fn main() -> Result<()> {
                     _ => {
                         println!("Unable to read number of passes provided - using the default.");
                         16
-                    },
+                    }
                 }
             } else {
                 println!("Number of passes not provided - using the default.");

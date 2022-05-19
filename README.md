@@ -10,24 +10,6 @@ You can install Dexios through cargo, with
 
 Or you can download a pre-compiled binary from [the releases page](https://github.com/brxken128/dexios/releases)!
 
-## Update Status
-
-Dexios will receive frequent updates, and they are always tested before being released. Starting with v7.0.0, there should be no breaking changes made to anything - this means your files will be backwards-compatible, and always supported.
-
-## Reporting a Vulnerability
-
-Please report any vulnerabilities as a Github issue - we believe all issues should be known, and they are likely to get resolved very quickly this way. Thank you.
-
-## Supported Versions
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 7.x.x   | :white_check_mark: |
-| 6.x.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :x:                |
-| < 4.0   | :x:                |
-
 ## Basic Usage
 
 To encrypt a file:
@@ -45,6 +27,24 @@ To securely erase a file:
 Here is a screenshot of Dexios in action! The performance is great, and the checksums match meaning the file is exactly the same as it was before encryption.
 
 ![Dexios in action](https://github.com/brxken128/dexios/wiki/assets/dexios-in-action.png)
+
+## Update Status
+
+Dexios will receive frequent updates, and they are always tested before being released. Starting with v7.0.0, there should be no breaking changes made to anything - this means your files will be backwards-compatible, and always supported.
+
+## Reporting a Vulnerability
+
+Please report any vulnerabilities as a Github issue - we believe all issues should be known, and they are likely to get resolved very quickly this way. Thank you.
+
+## Supported Versions
+
+| Version | Supported          |
+| ------- | ------------------ |
+| 7.x.x   | :white_check_mark: |
+| 6.x.x   | :white_check_mark: |
+| 5.0.x   | :x:                |
+| 4.0.x   | :x:                |
+| < 4.0   | :x:                |
 
 ## More Information
 

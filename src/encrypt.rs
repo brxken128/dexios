@@ -1,8 +1,8 @@
 use crate::encrypt::crypto::encrypt_bytes;
 use crate::encrypt::crypto::encrypt_bytes_stream;
-use crate::file::get_file_bytes;
+use crate::file::get_bytes;
 use crate::file::overwrite_check;
-use crate::file::write_encrypted_data_to_file;
+use crate::file::write_encrypted_data;
 use crate::global::BLOCK_SIZE;
 use crate::hashing::hash_data_blake3;
 use crate::key::get_user_key_encrypt;
@@ -14,7 +14,7 @@ use std::time::Instant;
 
 mod crypto;
 
-pub fn encrypt_file(
+pub fn memory_mode(
     input: &str,
     output: &str,
     keyfile: &str,
@@ -29,7 +29,7 @@ pub fn encrypt_file(
     let raw_key = get_user_key_encrypt(keyfile)?;
 
     let read_start_time = Instant::now();
-    let file_contents = get_file_bytes(input)?;
+    let file_contents = get_bytes(input)?;
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
@@ -47,7 +47,7 @@ pub fn encrypt_file(
 
     if !bench {
         let write_start_time = Instant::now();
-        write_encrypted_data_to_file(output, &salt, &nonce, &data)?;
+        write_encrypted_data(output, &salt, &nonce, &data)?;
         let write_duration = write_start_time.elapsed();
         println!(
             "Wrote to {} [took {:.2}s]",
@@ -70,7 +70,7 @@ pub fn encrypt_file(
     Ok(())
 }
 
-pub fn encrypt_file_stream(
+pub fn stream_mode(
     input: &str,
     output: &str,
     keyfile: &str,
@@ -91,7 +91,7 @@ pub fn encrypt_file_stream(
 
     if file_size <= BLOCK_SIZE.try_into().unwrap() {
         println!("Input file size is less than the stream block size - redirecting to memory mode");
-        return encrypt_file(input, output, keyfile, hash_mode, skip, bench);
+        return memory_mode(input, output, keyfile, hash_mode, skip, bench);
     }
 
     let mut output_file =

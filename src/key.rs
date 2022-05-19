@@ -1,4 +1,4 @@
-use crate::file::get_file_bytes;
+use crate::file::get_bytes;
 use anyhow::{Context, Ok, Result};
 use secrecy::Secret;
 use secrecy::SecretVec;
@@ -24,7 +24,7 @@ fn get_password_with_validation() -> Result<Vec<u8>> {
 pub fn get_user_key_encrypt(keyfile: &str) -> Result<Secret<Vec<u8>>> {
     Ok(if !keyfile.is_empty() {
         println!("Reading key from {}", keyfile);
-        SecretVec::new(get_file_bytes(keyfile)?)
+        SecretVec::new(get_bytes(keyfile)?)
     } else if std::env::var("DEXIOS_KEY").is_ok() {
         println!("Reading key from DEXIOS_KEY environment variable");
         SecretVec::new(
@@ -41,7 +41,7 @@ pub fn get_user_key_encrypt(keyfile: &str) -> Result<Secret<Vec<u8>>> {
 pub fn get_user_key_decrypt(keyfile: &str) -> Result<Secret<Vec<u8>>> {
     Ok(if !keyfile.is_empty() {
         println!("Reading key from {}", keyfile);
-        SecretVec::new(get_file_bytes(keyfile)?)
+        SecretVec::new(get_bytes(keyfile)?)
     } else if std::env::var("DEXIOS_KEY").is_ok() {
         println!("Reading key from DEXIOS_KEY environment variable");
         SecretVec::new(

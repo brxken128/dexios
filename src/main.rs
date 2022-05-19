@@ -25,7 +25,7 @@ fn main() -> Result<()> {
             }
 
             let result = if sub_matches.is_present("memory") {
-                encrypt::encrypt_file(
+                encrypt::memory_mode(
                     sub_matches
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
@@ -38,7 +38,7 @@ fn main() -> Result<()> {
                     sub_matches.is_present("bench"),
                 )
             } else {
-                encrypt::encrypt_file_stream(
+                encrypt::stream_mode(
                     sub_matches
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
@@ -80,7 +80,7 @@ fn main() -> Result<()> {
             }
 
             let result = if sub_matches.is_present("memory") {
-                decrypt::decrypt_file(
+                decrypt::memory_mode(
                     sub_matches
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
@@ -93,7 +93,7 @@ fn main() -> Result<()> {
                     sub_matches.is_present("bench"),
                 )
             } else {
-                decrypt::decrypt_file_stream(
+                decrypt::stream_mode(
                     sub_matches
                         .value_of("input")
                         .context("No input file/invalid text provided")?,

@@ -4,6 +4,8 @@ use secrecy::Secret;
 use secrecy::SecretVec;
 use secrecy::Zeroize;
 
+// this interactively gets the user's password from the terminal
+// it takes the password twice, compares, and returns the bytes
 fn get_password_with_validation() -> Result<Vec<u8>> {
     Ok(loop {
         let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
@@ -21,7 +23,12 @@ fn get_password_with_validation() -> Result<Vec<u8>> {
     })
 }
 
-pub fn get_user_key_encrypt(keyfile: &str) -> Result<Secret<Vec<u8>>> {
+// this takes in the keyfile string - if if's not empty, get those bytes
+// next, if the env var DEXIOS_KEY is set, retrieve the value
+// if neither of the above are true, ask the user for their specified key
+// if validation is true, call get_password_with_validation and require it be entered twice
+// if not, just get the key once
+pub fn get_user_key(keyfile: &str, validation: bool) -> Result<Secret<Vec<u8>>> {
     Ok(if !keyfile.is_empty() {
         println!("Reading key from {}", keyfile);
         SecretVec::new(get_bytes(keyfile)?)
@@ -33,25 +40,11 @@ pub fn get_user_key_encrypt(keyfile: &str) -> Result<Secret<Vec<u8>>> {
                 .into_bytes(),
         )
     } else {
-        println!("Reading key from the terminal");
-        SecretVec::new(get_password_with_validation()?)
-    })
-}
-
-pub fn get_user_key_decrypt(keyfile: &str) -> Result<Secret<Vec<u8>>> {
-    Ok(if !keyfile.is_empty() {
-        println!("Reading key from {}", keyfile);
-        SecretVec::new(get_bytes(keyfile)?)
-    } else if std::env::var("DEXIOS_KEY").is_ok() {
-        println!("Reading key from DEXIOS_KEY environment variable");
-        SecretVec::new(
-            std::env::var("DEXIOS_KEY")
-                .context("Unable to read DEXIOS_KEY from environment variable")?
-                .into_bytes(),
-        )
-    } else {
-        println!("Reading key from the terminal");
-        let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        SecretVec::new(input.into_bytes())
+        if validation {
+            SecretVec::new(get_password_with_validation()?)
+        } else {
+            let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
+            SecretVec::new(input.into_bytes())
+        }
     })
 }

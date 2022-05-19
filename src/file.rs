@@ -7,6 +7,7 @@ use std::{
     io::{BufReader, Read, Write},
 };
 
+// this takes the name/relative path of a file, and returns the bytes
 pub fn get_bytes(name: &str) -> Result<Vec<u8>> {
     let file = File::open(name).with_context(|| format!("Unable to open file: {}", name))?;
     let mut reader = BufReader::new(file);
@@ -17,6 +18,12 @@ pub fn get_bytes(name: &str) -> Result<Vec<u8>> {
     Ok(data)
 }
 
+// this takes the name/relative path of a file, and reads it in the correct format
+// this is used for memory-mode
+// the first 16 bytes of the file are always the salt
+// the next 12 bytes are always the nonce
+// the rest of the data is the encrpted data
+// all of these values are returned
 pub fn get_encrypted_data(name: &str) -> Result<([u8; SALT_LEN], [u8; 12], Vec<u8>)> {
     let file = File::open(name).with_context(|| format!("Unable to open input file: {}", name))?;
     let mut reader = BufReader::new(file);
@@ -45,6 +52,12 @@ pub fn get_encrypted_data(name: &str) -> Result<([u8; SALT_LEN], [u8; 12], Vec<u
     Ok((salt, nonce, encrypted_data))
 }
 
+// this writes the data, in the format that get_encrypted_data() can read
+// this is used for memory-mode
+// it takes the file name/relative path, salt, nonce and the data
+// it first writes the 16 byte salt to the start of the file
+// then it writes the 12 byte nonce
+// and finally, it writes all of the data
 pub fn write_encrypted_data(
     name: &str,
     salt: &[u8; 16],
@@ -68,6 +81,7 @@ pub fn write_encrypted_data(
     Ok(())
 }
 
+// this simply just writes bytes to the specified file
 pub fn write_bytes(name: &str, bytes: &[u8]) -> Result<()> {
     let mut writer =
         File::create(name).with_context(|| format!("Unable to create output file: {}", name))?;
@@ -78,14 +92,4 @@ pub fn write_bytes(name: &str, bytes: &[u8]) -> Result<()> {
         .flush()
         .with_context(|| format!("Unable to flush the output file: {}", name))?;
     Ok(())
-}
-
-pub fn overwrite_check(name: &str, skip: bool) -> Result<bool> {
-    let answer = if metadata(name).is_ok() {
-        let prompt = format!("{} already exists, would you like to overwrite?", name);
-        get_answer(&prompt, true, skip)?
-    } else {
-        true
-    };
-    Ok(answer)
 }

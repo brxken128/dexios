@@ -1,11 +1,11 @@
-use crate::encrypt::crypto::encrypt_bytes;
-use crate::encrypt::crypto::encrypt_bytes_stream;
+use crate::encrypt::crypto::encrypt_bytes_memory_mode;
+use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
-use crate::file::overwrite_check;
+use crate::prompt::overwrite_check;
 use crate::file::write_encrypted_data;
 use crate::global::BLOCK_SIZE;
 use crate::hashing::hash_data_blake3;
-use crate::key::get_user_key_encrypt;
+use crate::key::get_user_key;
 use anyhow::Context;
 use anyhow::{Ok, Result};
 use std::fs::File;
@@ -14,6 +14,8 @@ use std::time::Instant;
 
 mod crypto;
 
+// this function is for encrypting a file in memory mode
+// it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
 pub fn memory_mode(
     input: &str,
     output: &str,
@@ -26,7 +28,7 @@ pub fn memory_mode(
         exit(0);
     }
 
-    let raw_key = get_user_key_encrypt(keyfile)?;
+    let raw_key = get_user_key(keyfile, true)?;
 
     let read_start_time = Instant::now();
     let file_contents = get_bytes(input)?;
@@ -38,7 +40,7 @@ pub fn memory_mode(
         input
     );
     let encrypt_start_time = Instant::now();
-    let (salt, nonce, data) = encrypt_bytes(file_contents, raw_key)?;
+    let (salt, nonce, data) = encrypt_bytes_memory_mode(file_contents, raw_key)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",
@@ -70,6 +72,8 @@ pub fn memory_mode(
     Ok(())
 }
 
+// this function is for encrypting a file in stream mode
+// it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
 pub fn stream_mode(
     input: &str,
     output: &str,
@@ -101,14 +105,14 @@ pub fn stream_mode(
     let mut output_file =
         File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 
-    let raw_key = get_user_key_encrypt(keyfile)?;
+    let raw_key = get_user_key(keyfile, true)?;
 
     println!(
         "Encrypting {} in stream mode (this may take a while)",
         input
     );
     let encrypt_start_time = Instant::now();
-    encrypt_bytes_stream(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?;
+    encrypt_bytes_stream_mode(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! File saved as {} [took {:.2}s]",

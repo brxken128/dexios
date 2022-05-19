@@ -13,12 +13,15 @@ use secrecy::{ExposeSecret, Secret};
 use std::io::Read;
 use std::io::Write;
 
+// this generates a salt for password hashing
 fn gen_salt() -> [u8; SALT_LEN] {
     let mut salt: [u8; SALT_LEN] = [0; SALT_LEN];
     StdRng::from_entropy().fill_bytes(&mut salt);
     salt
 }
 
+// this handles argon2 hashing with the provided key
+// it returns the key and a salt
 fn gen_key(raw_key: Secret<Vec<u8>>) -> Result<(Secret<[u8; 32]>, [u8; SALT_LEN])> {
     let mut key = [0u8; 32];
     let salt = gen_salt();
@@ -42,7 +45,11 @@ fn gen_nonce() -> [u8; 12] {
     StdRng::from_entropy().gen::<[u8; 12]>()
 }
 
-pub fn encrypt_bytes(
+// this encrypts data in memory mode
+// it takes the data and a Secret<> key
+// it generates the 12 byte nonce, hashes the key and encrypts the data
+// it returns the salt, nonce, and encrypted bytes
+pub fn encrypt_bytes_memory_mode(
     data: Vec<u8>,
     raw_key: Secret<Vec<u8>>,
 ) -> Result<([u8; SALT_LEN], [u8; 12], Vec<u8>)> {
@@ -70,7 +77,12 @@ pub fn encrypt_bytes(
     Ok((salt, nonce_bytes, encrypted_bytes.unwrap()))
 }
 
-pub fn encrypt_bytes_stream(
+// this encrypts data in stream mode
+// it takes an input file handle, an output file handle, a Secret<> key, and bools for if we're in bench/hash mode
+// it generates the 8 byte nonce, creates the encryption cipher and then reads the file in blocks
+// on each read, it encrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
+// this could probably do with some delegation - it does a lot of stuff on it's own
+pub fn encrypt_bytes_stream_mode(
     input: &mut File,
     output: &mut File,
     raw_key: Secret<Vec<u8>>,
@@ -78,7 +90,7 @@ pub fn encrypt_bytes_stream(
     hash: bool,
 ) -> Result<()> {
     let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
-    let nonce = Nonce::from_slice(&nonce_bytes); // truncate to correct size
+    let nonce = Nonce::from_slice(&nonce_bytes);
 
     let (key, salt) = gen_key(raw_key)?;
     let cipher = Aes256Gcm::new_from_slice(key.expose_secret());

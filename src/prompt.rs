@@ -1,6 +1,9 @@
 use anyhow::{Context, Result};
 use std::io::{self, stdin, Write};
 
+// this handles user-interactivity, specifically getting a "yes" or "no" answer from the user
+// it requires the question itself, if the default is true/false
+// if skip is enabled then it will just return the `default`
 pub fn get_answer(prompt: &str, default: bool, skip: bool) -> Result<bool> {
     if skip {
         return Ok(true);
@@ -33,4 +36,17 @@ pub fn get_answer(prompt: &str, default: bool, skip: bool) -> Result<bool> {
         };
     };
     Ok(answer_bool)
+}
+
+// this checks if the file exists
+// then it prompts the user if they'd like to overwrite a file (while showing the associated file name)
+// if they have the skip argument supplied, this will just assume true
+pub fn overwrite_check(name: &str, skip: bool) -> Result<bool> {
+    let answer = if std::fs::metadata(name).is_ok() {
+        let prompt = format!("{} already exists, would you like to overwrite?", name);
+        get_answer(&prompt, true, skip)?
+    } else {
+        true
+    };
+    Ok(answer)
 }

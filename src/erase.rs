@@ -6,6 +6,9 @@ use std::{
     time::Instant,
 };
 
+// this function securely erases a file
+// read the wiki for some caveats with file-erasure on flash storage
+// it takes the file name/relative path, and the number of times to go over the file's contents with random bytes
 #[allow(clippy::module_name_repetitions)]
 pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     let start_time = Instant::now();

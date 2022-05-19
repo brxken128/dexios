@@ -15,6 +15,7 @@ use secrecy::{ExposeSecret, Secret};
 use std::io::Read;
 use std::io::Write;
 
+// this handles argon2id hashing with the provided key and salt
 fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; SALT_LEN]) -> Result<Secret<[u8; 32]>> {
     let mut key = [0u8; 32];
 
@@ -33,7 +34,11 @@ fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; SALT_LEN]) -> Result<Secret<[u8;
     Ok(Secret::new(key))
 }
 
-pub fn decrypt_bytes(
+// this decrypts the data in memory mode
+// it takes the data, a Secret<> key, the salt and the 12 byte nonce
+// it hashes the key with the supplised salt, and decrypts all of the data
+// it returns the decrypted bytes
+pub fn decrypt_bytes_memory_mode(
     salt: [u8; 16],
     nonce: [u8; 12],
     data: &[u8],
@@ -62,7 +67,12 @@ pub fn decrypt_bytes(
     Ok(decrypted_bytes.unwrap())
 }
 
-pub fn decrypt_bytes_stream(
+// this decrypts data in stream mode
+// it takes an input file handle, an output file handle, a Secret<> key, and bools for if we're in bench/hash mode
+// it reads the salt and the 8 byte nonce, creates the encryption cipher and then reads the file in blocks (including the gcm tag)
+// on each read, it decrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
+// this could probably do with some delegation - it does a lot of stuff on it's own
+pub fn decrypt_bytes_stream_mode(
     input: &mut File,
     output: &mut File,
     raw_key: Secret<Vec<u8>>,
@@ -116,7 +126,7 @@ pub fn decrypt_bytes_stream(
                 hasher.update(&buffer);
             }
         } else {
-            // if we read something less than 1040, and have hit the end of the file
+            // if we read something less than BLOCK_SIZE+16, and have hit the end of the file
             let decrypted_data = stream.decrypt_last(&buffer[..read_count]);
 
             if decrypted_data.is_err() {

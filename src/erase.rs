@@ -6,6 +6,7 @@ use std::{
     time::Instant,
 };
 
+#[allow(clippy::module_name_repetitions)]
 pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     let start_time = Instant::now();
     let file = File::open(input).with_context(|| format!("Unable to open file: {}", input))?;

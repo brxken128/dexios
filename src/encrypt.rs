@@ -89,7 +89,7 @@ pub fn stream_mode(
         .with_context(|| format!("Unable to get input file metadata: {}", input))?
         .len();
 
-    if file_size <= BLOCK_SIZE.try_into().unwrap() {
+    if file_size <= BLOCK_SIZE.try_into().context("Unable to parse stream block size as u64")? {
         println!("Input file size is less than the stream block size - redirecting to memory mode");
         return memory_mode(input, output, keyfile, hash_mode, skip, bench);
     }

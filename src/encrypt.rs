@@ -25,7 +25,7 @@ pub fn memory_mode(
     bench: bool,
     password: bool,
 ) -> Result<()> {
-    if !overwrite_check(output, skip)? {
+    if !overwrite_check(output, skip, bench)? {
         exit(0);
     }
 
@@ -84,10 +84,6 @@ pub fn stream_mode(
     bench: bool,
     password: bool,
 ) -> Result<()> {
-    if !overwrite_check(output, skip)? {
-        exit(0);
-    }
-
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
     let file_size = input_file
@@ -102,6 +98,10 @@ pub fn stream_mode(
     {
         println!("Input file size is less than the stream block size - redirecting to memory mode");
         return memory_mode(input, output, keyfile, hash_mode, skip, bench, password);
+    }
+
+    if !overwrite_check(output, skip, bench)? {
+        exit(0);
     }
 
     let mut output_file =

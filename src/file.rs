@@ -7,7 +7,7 @@ use std::{
 use secrecy::SecretVec;
 use secrecy::Secret;
 
-// this takes the name/relative path of a file, and returns the bytes
+// this takes the name/relative path of a file, and returns the bytes wrapped in a secret
 pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {
     let file = File::open(name).with_context(|| format!("Unable to open file: {}", name))?;
     let mut reader = BufReader::new(file);

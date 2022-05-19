@@ -38,7 +38,7 @@ pub fn encrypt_file(
         input
     );
     let encrypt_start_time = Instant::now();
-    let data = encrypt_bytes(file_contents, raw_key)?;
+    let (salt, nonce, data) = encrypt_bytes(file_contents, raw_key)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",
@@ -47,7 +47,7 @@ pub fn encrypt_file(
 
     if !bench {
         let write_start_time = Instant::now();
-        write_encrypted_data_to_file(output, &data)?;
+        write_encrypted_data_to_file(output, &salt, &nonce, &data)?;
         let write_duration = write_start_time.elapsed();
         println!(
             "Wrote to {} [took {:.2}s]",
@@ -58,7 +58,7 @@ pub fn encrypt_file(
 
     if hash_mode {
         let hash_start_time = Instant::now();
-        let hash = hash_data_blake3(&data)?;
+        let hash = hash_data_blake3(&salt, &nonce, &data)?;
         let hash_duration = hash_start_time.elapsed();
         println!(
             "Hash of the encrypted file is: {} [took {:.2}s]",

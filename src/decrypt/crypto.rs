@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use crate::global::{DexiosFile, BLOCK_SIZE, SALT_LEN};
+use crate::global::{BLOCK_SIZE, SALT_LEN};
 use aes_gcm::aead::stream::DecryptorLE31;
 use anyhow::Result;
 
@@ -33,10 +33,10 @@ fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; SALT_LEN]) -> Result<Secret<[u8;
     Ok(Secret::new(key))
 }
 
-pub fn decrypt_bytes(data: DexiosFile, raw_key: Secret<Vec<u8>>) -> Result<Vec<u8>> {
-    let key = get_key(raw_key, data.salt)?;
+pub fn decrypt_bytes(salt: [u8; 16], nonce: [u8; 12], data: Vec<u8>, raw_key: Secret<Vec<u8>>) -> Result<Vec<u8>> {
+    let key = get_key(raw_key, salt)?;
 
-    let nonce = Nonce::from_slice(data.nonce.as_slice());
+    let nonce = Nonce::from_slice(nonce.as_slice());
     let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
     drop(key);
 
@@ -46,7 +46,7 @@ pub fn decrypt_bytes(data: DexiosFile, raw_key: Secret<Vec<u8>>) -> Result<Vec<u
 
     let cipher = cipher.unwrap();
 
-    let decrypted_bytes = cipher.decrypt(nonce, data.data.as_slice());
+    let decrypted_bytes = cipher.decrypt(nonce, data.as_slice());
 
     if decrypted_bytes.is_err() {
         return Err(anyhow!(

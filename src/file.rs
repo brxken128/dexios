@@ -1,4 +1,4 @@
-use crate::global::{DexiosFile, SALT_LEN};
+use crate::global::SALT_LEN;
 use crate::prompt::get_answer;
 use anyhow::{Context, Ok, Result};
 use std::fs::metadata;
@@ -45,17 +45,17 @@ pub fn get_encrypted_file_data(name: &str) -> Result<([u8; SALT_LEN], [u8; 12], 
     Ok((salt, nonce, encrypted_data))
 }
 
-pub fn write_encrypted_data_to_file(name: &str, data: &DexiosFile) -> Result<()> {
+pub fn write_encrypted_data_to_file(name: &str, salt: &[u8; 16], nonce: &[u8; 12], data: &Vec<u8>) -> Result<()> {
     let mut writer =
         File::create(name).with_context(|| format!("Unable to create output file: {}", name))?;
     writer
-        .write_all(&data.salt)
+        .write_all(salt)
         .with_context(|| format!("Unable to write salt to output file: {}", name))?;
     writer
-        .write_all(&data.nonce)
+        .write_all(nonce)
         .with_context(|| format!("Unable to write nonce to output file: {}", name))?;
     writer
-        .write_all(&data.data)
+        .write_all(data)
         .with_context(|| format!("Unable to write data to output file: {}", name))?;
     writer
         .flush()

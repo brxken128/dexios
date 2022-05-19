@@ -1,12 +1,10 @@
 use anyhow::{Ok, Result};
 
-use crate::global::DexiosFile;
-
-pub fn hash_data_blake3(data: &DexiosFile) -> Result<String> {
+pub fn hash_data_blake3(salt: &[u8; 16], nonce: &[u8; 12], data: &Vec<u8>) -> Result<String> {
     let mut hasher = blake3::Hasher::new();
-    hasher.update(&data.salt);
-    hasher.update(&data.nonce);
-    hasher.update(&data.data);
+    hasher.update(salt);
+    hasher.update(nonce);
+    hasher.update(data);
     let hash = hasher.finalize().to_hex().to_string();
     Ok(hash)
 }

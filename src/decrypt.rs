@@ -3,7 +3,6 @@ use crate::decrypt::crypto::decrypt_bytes_stream;
 use crate::file::get_encrypted_file_data;
 use crate::file::overwrite_check;
 use crate::file::write_bytes_to_file;
-use crate::global::DexiosFile;
 use crate::global::BLOCK_SIZE;
 use crate::global::SALT_LEN;
 use crate::hashing::hash_data_blake3;
@@ -30,17 +29,12 @@ pub fn decrypt_file(
 
     let read_start_time = Instant::now();
     let (salt, nonce, encrypted_data) = get_encrypted_file_data(input)?;
-    let data = DexiosFile {
-        salt,
-        nonce,
-        data: encrypted_data,
-    };
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
     if hash_mode {
         let start_time = Instant::now();
-        let hash = hash_data_blake3(&data)?;
+        let hash = hash_data_blake3(&salt, &nonce, &encrypted_data)?;
         let duration = start_time.elapsed();
         println!(
             "Hash of the encrypted file is: {} [took {:.2}s]",
@@ -65,7 +59,7 @@ pub fn decrypt_file(
         input
     );
     let decrypt_start_time = Instant::now();
-    let decrypted_bytes = decrypt_bytes(data, raw_key)?;
+    let decrypted_bytes = decrypt_bytes(salt, nonce, encrypted_data, raw_key)?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! [took {:.2}s]",

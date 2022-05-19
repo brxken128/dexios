@@ -50,6 +50,8 @@ Dexios will receive frequent updates, and they are always tested before being re
 
 Please report any vulnerabilities as a Github issue - we believe all issues should be known, and they are likely to get resolved very quickly this way. Thank you.
 
+As an alternative, you may contact `brxken128@tutanota.com`
+
 ## Supported Versions
 
 | Version | Supported          |

@@ -28,7 +28,19 @@ Please report any vulnerabilities as a Github issue - we believe all issues shou
 | 4.0.x   | :x:                |
 | < 4.0   | :x:                |
 
-## Images
+## Basic Usage
+
+To encrypt a file:
+
+`dexios encrypt secret.txt secret.enc`
+
+And to decrypt that same file:
+
+`dexios decrypt secret.enc secret.txt`
+
+To securely erase a file:
+
+`dexios erase secret.txt`
 
 Here is a screenshot of Dexios in action! The performance is great, and the checksums match meaning the file is exactly the same as it was before encryption.
 

@@ -7,7 +7,7 @@ use clap::{Arg, Command};
 pub fn get_matches() -> clap::ArgMatches {
     Command::new("dexios")
         .version(clap::crate_version!())
-        .author("brxken128 <github.com/brxken128>")
+        .author("brxken128 <brxken128@tutanota.com>")
         .about("Secure command-line encryption of files.")
         .subcommand_required(true)
         .subcommand(

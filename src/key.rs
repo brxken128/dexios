@@ -6,15 +6,19 @@ use secrecy::Zeroize;
 
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes
-fn get_password_with_validation() -> Result<Vec<u8>> {
+fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
     Ok(loop {
         let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
+        if !validation {
+            return Ok(SecretVec::new(input.into_bytes()));
+        }
+
         let mut input_validation = rpassword::prompt_password("Password (for validation): ")
             .context("Unable to read password")?;
 
         if input == input_validation && !input.is_empty() {
             input_validation.zeroize();
-            break input.into_bytes();
+            break SecretVec::new(input.into_bytes());
         } else if input.is_empty() {
             println!("Password cannot be empty, please try again.");
         } else {
@@ -31,7 +35,7 @@ fn get_password_with_validation() -> Result<Vec<u8>> {
 pub fn get_user_key(keyfile: &str, validation: bool) -> Result<Secret<Vec<u8>>> {
     Ok(if !keyfile.is_empty() {
         println!("Reading key from {}", keyfile);
-        SecretVec::new(get_bytes(keyfile)?)
+        get_bytes(keyfile)? // already a secret
     } else if std::env::var("DEXIOS_KEY").is_ok() {
         println!("Reading key from DEXIOS_KEY environment variable");
         SecretVec::new(
@@ -39,11 +43,7 @@ pub fn get_user_key(keyfile: &str, validation: bool) -> Result<Secret<Vec<u8>>> 
                 .context("Unable to read DEXIOS_KEY from environment variable")?
                 .into_bytes(),
         )
-    } else if validation {
-            SecretVec::new(get_password_with_validation()?)
     } else {
-        let input =
-            rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        SecretVec::new(input.into_bytes())
+        get_password(validation)? // already a secret
     })
 }

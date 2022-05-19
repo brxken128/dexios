@@ -50,7 +50,7 @@ fn gen_nonce() -> [u8; 12] {
 // it generates the 12 byte nonce, hashes the key and encrypts the data
 // it returns the salt, nonce, and encrypted bytes
 pub fn encrypt_bytes_memory_mode(
-    data: Vec<u8>,
+    data: Secret<Vec<u8>>,
     raw_key: Secret<Vec<u8>>,
 ) -> Result<([u8; SALT_LEN], [u8; 12], Vec<u8>)> {
     let nonce_bytes = gen_nonce();
@@ -66,7 +66,7 @@ pub fn encrypt_bytes_memory_mode(
 
     let cipher = cipher.unwrap();
 
-    let encrypted_bytes = cipher.encrypt(nonce, data.as_slice());
+    let encrypted_bytes = cipher.encrypt(nonce, data.expose_secret().as_slice());
 
     if encrypted_bytes.is_err() {
         return Err(anyhow!("Unable to encrypt the data"));

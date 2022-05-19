@@ -4,16 +4,18 @@ use std::{
     fs::File,
     io::{BufReader, Read, Write},
 };
+use secrecy::SecretVec;
+use secrecy::Secret;
 
 // this takes the name/relative path of a file, and returns the bytes
-pub fn get_bytes(name: &str) -> Result<Vec<u8>> {
+pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {
     let file = File::open(name).with_context(|| format!("Unable to open file: {}", name))?;
     let mut reader = BufReader::new(file);
     let mut data = Vec::new();
     reader
         .read_to_end(&mut data)
         .with_context(|| format!("Unable to read file: {}", name))?;
-    Ok(data)
+    Ok(SecretVec::new(data))
 }
 
 // this takes the name/relative path of a file, and reads it in the correct format

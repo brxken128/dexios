@@ -102,8 +102,11 @@ pub fn decrypt_bytes_stream_mode(
     let mut stream = DecryptorLE31::from_aead(cipher, nonce);
 
     let mut hasher = blake3::Hasher::new();
-    hasher.update(&salt);
-    hasher.update(nonce);
+    
+    if hash {
+        hasher.update(&salt);
+        hasher.update(nonce);
+    }
 
     let mut buffer = [0u8; BLOCK_SIZE + 16]; // 16 bytes is the length of the GCM tag
 

@@ -1,4 +1,7 @@
-use aead::{stream::{EncryptorLE31, DecryptorLE31}, Payload, Result};
+use aead::{
+    stream::{DecryptorLE31, EncryptorLE31},
+    Payload, Result,
+};
 use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
 
@@ -24,14 +27,20 @@ pub enum DecryptStreamCiphers {
 }
 
 impl EncryptStreamCiphers {
-    pub fn encrypt_next<'msg, 'aad>(&mut self, payload: impl Into<Payload<'msg, 'aad>>) -> Result<Vec<u8>> {
+    pub fn encrypt_next<'msg, 'aad>(
+        &mut self,
+        payload: impl Into<Payload<'msg, 'aad>>,
+    ) -> Result<Vec<u8>> {
         match self {
             EncryptStreamCiphers::AesGcm(s) => s.encrypt_next(payload),
             EncryptStreamCiphers::XChaCha(s) => s.encrypt_next(payload),
         }
     }
 
-    pub fn encrypt_last<'msg, 'aad>(self, payload: impl Into<Payload<'msg, 'aad>>) -> Result<Vec<u8>> {
+    pub fn encrypt_last<'msg, 'aad>(
+        self,
+        payload: impl Into<Payload<'msg, 'aad>>,
+    ) -> Result<Vec<u8>> {
         match self {
             EncryptStreamCiphers::AesGcm(s) => s.encrypt_last(payload),
             EncryptStreamCiphers::XChaCha(s) => s.encrypt_last(payload),
@@ -50,7 +59,10 @@ impl DecryptStreamCiphers {
         }
     }
 
-    pub fn decrypt_last<'msg, 'aad>(self, payload: impl Into<Payload<'msg, 'aad>>) -> aead::Result<Vec<u8>> {
+    pub fn decrypt_last<'msg, 'aad>(
+        self,
+        payload: impl Into<Payload<'msg, 'aad>>,
+    ) -> aead::Result<Vec<u8>> {
         match self {
             DecryptStreamCiphers::AesGcm(s) => s.decrypt_last(payload),
             DecryptStreamCiphers::XChaCha(s) => s.decrypt_last(payload),

@@ -1,16 +1,16 @@
 use std::fs::File;
 
-use crate::global::{BLOCK_SIZE, SALT_LEN, CipherType, DecryptStreamCiphers};
+use crate::global::{CipherType, DecryptStreamCiphers, BLOCK_SIZE, SALT_LEN};
 use aead::stream::DecryptorLE31;
 use aead::{Aead, NewAead};
-use anyhow::Result;
-use chacha20poly1305::XChaCha20Poly1305;
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Ok;
+use anyhow::Result;
 use argon2::Argon2;
 use argon2::Params;
+use chacha20poly1305::XChaCha20Poly1305;
 use secrecy::{ExposeSecret, Secret};
 use std::io::Read;
 use std::io::Write;
@@ -98,7 +98,7 @@ pub fn decrypt_bytes_stream_mode(
             input
                 .read(&mut nonce_bytes)
                 .context("Unable to read nonce from the file")?;
-        
+
             if hash {
                 hasher.update(&nonce_bytes);
             }
@@ -110,13 +110,13 @@ pub fn decrypt_bytes_stream_mode(
             if cipher.is_err() {
                 return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
             }
-        
+
             let cipher = cipher.unwrap();
-        
+
             let stream = DecryptorLE31::from_aead(cipher, nonce);
 
             DecryptStreamCiphers::AesGcm(stream)
-        },
+        }
         CipherType::XChaCha20Poly1305 => {
             let mut nonce_bytes = [0u8; 20];
             input
@@ -133,14 +133,13 @@ pub fn decrypt_bytes_stream_mode(
             if cipher.is_err() {
                 return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
             }
-        
+
             let cipher = cipher.unwrap();
-        
+
             let stream = DecryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
             DecryptStreamCiphers::XChaCha(stream)
         }
     };
-
 
     let mut buffer = [0u8; BLOCK_SIZE + 16]; // 16 bytes is the length of the AEAD tag
 

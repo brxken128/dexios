@@ -2,8 +2,8 @@ use crate::encrypt::crypto::encrypt_bytes_memory_mode;
 use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
 use crate::file::write_encrypted_data;
-use crate::global::BLOCK_SIZE;
 use crate::global::CipherType;
+use crate::global::BLOCK_SIZE;
 use crate::hashing::hash_data_blake3;
 use crate::key::get_user_key;
 use crate::prompt::overwrite_check;
@@ -100,7 +100,16 @@ pub fn stream_mode(
             .context("Unable to parse stream block size as u64")?
     {
         println!("Input file size is less than the stream block size - redirecting to memory mode");
-        return memory_mode(input, output, keyfile, hash_mode, skip, bench, password, cipher_type);
+        return memory_mode(
+            input,
+            output,
+            keyfile,
+            hash_mode,
+            skip,
+            bench,
+            password,
+            cipher_type,
+        );
     }
 
     if !overwrite_check(output, skip, bench)? {
@@ -114,11 +123,17 @@ pub fn stream_mode(
 
     println!(
         "Encrypting {} in stream mode with {:?} (this may take a while)",
-        input,
-        cipher_type
+        input, cipher_type
     );
     let encrypt_start_time = Instant::now();
-    encrypt_bytes_stream_mode(&mut input_file, &mut output_file, raw_key, bench, hash_mode, cipher_type)?;
+    encrypt_bytes_stream_mode(
+        &mut input_file,
+        &mut output_file,
+        raw_key,
+        bench,
+        hash_mode,
+        cipher_type,
+    )?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! File saved as {} [took {:.2}s]",

@@ -1,11 +1,11 @@
 use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
+use secrecy::Secret;
+use secrecy::SecretVec;
 use std::{
     fs::File,
     io::{BufReader, Read, Write},
 };
-use secrecy::SecretVec;
-use secrecy::Secret;
 
 // this takes the name/relative path of a file, and returns the bytes wrapped in a secret
 pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {

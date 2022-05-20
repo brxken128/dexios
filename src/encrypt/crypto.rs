@@ -1,6 +1,6 @@
 use std::fs::File;
 
-use crate::global::{BLOCK_SIZE, SALT_LEN, CipherType, EncryptStreamCiphers};
+use crate::global::{CipherType, EncryptStreamCiphers, BLOCK_SIZE, SALT_LEN};
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
@@ -91,41 +91,53 @@ pub fn encrypt_bytes_stream_mode(
     hash: bool,
     cipher_type: CipherType,
 ) -> Result<()> {
-    let (mut streams, salt, nonce_bytes): (EncryptStreamCiphers, [u8; SALT_LEN], Vec<u8>) = match cipher_type {
-        CipherType::AesGcm => {
-            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
-            let nonce = Nonce::from_slice(&nonce_bytes);
-        
-            let (key, salt) = gen_key(raw_key)?;
-            let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
-            drop(key);
+    let (mut streams, salt, nonce_bytes): (EncryptStreamCiphers, [u8; SALT_LEN], Vec<u8>) =
+        match cipher_type {
+            CipherType::AesGcm => {
+                let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
+                let nonce = Nonce::from_slice(&nonce_bytes);
 
-            if cipher.is_err() {
-                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
-            }
-        
-            let cipher = cipher.unwrap();
-        
-            let stream = aes_gcm::aead::stream::EncryptorLE31::from_aead(cipher, nonce);
-            (EncryptStreamCiphers::AesGcm(stream), salt, nonce_bytes.to_vec())
-        },
-        CipherType::XChaCha20Poly1305 => {
-            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
+                let (key, salt) = gen_key(raw_key)?;
+                let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
+                drop(key);
 
-            let (key, salt) = gen_key(raw_key)?;
-            let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
-            drop(key);
-        
-            if cipher.is_err() {
-                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
+                if cipher.is_err() {
+                    return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
+                }
+
+                let cipher = cipher.unwrap();
+
+                let stream = aes_gcm::aead::stream::EncryptorLE31::from_aead(cipher, nonce);
+                (
+                    EncryptStreamCiphers::AesGcm(stream),
+                    salt,
+                    nonce_bytes.to_vec(),
+                )
             }
-        
-            let cipher = cipher.unwrap();
-        
-            let stream = chacha20poly1305::aead::stream::EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
-            (EncryptStreamCiphers::XChaCha(stream), salt, nonce_bytes.to_vec())
-        }
-    };
+            CipherType::XChaCha20Poly1305 => {
+                let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
+
+                let (key, salt) = gen_key(raw_key)?;
+                let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
+                drop(key);
+
+                if cipher.is_err() {
+                    return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
+                }
+
+                let cipher = cipher.unwrap();
+
+                let stream = chacha20poly1305::aead::stream::EncryptorLE31::from_aead(
+                    cipher,
+                    nonce_bytes.as_slice().into(),
+                );
+                (
+                    EncryptStreamCiphers::XChaCha(stream),
+                    salt,
+                    nonce_bytes.to_vec(),
+                )
+            }
+        };
 
     if !bench {
         output

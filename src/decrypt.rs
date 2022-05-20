@@ -1,4 +1,4 @@
-use crate::decrypt::crypto::decrypt_bytes_memory_mode_gcm;
+use crate::decrypt::crypto::decrypt_bytes_memory_mode;
 use crate::decrypt::crypto::decrypt_bytes_stream_mode;
 use crate::file::get_encrypted_data;
 use crate::file::write_bytes;
@@ -64,7 +64,7 @@ pub fn memory_mode(
         input
     );
     let decrypt_start_time = Instant::now();
-    let decrypted_bytes = decrypt_bytes_memory_mode_gcm(salt, nonce, &encrypted_data, raw_key)?;
+    let decrypted_bytes = decrypt_bytes_memory_mode(salt, nonce, &encrypted_data, raw_key)?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! [took {:.2}s]",

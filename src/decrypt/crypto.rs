@@ -38,7 +38,7 @@ fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; SALT_LEN]) -> Result<Secret<[u8;
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce
 // it hashes the key with the supplised salt, and decrypts all of the data
 // it returns the decrypted bytes
-pub fn decrypt_bytes_memory_mode_gcm(
+pub fn decrypt_bytes_memory_mode(
     salt: [u8; 16],
     nonce: [u8; 12],
     data: &[u8],

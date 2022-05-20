@@ -1,4 +1,5 @@
-use aes_gcm::{aead::{stream::{DecryptorLE31}, Payload}, Aes256Gcm};
+use aead::{stream::{EncryptorLE31, DecryptorLE31}, Payload, Result};
+use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
 
 // this file sets constants that are used throughout the codebase
@@ -12,11 +13,33 @@ pub enum CipherType {
     XChaCha20Poly1305,
 }
 
+
+pub enum EncryptStreamCiphers {
+    AesGcm(EncryptorLE31<Aes256Gcm>),
+    XChaCha(EncryptorLE31<XChaCha20Poly1305>),
+}
+
 pub enum DecryptStreamCiphers {
     AesGcm(DecryptorLE31<Aes256Gcm>),
     XChaCha(DecryptorLE31<XChaCha20Poly1305>),
 }
- 
+
+impl EncryptStreamCiphers {
+    pub fn encrypt_next<'msg, 'aad>(&mut self, payload: impl Into<Payload<'msg, 'aad>>) -> Result<Vec<u8>> {
+        match self {
+            EncryptStreamCiphers::AesGcm(s) => s.encrypt_next(payload),
+            EncryptStreamCiphers::XChaCha(s) => s.encrypt_next(payload),
+        }
+    }
+
+    pub fn encrypt_last<'msg, 'aad>(self, payload: impl Into<Payload<'msg, 'aad>>) -> Result<Vec<u8>> {
+        match self {
+            EncryptStreamCiphers::AesGcm(s) => s.encrypt_last(payload),
+            EncryptStreamCiphers::XChaCha(s) => s.encrypt_last(payload),
+        }
+    }
+}
+
 impl DecryptStreamCiphers {
     pub fn decrypt_next<'msg, 'aad>(
         &mut self,

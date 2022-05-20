@@ -1,6 +1,5 @@
 use crate::encrypt::crypto::encrypt_bytes_memory_mode;
-use crate::encrypt::crypto::encrypt_bytes_stream_mode_chacha;
-use crate::encrypt::crypto::encrypt_bytes_stream_mode_gcm;
+use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
 use crate::file::write_encrypted_data;
 use crate::global::BLOCK_SIZE;
@@ -118,10 +117,7 @@ pub fn stream_mode(
         input
     );
     let encrypt_start_time = Instant::now();
-    match cipher_type {
-        CipherType::AesGcm => encrypt_bytes_stream_mode_gcm(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?,
-        CipherType::XChaCha20Poly1305 => encrypt_bytes_stream_mode_chacha(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?,
-    }
+    encrypt_bytes_stream_mode(&mut input_file, &mut output_file, raw_key, bench, hash_mode, cipher_type)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! File saved as {} [took {:.2}s]",

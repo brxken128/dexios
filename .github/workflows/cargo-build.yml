@@ -60,6 +60,8 @@ jobs:
         args: --release
     - name: Strip
       run: strip target/release/dexios
+    - name: Hash the Binary
+      run: sha256sum target/release/dexios
     - name: Upload Binary as artifact
       uses: actions/upload-artifact@v3
       with:

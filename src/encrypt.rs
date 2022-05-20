@@ -26,7 +26,7 @@ pub fn memory_mode(
     skip: bool,
     bench: bool,
     password: bool,
-    cipher_type: CipherType,
+    _cipher_type: CipherType,
 ) -> Result<()> {
     if !overwrite_check(output, skip, bench)? {
         exit(0);

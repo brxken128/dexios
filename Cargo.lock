@@ -236,6 +236,7 @@ dependencies = [
 name = "dexios"
 version = "7.2.9"
 dependencies = [
+ "aead",
  "aes-gcm",
  "anyhow",
  "argon2",

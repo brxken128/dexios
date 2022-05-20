@@ -1,6 +1,5 @@
 use crate::decrypt::crypto::decrypt_bytes_memory_mode_gcm;
-use crate::decrypt::crypto::decrypt_bytes_stream_mode_gcm;
-use crate::decrypt::crypto::decrypt_bytes_stream_mode_chacha;
+use crate::decrypt::crypto::decrypt_bytes_stream_mode;
 use crate::file::get_encrypted_data;
 use crate::file::write_bytes;
 use crate::global::BLOCK_SIZE;
@@ -27,7 +26,7 @@ pub fn memory_mode(
     skip: bool,
     bench: bool,
     password: bool,
-    cipher_type: CipherType,
+    _cipher_type: CipherType,
 ) -> Result<()> {
     if !overwrite_check(output, skip, bench)? {
         exit(0);
@@ -132,10 +131,7 @@ pub fn stream_mode(
         input
     );
     let decrypt_start_time = Instant::now();
-    match cipher_type {
-        CipherType::AesGcm => decrypt_bytes_stream_mode_gcm(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?,
-        CipherType::XChaCha20Poly1305 => decrypt_bytes_stream_mode_chacha(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?,
-    }
+    decrypt_bytes_stream_mode(&mut input_file, &mut output_file, raw_key, bench, hash_mode, cipher_type)?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! File saved as {} [took {:.2}s]",

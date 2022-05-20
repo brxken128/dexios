@@ -106,7 +106,7 @@ pub fn decrypt_bytes_stream_mode(
             let nonce = Nonce::from_slice(nonce_bytes.as_slice());
             let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
             drop(key);
-        
+
             if cipher.is_err() {
                 return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
             }
@@ -129,7 +129,7 @@ pub fn decrypt_bytes_stream_mode(
 
             let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
             drop(key);
-        
+
             if cipher.is_err() {
                 return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
             }

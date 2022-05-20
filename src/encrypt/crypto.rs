@@ -91,7 +91,6 @@ pub fn encrypt_bytes_stream_mode(
     hash: bool,
     cipher_type: CipherType,
 ) -> Result<()> {
-   
     let (mut streams, salt, nonce_bytes): (EncryptStreamCiphers, [u8; SALT_LEN], Vec<u8>) = match cipher_type {
         CipherType::AesGcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
@@ -100,7 +99,7 @@ pub fn encrypt_bytes_stream_mode(
             let (key, salt) = gen_key(raw_key)?;
             let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
             drop(key);
-        
+
             if cipher.is_err() {
                 return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
             }

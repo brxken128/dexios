@@ -89,6 +89,13 @@ pub fn get_matches() -> clap::ArgMatches {
                         .takes_value(false)
                         .help("interactively ask for your password")
                         .conflicts_with("keyfile"),
+                )
+                .arg(
+                    Arg::new("gcm")
+                        .short('g')
+                        .long("gcm")
+                        .takes_value(false)
+                        .help("use aes-gcm instead of xchacha20-poly1305"),
                 ),
         )
         .subcommand(
@@ -170,6 +177,13 @@ pub fn get_matches() -> clap::ArgMatches {
                         .takes_value(false)
                         .help("interactively ask for your password")
                         .conflicts_with("keyfile"),
+                )
+                .arg(
+                    Arg::new("gcm")
+                        .short('g')
+                        .long("gcm")
+                        .takes_value(false)
+                        .help("use aes-gcm instead of xchacha20-poly1305"),
                 ),
         )
         .subcommand(

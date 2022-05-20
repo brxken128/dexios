@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use global::CipherType;
 use std::result::Result::Ok;
 
 mod cli;
@@ -24,6 +25,12 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
+            let cipher_type = if sub_matches.is_present("gcm") {
+                CipherType::AesGcm
+            } else {
+                CipherType::XChaCha20Poly1305
+            };
+
             let result = if sub_matches.is_present("memory") {
                 encrypt::memory_mode(
                     sub_matches
@@ -37,6 +44,7 @@ fn main() -> Result<()> {
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
                     sub_matches.is_present("password"),
+                    cipher_type,
                 )
             } else {
                 encrypt::stream_mode(
@@ -51,6 +59,7 @@ fn main() -> Result<()> {
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
                     sub_matches.is_present("password"),
+                    cipher_type,
                 )
             };
 
@@ -84,6 +93,12 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
+            let cipher_type = if sub_matches.is_present("gcm") {
+                CipherType::AesGcm
+            } else {
+                CipherType::XChaCha20Poly1305
+            };
+
             let result = if sub_matches.is_present("memory") {
                 decrypt::memory_mode(
                     sub_matches
@@ -97,6 +112,7 @@ fn main() -> Result<()> {
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
                     sub_matches.is_present("password"),
+                    cipher_type,
                 )
             } else {
                 decrypt::stream_mode(
@@ -111,6 +127,7 @@ fn main() -> Result<()> {
                     sub_matches.is_present("skip"),
                     sub_matches.is_present("bench"),
                     sub_matches.is_present("password"),
+                    cipher_type,
                 )
             };
 

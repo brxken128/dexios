@@ -122,7 +122,7 @@ pub fn stream_mode(
     let raw_key = get_user_key(keyfile, true, password)?;
 
     println!(
-        "Encrypting {} in stream mode with {:?} (this may take a while)",
+        "Encrypting {} in stream mode with {} (this may take a while)",
         input, cipher_type
     );
     let encrypt_start_time = Instant::now();

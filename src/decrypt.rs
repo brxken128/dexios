@@ -136,7 +136,7 @@ pub fn stream_mode(
     let raw_key = get_user_key(keyfile, false, password)?;
 
     println!(
-        "Decrypting {} in stream mode with {:?} (this may take a while)",
+        "Decrypting {} in stream mode with {} (this may take a while)",
         input, cipher_type,
     );
     let decrypt_start_time = Instant::now();

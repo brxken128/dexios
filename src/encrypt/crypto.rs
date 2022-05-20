@@ -1,6 +1,7 @@
 use std::fs::File;
 
 use crate::global::{CipherType, EncryptStreamCiphers, BLOCK_SIZE, SALT_LEN};
+use aead::stream::EncryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
@@ -107,7 +108,7 @@ pub fn encrypt_bytes_stream_mode(
 
                 let cipher = cipher.unwrap();
 
-                let stream = aes_gcm::aead::stream::EncryptorLE31::from_aead(cipher, nonce);
+                let stream = EncryptorLE31::from_aead(cipher, nonce);
                 (
                     EncryptStreamCiphers::AesGcm(stream),
                     salt,
@@ -127,7 +128,7 @@ pub fn encrypt_bytes_stream_mode(
 
                 let cipher = cipher.unwrap();
 
-                let stream = chacha20poly1305::aead::stream::EncryptorLE31::from_aead(
+                let stream = EncryptorLE31::from_aead(
                     cipher,
                     nonce_bytes.as_slice().into(),
                 );

@@ -80,16 +80,16 @@ pub fn decrypt_bytes_stream_mode_gcm(
     hash: bool,
 ) -> Result<()> {
     let mut salt = [0u8; SALT_LEN];
-    let mut nonce = [0u8; 8];
+    let mut nonce_bytes = [0u8; 8];
     input
         .read(&mut salt)
         .context("Unable to read salt from the file")?;
     input
-        .read(&mut nonce)
+        .read(&mut nonce_bytes)
         .context("Unable to read nonce from the file")?;
 
     let key = get_key(raw_key, salt)?;
-    let nonce = Nonce::from_slice(nonce.as_slice());
+    let nonce = Nonce::from_slice(nonce_bytes.as_slice());
     let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
     drop(key);
 
@@ -166,16 +166,15 @@ pub fn decrypt_bytes_stream_mode_chacha(
     hash: bool,
 ) -> Result<()> {
     let mut salt = [0u8; SALT_LEN];
-    let mut nonce = [0u8; 20];
+    let mut nonce_bytes = [0u8; 20];
     input
         .read(&mut salt)
         .context("Unable to read salt from the file")?;
     input
-        .read(&mut nonce)
+        .read(&mut nonce_bytes)
         .context("Unable to read nonce from the file")?;
 
     let key = get_key(raw_key, salt)?;
-    let nonce = XNonce::from_slice(nonce.as_slice());
     let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
     drop(key);
 
@@ -185,13 +184,13 @@ pub fn decrypt_bytes_stream_mode_chacha(
 
     let cipher = cipher.unwrap();
 
-    let mut stream = DecryptorLE31::from_aead(cipher, nonce.as_slice().into());
+    let mut stream = DecryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
 
     let mut hasher = blake3::Hasher::new();
     
     if hash {
         hasher.update(&salt);
-        hasher.update(nonce);
+        hasher.update(&nonce_bytes);
     }
 
     let mut buffer = [0u8; BLOCK_SIZE + 16]; // 16 bytes is the length of the AEAD tag

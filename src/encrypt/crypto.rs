@@ -182,7 +182,6 @@ pub fn encrypt_bytes_stream_mode_chacha(
     hash: bool,
 ) -> Result<()> {
     let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
-    let nonce = XNonce::from_slice(&nonce_bytes);
 
     let (key, salt) = gen_key(raw_key)?;
     let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
@@ -194,7 +193,7 @@ pub fn encrypt_bytes_stream_mode_chacha(
 
     let cipher = cipher.unwrap();
 
-    let mut stream = chacha20poly1305::aead::stream::EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
+    let mut stream = chacha20poly1305::aead::stream::EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
 
     if !bench {
         output

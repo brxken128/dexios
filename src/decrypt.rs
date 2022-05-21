@@ -87,8 +87,8 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: Parameters)
         .with_context(|| format!("Unable to get input file metadata: {}", input))?
         .len();
 
-    // +16 for GCM tag, +SALT_LEN to account for salt, +4 for the extra 4 bytes of nonce stored with each block
-    // +8 to account for nonce itself
+    // +16 for AEAD tag, +SALT_LEN to account for salt, +4 for the extra 4 bytes of nonce stored with each block
+    // +8 to account for nonce itself (assuming the smallest nonce, which is aes-256-gcm's)
     if file_size
         <= (BLOCK_SIZE + 24 + SALT_LEN)
             .try_into()

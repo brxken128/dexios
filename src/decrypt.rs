@@ -2,6 +2,7 @@ use crate::decrypt::crypto::decrypt_bytes_memory_mode;
 use crate::decrypt::crypto::decrypt_bytes_stream_mode;
 use crate::file::get_encrypted_data;
 use crate::file::write_bytes;
+use crate::global::Parameters;
 use crate::global::BLOCK_SIZE;
 use crate::global::SALT_LEN;
 use crate::hashing::hash_data_blake3;
@@ -17,25 +18,17 @@ mod crypto;
 
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
-pub fn memory_mode(
-    input: &str,
-    output: &str,
-    keyfile: &str,
-    hash_mode: bool,
-    skip: bool,
-    bench: bool,
-    password: bool,
-) -> Result<()> {
-    if !overwrite_check(output, skip, bench)? {
+pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: Parameters) -> Result<()> {
+    if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
 
     let read_start_time = Instant::now();
-    let (salt, nonce, encrypted_data) = get_encrypted_data(input)?;
+    let (salt, nonce, encrypted_data) = get_encrypted_data(input, params.cipher_type)?;
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
-    if hash_mode {
+    if params.hash_mode {
         let start_time = Instant::now();
         let hash = hash_data_blake3(&salt, &nonce, &encrypted_data)?;
         let duration = start_time.elapsed();
@@ -48,28 +41,29 @@ pub fn memory_mode(
         let answer = get_answer(
             "Would you like to continue with the decryption?",
             true,
-            skip,
+            params.skip,
         )?;
         if !answer {
             exit(0);
         }
     }
 
-    let raw_key = get_user_key(keyfile, false, password)?;
+    let raw_key = get_user_key(keyfile, false, params.password)?;
 
     println!(
         "Decrypting {} in memory mode (this may take a while)",
         input
     );
     let decrypt_start_time = Instant::now();
-    let decrypted_bytes = decrypt_bytes_memory_mode(salt, nonce, &encrypted_data, raw_key)?;
+    let decrypted_bytes =
+        decrypt_bytes_memory_mode(salt, &nonce, &encrypted_data, raw_key, params.cipher_type)?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! [took {:.2}s]",
         decrypt_duration.as_secs_f32()
     );
 
-    if !bench {
+    if !params.bench {
         let write_start_time = Instant::now();
         write_bytes(output, &decrypted_bytes)?;
         let write_duration = write_start_time.elapsed();
@@ -85,15 +79,7 @@ pub fn memory_mode(
 
 // this function is for decrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
-pub fn stream_mode(
-    input: &str,
-    output: &str,
-    keyfile: &str,
-    hash_mode: bool,
-    skip: bool,
-    bench: bool,
-    password: bool,
-) -> Result<()> {
+pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: Parameters) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
     let file_size = input_file
@@ -111,24 +97,31 @@ pub fn stream_mode(
         println!(
             "Encrypted data size is less than the stream block size - redirecting to memory mode"
         );
-        return memory_mode(input, output, keyfile, hash_mode, skip, bench, password);
+        return memory_mode(input, output, keyfile, params);
     }
 
-    if !overwrite_check(output, skip, bench)? {
+    if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
 
     let mut output_file =
         File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 
-    let raw_key = get_user_key(keyfile, false, password)?;
+    let raw_key = get_user_key(keyfile, false, params.password)?;
 
     println!(
-        "Decrypting {} in stream mode (this may take a while)",
-        input
+        "Decrypting {} in stream mode with {} (this may take a while)",
+        input, params.cipher_type,
     );
     let decrypt_start_time = Instant::now();
-    decrypt_bytes_stream_mode(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?;
+    decrypt_bytes_stream_mode(
+        &mut input_file,
+        &mut output_file,
+        raw_key,
+        params.bench,
+        params.hash_mode,
+        params.cipher_type,
+    )?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! File saved as {} [took {:.2}s]",

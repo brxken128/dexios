@@ -72,7 +72,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .short('s')
                         .long("stream")
                         .takes_value(false)
-                        .help("use stream encryption - default")
+                        .help("use stream encryption (default)")
                         .conflicts_with("memory"),
                 )
                 .arg(
@@ -89,6 +89,21 @@ pub fn get_matches() -> clap::ArgMatches {
                         .takes_value(false)
                         .help("interactively ask for your password")
                         .conflicts_with("keyfile"),
+                )
+                .arg(
+                    Arg::new("gcm")
+                        .short('g')
+                        .long("gcm")
+                        .takes_value(false)
+                        .help("use aes-256-gcm"),
+                )
+                .arg(
+                    Arg::new("xchacha")
+                        .short('x')
+                        .long("xchacha")
+                        .takes_value(false)
+                        .help("use xchacha20-poly1305 (default)")
+                        .conflicts_with("gcm"),
                 ),
         )
         .subcommand(
@@ -153,7 +168,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .short('s')
                         .long("stream")
                         .takes_value(false)
-                        .help("use stream decryption - default")
+                        .help("use stream decryption (default)")
                         .conflicts_with("memory"),
                 )
                 .arg(
@@ -170,6 +185,21 @@ pub fn get_matches() -> clap::ArgMatches {
                         .takes_value(false)
                         .help("interactively ask for your password")
                         .conflicts_with("keyfile"),
+                )
+                .arg(
+                    Arg::new("gcm")
+                        .short('g')
+                        .long("gcm")
+                        .takes_value(false)
+                        .help("use aes-256-gcm"),
+                )
+                .arg(
+                    Arg::new("xchacha")
+                        .short('x')
+                        .long("xchacha")
+                        .takes_value(false)
+                        .help("use xchacha20-poly1305 (default)")
+                        .conflicts_with("gcm"),
                 ),
         )
         .subcommand(

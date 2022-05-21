@@ -2,6 +2,7 @@ use crate::encrypt::crypto::encrypt_bytes_memory_mode;
 use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
 use crate::file::write_encrypted_data;
+use crate::global::Parameters;
 use crate::global::BLOCK_SIZE;
 use crate::hashing::hash_data_blake3;
 use crate::key::get_user_key;
@@ -16,20 +17,12 @@ mod crypto;
 
 // this function is for encrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
-pub fn memory_mode(
-    input: &str,
-    output: &str,
-    keyfile: &str,
-    hash_mode: bool,
-    skip: bool,
-    bench: bool,
-    password: bool,
-) -> Result<()> {
-    if !overwrite_check(output, skip, bench)? {
+pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: Parameters) -> Result<()> {
+    if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
 
-    let raw_key = get_user_key(keyfile, true, password)?;
+    let raw_key = get_user_key(keyfile, true, params.password)?;
 
     let read_start_time = Instant::now();
     let file_contents = get_bytes(input)?;
@@ -41,14 +34,15 @@ pub fn memory_mode(
         input
     );
     let encrypt_start_time = Instant::now();
-    let (salt, nonce, data) = encrypt_bytes_memory_mode(file_contents, raw_key)?;
+    let (salt, nonce, data) =
+        encrypt_bytes_memory_mode(file_contents, raw_key, params.cipher_type)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",
         encrypt_duration.as_secs_f32()
     );
 
-    if !bench {
+    if !params.bench {
         let write_start_time = Instant::now();
         write_encrypted_data(output, &salt, &nonce, &data)?;
         let write_duration = write_start_time.elapsed();
@@ -59,7 +53,7 @@ pub fn memory_mode(
         );
     }
 
-    if hash_mode {
+    if params.hash_mode {
         let hash_start_time = Instant::now();
         let hash = hash_data_blake3(&salt, &nonce, &data)?;
         let hash_duration = hash_start_time.elapsed();
@@ -75,15 +69,7 @@ pub fn memory_mode(
 
 // this function is for encrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
-pub fn stream_mode(
-    input: &str,
-    output: &str,
-    keyfile: &str,
-    hash_mode: bool,
-    skip: bool,
-    bench: bool,
-    password: bool,
-) -> Result<()> {
+pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: Parameters) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
     let file_size = input_file
@@ -97,28 +83,35 @@ pub fn stream_mode(
             .context("Unable to parse stream block size as u64")?
     {
         println!("Input file size is less than the stream block size - redirecting to memory mode");
-        return memory_mode(input, output, keyfile, hash_mode, skip, bench, password);
+        return memory_mode(input, output, keyfile, params);
     }
 
-    if !overwrite_check(output, skip, bench)? {
+    if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
 
     let mut output_file =
         File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 
-    let raw_key = get_user_key(keyfile, true, password)?;
+    let raw_key = get_user_key(keyfile, true, params.password)?;
 
     println!(
-        "Encrypting {} in stream mode (this may take a while)",
-        input
+        "Encrypting {} in stream mode with {} (this may take a while)",
+        input, params.cipher_type
     );
     let encrypt_start_time = Instant::now();
-    encrypt_bytes_stream_mode(&mut input_file, &mut output_file, raw_key, bench, hash_mode)?;
+    encrypt_bytes_stream_mode(
+        &mut input_file,
+        &mut output_file,
+        raw_key,
+        params.bench,
+        params.hash_mode,
+        params.cipher_type,
+    )?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! File saved as {} [took {:.2}s]",
-        input,
+        output,
         encrypt_duration.as_secs_f32(),
     );
 

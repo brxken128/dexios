@@ -69,7 +69,7 @@ pub fn get_encrypted_data(name: &str, cipher_type: CipherType) -> Result<([u8; S
                 .read_to_end(&mut encrypted_data)
                 .with_context(|| format!("Unable to read data from file: {}", name))?;
         
-            if salt_size != SALT_LEN || nonce_size != 12 {
+            if salt_size != SALT_LEN || nonce_size != 24 {
                 return Err(anyhow::anyhow!(
                     "Input file ({}) does not contain the correct amount of information",
                     name

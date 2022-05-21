@@ -44,10 +44,16 @@ jobs:
       run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
-    - name: Encrypt in hash mode
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -emHyk keyfile 100MB.bin 100MB.enc 
-    - name: Decrypt in hash mode
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dmHyk keyfile 100MB.enc 100MB.bin
+    - name: Encrypt in hash mode (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -emxHyk keyfile 100MB.bin 100MB.enc 
+    - name: Decrypt in hash mode (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dmxHyk keyfile 100MB.enc 100MB.bin
+    - name: Generate test file
+      run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
+    - name: Encrypt in hash mode (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -emgHyk keyfile 100MB.bin 100MB.enc 
+    - name: Decrypt in hash mode (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dmgHyk keyfile 100MB.enc 100MB.bin
   stream-mode:
     needs: build
     runs-on: ubuntu-latest
@@ -64,10 +70,16 @@ jobs:
       run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
-    - name: Encrypt in stream mode
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -esHyk keyfile 100MB.bin 100MB.enc
-    - name: Decrypt in stream mode
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dsHyk keyfile 100MB.enc 100MB.bin
+    - name: Encrypt in stream mode (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -esxHyk keyfile 100MB.bin 100MB.enc
+    - name: Decrypt in stream mode (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dsxHyk keyfile 100MB.enc 100MB.bin
+    - name: Generate test file
+      run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
+    - name: Encrypt in stream mode (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -esgHyk keyfile 100MB.bin 100MB.enc
+    - name: Decrypt in stream mode (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dsgHyk keyfile 100MB.enc 100MB.bin
   erase:
     needs: build
     runs-on: ubuntu-latest
@@ -82,12 +94,6 @@ jobs:
       run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
     - name: Generate test file
       run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
-    - name: Generate keyfile
-      run: dd if=/dev/urandom of=keyfile bs=1 count=4096
-    - name: Encrypt and erase afterwards
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHy --erase -k keyfile 100MB.bin 100MB.enc
-    - name: Decrypt and erase afterwards
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHy --erase -k keyfile 100MB.enc 100MB.bin
     - name: Generate test file
       run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
     - name: Erase file (standalone mode)

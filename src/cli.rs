@@ -176,7 +176,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .short('m')
                         .long("memory")
                         .takes_value(false)
-                        .help("load the file into memory before encrypting"),
+                        .help("load the file into memory before decrypting"),
                 )
                 .arg(
                     Arg::new("password")
@@ -221,6 +221,32 @@ pub fn get_matches() -> clap::ArgMatches {
                         .help("specify the number of passes (default is 16)")
                         .min_values(0)
                         .default_missing_value("16"),
+                ),
+        )
+        .subcommand(
+            Command::new("hash")
+                .about("hash a file")
+                .arg(
+                    Arg::new("input")
+                        .value_name("input")
+                        .takes_value(true)
+                        .required(true)
+                        .help("the file to hash"),
+                )
+                .arg(
+                    Arg::new("memory")
+                        .short('m')
+                        .long("memory")
+                        .takes_value(false)
+                        .help("load the file into memory before hashing"),
+                )
+                .arg(
+                    Arg::new("stream")
+                        .short('s')
+                        .long("stream")
+                        .takes_value(false)
+                        .help("use stream hashing (default)")
+                        .conflicts_with("memory"),
                 ),
         )
         .get_matches()

@@ -13,6 +13,10 @@ homepage = "https://github.com/brxken128/dexios"
 documentation = "https://github.com/brxken128/dexios/wiki"
 license = "BSD-2-Clause"
 
+# this is for sites other than crates.io, who may still use it
+[badges]
+maintenance = { status = "actively-developed" }
+
 [dependencies]
 aes-gcm = { version = "0.9.4", features = ["stream"] }
 clap = { version = "3.1.18", features = ["cargo"] }

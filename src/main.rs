@@ -179,23 +179,26 @@ fn main() -> Result<()> {
                     .context("No input file/invalid text provided")?,
                 passes,
             )?;
-        },
+        }
         Some(("hash", sub_matches)) => {
-            let file_name = sub_matches.value_of("input").context("No input file provided")?;
-            let file_size = std::fs::metadata(file_name).context("Unable to read metadata for x")?; // CHANGE THIS TO WITH CONTEXT
+            let file_name = sub_matches
+                .value_of("input")
+                .context("No input file provided")?;
+            let file_size =
+                std::fs::metadata(file_name).context("Unable to read metadata for x")?; // CHANGE THIS TO WITH CONTEXT
 
             if sub_matches.is_present("memory") {
                 hashing::hash_memory(file_name)?;
+            } else if file_size.len()
+                <= BLOCK_SIZE
+                    .try_into()
+                    .context("Unable to parse stream block size as u64")?
+            {
+                println!("Input file size is less than the stream block size - redirecting to memory mode");
+                hashing::hash_memory(file_name)?;
             } else {
-                if file_size.len() <= BLOCK_SIZE.try_into().context("Unable to parse stream block size as u64")?
-                {
-                    println!("Input file size is less than the stream block size - redirecting to memory mode");
-                    hashing::hash_memory(file_name)?;
-                } else {
-                    hashing::hash_stream(file_name)?;
-                }
+                hashing::hash_stream(file_name)?;
             }
-
         }
         _ => (),
     }

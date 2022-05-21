@@ -1,19 +1,19 @@
-use std::fs::File;
-use std::result::Result::Ok;
 use crate::global::{CipherType, EncryptStreamCiphers, BLOCK_SIZE, SALT_LEN};
 use aead::stream::EncryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
-use anyhow::Result;
 use anyhow::Context;
+use anyhow::Result;
 use argon2::Argon2;
 use argon2::Params;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
 use secrecy::{ExposeSecret, Secret};
+use std::fs::File;
 use std::io::Read;
 use std::io::Write;
+use std::result::Result::Ok;
 
 // this generates a salt for password hashing
 fn gen_salt() -> [u8; SALT_LEN] {
@@ -63,8 +63,8 @@ pub fn encrypt_bytes_memory_mode(
                 Ok(cipher) => {
                     drop(key);
                     cipher
-                },
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+                }
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
             let encrypted_bytes = match cipher.encrypt(nonce, data.expose_secret().as_slice()) {
@@ -85,15 +85,15 @@ pub fn encrypt_bytes_memory_mode(
                 Ok(cipher) => {
                     drop(key);
                     cipher
-                },
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+                }
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
             let encrypted_bytes = match cipher.encrypt(nonce, data.expose_secret().as_slice()) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };
-            
+
             drop(data);
 
             Ok((salt, nonce_bytes.to_vec(), encrypted_bytes))
@@ -125,8 +125,10 @@ pub fn encrypt_bytes_stream_mode(
                     Ok(cipher) => {
                         drop(key);
                         cipher
-                    },
-                    Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+                    }
+                    Err(_) => {
+                        return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+                    }
                 };
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce);
@@ -144,8 +146,10 @@ pub fn encrypt_bytes_stream_mode(
                     Ok(cipher) => {
                         drop(key);
                         cipher
-                    },
-                    Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+                    }
+                    Err(_) => {
+                        return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+                    }
                 };
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());

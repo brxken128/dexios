@@ -2,8 +2,8 @@ use crate::encrypt::crypto::encrypt_bytes_memory_mode;
 use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
 use crate::file::write_encrypted_data;
-use crate::global::BLOCK_SIZE;
 use crate::global::Parameters;
+use crate::global::BLOCK_SIZE;
 use crate::hashing::hash_data_blake3;
 use crate::key::get_user_key;
 use crate::prompt::overwrite_check;
@@ -17,12 +17,7 @@ mod crypto;
 
 // this function is for encrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
-pub fn memory_mode(
-    input: &str,
-    output: &str,
-    keyfile: &str,
-    params: Parameters,
-) -> Result<()> {
+pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: Parameters) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
@@ -39,7 +34,8 @@ pub fn memory_mode(
         input
     );
     let encrypt_start_time = Instant::now();
-    let (salt, nonce, data) = encrypt_bytes_memory_mode(file_contents, raw_key, params.cipher_type)?;
+    let (salt, nonce, data) =
+        encrypt_bytes_memory_mode(file_contents, raw_key, params.cipher_type)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",
@@ -73,12 +69,7 @@ pub fn memory_mode(
 
 // this function is for encrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
-pub fn stream_mode(
-    input: &str,
-    output: &str,
-    keyfile: &str,
-    params: Parameters,
-) -> Result<()> {
+pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: Parameters) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
     let file_size = input_file
@@ -92,12 +83,7 @@ pub fn stream_mode(
             .context("Unable to parse stream block size as u64")?
     {
         println!("Input file size is less than the stream block size - redirecting to memory mode");
-        return memory_mode(
-            input,
-            output,
-            keyfile,
-            params,
-        );
+        return memory_mode(input, output, keyfile, params);
     }
 
     if !overwrite_check(output, params.skip, params.bench)? {

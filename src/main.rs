@@ -38,7 +38,7 @@ fn main() -> Result<()> {
                 skip: sub_matches.is_present("skip"),
                 bench: sub_matches.is_present("bench"),
                 password: sub_matches.is_present("password"),
-                cipher_type
+                cipher_type,
             };
 
             let result = if sub_matches.is_present("memory") {
@@ -102,13 +102,13 @@ fn main() -> Result<()> {
                 // default
                 CipherType::XChaCha20Poly1305
             };
-            
+
             let params = Parameters {
                 hash_mode: sub_matches.is_present("hash"),
                 skip: sub_matches.is_present("skip"),
                 bench: sub_matches.is_present("bench"),
                 password: sub_matches.is_present("password"),
-                cipher_type
+                cipher_type,
             };
 
             let result = if sub_matches.is_present("memory") {

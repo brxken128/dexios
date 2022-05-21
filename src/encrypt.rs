@@ -2,8 +2,8 @@ use crate::encrypt::crypto::encrypt_bytes_memory_mode;
 use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
 use crate::file::write_encrypted_data;
-use crate::global::CipherType;
 use crate::global::BLOCK_SIZE;
+use crate::global::Parameters;
 use crate::hashing::hash_data_blake3;
 use crate::key::get_user_key;
 use crate::prompt::overwrite_check;
@@ -21,17 +21,13 @@ pub fn memory_mode(
     input: &str,
     output: &str,
     keyfile: &str,
-    hash_mode: bool,
-    skip: bool,
-    bench: bool,
-    password: bool,
-    cipher_type: CipherType,
+    params: Parameters,
 ) -> Result<()> {
-    if !overwrite_check(output, skip, bench)? {
+    if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
 
-    let raw_key = get_user_key(keyfile, true, password)?;
+    let raw_key = get_user_key(keyfile, true, params.password)?;
 
     let read_start_time = Instant::now();
     let file_contents = get_bytes(input)?;
@@ -43,14 +39,14 @@ pub fn memory_mode(
         input
     );
     let encrypt_start_time = Instant::now();
-    let (salt, nonce, data) = encrypt_bytes_memory_mode(file_contents, raw_key, cipher_type)?;
+    let (salt, nonce, data) = encrypt_bytes_memory_mode(file_contents, raw_key, params.cipher_type)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",
         encrypt_duration.as_secs_f32()
     );
 
-    if !bench {
+    if !params.bench {
         let write_start_time = Instant::now();
         write_encrypted_data(output, &salt, &nonce, &data)?;
         let write_duration = write_start_time.elapsed();
@@ -61,7 +57,7 @@ pub fn memory_mode(
         );
     }
 
-    if hash_mode {
+    if params.hash_mode {
         let hash_start_time = Instant::now();
         let hash = hash_data_blake3(&salt, &nonce, &data)?;
         let hash_duration = hash_start_time.elapsed();
@@ -81,11 +77,7 @@ pub fn stream_mode(
     input: &str,
     output: &str,
     keyfile: &str,
-    hash_mode: bool,
-    skip: bool,
-    bench: bool,
-    password: bool,
-    cipher_type: CipherType,
+    params: Parameters,
 ) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
@@ -104,35 +96,31 @@ pub fn stream_mode(
             input,
             output,
             keyfile,
-            hash_mode,
-            skip,
-            bench,
-            password,
-            cipher_type,
+            params,
         );
     }
 
-    if !overwrite_check(output, skip, bench)? {
+    if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
 
     let mut output_file =
         File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 
-    let raw_key = get_user_key(keyfile, true, password)?;
+    let raw_key = get_user_key(keyfile, true, params.password)?;
 
     println!(
         "Encrypting {} in stream mode with {} (this may take a while)",
-        input, cipher_type
+        input, params.cipher_type
     );
     let encrypt_start_time = Instant::now();
     encrypt_bytes_stream_mode(
         &mut input_file,
         &mut output_file,
         raw_key,
-        bench,
-        hash_mode,
-        cipher_type,
+        params.bench,
+        params.hash_mode,
+        params.cipher_type,
     )?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(

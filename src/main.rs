@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::CipherType;
+use global::{CipherType, Parameters};
 use std::result::Result::Ok;
 
 mod cli;
@@ -36,6 +36,14 @@ fn main() -> Result<()> {
                 CipherType::XChaCha20Poly1305
             };
 
+            let params = Parameters {
+                hash_mode: sub_matches.is_present("hash"),
+                skip: sub_matches.is_present("skip"),
+                bench: sub_matches.is_present("bench"),
+                password: sub_matches.is_present("password"),
+                cipher_type
+            };
+
             let result = if sub_matches.is_present("memory") {
                 encrypt::memory_mode(
                     sub_matches
@@ -45,11 +53,7 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     keyfile,
-                    sub_matches.is_present("hash"),
-                    sub_matches.is_present("skip"),
-                    sub_matches.is_present("bench"),
-                    sub_matches.is_present("password"),
-                    cipher_type,
+                    params,
                 )
             } else {
                 encrypt::stream_mode(
@@ -60,11 +64,7 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     keyfile,
-                    sub_matches.is_present("hash"),
-                    sub_matches.is_present("skip"),
-                    sub_matches.is_present("bench"),
-                    sub_matches.is_present("password"),
-                    cipher_type,
+                    params,
                 )
             };
 
@@ -108,6 +108,14 @@ fn main() -> Result<()> {
                 // default
                 CipherType::XChaCha20Poly1305
             };
+            
+            let params = Parameters {
+                hash_mode: sub_matches.is_present("hash"),
+                skip: sub_matches.is_present("skip"),
+                bench: sub_matches.is_present("bench"),
+                password: sub_matches.is_present("password"),
+                cipher_type
+            };
 
             let result = if sub_matches.is_present("memory") {
                 decrypt::memory_mode(
@@ -118,11 +126,7 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     keyfile,
-                    sub_matches.is_present("hash"),
-                    sub_matches.is_present("skip"),
-                    sub_matches.is_present("bench"),
-                    sub_matches.is_present("password"),
-                    cipher_type,
+                    params,
                 )
             } else {
                 decrypt::stream_mode(
@@ -133,11 +137,7 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     keyfile,
-                    sub_matches.is_present("hash"),
-                    sub_matches.is_present("skip"),
-                    sub_matches.is_present("bench"),
-                    sub_matches.is_present("password"),
-                    cipher_type,
+                    params,
                 )
             };
 

@@ -72,7 +72,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .short('s')
                         .long("stream")
                         .takes_value(false)
-                        .help("use stream encryption - default")
+                        .help("use stream encryption (default)")
                         .conflicts_with("memory"),
                 )
                 .arg(
@@ -168,7 +168,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .short('s')
                         .long("stream")
                         .takes_value(false)
-                        .help("use stream decryption - default")
+                        .help("use stream decryption (default)")
                         .conflicts_with("memory"),
                 )
                 .arg(

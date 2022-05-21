@@ -24,7 +24,7 @@ To securely erase a file:
 
 `dexios erase secret.txt`
 
-Here is a screenshot of Dexios in action! The performance is great, and the checksums match meaning the file is exactly the same as it was before encryption.
+Here is a screenshot of Dexios in action! The performance is great (that is a 3.5GiB file), and the checksums match meaning the file is exactly the same as it was before encryption.
 
 ![Dexios in action](https://github.com/brxken128/dexios/wiki/assets/dexios-in-action.png)
 

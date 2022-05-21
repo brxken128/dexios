@@ -10,6 +10,7 @@ use chacha20poly1305::XChaCha20Poly1305;
 pub const BLOCK_SIZE: usize = 1_048_576; // 1024*1024 bytes
 pub const SALT_LEN: usize = 16; // bytes
 
+#[allow(clippy::struct_excessive_bools)] // possibly only temporary - requires more thought
 pub struct Parameters {
     pub hash_mode: bool,
     pub skip: bool,

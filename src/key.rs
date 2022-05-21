@@ -32,6 +32,7 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
 // if neither of the above are true, ask the user for their specified key
 // if validation is true, call get_password_with_validation and require it be entered twice
 // if not, just get the key once
+#[allow(clippy::module_name_repetitions)] // possibly temporary - need a way to handle this (maybe key::handler?)
 pub fn get_user_key(keyfile: &str, validation: bool, password: bool) -> Result<Secret<Vec<u8>>> {
     Ok(if !keyfile.is_empty() {
         println!("Reading key from {}", keyfile);

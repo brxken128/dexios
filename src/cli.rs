@@ -95,7 +95,15 @@ pub fn get_matches() -> clap::ArgMatches {
                         .short('g')
                         .long("gcm")
                         .takes_value(false)
-                        .help("use aes-gcm instead of xchacha20-poly1305"),
+                        .help("use aes-256-gcm"),
+                )
+                .arg(
+                    Arg::new("xchacha")
+                        .short('x')
+                        .long("xchacha")
+                        .takes_value(false)
+                        .help("use xchacha20-poly1305")
+                        .conflicts_with("gcm"),
                 ),
         )
         .subcommand(
@@ -183,7 +191,15 @@ pub fn get_matches() -> clap::ArgMatches {
                         .short('g')
                         .long("gcm")
                         .takes_value(false)
-                        .help("use aes-gcm instead of xchacha20-poly1305"),
+                        .help("use aes-256-gcm"),
+                )
+                .arg(
+                    Arg::new("xchacha")
+                        .short('x')
+                        .long("xchacha")
+                        .takes_value(false)
+                        .help("use xchacha20-poly1305")
+                        .conflicts_with("gcm"),
                 ),
         )
         .subcommand(

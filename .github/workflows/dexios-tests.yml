@@ -114,10 +114,16 @@ jobs:
       run: dd if=/dev/urandom of=1GB.bin bs=1M count=1000
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
-    - name: Encrypt 1GB file
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 1GB.bin 1GB.enc
-    - name: Decrypt 1GB file
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 1GB.enc 1GB.bin
+    - name: Encrypt 1GB file (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -exHyk keyfile 1GB.bin 1GB.enc
+    - name: Decrypt 1GB file (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dxHyk keyfile 1GB.enc 1GB.bin
+    - name: Generate test file
+      run: dd if=/dev/urandom of=1GB.bin bs=1M count=1000
+    - name: Encrypt 1GB file (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -egHyk keyfile 1GB.bin 1GB.enc
+    - name: Decrypt 1GB file (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dgHyk keyfile 1GB.enc 1GB.bin
   small-file:
     needs: build
     runs-on: ubuntu-latest
@@ -133,7 +139,13 @@ jobs:
       run: dd if=/dev/urandom of=1KB.bin bs=1 count=1024
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
-    - name: Encrypt 1KB file
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 1KB.bin 1KB.enc
-    - name: Decrypt 1KB file
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 1KB.enc 1KB.bin
+    - name: Encrypt 1KB file (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -exHyk keyfile 1KB.bin 1KB.enc
+    - name: Decrypt 1KB file (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dxHyk keyfile 1KB.enc 1KB.bin
+    - name: Generate test file
+      run: dd if=/dev/urandom of=1KB.bin bs=1 count=1024
+    - name: Encrypt 1KB file (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -egHyk keyfile 1KB.bin 1KB.enc
+    - name: Decrypt 1KB file (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dgHyk keyfile 1KB.enc 1KB.bin

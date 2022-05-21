@@ -22,7 +22,7 @@ pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {
 // this takes the name/relative path of a file, and reads it in the correct format
 // this is used for memory-mode
 // the first 16 bytes of the file are always the salt
-// the next 12 bytes are always the nonce
+// the next 12/24 bytes are always the nonce
 // the rest of the data is the encrpted data
 // all of these values are returned
 pub fn get_encrypted_data(

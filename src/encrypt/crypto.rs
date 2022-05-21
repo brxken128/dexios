@@ -43,13 +43,9 @@ fn gen_key(raw_key: Secret<Vec<u8>>) -> Result<(Secret<[u8; 32]>, [u8; SALT_LEN]
     Ok((Secret::new(key), salt))
 }
 
-fn gen_nonce() -> [u8; 12] {
-    StdRng::from_entropy().gen::<[u8; 12]>()
-}
-
 // this encrypts data in memory mode
 // it takes the data and a Secret<> key
-// it generates the 12 byte nonce, hashes the key and encrypts the data
+// it generates the 12/24 byte nonce, hashes the key and encrypts the data
 // it returns the salt, nonce, and encrypted bytes
 pub fn encrypt_bytes_memory_mode(
     data: Secret<Vec<u8>>,
@@ -58,7 +54,7 @@ pub fn encrypt_bytes_memory_mode(
 ) -> Result<([u8; SALT_LEN], Vec<u8>, Vec<u8>)> {
     return match cipher_type {
         CipherType::AesGcm => {
-            let nonce_bytes = gen_nonce();
+            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
             let nonce = Nonce::from_slice(nonce_bytes.as_slice());
 
             let (key, salt) = gen_key(raw_key)?;
@@ -111,7 +107,7 @@ pub fn encrypt_bytes_memory_mode(
 // it takes an input file handle, an output file handle, a Secret<> key, and bools for if we're in bench/hash mode
 // it generates the 8 byte nonce, creates the encryption cipher and then reads the file in blocks
 // on each read, it encrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
-// this could probably do with some delegation - it does a lot of stuff on it's own
+// it also handles the prep of each individual stream, via the match statement
 pub fn encrypt_bytes_stream_mode(
     input: &mut File,
     output: &mut File,

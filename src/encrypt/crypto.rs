@@ -1,12 +1,12 @@
 use std::fs::File;
-
+use std::result::Result::Ok;
 use crate::global::{CipherType, EncryptStreamCiphers, BLOCK_SIZE, SALT_LEN};
 use aead::stream::EncryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
 use anyhow::Result;
-use anyhow::{Context, Ok};
+use anyhow::Context;
 use argon2::Argon2;
 use argon2::Params;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
@@ -58,14 +58,14 @@ pub fn encrypt_bytes_memory_mode(
             let nonce = Nonce::from_slice(nonce_bytes.as_slice());
 
             let (key, salt) = gen_key(raw_key)?;
-            let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
-            drop(key);
 
-            if cipher.is_err() {
-                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
-            }
-
-            let cipher = cipher.unwrap();
+            let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                },
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+            };
 
             let encrypted_bytes = cipher.encrypt(nonce, data.expose_secret().as_slice());
 
@@ -81,24 +81,23 @@ pub fn encrypt_bytes_memory_mode(
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 24]>();
             let nonce = XNonce::from_slice(&nonce_bytes);
             let (key, salt) = gen_key(raw_key)?;
-            let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
-            drop(key);
 
-            if cipher.is_err() {
-                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
-            }
+            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                },
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+            };
 
-            let cipher = cipher.unwrap();
-
-            let encrypted_bytes = cipher.encrypt(nonce, data.expose_secret().as_slice());
-
-            if encrypted_bytes.is_err() {
-                return Err(anyhow!("Unable to encrypt the data"));
-            }
-
+            let encrypted_bytes = match cipher.encrypt(nonce, data.expose_secret().as_slice()) {
+                Ok(bytes) => bytes,
+                Err(_) => return Err(anyhow!("Unable to encrypt the data")),
+            };
+            
             drop(data);
 
-            Ok((salt, nonce_bytes.to_vec(), encrypted_bytes.unwrap()))
+            Ok((salt, nonce_bytes.to_vec(), encrypted_bytes))
         }
     };
 }
@@ -123,14 +122,13 @@ pub fn encrypt_bytes_stream_mode(
                 let nonce = Nonce::from_slice(&nonce_bytes);
 
                 let (key, salt) = gen_key(raw_key)?;
-                let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
-                drop(key);
-
-                if cipher.is_err() {
-                    return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
-                }
-
-                let cipher = cipher.unwrap();
+                let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
+                    Ok(cipher) => {
+                        drop(key);
+                        cipher
+                    },
+                    Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+                };
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce);
                 (
@@ -143,14 +141,13 @@ pub fn encrypt_bytes_stream_mode(
                 let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
 
                 let (key, salt) = gen_key(raw_key)?;
-                let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
-                drop(key);
-
-                if cipher.is_err() {
-                    return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
-                }
-
-                let cipher = cipher.unwrap();
+                let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
+                    Ok(cipher) => {
+                        drop(key);
+                        cipher
+                    },
+                    Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+                };
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
                 (
@@ -184,14 +181,11 @@ pub fn encrypt_bytes_stream_mode(
             .read(&mut buffer)
             .context("Unable to read from the input file")?;
         if read_count == BLOCK_SIZE {
-            // buffer length
-            let encrypted_data = streams.encrypt_next(buffer.as_slice());
+            let encrypted_data = match streams.encrypt_next(buffer.as_slice()) {
+                Ok(bytes) => bytes,
+                Err(_) => return Err(anyhow!("Unable to encrypt the data")),
+            };
 
-            if encrypted_data.is_err() {
-                return Err(anyhow!("Unable to encrypt the data"));
-            }
-
-            let encrypted_data = encrypted_data.unwrap();
             if !bench {
                 output
                     .write_all(&encrypted_data)
@@ -202,13 +196,11 @@ pub fn encrypt_bytes_stream_mode(
             }
         } else {
             // if we read something less than BLOCK_SIZE, and have hit the end of the file
-            let encrypted_data = streams.encrypt_last(&buffer[..read_count]);
+            let encrypted_data = match streams.encrypt_last(&buffer[..read_count]) {
+                Ok(bytes) => bytes,
+                Err(_) => return Err(anyhow!("Unable to encrypt the data")),
+            };
 
-            if encrypted_data.is_err() {
-                return Err(anyhow!("Unable to encrypt the final block of data"));
-            }
-
-            let encrypted_data = encrypted_data.unwrap();
             if !bench {
                 output
                     .write_all(&encrypted_data)

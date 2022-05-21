@@ -138,7 +138,7 @@ pub fn encrypt_bytes_stream_mode(
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce);
                 (
-                    EncryptStreamCiphers::AesGcm(stream),
+                    EncryptStreamCiphers::AesGcm(Box::new(stream)),
                     salt,
                     nonce_bytes.to_vec(),
                 )
@@ -158,7 +158,7 @@ pub fn encrypt_bytes_stream_mode(
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
                 (
-                    EncryptStreamCiphers::XChaCha(stream),
+                    EncryptStreamCiphers::XChaCha(Box::new(stream)),
                     salt,
                     nonce_bytes.to_vec(),
                 )

@@ -140,7 +140,7 @@ pub fn decrypt_bytes_stream_mode(
 
             let stream = DecryptorLE31::from_aead(cipher, nonce);
 
-            DecryptStreamCiphers::AesGcm(stream)
+            DecryptStreamCiphers::AesGcm(Box::new(stream))
         }
         CipherType::XChaCha20Poly1305 => {
             let mut nonce_bytes = [0u8; 20];
@@ -162,7 +162,7 @@ pub fn decrypt_bytes_stream_mode(
             let cipher = cipher.unwrap();
 
             let stream = DecryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
-            DecryptStreamCiphers::XChaCha(stream)
+            DecryptStreamCiphers::XChaCha(Box::new(stream))
         }
     };
 

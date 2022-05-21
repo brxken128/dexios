@@ -26,13 +26,13 @@ impl std::fmt::Display for CipherType {
 }
 
 pub enum EncryptStreamCiphers {
-    AesGcm(EncryptorLE31<Aes256Gcm>),
-    XChaCha(EncryptorLE31<XChaCha20Poly1305>),
+    AesGcm(Box<EncryptorLE31<Aes256Gcm>>),
+    XChaCha(Box<EncryptorLE31<XChaCha20Poly1305>>),
 }
 
 pub enum DecryptStreamCiphers {
-    AesGcm(DecryptorLE31<Aes256Gcm>),
-    XChaCha(DecryptorLE31<XChaCha20Poly1305>),
+    AesGcm(Box<DecryptorLE31<Aes256Gcm>>),
+    XChaCha(Box<DecryptorLE31<XChaCha20Poly1305>>),
 }
 
 impl EncryptStreamCiphers {

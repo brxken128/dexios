@@ -26,14 +26,14 @@ pub fn memory_mode(
     skip: bool,
     bench: bool,
     password: bool,
-    _cipher_type: CipherType,
+    cipher_type: CipherType,
 ) -> Result<()> {
     if !overwrite_check(output, skip, bench)? {
         exit(0);
     }
 
     let read_start_time = Instant::now();
-    let (salt, nonce, encrypted_data) = get_encrypted_data(input)?;
+    let (salt, nonce, encrypted_data) = get_encrypted_data(input, cipher_type)?;
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
@@ -64,7 +64,7 @@ pub fn memory_mode(
         input
     );
     let decrypt_start_time = Instant::now();
-    let decrypted_bytes = decrypt_bytes_memory_mode(salt, nonce, &encrypted_data, raw_key)?;
+    let decrypted_bytes = decrypt_bytes_memory_mode(salt, &nonce, &encrypted_data, raw_key, cipher_type)?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! [took {:.2}s]",

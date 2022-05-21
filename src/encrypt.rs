@@ -25,7 +25,7 @@ pub fn memory_mode(
     skip: bool,
     bench: bool,
     password: bool,
-    _cipher_type: CipherType,
+    cipher_type: CipherType,
 ) -> Result<()> {
     if !overwrite_check(output, skip, bench)? {
         exit(0);
@@ -43,7 +43,7 @@ pub fn memory_mode(
         input
     );
     let encrypt_start_time = Instant::now();
-    let (salt, nonce, data) = encrypt_bytes_memory_mode(file_contents, raw_key)?;
+    let (salt, nonce, data) = encrypt_bytes_memory_mode(file_contents, raw_key, cipher_type)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",

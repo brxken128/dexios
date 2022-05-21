@@ -10,7 +10,7 @@ use anyhow::Ok;
 use anyhow::Result;
 use argon2::Argon2;
 use argon2::Params;
-use chacha20poly1305::XChaCha20Poly1305;
+use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use secrecy::{ExposeSecret, Secret};
 use std::io::Read;
 use std::io::Write;
@@ -40,31 +40,57 @@ fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; SALT_LEN]) -> Result<Secret<[u8;
 // it returns the decrypted bytes
 pub fn decrypt_bytes_memory_mode(
     salt: [u8; 16],
-    nonce: [u8; 12],
+    nonce: &[u8],
     data: &[u8],
     raw_key: Secret<Vec<u8>>,
+    cipher_type: CipherType,
 ) -> Result<Vec<u8>> {
     let key = get_key(raw_key, salt)?;
 
-    let nonce = Nonce::from_slice(nonce.as_slice());
-    let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
-    drop(key);
-
-    if cipher.is_err() {
-        return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
+    return match cipher_type {
+        CipherType::AesGcm => {
+            let nonce = Nonce::from_slice(nonce);
+            let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
+            drop(key);
+        
+            if cipher.is_err() {
+                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
+            }
+        
+            let cipher = cipher.unwrap();
+        
+            let decrypted_bytes = cipher.decrypt(nonce, data);
+        
+            if decrypted_bytes.is_err() {
+                return Err(anyhow!(
+                    "Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."
+                ));
+            }
+            Ok(decrypted_bytes.unwrap())
+        },
+        CipherType::XChaCha20Poly1305 => {
+            let nonce = XNonce::from_slice(nonce);
+            let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
+            drop(key);
+        
+            if cipher.is_err() {
+                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
+            }
+        
+            let cipher = cipher.unwrap();
+        
+            let decrypted_bytes = cipher.decrypt(nonce, data);
+        
+            if decrypted_bytes.is_err() {
+                return Err(anyhow!(
+                    "Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."
+                ));
+            }
+            Ok(decrypted_bytes.unwrap())
+        }
     }
 
-    let cipher = cipher.unwrap();
 
-    let decrypted_bytes = cipher.decrypt(nonce, data);
-
-    if decrypted_bytes.is_err() {
-        return Err(anyhow!(
-            "Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."
-        ));
-    }
-
-    Ok(decrypted_bytes.unwrap())
 }
 
 // this decrypts data in stream mode

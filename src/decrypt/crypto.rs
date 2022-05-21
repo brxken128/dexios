@@ -1,12 +1,11 @@
 use std::fs::File;
-
+use std::result::Result::Ok;
 use crate::global::{CipherType, DecryptStreamCiphers, BLOCK_SIZE, SALT_LEN};
 use aead::stream::DecryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
 use anyhow::Context;
-use anyhow::Ok;
 use anyhow::Result;
 use argon2::Argon2;
 use argon2::Params;
@@ -50,43 +49,33 @@ pub fn decrypt_bytes_memory_mode(
     return match cipher_type {
         CipherType::AesGcm => {
             let nonce = Nonce::from_slice(nonce);
-            let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
-            drop(key);
+            let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                },
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+            };
 
-            if cipher.is_err() {
-                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
+            match cipher.decrypt(nonce, data) {
+                Ok(decrypted_bytes) => Ok(decrypted_bytes),
+                Err(_) => Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
             }
-
-            let cipher = cipher.unwrap();
-
-            let decrypted_bytes = cipher.decrypt(nonce, data);
-
-            if decrypted_bytes.is_err() {
-                return Err(anyhow!(
-                    "Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."
-                ));
-            }
-            Ok(decrypted_bytes.unwrap())
         }
         CipherType::XChaCha20Poly1305 => {
             let nonce = XNonce::from_slice(nonce);
-            let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
-            drop(key);
+            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                },
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+            };
 
-            if cipher.is_err() {
-                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
+            match cipher.decrypt(nonce, data) {
+                Ok(decrypted_bytes) => Ok(decrypted_bytes),
+                Err(_) => Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
             }
-
-            let cipher = cipher.unwrap();
-
-            let decrypted_bytes = cipher.decrypt(nonce, data);
-
-            if decrypted_bytes.is_err() {
-                return Err(anyhow!(
-                    "Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."
-                ));
-            }
-            Ok(decrypted_bytes.unwrap())
         }
     };
 }
@@ -119,6 +108,14 @@ pub fn decrypt_bytes_stream_mode(
 
     let mut streams: DecryptStreamCiphers = match cipher_type {
         CipherType::AesGcm => {
+            let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                },
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+            };
+            
             let mut nonce_bytes = [0u8; 8];
             input
                 .read(&mut nonce_bytes)
@@ -129,20 +126,20 @@ pub fn decrypt_bytes_stream_mode(
             }
 
             let nonce = Nonce::from_slice(nonce_bytes.as_slice());
-            let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
-            drop(key);
-
-            if cipher.is_err() {
-                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
-            }
-
-            let cipher = cipher.unwrap();
 
             let stream = DecryptorLE31::from_aead(cipher, nonce);
 
             DecryptStreamCiphers::AesGcm(Box::new(stream))
         }
         CipherType::XChaCha20Poly1305 => {
+            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                },
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
+            };
+
             let mut nonce_bytes = [0u8; 20];
             input
                 .read(&mut nonce_bytes)
@@ -151,15 +148,6 @@ pub fn decrypt_bytes_stream_mode(
             if hash {
                 hasher.update(&nonce_bytes);
             }
-
-            let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
-            drop(key);
-
-            if cipher.is_err() {
-                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
-            }
-
-            let cipher = cipher.unwrap();
 
             let stream = DecryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
             DecryptStreamCiphers::XChaCha(Box::new(stream))
@@ -171,13 +159,11 @@ pub fn decrypt_bytes_stream_mode(
     loop {
         let read_count = input.read(&mut buffer)?;
         if read_count == (BLOCK_SIZE + 16) {
-            let decrypted_data = streams.decrypt_next(buffer.as_slice());
+            let decrypted_data = match streams.decrypt_next(buffer.as_slice()) {
+                Ok(bytes) => bytes,
+                Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file.")),
+            };
 
-            if decrypted_data.is_err() {
-                return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."));
-            }
-
-            let decrypted_data = decrypted_data.unwrap();
             if !bench {
                 output
                     .write_all(&decrypted_data)
@@ -188,15 +174,11 @@ pub fn decrypt_bytes_stream_mode(
             }
         } else {
             // if we read something less than BLOCK_SIZE+16, and have hit the end of the file
-            // let decrypted_data = stream.decrypt_last(&buffer[..read_count]);
+            let decrypted_data = match streams.decrypt_last(&buffer[..read_count]) {
+                Ok(bytes) => bytes,
+                Err(_) => return Err(anyhow!("Unable to decrypt the final block of data. Maybe it's the wrong key, or it's not an encrypted file.")),
+            };
 
-            let decrypted_data = streams.decrypt_last(&buffer[..read_count]);
-
-            if decrypted_data.is_err() {
-                return Err(anyhow!("Unable to decrypt the final block of data. Maybe it's the wrong key, or it's not an encrypted file."));
-            }
-
-            let decrypted_data = decrypted_data.unwrap();
             if !bench {
                 output
                     .write_all(&decrypted_data)

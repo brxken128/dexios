@@ -67,15 +67,14 @@ pub fn encrypt_bytes_memory_mode(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
             };
 
-            let encrypted_bytes = cipher.encrypt(nonce, data.expose_secret().as_slice());
-
-            if encrypted_bytes.is_err() {
-                return Err(anyhow!("Unable to encrypt the data"));
-            }
+            let encrypted_bytes = match cipher.encrypt(nonce, data.expose_secret().as_slice()) {
+                Ok(bytes) => bytes,
+                Err(_) => return Err(anyhow!("Unable to encrypt the data")),
+            };
 
             drop(data);
 
-            Ok((salt, nonce_bytes.to_vec(), encrypted_bytes.unwrap()))
+            Ok((salt, nonce_bytes.to_vec(), encrypted_bytes))
         }
         CipherType::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 24]>();

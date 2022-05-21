@@ -102,7 +102,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .short('x')
                         .long("xchacha")
                         .takes_value(false)
-                        .help("use xchacha20-poly1305")
+                        .help("use xchacha20-poly1305 (default)")
                         .conflicts_with("gcm"),
                 ),
         )
@@ -198,7 +198,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .short('x')
                         .long("xchacha")
                         .takes_value(false)
-                        .help("use xchacha20-poly1305")
+                        .help("use xchacha20-poly1305 (default)")
                         .conflicts_with("gcm"),
                 ),
         )

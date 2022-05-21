@@ -52,35 +52,15 @@ pub fn decrypt_bytes_memory_mode(
             let nonce = Nonce::from_slice(nonce);
             let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
             drop(key);
-        
+
             if cipher.is_err() {
                 return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
             }
-        
+
             let cipher = cipher.unwrap();
-        
+
             let decrypted_bytes = cipher.decrypt(nonce, data);
-        
-            if decrypted_bytes.is_err() {
-                return Err(anyhow!(
-                    "Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."
-                ));
-            }
-            Ok(decrypted_bytes.unwrap())
-        },
-        CipherType::XChaCha20Poly1305 => {
-            let nonce = XNonce::from_slice(nonce);
-            let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
-            drop(key);
-        
-            if cipher.is_err() {
-                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
-            }
-        
-            let cipher = cipher.unwrap();
-        
-            let decrypted_bytes = cipher.decrypt(nonce, data);
-        
+
             if decrypted_bytes.is_err() {
                 return Err(anyhow!(
                     "Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."
@@ -88,9 +68,27 @@ pub fn decrypt_bytes_memory_mode(
             }
             Ok(decrypted_bytes.unwrap())
         }
-    }
+        CipherType::XChaCha20Poly1305 => {
+            let nonce = XNonce::from_slice(nonce);
+            let cipher = XChaCha20Poly1305::new_from_slice(key.expose_secret());
+            drop(key);
 
+            if cipher.is_err() {
+                return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
+            }
 
+            let cipher = cipher.unwrap();
+
+            let decrypted_bytes = cipher.decrypt(nonce, data);
+
+            if decrypted_bytes.is_err() {
+                return Err(anyhow!(
+                    "Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."
+                ));
+            }
+            Ok(decrypted_bytes.unwrap())
+        }
+    };
 }
 
 // this decrypts data in stream mode

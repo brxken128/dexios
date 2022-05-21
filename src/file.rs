@@ -25,7 +25,10 @@ pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {
 // the next 12 bytes are always the nonce
 // the rest of the data is the encrpted data
 // all of these values are returned
-pub fn get_encrypted_data(name: &str, cipher_type: CipherType) -> Result<([u8; SALT_LEN], Vec<u8>, Vec<u8>)> {
+pub fn get_encrypted_data(
+    name: &str,
+    cipher_type: CipherType,
+) -> Result<([u8; SALT_LEN], Vec<u8>, Vec<u8>)> {
     let file = File::open(name).with_context(|| format!("Unable to open input file: {}", name))?;
     let mut reader = BufReader::new(file);
 
@@ -34,7 +37,7 @@ pub fn get_encrypted_data(name: &str, cipher_type: CipherType) -> Result<([u8; S
             let mut salt = [0u8; SALT_LEN];
             let mut nonce = [0u8; 12];
             let mut encrypted_data: Vec<u8> = Vec::new();
-        
+
             let salt_size = reader
                 .read(&mut salt)
                 .with_context(|| format!("Unable to read salt from file: {}", name))?;
@@ -44,7 +47,7 @@ pub fn get_encrypted_data(name: &str, cipher_type: CipherType) -> Result<([u8; S
             reader
                 .read_to_end(&mut encrypted_data)
                 .with_context(|| format!("Unable to read data from file: {}", name))?;
-        
+
             if salt_size != SALT_LEN || nonce_size != 12 {
                 return Err(anyhow::anyhow!(
                     "Input file ({}) does not contain the correct amount of information",
@@ -53,12 +56,12 @@ pub fn get_encrypted_data(name: &str, cipher_type: CipherType) -> Result<([u8; S
             }
 
             Ok((salt, nonce.to_vec(), encrypted_data))
-        },
+        }
         CipherType::XChaCha20Poly1305 => {
             let mut salt = [0u8; SALT_LEN];
             let mut nonce = [0u8; 24];
             let mut encrypted_data: Vec<u8> = Vec::new();
-        
+
             let salt_size = reader
                 .read(&mut salt)
                 .with_context(|| format!("Unable to read salt from file: {}", name))?;
@@ -68,7 +71,7 @@ pub fn get_encrypted_data(name: &str, cipher_type: CipherType) -> Result<([u8; S
             reader
                 .read_to_end(&mut encrypted_data)
                 .with_context(|| format!("Unable to read data from file: {}", name))?;
-        
+
             if salt_size != SALT_LEN || nonce_size != 24 {
                 return Err(anyhow::anyhow!(
                     "Input file ({}) does not contain the correct amount of information",
@@ -78,9 +81,7 @@ pub fn get_encrypted_data(name: &str, cipher_type: CipherType) -> Result<([u8; S
 
             Ok((salt, nonce.to_vec(), encrypted_data))
         }
-    }
-
-
+    };
 }
 
 // this writes the data, in the format that get_encrypted_data() can read

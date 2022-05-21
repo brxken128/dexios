@@ -60,27 +60,27 @@ pub fn encrypt_bytes_memory_mode(
         CipherType::AesGcm => {
             let nonce_bytes = gen_nonce();
             let nonce = Nonce::from_slice(nonce_bytes.as_slice());
-        
+
             let (key, salt) = gen_key(raw_key)?;
             let cipher = Aes256Gcm::new_from_slice(key.expose_secret());
             drop(key);
-        
+
             if cipher.is_err() {
                 return Err(anyhow!("Unable to create cipher with argon2id hashed key."));
             }
-        
+
             let cipher = cipher.unwrap();
-        
+
             let encrypted_bytes = cipher.encrypt(nonce, data.expose_secret().as_slice());
-        
+
             if encrypted_bytes.is_err() {
                 return Err(anyhow!("Unable to encrypt the data"));
             }
-        
+
             drop(data);
 
             Ok((salt, nonce_bytes.to_vec(), encrypted_bytes.unwrap()))
-        },
+        }
         CipherType::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 24]>();
             let nonce = XNonce::from_slice(&nonce_bytes);
@@ -93,7 +93,7 @@ pub fn encrypt_bytes_memory_mode(
             }
 
             let cipher = cipher.unwrap();
-            
+
             let encrypted_bytes = cipher.encrypt(nonce, data.expose_secret().as_slice());
 
             if encrypted_bytes.is_err() {
@@ -104,7 +104,7 @@ pub fn encrypt_bytes_memory_mode(
 
             Ok((salt, nonce_bytes.to_vec(), encrypted_bytes.unwrap()))
         }
-    };    
+    };
 }
 
 // this encrypts data in stream mode
@@ -156,10 +156,7 @@ pub fn encrypt_bytes_stream_mode(
 
                 let cipher = cipher.unwrap();
 
-                let stream = EncryptorLE31::from_aead(
-                    cipher,
-                    nonce_bytes.as_slice().into(),
-                );
+                let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
                 (
                     EncryptStreamCiphers::XChaCha(stream),
                     salt,

@@ -25,11 +25,14 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
-            let cipher_type = if sub_matches.is_present("gcm") { // specify gcm manually
+            let cipher_type = if sub_matches.is_present("gcm") {
+                // specify gcm manually
                 CipherType::AesGcm
-            } else if sub_matches.is_present("xchacha") { // specify xchacha manually
+            } else if sub_matches.is_present("xchacha") {
+                // specify xchacha manually
                 CipherType::XChaCha20Poly1305
-            } else { // default
+            } else {
+                // default
                 CipherType::XChaCha20Poly1305
             };
 
@@ -95,11 +98,14 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
-            let cipher_type = if sub_matches.is_present("gcm") { // specify gcm manually
+            let cipher_type = if sub_matches.is_present("gcm") {
+                // specify gcm manually
                 CipherType::AesGcm
-            } else if sub_matches.is_present("xchacha") { // specify xchacha manually
+            } else if sub_matches.is_present("xchacha") {
+                // specify xchacha manually
                 CipherType::XChaCha20Poly1305
-            } else { // default
+            } else {
+                // default
                 CipherType::XChaCha20Poly1305
             };
 

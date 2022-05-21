@@ -81,7 +81,6 @@ pub fn decrypt_bytes_stream_mode(
     cipher_type: CipherType,
 ) -> Result<()> {
     let mut salt = [0u8; SALT_LEN];
-    let key = get_key(raw_key, salt)?;
     input
         .read(&mut salt)
         .context("Unable to read salt from the file")?;
@@ -91,6 +90,8 @@ pub fn decrypt_bytes_stream_mode(
     if hash {
         hasher.update(&salt);
     }
+
+    let key = get_key(raw_key, salt)?;
 
     let mut streams: DecryptStreamCiphers = match cipher_type {
         CipherType::AesGcm => {

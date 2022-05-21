@@ -28,7 +28,7 @@ pub fn hash_stream(input: &str) -> Result<()> {
         let read_count = input_file
             .read(&mut buffer)
             .with_context(|| format!("Unable to read data from file: {}", input))?;
-        hasher.update(&buffer);
+        hasher.update(&buffer[..read_count]);
         if read_count != BLOCK_SIZE {
             break;
         }

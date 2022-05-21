@@ -18,7 +18,7 @@ mod crypto;
 
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
-pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: Parameters) -> Result<()> {
+pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
@@ -79,7 +79,7 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: Parameters)
 
 // this function is for decrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
-pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: Parameters) -> Result<()> {
+pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
     let file_size = input_file

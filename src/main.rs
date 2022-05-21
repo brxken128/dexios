@@ -50,7 +50,7 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     keyfile,
-                    params,
+                    &params,
                 )
             } else {
                 encrypt::stream_mode(
@@ -61,7 +61,7 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     keyfile,
-                    params,
+                    &params,
                 )
             };
 
@@ -120,7 +120,7 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     keyfile,
-                    params,
+                    &params,
                 )
             } else {
                 decrypt::stream_mode(
@@ -131,7 +131,7 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     keyfile,
-                    params,
+                    &params,
                 )
             };
 

@@ -2,7 +2,10 @@ use crate::decrypt::crypto::decrypt_bytes_memory_mode;
 use crate::decrypt::crypto::decrypt_bytes_stream_mode;
 use crate::file::get_encrypted_data;
 use crate::file::write_bytes;
+use crate::global::BenchMode;
+use crate::global::HashMode;
 use crate::global::Parameters;
+use crate::global::SkipMode;
 use crate::global::BLOCK_SIZE;
 use crate::global::SALT_LEN;
 use crate::hashing::hash_data_blake3;
@@ -28,7 +31,7 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
-    if params.hash_mode {
+    if params.hash_mode == HashMode::EmitHash {
         let start_time = Instant::now();
         let hash = hash_data_blake3(&salt, &nonce, &encrypted_data)?;
         let duration = start_time.elapsed();
@@ -38,10 +41,12 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
             duration.as_secs_f32()
         );
 
+        let skip_if_hidden = params.skip == SkipMode::HidePrompts;
+
         let answer = get_answer(
             "Would you like to continue with the decryption?",
             true,
-            params.skip,
+            skip_if_hidden,
         )?;
         if !answer {
             exit(0);
@@ -63,7 +68,7 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         decrypt_duration.as_secs_f32()
     );
 
-    if !params.bench {
+    if params.bench == BenchMode::WriteToFilesystem {
         let write_start_time = Instant::now();
         write_bytes(output, &decrypted_bytes)?;
         let write_duration = write_start_time.elapsed();

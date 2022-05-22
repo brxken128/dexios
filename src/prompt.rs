@@ -1,6 +1,8 @@
 use anyhow::{Context, Result};
 use std::io::{self, stdin, Write};
 
+use crate::global::{BenchMode, SkipMode};
+
 // this handles user-interactivity, specifically getting a "yes" or "no" answer from the user
 // it requires the question itself, if the default is true/false
 // if skip is enabled then it will just return the `default`
@@ -42,10 +44,11 @@ pub fn get_answer(prompt: &str, default: bool, skip: bool) -> Result<bool> {
 // then it prompts the user if they'd like to overwrite a file (while showing the associated file name)
 // if they have the skip argument supplied, this will just assume true
 // if benchmarking or skip are true, skip the prompt entirely
-pub fn overwrite_check(name: &str, skip: bool, bench: bool) -> Result<bool> {
+pub fn overwrite_check(name: &str, skip: SkipMode, bench: BenchMode) -> Result<bool> {
     let answer = if std::fs::metadata(name).is_ok() {
         let prompt = format!("{} already exists, would you like to overwrite?", name);
-        get_answer(&prompt, true, skip || bench)?
+        let skip_or_bench = skip == SkipMode::HidePrompts || bench == BenchMode::BenchmarkInMemory;
+        get_answer(&prompt, true, skip_or_bench)?
     } else {
         true
     };

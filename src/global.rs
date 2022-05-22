@@ -10,15 +10,34 @@ use chacha20poly1305::XChaCha20Poly1305;
 pub const BLOCK_SIZE: usize = 1_048_576; // 1024*1024 bytes
 pub const SALT_LEN: usize = 16; // bytes
 
-#[allow(clippy::struct_excessive_bools)] // possibly only temporary - requires more thought
 pub struct Parameters {
-    pub hash_mode: bool,
-    pub skip: bool,
-    pub bench: bool,
-    pub password: bool,
+    pub hash_mode: HashMode,
+    pub skip: SkipMode,
+    pub bench: BenchMode,
+    pub password: PasswordMode,
     pub cipher_type: CipherType,
 }
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum HashMode {
+    EmitHash,
+    HideHash,
+}
 
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub enum SkipMode {
+    ShowPrompts,
+    HidePrompts,
+}
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub enum BenchMode {
+    WriteToFilesystem,
+    BenchmarkInMemory,
+}
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub enum PasswordMode {
+    ForceUserProvidedPassword,
+    NormalKeySourcePriority,
+}
 #[derive(Copy, Clone)]
 pub enum CipherType {
     AesGcm,

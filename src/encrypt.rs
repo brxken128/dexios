@@ -2,6 +2,8 @@ use crate::encrypt::crypto::encrypt_bytes_memory_mode;
 use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
 use crate::file::write_encrypted_data;
+use crate::global::BenchMode;
+use crate::global::HashMode;
 use crate::global::Parameters;
 use crate::global::BLOCK_SIZE;
 use crate::hashing::hash_data_blake3;
@@ -42,7 +44,7 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         encrypt_duration.as_secs_f32()
     );
 
-    if !params.bench {
+    if params.bench == BenchMode::WriteToFilesystem {
         let write_start_time = Instant::now();
         write_encrypted_data(output, &salt, &nonce, &data)?;
         let write_duration = write_start_time.elapsed();
@@ -53,7 +55,7 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         );
     }
 
-    if params.hash_mode {
+    if params.hash_mode == HashMode::EmitHash {
         let hash_start_time = Instant::now();
         let hash = hash_data_blake3(&salt, &nonce, &data)?;
         let hash_duration = hash_start_time.elapsed();
@@ -100,6 +102,7 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         input, params.cipher_type
     );
     let encrypt_start_time = Instant::now();
+
     encrypt_bytes_stream_mode(
         &mut input_file,
         &mut output_file,

@@ -128,7 +128,7 @@ fn main() -> Result<()> {
             }
 
             let hash_mode = if sub_matches.is_present("hash") {
-                //specify to emit hash after operation
+                // specify to emit hash after operation
                 HashMode::CalculateHash
             } else {
                 // default
@@ -136,7 +136,7 @@ fn main() -> Result<()> {
             };
 
             let skip = if sub_matches.is_present("skip") {
-                //specify to hide promps during operation
+                // specify to hide promps during operation
                 SkipMode::HidePrompts
             } else {
                 // default
@@ -144,7 +144,7 @@ fn main() -> Result<()> {
             };
 
             let bench = if sub_matches.is_present("bench") {
-                //specify to not write to filesystem, for benchmarking and saving wear on hardware
+                // specify to not write to filesystem, for benchmarking and saving wear on hardware
                 BenchMode::BenchmarkInMemory
             } else {
                 // default
@@ -152,7 +152,7 @@ fn main() -> Result<()> {
             };
 
             let password = if sub_matches.is_present("password") {
-                //Overwrite, so the user provided password is used and ignore environment supplied one?!
+                // Overwrite, so the user provided password is used and ignore environment supplied one?!
                 PasswordMode::ForceUserProvidedPassword
             } else {
                 // default

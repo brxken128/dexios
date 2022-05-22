@@ -248,8 +248,8 @@ fn main() -> Result<()> {
             let file_name = sub_matches
                 .value_of("input")
                 .context("No input file provided")?;
-            let file_size =
-                std::fs::metadata(file_name).with_context(|| format!("Unable to get file metadata: {}", file_name))?;
+            let file_size = std::fs::metadata(file_name)
+                .with_context(|| format!("Unable to get file metadata: {}", file_name))?;
 
             if sub_matches.is_present("memory") {
                 hashing::hash_memory(file_name)?;

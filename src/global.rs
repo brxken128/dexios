@@ -28,16 +28,19 @@ pub enum SkipMode {
     ShowPrompts,
     HidePrompts,
 }
+
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub enum BenchMode {
     WriteToFilesystem,
     BenchmarkInMemory,
 }
+
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub enum PasswordMode {
     ForceUserProvidedPassword,
     NormalKeySourcePriority,
 }
+
 #[derive(Copy, Clone)]
 pub enum CipherType {
     AesGcm,

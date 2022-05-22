@@ -172,7 +172,7 @@ pub fn encrypt_bytes_stream_mode(
 
     let mut hasher = blake3::Hasher::new();
 
-    if hash == HashMode::EmitHash {
+    if hash == HashMode::CalculateHash {
         hasher.update(&salt);
         hasher.update(&nonce_bytes);
     }
@@ -194,7 +194,7 @@ pub fn encrypt_bytes_stream_mode(
                     .write_all(&encrypted_data)
                     .context("Unable to write to the output file")?;
             }
-            if hash == HashMode::EmitHash {
+            if hash == HashMode::CalculateHash {
                 hasher.update(&encrypted_data);
             }
         } else {
@@ -209,7 +209,7 @@ pub fn encrypt_bytes_stream_mode(
                     .write_all(&encrypted_data)
                     .context("Unable to write to the output file")?;
             }
-            if hash == HashMode::EmitHash {
+            if hash == HashMode::CalculateHash {
                 hasher.update(&encrypted_data);
             }
             break;
@@ -218,7 +218,7 @@ pub fn encrypt_bytes_stream_mode(
     if bench == BenchMode::WriteToFilesystem {
         output.flush().context("Unable to flush the output file")?;
     }
-    if hash == HashMode::EmitHash {
+    if hash == HashMode::CalculateHash {
         let hash = hasher.finalize().to_hex().to_string();
         println!("Hash of the encrypted file is: {}", hash,);
     }

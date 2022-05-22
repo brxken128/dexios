@@ -55,7 +55,7 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         );
     }
 
-    if params.hash_mode == HashMode::EmitHash {
+    if params.hash_mode == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
         let hash = hash_data_blake3(&salt, &nonce, &data)?;
         let hash_duration = hash_start_time.elapsed();

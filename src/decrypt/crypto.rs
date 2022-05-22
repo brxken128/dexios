@@ -100,7 +100,7 @@ pub fn decrypt_bytes_stream_mode(
 
     let mut hasher = blake3::Hasher::new();
 
-    if hash == HashMode::EmitHash {
+    if hash == HashMode::CalculateHash {
         hasher.update(&salt);
     }
 
@@ -121,7 +121,7 @@ pub fn decrypt_bytes_stream_mode(
                 .read(&mut nonce_bytes)
                 .context("Unable to read nonce from the file")?;
 
-            if hash == HashMode::EmitHash {
+            if hash == HashMode::CalculateHash {
                 hasher.update(&nonce_bytes);
             }
 
@@ -145,7 +145,7 @@ pub fn decrypt_bytes_stream_mode(
                 .read(&mut nonce_bytes)
                 .context("Unable to read nonce from the file")?;
 
-            if hash == HashMode::EmitHash {
+            if hash == HashMode::CalculateHash {
                 hasher.update(&nonce_bytes);
             }
 
@@ -169,7 +169,7 @@ pub fn decrypt_bytes_stream_mode(
                     .write_all(&decrypted_data)
                     .context("Unable to write to the output file")?;
             }
-            if hash == HashMode::EmitHash {
+            if hash == HashMode::CalculateHash {
                 hasher.update(&buffer);
             }
         } else {
@@ -185,14 +185,14 @@ pub fn decrypt_bytes_stream_mode(
                     .context("Unable to write to the output file")?;
                 output.flush().context("Unable to flush the output file")?;
             }
-            if hash == HashMode::EmitHash {
+            if hash == HashMode::CalculateHash {
                 hasher.update(&buffer[..read_count]);
             }
             break;
         }
     }
 
-    if hash == HashMode::EmitHash {
+    if hash == HashMode::CalculateHash {
         let hash = hasher.finalize().to_hex().to_string();
         println!("Hash of the encrypted file is: {}. If this doesn't match with the original, something very bad has happened.", hash);
     }

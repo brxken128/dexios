@@ -31,7 +31,7 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
-    if params.hash_mode == HashMode::EmitHash {
+    if params.hash_mode == HashMode::CalculateHash {
         let start_time = Instant::now();
         let hash = hash_data_blake3(&salt, &nonce, &encrypted_data)?;
         let duration = start_time.elapsed();

@@ -27,10 +27,10 @@ fn main() -> Result<()> {
 
             let hash_mode = if sub_matches.is_present("hash") {
                 //specify to emit hash after operation
-                HashMode::EmitHash
+                HashMode::CalculateHash
             } else {
                 // default
-                HashMode::HideHash
+                HashMode::NoHash
             };
 
             let skip = if sub_matches.is_present("skip") {
@@ -129,10 +129,10 @@ fn main() -> Result<()> {
 
             let hash_mode = if sub_matches.is_present("hash") {
                 //specify to emit hash after operation
-                HashMode::EmitHash
+                HashMode::CalculateHash
             } else {
                 // default
-                HashMode::HideHash
+                HashMode::NoHash
             };
 
             let skip = if sub_matches.is_present("skip") {

@@ -19,8 +19,8 @@ pub struct Parameters {
 }
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum HashMode {
-    EmitHash,
-    HideHash,
+    CalculateHash,
+    NoHash,
 }
 
 #[derive(PartialEq, Eq, Copy, Clone)]

@@ -142,10 +142,7 @@ pub fn get_paths_in_dir(name: &str, mode: DirectoryMode) -> Result<(Vec<PathBuf>
 
             let (files, dirs) = get_paths_in_dir(name, mode)?;
             file_list.extend(files);
-            match dirs {
-                Some(d) => dir_list.extend(d),
-                None => (),
-            }
+            dir_list.extend(dirs.unwrap()); // this should never error and it should be there, at least empty - should still add context
 
         } else if !path.is_symlink() {
             file_list.push(path);

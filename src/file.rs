@@ -1,8 +1,11 @@
 use crate::global::CipherType;
+use crate::global::DirectoryMode;
 use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
 use secrecy::Secret;
 use secrecy::SecretVec;
+use std::fs::read_dir;
+use std::path::PathBuf;
 use std::{
     fs::File,
     io::{BufReader, Read, Write},
@@ -124,4 +127,37 @@ pub fn write_bytes(name: &str, bytes: &[u8]) -> Result<()> {
         .flush()
         .with_context(|| format!("Unable to flush the output file: {}", name))?;
     Ok(())
+}
+
+pub fn get_paths_in_dir(name: &str, mode: DirectoryMode) -> Result<(Vec<PathBuf>, Option<Vec<PathBuf>>)> {
+    let mut file_list = Vec::new(); // so we know what files to encrypt
+    let mut dir_list = Vec::new(); // so we can recreate the structure inside of the tar file
+
+    let paths = read_dir(name).with_context(|| format!("Unable to open the directory: {}", name))?;
+
+    for item in paths {
+        let path = item.with_context(|| format!("Unable to get the item's path: {}", name))?.path(); // not great error message
+        if path.is_dir() && mode == DirectoryMode::Recursive {
+            dir_list.push(path);
+
+            let (files, dirs) = get_paths_in_dir(name, mode)?;
+            file_list.extend(files);
+            match dirs {
+                Some(d) => dir_list.extend(d),
+                None => (),
+            }
+
+        } else if !path.is_symlink() {
+            file_list.push(path);
+        } else {
+            println!("Skipping {} as it's a symlink", path.display());
+        }
+    }
+
+    if mode == DirectoryMode::Recursive {
+        Ok((file_list, Some(dir_list)))
+    } else {
+        Ok((file_list, None))
+    }
+
 }

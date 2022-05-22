@@ -17,6 +17,13 @@ pub struct Parameters {
     pub password: PasswordMode,
     pub cipher_type: CipherType,
 }
+
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum DirectoryMode {
+    Singular,
+    Recursive,
+}
+
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum HashMode {
     CalculateHash,

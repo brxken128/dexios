@@ -11,6 +11,7 @@ mod global;
 mod hashing;
 mod key;
 mod prompt;
+mod directory;
 
 #[allow(clippy::too_many_lines)]
 fn main() -> Result<()> {

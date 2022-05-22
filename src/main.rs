@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::{CipherType, Parameters, BLOCK_SIZE};
+use global::{BenchMode, CipherType, HashMode, Parameters, PasswordMode, SkipMode, BLOCK_SIZE};
 use std::result::Result::Ok;
 
 mod cli;
@@ -25,6 +25,38 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
+            let hash_mode = if sub_matches.is_present("hash") {
+                //specify to emit hash after operation
+                HashMode::EmitHash
+            } else {
+                // default
+                HashMode::HideHash
+            };
+
+            let skip = if sub_matches.is_present("skip") {
+                //specify to hide promps during operation
+                SkipMode::HidePrompts
+            } else {
+                // default
+                SkipMode::ShowPrompts
+            };
+
+            let bench = if sub_matches.is_present("bench") {
+                //specify to not write to filesystem, for benchmarking and saving wear on hardware
+                BenchMode::BenchmarkInMemory
+            } else {
+                // default
+                BenchMode::WriteToFilesystem
+            };
+
+            let password = if sub_matches.is_present("password") {
+                //Overwrite, so the user provided password is used and ignore environment supplied one?!
+                PasswordMode::ForceUserProvidedPassword
+            } else {
+                // default
+                PasswordMode::NormalKeySourcePriority
+            };
+
             let cipher_type = if sub_matches.is_present("gcm") {
                 // specify gcm manually
                 CipherType::AesGcm
@@ -34,10 +66,10 @@ fn main() -> Result<()> {
             };
 
             let params = Parameters {
-                hash_mode: sub_matches.is_present("hash"),
-                skip: sub_matches.is_present("skip"),
-                bench: sub_matches.is_present("bench"),
-                password: sub_matches.is_present("password"),
+                hash_mode,
+                skip,
+                bench,
+                password,
                 cipher_type,
             };
 
@@ -95,6 +127,38 @@ fn main() -> Result<()> {
                     .context("No keyfile/invalid text provided")?;
             }
 
+            let hash_mode = if sub_matches.is_present("hash") {
+                //specify to emit hash after operation
+                HashMode::EmitHash
+            } else {
+                // default
+                HashMode::HideHash
+            };
+
+            let skip = if sub_matches.is_present("skip") {
+                //specify to hide promps during operation
+                SkipMode::HidePrompts
+            } else {
+                // default
+                SkipMode::ShowPrompts
+            };
+
+            let bench = if sub_matches.is_present("bench") {
+                //specify to not write to filesystem, for benchmarking and saving wear on hardware
+                BenchMode::BenchmarkInMemory
+            } else {
+                // default
+                BenchMode::WriteToFilesystem
+            };
+
+            let password = if sub_matches.is_present("password") {
+                //Overwrite, so the user provided password is used and ignore environment supplied one?!
+                PasswordMode::ForceUserProvidedPassword
+            } else {
+                // default
+                PasswordMode::NormalKeySourcePriority
+            };
+
             let cipher_type = if sub_matches.is_present("gcm") {
                 // specify gcm manually
                 CipherType::AesGcm
@@ -104,10 +168,10 @@ fn main() -> Result<()> {
             };
 
             let params = Parameters {
-                hash_mode: sub_matches.is_present("hash"),
-                skip: sub_matches.is_present("skip"),
-                bench: sub_matches.is_present("bench"),
-                password: sub_matches.is_present("password"),
+                hash_mode,
+                skip,
+                bench,
+                password,
                 cipher_type,
             };
 

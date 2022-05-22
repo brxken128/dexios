@@ -1,4 +1,4 @@
-use crate::global::{CipherType, EncryptStreamCiphers, BLOCK_SIZE, SALT_LEN};
+use crate::global::{BenchMode, CipherType, EncryptStreamCiphers, HashMode, BLOCK_SIZE, SALT_LEN};
 use aead::stream::EncryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -110,8 +110,8 @@ pub fn encrypt_bytes_stream_mode(
     input: &mut File,
     output: &mut File,
     raw_key: Secret<Vec<u8>>,
-    bench: bool,
-    hash: bool,
+    bench: BenchMode,
+    hash: HashMode,
     cipher_type: CipherType,
 ) -> Result<()> {
     let (mut streams, salt, nonce_bytes): (EncryptStreamCiphers, [u8; SALT_LEN], Vec<u8>) =
@@ -161,7 +161,7 @@ pub fn encrypt_bytes_stream_mode(
             }
         };
 
-    if !bench {
+    if bench == BenchMode::WriteToFilesystem {
         output
             .write_all(&salt)
             .context("Unable to write salt to the output file")?;
@@ -172,7 +172,7 @@ pub fn encrypt_bytes_stream_mode(
 
     let mut hasher = blake3::Hasher::new();
 
-    if hash {
+    if hash == HashMode::EmitHash {
         hasher.update(&salt);
         hasher.update(&nonce_bytes);
     }
@@ -189,12 +189,12 @@ pub fn encrypt_bytes_stream_mode(
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };
 
-            if !bench {
+            if bench == BenchMode::WriteToFilesystem {
                 output
                     .write_all(&encrypted_data)
                     .context("Unable to write to the output file")?;
             }
-            if hash {
+            if hash == HashMode::EmitHash {
                 hasher.update(&encrypted_data);
             }
         } else {
@@ -204,21 +204,21 @@ pub fn encrypt_bytes_stream_mode(
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };
 
-            if !bench {
+            if bench == BenchMode::WriteToFilesystem {
                 output
                     .write_all(&encrypted_data)
                     .context("Unable to write to the output file")?;
             }
-            if hash {
+            if hash == HashMode::EmitHash {
                 hasher.update(&encrypted_data);
             }
             break;
         }
     }
-    if !bench {
+    if bench == BenchMode::WriteToFilesystem {
         output.flush().context("Unable to flush the output file")?;
     }
-    if hash {
+    if hash == HashMode::EmitHash {
         let hash = hasher.finalize().to_hex().to_string();
         println!("Hash of the encrypted file is: {}", hash,);
     }

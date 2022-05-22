@@ -1,4 +1,4 @@
-use crate::global::{CipherType, DecryptStreamCiphers, BLOCK_SIZE, SALT_LEN};
+use crate::global::{BenchMode, CipherType, DecryptStreamCiphers, HashMode, BLOCK_SIZE, SALT_LEN};
 use aead::stream::DecryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -89,8 +89,8 @@ pub fn decrypt_bytes_stream_mode(
     input: &mut File,
     output: &mut File,
     raw_key: Secret<Vec<u8>>,
-    bench: bool,
-    hash: bool,
+    bench: BenchMode,
+    hash: HashMode,
     cipher_type: CipherType,
 ) -> Result<()> {
     let mut salt = [0u8; SALT_LEN];
@@ -100,7 +100,7 @@ pub fn decrypt_bytes_stream_mode(
 
     let mut hasher = blake3::Hasher::new();
 
-    if hash {
+    if hash == HashMode::EmitHash {
         hasher.update(&salt);
     }
 
@@ -121,7 +121,7 @@ pub fn decrypt_bytes_stream_mode(
                 .read(&mut nonce_bytes)
                 .context("Unable to read nonce from the file")?;
 
-            if hash {
+            if hash == HashMode::EmitHash {
                 hasher.update(&nonce_bytes);
             }
 
@@ -145,7 +145,7 @@ pub fn decrypt_bytes_stream_mode(
                 .read(&mut nonce_bytes)
                 .context("Unable to read nonce from the file")?;
 
-            if hash {
+            if hash == HashMode::EmitHash {
                 hasher.update(&nonce_bytes);
             }
 
@@ -164,12 +164,12 @@ pub fn decrypt_bytes_stream_mode(
                 Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file.")),
             };
 
-            if !bench {
+            if bench == BenchMode::WriteToFilesystem {
                 output
                     .write_all(&decrypted_data)
                     .context("Unable to write to the output file")?;
             }
-            if hash {
+            if hash == HashMode::EmitHash {
                 hasher.update(&buffer);
             }
         } else {
@@ -179,20 +179,20 @@ pub fn decrypt_bytes_stream_mode(
                 Err(_) => return Err(anyhow!("Unable to decrypt the final block of data. Maybe it's the wrong key, or it's not an encrypted file.")),
             };
 
-            if !bench {
+            if bench == BenchMode::WriteToFilesystem {
                 output
                     .write_all(&decrypted_data)
                     .context("Unable to write to the output file")?;
                 output.flush().context("Unable to flush the output file")?;
             }
-            if hash {
+            if hash == HashMode::EmitHash {
                 hasher.update(&buffer[..read_count]);
             }
             break;
         }
     }
 
-    if hash {
+    if hash == HashMode::EmitHash {
         let hash = hasher.finalize().to_hex().to_string();
         println!("Hash of the encrypted file is: {}. If this doesn't match with the original, something very bad has happened.", hash);
     }

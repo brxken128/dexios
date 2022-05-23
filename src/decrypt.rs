@@ -3,6 +3,7 @@ use crate::decrypt::crypto::decrypt_bytes_stream_mode;
 use crate::file::get_encrypted_data;
 use crate::file::write_bytes;
 use crate::global::BenchMode;
+use crate::global::EraseMode;
 use crate::global::HashMode;
 use crate::global::OutputFile;
 use crate::global::Parameters;
@@ -80,6 +81,10 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         );
     }
 
+    if params.erase != EraseMode::IgnoreFile(0) {
+        crate::erase::secure_erase(input, params.erase.get_passes())?;
+    }
+
     Ok(())
 }
 
@@ -109,9 +114,6 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
-
-    // let mut output_file =
-    //     File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
@@ -152,6 +154,10 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
                 decrypt_duration.as_secs_f32(),
             );
         }
+    }
+
+    if params.erase != EraseMode::IgnoreFile(0) {
+        crate::erase::secure_erase(input, params.erase.get_passes())?;
     }
 
     Ok(())

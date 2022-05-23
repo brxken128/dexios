@@ -3,6 +3,7 @@ use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
 use crate::file::write_encrypted_data;
 use crate::global::BenchMode;
+use crate::global::EraseMode;
 use crate::global::HashMode;
 use crate::global::OutputFile;
 use crate::global::Parameters;
@@ -67,6 +68,10 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         );
     }
 
+    if params.erase != EraseMode::IgnoreFile(0) {
+        crate::erase::secure_erase(input, params.erase.get_passes())?;
+    }
+
     Ok(())
 }
 
@@ -91,6 +96,12 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
 
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
+    }
+
+    if input == output {
+        return Err(anyhow::anyhow!(
+            "Input and output files cannot have the same name in stream mode."
+        ));
     }
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
@@ -133,6 +144,10 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
                 encrypt_duration.as_secs_f32(),
             );
         }
+    }
+
+    if params.erase != EraseMode::IgnoreFile(0) {
+        crate::erase::secure_erase(input, params.erase.get_passes())?;
     }
 
     Ok(())

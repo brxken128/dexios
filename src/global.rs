@@ -18,8 +18,31 @@ pub struct Parameters {
     pub skip: SkipMode,
     pub bench: BenchMode,
     pub password: PasswordMode,
+    pub erase: EraseMode,
     pub cipher_type: CipherType,
 }
+
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum DirectoryMode {
+    Singular,
+    Recursive,
+}
+
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum EraseMode {
+    EraseFile(i32),
+    IgnoreFile(i32),
+}
+
+impl EraseMode {
+    pub fn get_passes(self) -> i32 {
+        match self {
+            EraseMode::EraseFile(passes) => passes,
+            EraseMode::IgnoreFile(_) => 0,
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum HashMode {
     CalculateHash,

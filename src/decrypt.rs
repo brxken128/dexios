@@ -115,7 +115,9 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
     }
 
     if input == output {
-        return Err(anyhow::anyhow!("Input and output files cannot have the same name in stream mode."))
+        return Err(anyhow::anyhow!(
+            "Input and output files cannot have the same name in stream mode."
+        ));
     }
 
     let mut output_file =

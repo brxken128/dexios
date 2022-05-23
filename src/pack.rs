@@ -1,6 +1,8 @@
 use std::{
     fs::File,
-    io::{Read, Write}, path::PathBuf, str::FromStr,
+    io::{Read, Write},
+    path::PathBuf,
+    str::FromStr,
 };
 
 use anyhow::{Context, Result};
@@ -9,7 +11,8 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::{DirectoryMode, Parameters, BLOCK_SIZE, SkipMode}, prompt::get_answer,
+    global::{DirectoryMode, Parameters, SkipMode, BLOCK_SIZE},
+    prompt::get_answer,
 };
 
 pub fn encrypt_directory(
@@ -88,12 +91,11 @@ pub fn encrypt_directory(
     Ok(())
 }
 
-
 pub fn decrypt_directory(
-    input: &str, // encrypted zip file
-    output: &str, // directory
-    keyfile: &str, // for decrypt function
-    memory: bool, // memory or stream mode
+    input: &str,        // encrypted zip file
+    output: &str,       // directory
+    keyfile: &str,      // for decrypt function
+    memory: bool,       // memory or stream mode
     params: Parameters, // params for decrypt function
 ) -> Result<()> {
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
@@ -108,7 +110,8 @@ pub fn decrypt_directory(
     }
 
     let file = File::open(&tmp_name).context("Unable to open temporary archive")?;
-    let mut archive = zip::ZipArchive::new(file).context("Temporary archive can't be opened, is it a zip file?")?;
+    let mut archive = zip::ZipArchive::new(file)
+        .context("Temporary archive can't be opened, is it a zip file?")?;
 
     match std::fs::create_dir(output) {
         Ok(_) => println!("Created output directory: {}", output),
@@ -116,7 +119,8 @@ pub fn decrypt_directory(
     }
 
     for i in 0..archive.len() {
-        let mut full_path = PathBuf::from_str(output).context("Unable to create a PathBuf from your output directory")?;
+        let mut full_path = PathBuf::from_str(output)
+            .context("Unable to create a PathBuf from your output directory")?;
 
         let mut file = archive.by_index(i).context("Unable to index the archive")?;
         match file.enclosed_name() {
@@ -124,12 +128,24 @@ pub fn decrypt_directory(
             None => continue,
         };
 
-        if file.name().ends_with('/') { // if it's a directory, recreate the structure
+        if file.name().ends_with('/') {
+            // if it's a directory, recreate the structure
             std::fs::create_dir_all(full_path)?;
-        } else { // this must be a file
-            let file_name: String = full_path.clone().file_name().unwrap().to_str().unwrap().to_string();
+        } else {
+            // this must be a file
+            let file_name: String = full_path
+                .clone()
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string();
             if std::fs::metadata(full_path.clone()).is_ok() {
-                let answer = get_answer(&format!("{} already exists, would you like to overwrite?", file_name), true, params.skip == SkipMode::HidePrompts)?;
+                let answer = get_answer(
+                    &format!("{} already exists, would you like to overwrite?", file_name),
+                    true,
+                    params.skip == SkipMode::HidePrompts,
+                )?;
                 if !answer {
                     println!("Skipping {}", file_name);
                     continue;

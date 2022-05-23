@@ -5,13 +5,13 @@ use std::result::Result::Ok;
 
 mod cli;
 mod decrypt;
-mod pack;
 mod encrypt;
 mod erase;
 mod file;
 mod global;
 mod hashing;
 mod key;
+mod pack;
 mod param_handler;
 mod prompt;
 
@@ -156,7 +156,7 @@ fn main() -> Result<()> {
                     sub_matches_decrypt
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
-                        sub_matches_decrypt
+                    sub_matches_decrypt
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     keyfile,

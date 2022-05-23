@@ -144,14 +144,16 @@ pub fn get_paths_in_dir(
             .with_context(|| format!("Unable to get the item's path: {}", name))?
             .path(); // not great error message
         if path.is_dir() && mode == DirectoryMode::Recursive {
-
             let (files, dirs) = get_paths_in_dir(path.to_str().unwrap(), mode)?;
             dir_list.push(path);
-            
+
             file_list.extend(files);
             dir_list.extend(dirs.unwrap()); // this should never error and it should be there, at least empty - should still add context
         } else if path.is_dir() {
-            println!("Skipping {} as it's a directory and -r was not specified", path.display());
+            println!(
+                "Skipping {} as it's a directory and -r was not specified",
+                path.display()
+            );
         } else if path.is_symlink() {
             println!("Skipping {} as it's a symlink", path.display());
         } else {

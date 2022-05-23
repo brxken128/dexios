@@ -115,6 +115,12 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         exit(0);
     }
 
+    if input == output {
+        return Err(anyhow::anyhow!(
+            "Input and output files cannot have the same name in stream mode."
+        ));
+    }
+
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
             File::create(output)

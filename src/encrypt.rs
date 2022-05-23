@@ -5,6 +5,7 @@ use crate::file::write_encrypted_data;
 use crate::global::BenchMode;
 use crate::global::EraseMode;
 use crate::global::HashMode;
+use crate::global::OutputFile;
 use crate::global::Parameters;
 use crate::global::BLOCK_SIZE;
 use crate::hashing::hash_data_blake3;
@@ -103,8 +104,14 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         ));
     }
 
-    let mut output_file =
-        File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
+    let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
+        OutputFile::Some(
+            File::create(output)
+                .with_context(|| format!("Unable to open output file: {}", output))?,
+        )
+    } else {
+        OutputFile::None
+    };
 
     let raw_key = get_user_key(keyfile, true, params.password)?;
 
@@ -123,11 +130,21 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         params.cipher_type,
     )?;
     let encrypt_duration = encrypt_start_time.elapsed();
-    println!(
-        "Encryption successful! File saved as {} [took {:.2}s]",
-        output,
-        encrypt_duration.as_secs_f32(),
-    );
+    match params.bench {
+        BenchMode::WriteToFilesystem => {
+            println!(
+                "Encryption successful! File saved as {} [took {:.2}s]",
+                output,
+                encrypt_duration.as_secs_f32(),
+            );
+        }
+        BenchMode::BenchmarkInMemory => {
+            println!(
+                "Encryption successful! [took {:.2}s]",
+                encrypt_duration.as_secs_f32(),
+            );
+        }
+    }
 
     if params.erase != EraseMode::IgnoreFile(0) {
         crate::erase::secure_erase(input, params.erase.get_passes())?;

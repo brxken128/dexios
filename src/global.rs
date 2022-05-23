@@ -1,9 +1,12 @@
 use aead::{
     stream::{DecryptorLE31, EncryptorLE31},
-    Payload, Result,
+    Payload,
 };
 use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
+use std::fs::File;
+use std::io::Result;
+use std::io::Write;
 
 // this file sets constants that are used throughout the codebase
 // these can be customised easily by anyone to suit their own needs
@@ -64,6 +67,26 @@ pub enum PasswordMode {
     NormalKeySourcePriority,
 }
 
+pub enum OutputFile {
+    Some(File),
+    None,
+}
+
+impl OutputFile {
+    pub fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+        match self {
+            OutputFile::Some(file) => file.write_all(buf),
+            OutputFile::None => Ok(()),
+        }
+    }
+    pub fn flush(&mut self) -> Result<()> {
+        match self {
+            OutputFile::Some(file) => file.flush(),
+            OutputFile::None => Ok(()),
+        }
+    }
+}
+
 #[derive(Copy, Clone)]
 pub enum CipherType {
     AesGcm,
@@ -93,7 +116,7 @@ impl EncryptStreamCiphers {
     pub fn encrypt_next<'msg, 'aad>(
         &mut self,
         payload: impl Into<Payload<'msg, 'aad>>,
-    ) -> Result<Vec<u8>> {
+    ) -> aead::Result<Vec<u8>> {
         match self {
             EncryptStreamCiphers::AesGcm(s) => s.encrypt_next(payload),
             EncryptStreamCiphers::XChaCha(s) => s.encrypt_next(payload),
@@ -103,7 +126,7 @@ impl EncryptStreamCiphers {
     pub fn encrypt_last<'msg, 'aad>(
         self,
         payload: impl Into<Payload<'msg, 'aad>>,
-    ) -> Result<Vec<u8>> {
+    ) -> aead::Result<Vec<u8>> {
         match self {
             EncryptStreamCiphers::AesGcm(s) => s.encrypt_last(payload),
             EncryptStreamCiphers::XChaCha(s) => s.encrypt_last(payload),

@@ -1,4 +1,6 @@
-use crate::global::{BenchMode, CipherType, DecryptStreamCiphers, HashMode, BLOCK_SIZE, SALT_LEN};
+use crate::global::{
+    BenchMode, CipherType, DecryptStreamCiphers, HashMode, OutputFile, BLOCK_SIZE, SALT_LEN,
+};
 use aead::stream::DecryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -11,7 +13,6 @@ use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use secrecy::{ExposeSecret, Secret};
 use std::fs::File;
 use std::io::Read;
-use std::io::Write;
 use std::result::Result::Ok;
 
 // this handles argon2id hashing with the provided key and salt
@@ -87,7 +88,7 @@ pub fn decrypt_bytes_memory_mode(
 // this could probably do with some delegation - it does a lot of stuff on it's own
 pub fn decrypt_bytes_stream_mode(
     input: &mut File,
-    output: &mut File,
+    output: &mut OutputFile,
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,

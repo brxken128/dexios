@@ -72,15 +72,13 @@ pub fn encrypt_directory(
     }
     zip.finish()?;
 
-    let result = if memory {
-        crate::encrypt::memory_mode(&tmp_name, output, keyfile, &params)
+    if memory {
+        crate::encrypt::memory_mode(&tmp_name, output, keyfile, &params)?;
     } else {
-        crate::encrypt::stream_mode(&tmp_name, output, keyfile, &params)
+        crate::encrypt::stream_mode(&tmp_name, output, keyfile, &params)?;
     };
 
-    if result.is_ok() {
-        crate::erase::secure_erase(&tmp_name, 16)?;
-    }
+    crate::erase::secure_erase(&tmp_name, 16)?;
 
     Ok(())
 }

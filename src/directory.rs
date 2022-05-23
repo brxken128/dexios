@@ -37,10 +37,9 @@ pub fn encrypt_directory(
 
     if mode == DirectoryMode::Recursive {
         let directories = dirs.context("Error unwrapping directory vec")?; // this should always be *something* anyway
-        for dir in &directories {
+        for dir in directories {
             zip.add_directory(dir.to_str().unwrap(), options)?;
         }
-        drop(directories);
     }
 
     for file in files {

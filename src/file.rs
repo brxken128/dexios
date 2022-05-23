@@ -134,7 +134,7 @@ pub fn get_paths_in_dir(
     mode: DirectoryMode,
 ) -> Result<(Vec<PathBuf>, Option<Vec<PathBuf>>)> {
     let mut file_list = Vec::new(); // so we know what files to encrypt
-    let mut dir_list = Vec::new(); // so we can recreate the structure inside of the tar file
+    let mut dir_list = Vec::new(); // so we can recreate the structure inside of the zip file
 
     let paths =
         read_dir(name).with_context(|| format!("Unable to open the directory: {}", name))?;
@@ -144,9 +144,10 @@ pub fn get_paths_in_dir(
             .with_context(|| format!("Unable to get the item's path: {}", name))?
             .path(); // not great error message
         if path.is_dir() && mode == DirectoryMode::Recursive {
-            dir_list.push(path);
 
-            let (files, dirs) = get_paths_in_dir(name, mode)?;
+            let (files, dirs) = get_paths_in_dir(path.to_str().unwrap(), mode)?;
+            dir_list.push(path);
+            
             file_list.extend(files);
             dir_list.extend(dirs.unwrap()); // this should never error and it should be there, at least empty - should still add context
         } else if path.is_dir() {

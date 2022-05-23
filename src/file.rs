@@ -153,8 +153,8 @@ pub fn get_paths_in_dir(
             .with_context(|| format!("Unable to get the item's path: {}", name))?
             .path(); // not great error message
 
-
-        if set.is_match(path.clone()) { // compare with both file name and path
+        if set.is_match(path.clone()) {
+            // compare with both file name and path
             continue;
         } else if set.is_match(path.clone().file_name().unwrap()) {
             continue;

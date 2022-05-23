@@ -1,4 +1,4 @@
-use std::{path::Path, fs::File, io::{Read, Write}};
+use std::{fs::File, io::{Read, Write}};
 
 use anyhow::{Result, Context};
 use zip::write::FileOptions;

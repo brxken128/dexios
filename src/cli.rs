@@ -270,7 +270,6 @@ pub fn get_matches() -> clap::ArgMatches {
                         .min_values(0),
                 )
                 .subcommand(encrypt.clone())
-                .subcommand(decrypt.clone())
         )
         .get_matches()
 }

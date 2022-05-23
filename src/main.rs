@@ -175,7 +175,7 @@ fn main() -> Result<()> {
 
                     let (keyfile, params) = param_handler(sub_matches_encrypt)?;
 
-                    let result = directory::encrypt_directory(
+                    directory::encrypt_directory(
                         sub_matches_encrypt
                             .value_of("input")
                             .context("No input file/invalid text provided")?,
@@ -186,7 +186,7 @@ fn main() -> Result<()> {
                         keyfile,
                         mode,
                         sub_matches_encrypt.is_present("memory"),
-                        params);
+                        params)?;
                 },
                 Some("decrypt") => {
 

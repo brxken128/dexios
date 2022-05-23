@@ -1,20 +1,19 @@
 use anyhow::{Context, Result};
-use global::{BLOCK_SIZE, DirectoryMode};
+use global::{DirectoryMode, BLOCK_SIZE};
 use param_handler::param_handler;
 use std::result::Result::Ok;
 
 mod cli;
 mod decrypt;
+mod directory;
 mod encrypt;
 mod erase;
 mod file;
 mod global;
 mod hashing;
 mod key;
-mod prompt;
-mod directory;
 mod param_handler;
-
+mod prompt;
 
 #[allow(clippy::too_many_lines)]
 fn main() -> Result<()> {
@@ -96,7 +95,7 @@ fn main() -> Result<()> {
                     &params,
                 )
             };
-        
+
             if result.is_ok() && sub_matches.is_present("erase") {
                 let result = sub_matches
                     .value_of("erase")
@@ -108,7 +107,7 @@ fn main() -> Result<()> {
                     println!("Unable to read number of passes provided - using the default.");
                     16
                 };
-        
+
                 crate::erase::secure_erase(
                     sub_matches
                         .value_of("input")
@@ -116,7 +115,7 @@ fn main() -> Result<()> {
                     passes,
                 )?;
             }
-        
+
             return result;
         }
         Some(("erase", sub_matches)) => {
@@ -162,37 +161,34 @@ fn main() -> Result<()> {
                 hashing::hash_stream(file_name)?;
             }
         }
-        Some(("compress", sub_matches)) => {
-            match sub_matches.subcommand_name() {
-                Some("encrypt") => {
-                    let mode = if sub_matches.is_present("recursive") {
-                        DirectoryMode::Recursive
-                    } else {
-                        DirectoryMode::Singular
-                    };
+        Some(("compress", sub_matches)) => match sub_matches.subcommand_name() {
+            Some("encrypt") => {
+                let mode = if sub_matches.is_present("recursive") {
+                    DirectoryMode::Recursive
+                } else {
+                    DirectoryMode::Singular
+                };
 
-                    let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
+                let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
 
-                    let (keyfile, params) = param_handler(sub_matches_encrypt)?;
+                let (keyfile, params) = param_handler(sub_matches_encrypt)?;
 
-                    directory::encrypt_directory(
-                        sub_matches_encrypt
-                            .value_of("input")
-                            .context("No input file/invalid text provided")?,
-                        sub_matches_encrypt
-                            .value_of("output")
-                            .context("No output file/invalid text provided")?, 
-                        Vec::new(), 
-                        keyfile,
-                        mode,
-                        sub_matches_encrypt.is_present("memory"),
-                        params)?;
-                },
-                Some("decrypt") => {
-
-                }
-                None | _ => (),
+                directory::encrypt_directory(
+                    sub_matches_encrypt
+                        .value_of("input")
+                        .context("No input file/invalid text provided")?,
+                    sub_matches_encrypt
+                        .value_of("output")
+                        .context("No output file/invalid text provided")?,
+                    Vec::new(),
+                    keyfile,
+                    mode,
+                    sub_matches_encrypt.is_present("memory"),
+                    params,
+                )?;
             }
+            Some("decrypt") => {}
+            None | _ => (),
         },
         _ => (),
     }

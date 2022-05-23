@@ -195,7 +195,6 @@ pub fn get_matches() -> clap::ArgMatches {
                 .conflicts_with("gcm"),
         );
 
-
     Command::new("dexios")
         .version(clap::crate_version!())
         .author("brxken128 <brxken128@tutanota.com>")
@@ -269,7 +268,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .help("exclude a pattern (e.g. --exclude=\".*\")")
                         .min_values(0),
                 )
-                .subcommand(encrypt.clone())
+                .subcommand(encrypt.clone()),
         )
         .get_matches()
 }

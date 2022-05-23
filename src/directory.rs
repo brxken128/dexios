@@ -1,11 +1,25 @@
-use std::{fs::File, io::{Read, Write}};
+use std::{
+    fs::File,
+    io::{Read, Write},
+};
 
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use zip::write::FileOptions;
 
-use crate::{global::{Parameters, DirectoryMode, BLOCK_SIZE}, file::get_paths_in_dir};
+use crate::{
+    file::get_paths_in_dir,
+    global::{DirectoryMode, Parameters, BLOCK_SIZE},
+};
 
-pub fn encrypt_directory(input: &str, output: &str, exclude: Vec<&str>, keyfile: &str, mode: DirectoryMode, memory: bool, params: Parameters) -> Result<()> {
+pub fn encrypt_directory(
+    input: &str,
+    output: &str,
+    exclude: Vec<&str>,
+    keyfile: &str,
+    mode: DirectoryMode,
+    memory: bool,
+    params: Parameters,
+) -> Result<()> {
     let (files, dirs) = get_paths_in_dir(input, mode)?;
     let tmp_name = output.to_owned() + ".tmp";
 
@@ -17,7 +31,7 @@ pub fn encrypt_directory(input: &str, output: &str, exclude: Vec<&str>, keyfile:
         .unix_permissions(0o755);
 
     zip.add_directory(input, options)?;
-    
+
     if mode == DirectoryMode::Recursive {
         let directories = dirs.context("Error unwrapping directory vec")?; // this should always be *something* anyway
         for dir in directories {
@@ -26,7 +40,8 @@ pub fn encrypt_directory(input: &str, output: &str, exclude: Vec<&str>, keyfile:
     }
 
     for file in files {
-        zip.start_file(file.to_str().unwrap(), options).context("Unable to add file to zip")?;
+        zip.start_file(file.to_str().unwrap(), options)
+            .context("Unable to add file to zip")?;
         println!("Compressing {} into {}", file.to_str().unwrap(), tmp_name);
         let zip_writer = zip.by_ref();
         let mut file_reader = File::open(file)?;
@@ -66,8 +81,6 @@ pub fn encrypt_directory(input: &str, output: &str, exclude: Vec<&str>, keyfile:
     if result.is_ok() {
         crate::erase::secure_erase(&tmp_name, 16)?;
     }
-
-
 
     Ok(())
 }

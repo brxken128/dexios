@@ -1,5 +1,7 @@
-use anyhow::{Result, Context};
-use crate::global::{BenchMode, CipherType, HashMode, Parameters, PasswordMode, SkipMode, BLOCK_SIZE};
+use crate::global::{
+    BenchMode, CipherType, HashMode, Parameters, PasswordMode, SkipMode, BLOCK_SIZE,
+};
+use anyhow::{Context, Result};
 use clap::ArgMatches;
 
 pub fn param_handler(sub_matches: &ArgMatches) -> Result<(&str, Parameters)> {
@@ -50,11 +52,14 @@ pub fn param_handler(sub_matches: &ArgMatches) -> Result<(&str, Parameters)> {
         CipherType::XChaCha20Poly1305
     };
 
-    Ok((keyfile, Parameters {
-        hash_mode,
-        skip,
-        bench,
-        password,
-        cipher_type,
-    }))
+    Ok((
+        keyfile,
+        Parameters {
+            hash_mode,
+            skip,
+            bench,
+            password,
+            cipher_type,
+        },
+    ))
 }

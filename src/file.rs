@@ -129,21 +129,26 @@ pub fn write_bytes(name: &str, bytes: &[u8]) -> Result<()> {
     Ok(())
 }
 
-pub fn get_paths_in_dir(name: &str, mode: DirectoryMode) -> Result<(Vec<PathBuf>, Option<Vec<PathBuf>>)> {
+pub fn get_paths_in_dir(
+    name: &str,
+    mode: DirectoryMode,
+) -> Result<(Vec<PathBuf>, Option<Vec<PathBuf>>)> {
     let mut file_list = Vec::new(); // so we know what files to encrypt
     let mut dir_list = Vec::new(); // so we can recreate the structure inside of the tar file
 
-    let paths = read_dir(name).with_context(|| format!("Unable to open the directory: {}", name))?;
+    let paths =
+        read_dir(name).with_context(|| format!("Unable to open the directory: {}", name))?;
 
     for item in paths {
-        let path = item.with_context(|| format!("Unable to get the item's path: {}", name))?.path(); // not great error message
+        let path = item
+            .with_context(|| format!("Unable to get the item's path: {}", name))?
+            .path(); // not great error message
         if path.is_dir() && mode == DirectoryMode::Recursive {
             dir_list.push(path);
 
             let (files, dirs) = get_paths_in_dir(name, mode)?;
             file_list.extend(files);
             dir_list.extend(dirs.unwrap()); // this should never error and it should be there, at least empty - should still add context
-
         } else if !path.is_symlink() {
             file_list.push(path);
         } else {
@@ -156,5 +161,4 @@ pub fn get_paths_in_dir(name: &str, mode: DirectoryMode) -> Result<(Vec<PathBuf>
     } else {
         Ok((file_list, None))
     }
-
 }

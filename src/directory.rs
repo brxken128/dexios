@@ -1,6 +1,6 @@
 use std::{path::Path, fs::File};
 
-use anyhow::Result;
+use anyhow::{Result, Context};
 use zip::write::FileOptions;
 
 use crate::{global::{Parameters, DirectoryMode}, file::get_paths_in_dir};
@@ -16,10 +16,7 @@ pub fn encrypt_directory(input: &str, output: &str, exclude: Vec<&str>, keyfile:
         .unix_permissions(0o755);
 
     if mode == DirectoryMode::Recursive {
-        let directories = match dirs { // could probably just unwrap
-            Some(directories) => directories,
-            None => Vec::new(),
-        };
+        let directories = dirs.context("Error unwrapping directory vec")?; // this should always be *something* anyway
         for dir in directories {
             zip.add_directory(dir.to_str().unwrap(), options)?;
         }

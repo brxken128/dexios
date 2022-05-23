@@ -250,8 +250,8 @@ pub fn get_matches() -> clap::ArgMatches {
                 ),
         )
         .subcommand(
-            Command::new("compress")
-                .about("compress a directory and then encrypt/decrypt")
+            Command::new("pack")
+                .about("pack a directory and then encrypt/decrypt it")
                 .arg(
                     Arg::new("recursive")
                         .short('r')

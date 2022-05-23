@@ -121,7 +121,7 @@ fn main() -> Result<()> {
                 hashing::hash_stream(file_name)?;
             }
         }
-        Some(("compress", sub_matches)) => match sub_matches.subcommand_name() {
+        Some(("pack", sub_matches)) => match sub_matches.subcommand_name() {
             Some("encrypt") => {
                 let mode = if sub_matches.is_present("recursive") {
                     DirectoryMode::Recursive

@@ -167,7 +167,7 @@ jobs:
     - name: Decrypt+Unpack archive (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack -dxyk keyfile output.zip test/extracted
     - name: List files in directory
-      run: ls -lla test/extracted 
+      run: ls -lla test/extracted/test
   small-file:
     needs: build
     runs-on: ubuntu-latest

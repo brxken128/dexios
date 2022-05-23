@@ -5,16 +5,19 @@ use zip::write::FileOptions;
 
 use crate::{global::{Parameters, DirectoryMode, BLOCK_SIZE}, file::get_paths_in_dir};
 
-pub fn encrypt_directory(input: &str, output: &str, exclude: Vec<&str>, keyfile: &str, mode: DirectoryMode, params: Parameters) -> Result<()> {
+pub fn encrypt_directory(input: &str, output: &str, exclude: Vec<&str>, keyfile: &str, mode: DirectoryMode, memory: bool, params: Parameters) -> Result<()> {
     let (files, dirs) = get_paths_in_dir(input, mode)?;
+    let tmp_name = output.to_owned() + ".tmp";
 
-    let file = File::create(output)?;
+    let file = File::create(&tmp_name).context("Unable to create the output file")?;
     let mut zip = zip::ZipWriter::new(file);
     let options = FileOptions::default()
         .compression_method(zip::CompressionMethod::Bzip2)
         .compression_level(Some(6)) // this is the default anyway
         .unix_permissions(0o755);
 
+    zip.add_directory(input, options)?;
+    
     if mode == DirectoryMode::Recursive {
         let directories = dirs.context("Error unwrapping directory vec")?; // this should always be *something* anyway
         for dir in directories {
@@ -23,8 +26,8 @@ pub fn encrypt_directory(input: &str, output: &str, exclude: Vec<&str>, keyfile:
     }
 
     for file in files {
-        zip.start_file(file.to_str().unwrap(), options)?;
-
+        zip.start_file(file.to_str().unwrap(), options).context("Unable to add file to zip")?;
+        println!("Compressing {} into {}", file.to_str().unwrap(), tmp_name);
         let zip_writer = zip.by_ref();
         let mut file_reader = File::open(file)?;
         let file_size = file_reader.metadata().unwrap().len();
@@ -39,14 +42,32 @@ pub fn encrypt_directory(input: &str, output: &str, exclude: Vec<&str>, keyfile:
 
             loop {
                 let read_count = file_reader.read(&mut buffer)?;
-                zip_writer
-                    .write_all(&buffer[..read_count])
-                    .context("Unable to write to the output file")?;
+                if read_count == BLOCK_SIZE {
+                    zip_writer
+                        .write_all(&buffer[..read_count])
+                        .context("Unable to write to the output file")?;
+                } else {
+                    zip_writer
+                        .write_all(&buffer[..read_count])
+                        .context("Unable to write to the output file")?;
+                    break;
+                }
             }
         }
     }
-
     zip.finish()?;
+
+    let result = if memory {
+        crate::encrypt::memory_mode(&tmp_name, output, keyfile, &params)
+    } else {
+        crate::encrypt::stream_mode(&tmp_name, output, keyfile, &params)
+    };
+
+    if result.is_ok() {
+        crate::erase::secure_erase(&tmp_name, 16)?;
+    }
+
+
 
     Ok(())
 }

@@ -114,6 +114,10 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         exit(0);
     }
 
+    if input == output {
+        return Err(anyhow::anyhow!("Input and output files cannot have the same name in stream mode."))
+    }
+
     let mut output_file =
         File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 

@@ -1,4 +1,4 @@
-use crate::global::{BenchMode, CipherType, EncryptStreamCiphers, HashMode, BLOCK_SIZE, SALT_LEN};
+use crate::global::{BenchMode, CipherType, EncryptStreamCiphers, HashMode, BLOCK_SIZE, SALT_LEN, OutputFile};
 use aead::stream::EncryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -12,7 +12,6 @@ use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
 use secrecy::{ExposeSecret, Secret};
 use std::fs::File;
 use std::io::Read;
-use std::io::Write;
 use std::result::Result::Ok;
 
 // this generates a salt for password hashing
@@ -108,7 +107,7 @@ pub fn encrypt_bytes_memory_mode(
 // it also handles the prep of each individual stream, via the match statement
 pub fn encrypt_bytes_stream_mode(
     input: &mut File,
-    output: &mut File,
+    output: &mut OutputFile,
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,

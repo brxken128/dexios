@@ -107,10 +107,10 @@ pub fn encrypt_directory(
 }
 
 pub fn decrypt_directory(
-    input: &str,        // encrypted zip file
-    output: &str,       // directory
-    keyfile: &str,      // for decrypt function
-    memory: bool,       // memory or stream mode
+    input: &str,         // encrypted zip file
+    output: &str,        // directory
+    keyfile: &str,       // for decrypt function
+    memory: bool,        // memory or stream mode
     params: &Parameters, // params for decrypt function
 ) -> Result<()> {
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);

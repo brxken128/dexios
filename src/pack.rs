@@ -29,24 +29,24 @@ pub fn encrypt_directory(
 
     let tmp_name = format!("{}.{}", output, random_extension); // e.g. "output.kjHSD93l"
 
-    let file = File::create(&tmp_name).context("Unable to create the output file")?;
+    let file = File::create(&tmp_name).with_context(|| format!("Unable to create the output file: {}", output))?;
     let mut zip = zip::ZipWriter::new(file);
     let options = FileOptions::default()
         .compression_method(zip::CompressionMethod::Bzip2)
         .compression_level(Some(6)) // this is the default anyway
         .unix_permissions(0o755);
 
-    zip.add_directory(input, options)?;
+    zip.add_directory(input, options).context("Unable to add directory to zip")?;
 
     if mode == DirectoryMode::Recursive {
-        let directories = dirs.context("Error unwrapping directory vec")?; // this should always be *something* anyway
+        let directories = dirs.context("Error unwrapping Vec containing list of directories.")?; // this should always be *something* anyway
         for dir in directories {
-            zip.add_directory(dir.to_str().unwrap(), options)?;
+            zip.add_directory(dir.to_str().context("Error converting directory path to string")?, options).context("Unable to add directory to zip")?;
         }
     }
 
     for file in files {
-        zip.start_file(file.to_str().unwrap(), options)
+        zip.start_file(file.to_str().context("Error converting file path to string")?, options)
             .context("Unable to add file to zip")?;
         println!("Compressing {} into {}", file.to_str().unwrap(), tmp_name);
         let zip_writer = zip.by_ref();
@@ -66,11 +66,11 @@ pub fn encrypt_directory(
                 if read_count == BLOCK_SIZE {
                     zip_writer
                         .write_all(&buffer[..read_count])
-                        .context("Unable to write to the output file")?;
+                        .with_context(|| format!("Unable to write to the output file: {}", output))?;
                 } else {
                     zip_writer
                         .write_all(&buffer[..read_count])
-                        .context("Unable to write to the output file")?;
+                        .with_context(|| format!("Unable to write to the output file: {}", output))?;
                     break;
                 }
             }
@@ -130,15 +130,15 @@ pub fn decrypt_directory(
 
         if file.name().ends_with('/') {
             // if it's a directory, recreate the structure
-            std::fs::create_dir_all(full_path)?;
+            std::fs::create_dir_all(full_path).context("Unable to create an output directory")?;
         } else {
             // this must be a file
             let file_name: String = full_path
                 .clone()
                 .file_name()
-                .unwrap()
+                .context("Unable to convert file name to OsStr")?
                 .to_str()
-                .unwrap()
+                .context("Unable to convert file name's OsStr to &str")?
                 .to_string();
             if std::fs::metadata(full_path.clone()).is_ok() {
                 let answer = get_answer(
@@ -152,11 +152,14 @@ pub fn decrypt_directory(
                 }
             }
             println!("Extracting {}", file_name);
-            let mut output_file = File::create(full_path)?;
-            std::io::copy(&mut file, &mut output_file)?;
+            let mut output_file = File::create(full_path).context("Error creating an output file")?;
+            std::io::copy(&mut file, &mut output_file).context("Error copying data out of archive to the target file")?;
         }
     }
 
     crate::erase::secure_erase(&tmp_name, 8)?; // cleanup the tmp file
+
+    println!("Your files are in {}", output);
+
     Ok(())
 }

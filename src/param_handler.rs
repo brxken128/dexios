@@ -1,5 +1,5 @@
 use crate::global::{
-    BenchMode, CipherType, HashMode, Parameters, PasswordMode, SkipMode, EraseMode,
+    BenchMode, CipherType, EraseMode, HashMode, Parameters, PasswordMode, SkipMode,
 };
 use anyhow::{Context, Result};
 use clap::ArgMatches;

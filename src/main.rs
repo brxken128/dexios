@@ -5,7 +5,7 @@ use std::result::Result::Ok;
 
 mod cli;
 mod decrypt;
-mod directory;
+mod pack;
 mod encrypt;
 mod erase;
 mod file;
@@ -133,7 +133,7 @@ fn main() -> Result<()> {
 
                 let (keyfile, params) = param_handler(sub_matches_encrypt)?;
 
-                directory::encrypt_directory(
+                pack::encrypt_directory(
                     sub_matches_encrypt
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
@@ -147,7 +147,23 @@ fn main() -> Result<()> {
                     params,
                 )?;
             }
-            Some("decrypt") => {}
+            Some("decrypt") => {
+                let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
+
+                let (keyfile, params) = param_handler(sub_matches_decrypt)?;
+
+                pack::decrypt_directory(
+                    sub_matches_decrypt
+                        .value_of("input")
+                        .context("No input file/invalid text provided")?,
+                        sub_matches_decrypt
+                        .value_of("output")
+                        .context("No output file/invalid text provided")?,
+                    keyfile,
+                    sub_matches_decrypt.is_present("memory"),
+                    params,
+                )?;
+            }
             None | _ => (),
         },
         _ => (),

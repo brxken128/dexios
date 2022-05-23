@@ -257,7 +257,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .short('r')
                         .long("recursive")
                         .takes_value(false)
-                        .help("index files/folders recursively"),
+                        .help("index files/folders recursively (encrypt mode only)"),
                 )
                 .arg(
                     Arg::new("exclude")
@@ -265,10 +265,11 @@ pub fn get_matches() -> clap::ArgMatches {
                         .value_name("pattern to exclude")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("exclude a pattern (e.g. --exclude=\".*\")")
+                        .help("exclude a pattern (e.g. --exclude=\".*\") (encrypt mode only)")
                         .min_values(0),
                 )
-                .subcommand(encrypt.clone()),
+                .subcommand(encrypt.clone())
+                .subcommand(decrypt.clone()),
         )
         .get_matches()
 }

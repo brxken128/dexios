@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{Read, Write},
+    io::{Read, Write}, path::PathBuf, str::FromStr,
 };
 
 use anyhow::{Context, Result};
@@ -9,7 +9,7 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::{DirectoryMode, Parameters, BLOCK_SIZE},
+    global::{DirectoryMode, Parameters, BLOCK_SIZE, SkipMode}, prompt::get_answer,
 };
 
 pub fn encrypt_directory(
@@ -81,9 +81,66 @@ pub fn encrypt_directory(
         crate::encrypt::stream_mode(&tmp_name, output, keyfile, &params)?;
     };
 
-    crate::erase::secure_erase(&tmp_name, 16)?; // cleanup our tmp file
+    crate::erase::secure_erase(&tmp_name, 8)?; // cleanup our tmp file
 
     println!("Your output file is: {}", output);
 
+    Ok(())
+}
+
+
+pub fn decrypt_directory(
+    input: &str, // encrypted zip file
+    output: &str, // directory
+    keyfile: &str, // for decrypt function
+    memory: bool, // memory or stream mode
+    params: Parameters, // params for decrypt function
+) -> Result<()> {
+    let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
+
+    // this is the name of the decrypted zip file
+    let tmp_name = format!("{}.{}", input, random_extension); // e.g. "input.kjHSD93l"
+
+    if memory {
+        crate::decrypt::memory_mode(input, &tmp_name, keyfile, &params)?;
+    } else {
+        crate::decrypt::stream_mode(input, &tmp_name, keyfile, &params)?;
+    }
+
+    let file = File::open(&tmp_name).context("Unable to open temporary archive")?;
+    let mut archive = zip::ZipArchive::new(file).context("Temporary archive can't be opened, is it a zip file?")?;
+
+    match std::fs::create_dir(output) {
+        Ok(_) => println!("Created output directory: {}", output),
+        Err(_) => println!("Output directory ({}) already exists!", output),
+    }
+
+    for i in 0..archive.len() {
+        let mut full_path = PathBuf::from_str(output).context("Unable to create a PathBuf from your output directory")?;
+
+        let mut file = archive.by_index(i).context("Unable to index the archive")?;
+        match file.enclosed_name() {
+            Some(path) => full_path.push(path.to_owned()),
+            None => continue,
+        };
+
+        if file.name().ends_with('/') { // if it's a directory, recreate the structure
+            std::fs::create_dir_all(full_path)?;
+        } else { // this must be a file
+            let file_name: String = full_path.clone().file_name().unwrap().to_str().unwrap().to_string();
+            if std::fs::metadata(full_path.clone()).is_ok() {
+                let answer = get_answer(&format!("{} already exists, would you like to overwrite?", file_name), true, params.skip == SkipMode::HidePrompts)?;
+                if !answer {
+                    println!("Skipping {}", file_name);
+                    continue;
+                }
+            }
+            println!("Extracting {}", file_name);
+            let mut output_file = File::create(full_path)?;
+            std::io::copy(&mut file, &mut output_file)?;
+        }
+    }
+
+    crate::erase::secure_erase(&tmp_name, 8)?; // cleanup the tmp file
     Ok(())
 }

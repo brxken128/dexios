@@ -149,10 +149,12 @@ pub fn get_paths_in_dir(
             let (files, dirs) = get_paths_in_dir(name, mode)?;
             file_list.extend(files);
             dir_list.extend(dirs.unwrap()); // this should never error and it should be there, at least empty - should still add context
-        } else if !path.is_symlink() && !path.is_dir() {
-            file_list.push(path);
-        } else {
+        } else if path.is_dir() {
+            println!("Skipping {} as it's a directory and -r was not specified", path.display());
+        } else if path.is_symlink() {
             println!("Skipping {} as it's a symlink", path.display());
+        } else {
+            file_list.push(path);
         }
     }
 

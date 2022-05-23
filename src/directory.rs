@@ -84,5 +84,7 @@ pub fn encrypt_directory(
 
     crate::erase::secure_erase(&tmp_name, 16)?; // cleanup our tmp file
 
+    println!("Your output file is: {}", output);
+
     Ok(())
 }

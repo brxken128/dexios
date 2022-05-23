@@ -35,6 +35,7 @@ pub fn encrypt_directory(
     let options = FileOptions::default()
         .compression_method(zip::CompressionMethod::Bzip2)
         .compression_level(Some(6)) // this is the default anyway
+        .large_file(true)
         .unix_permissions(0o755);
 
     zip.add_directory(input, options)

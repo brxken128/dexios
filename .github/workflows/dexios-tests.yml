@@ -116,8 +116,6 @@ jobs:
       run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
     - name: Generate test file
       run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
-    - name: Generate test file
-      run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
     - name: Erase file (standalone mode)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios erase 100MB.bin
   large-file:

@@ -4,6 +4,7 @@ use std::{
 };
 
 use anyhow::{Context, Result};
+use rand::distributions::{Alphanumeric, DistString};
 use zip::write::FileOptions;
 
 use crate::{
@@ -21,7 +22,9 @@ pub fn encrypt_directory(
     params: Parameters,
 ) -> Result<()> {
     let (files, dirs) = get_paths_in_dir(input, mode)?;
-    let tmp_name = output.to_owned() + ".tmp";
+    let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
+
+    let tmp_name = format!("{}.{}", output, random_extension); // e.g. "output.kjHSD93l"
 
     let file = File::create(&tmp_name).context("Unable to create the output file")?;
     let mut zip = zip::ZipWriter::new(file);
@@ -34,9 +37,10 @@ pub fn encrypt_directory(
 
     if mode == DirectoryMode::Recursive {
         let directories = dirs.context("Error unwrapping directory vec")?; // this should always be *something* anyway
-        for dir in directories {
+        for dir in &directories {
             zip.add_directory(dir.to_str().unwrap(), options)?;
         }
+        drop(directories);
     }
 
     for file in files {

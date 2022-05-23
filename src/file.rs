@@ -134,7 +134,7 @@ pub fn write_bytes(name: &str, bytes: &[u8]) -> Result<()> {
 pub fn get_paths_in_dir(
     name: &str,
     mode: DirectoryMode,
-    exclude: &Vec<&str>,
+    exclude: &[&str],
 ) -> Result<(Vec<PathBuf>, Option<Vec<PathBuf>>)> {
     let mut file_list = Vec::new(); // so we know what files to encrypt
     let mut dir_list = Vec::new(); // so we can recreate the structure inside of the zip file
@@ -153,10 +153,8 @@ pub fn get_paths_in_dir(
             .with_context(|| format!("Unable to get the item's path: {}", name))?
             .path(); // not great error message
 
-        if set.is_match(path.clone()) {
+        if set.is_match(path.clone()) || set.is_match(path.clone().file_name().unwrap()) {
             // compare with both file name and path
-            continue;
-        } else if set.is_match(path.clone().file_name().unwrap()) {
             continue;
         }
 

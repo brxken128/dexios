@@ -146,11 +146,11 @@ fn main() -> Result<()> {
                     sub_matches_encrypt
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
-                    excluded,
+                    &excluded,
                     keyfile,
                     mode,
                     sub_matches_encrypt.is_present("memory"),
-                    params,
+                    &params,
                 )?;
             }
             Some("decrypt") => {
@@ -167,10 +167,10 @@ fn main() -> Result<()> {
                         .context("No output file/invalid text provided")?,
                     keyfile,
                     sub_matches_decrypt.is_present("memory"),
-                    params,
+                    &params,
                 )?;
             }
-            None | _ => (),
+            _ => (),
         },
         _ => (),
     }

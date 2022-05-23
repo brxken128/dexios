@@ -18,13 +18,13 @@ use crate::{
 pub fn encrypt_directory(
     input: &str,
     output: &str,
-    exclude: Vec<&str>,
+    exclude: &[&str],
     keyfile: &str,
     mode: DirectoryMode,
     memory: bool,
-    params: Parameters,
+    params: &Parameters,
 ) -> Result<()> {
-    let (files, dirs) = get_paths_in_dir(input, mode, &exclude)?;
+    let (files, dirs) = get_paths_in_dir(input, mode, exclude)?;
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
 
     let tmp_name = format!("{}.{}", output, random_extension); // e.g. "output.kjHSD93l"
@@ -67,7 +67,7 @@ pub fn encrypt_directory(
         if file_size <= BLOCK_SIZE.try_into().unwrap() {
             let mut data = Vec::new();
             file_reader.read_to_end(&mut data)?;
-            zip_writer.write_all(&mut data)?;
+            zip_writer.write_all(&data)?;
         } else {
             // stream read/write here
             let mut buffer = [0u8; BLOCK_SIZE];
@@ -94,9 +94,9 @@ pub fn encrypt_directory(
     zip.finish()?;
 
     if memory {
-        crate::encrypt::memory_mode(&tmp_name, output, keyfile, &params)?;
+        crate::encrypt::memory_mode(&tmp_name, output, keyfile, params)?;
     } else {
-        crate::encrypt::stream_mode(&tmp_name, output, keyfile, &params)?;
+        crate::encrypt::stream_mode(&tmp_name, output, keyfile, params)?;
     };
 
     crate::erase::secure_erase(&tmp_name, 8)?; // cleanup our tmp file
@@ -111,7 +111,7 @@ pub fn decrypt_directory(
     output: &str,       // directory
     keyfile: &str,      // for decrypt function
     memory: bool,       // memory or stream mode
-    params: Parameters, // params for decrypt function
+    params: &Parameters, // params for decrypt function
 ) -> Result<()> {
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
 
@@ -119,9 +119,9 @@ pub fn decrypt_directory(
     let tmp_name = format!("{}.{}", input, random_extension); // e.g. "input.kjHSD93l"
 
     if memory {
-        crate::decrypt::memory_mode(input, &tmp_name, keyfile, &params)?;
+        crate::decrypt::memory_mode(input, &tmp_name, keyfile, params)?;
     } else {
-        crate::decrypt::stream_mode(input, &tmp_name, keyfile, &params)?;
+        crate::decrypt::stream_mode(input, &tmp_name, keyfile, params)?;
     }
 
     let file = File::open(&tmp_name).context("Unable to open temporary archive")?;
@@ -139,7 +139,7 @@ pub fn decrypt_directory(
 
         let mut file = archive.by_index(i).context("Unable to index the archive")?;
         match file.enclosed_name() {
-            Some(path) => full_path.push(path.to_owned()),
+            Some(path) => full_path.push(path),
             None => continue,
         };
 

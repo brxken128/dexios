@@ -1,5 +1,5 @@
 use crate::global::{
-    BenchMode, CipherType, HashMode, Parameters, PasswordMode, SkipMode, BLOCK_SIZE,
+    BenchMode, CipherType, HashMode, Parameters, PasswordMode, SkipMode, EraseMode,
 };
 use anyhow::{Context, Result};
 use clap::ArgMatches;
@@ -26,6 +26,23 @@ pub fn param_handler(sub_matches: &ArgMatches) -> Result<(&str, Parameters)> {
     } else {
         // default
         SkipMode::ShowPrompts
+    };
+
+    let erase = if sub_matches.is_present("erase") {
+        let result = sub_matches
+            .value_of("erase")
+            .context("No amount of passes specified")?
+            .parse();
+
+        let passes = if let Ok(value) = result {
+            value
+        } else {
+            println!("Unable to read number of passes provided - using the default.");
+            16
+        };
+        EraseMode::EraseFile(passes)
+    } else {
+        EraseMode::IgnoreFile(0)
     };
 
     let bench = if sub_matches.is_present("bench") {
@@ -59,6 +76,7 @@ pub fn param_handler(sub_matches: &ArgMatches) -> Result<(&str, Parameters)> {
             skip,
             bench,
             password,
+            erase,
             cipher_type,
         },
     ))

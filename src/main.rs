@@ -47,26 +47,6 @@ fn main() -> Result<()> {
                 )
             };
 
-            if result.is_ok() && sub_matches.is_present("erase") {
-                let result = sub_matches
-                    .value_of("erase")
-                    .context("No amount of passes specified")?
-                    .parse();
-                let passes = if let Ok(value) = result {
-                    value
-                } else {
-                    println!("Unable to read number of passes provided - using the default.");
-                    16
-                };
-
-                crate::erase::secure_erase(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    passes,
-                )?;
-            }
-
             return result;
         }
         Some(("decrypt", sub_matches)) => {
@@ -95,26 +75,6 @@ fn main() -> Result<()> {
                     &params,
                 )
             };
-
-            if result.is_ok() && sub_matches.is_present("erase") {
-                let result = sub_matches
-                    .value_of("erase")
-                    .context("No amount of passes specified")?
-                    .parse();
-                let passes = if let Ok(value) = result {
-                    value
-                } else {
-                    println!("Unable to read number of passes provided - using the default.");
-                    16
-                };
-
-                crate::erase::secure_erase(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    passes,
-                )?;
-            }
 
             return result;
         }

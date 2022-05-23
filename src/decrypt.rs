@@ -6,6 +6,7 @@ use crate::global::BenchMode;
 use crate::global::HashMode;
 use crate::global::Parameters;
 use crate::global::SkipMode;
+use crate::global::EraseMode;
 use crate::global::BLOCK_SIZE;
 use crate::global::SALT_LEN;
 use crate::hashing::hash_data_blake3;
@@ -79,6 +80,10 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         );
     }
 
+    if params.erase != EraseMode::IgnoreFile(0) {
+        crate::erase::secure_erase(input, params.erase.get_passes())?;
+    }
+
     Ok(())
 }
 
@@ -133,6 +138,10 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         output,
         decrypt_duration.as_secs_f32(),
     );
+
+    if params.erase != EraseMode::IgnoreFile(0) {
+        crate::erase::secure_erase(input, params.erase.get_passes())?;
+    }
 
     Ok(())
 }

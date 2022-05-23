@@ -78,7 +78,7 @@ pub fn encrypt_directory(
         crate::encrypt::stream_mode(&tmp_name, output, keyfile, &params)?;
     };
 
-    crate::erase::secure_erase(&tmp_name, 16)?;
+    crate::erase::secure_erase(&tmp_name, 16)?; // cleanup our tmp file
 
     Ok(())
 }

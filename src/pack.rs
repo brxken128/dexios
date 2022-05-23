@@ -24,7 +24,7 @@ pub fn encrypt_directory(
     memory: bool,
     params: Parameters,
 ) -> Result<()> {
-    let (files, dirs) = get_paths_in_dir(input, mode)?;
+    let (files, dirs) = get_paths_in_dir(input, mode, &exclude)?;
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
 
     let tmp_name = format!("{}.{}", output, random_extension); // e.g. "output.kjHSD93l"

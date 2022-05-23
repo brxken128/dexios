@@ -129,6 +129,12 @@ fn main() -> Result<()> {
                     DirectoryMode::Singular
                 };
 
+                let excluded: Vec<&str> = if sub_matches.is_present("exclude") {
+                    sub_matches.values_of("exclude").unwrap().collect()
+                } else {
+                    Vec::new()
+                };
+
                 let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
 
                 let (keyfile, params) = param_handler(sub_matches_encrypt)?;
@@ -140,7 +146,7 @@ fn main() -> Result<()> {
                     sub_matches_encrypt
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
-                    Vec::new(),
+                    excluded,
                     keyfile,
                     mode,
                     sub_matches_encrypt.is_present("memory"),

@@ -266,7 +266,8 @@ pub fn get_matches() -> clap::ArgMatches {
                         .takes_value(true)
                         .require_equals(true)
                         .help("exclude a pattern (e.g. --exclude=\".*\") (encrypt mode only)")
-                        .min_values(0),
+                        .min_values(0)
+                        .multiple_occurrences(true),
                 )
                 .subcommand(encrypt.clone())
                 .subcommand(decrypt.clone()),

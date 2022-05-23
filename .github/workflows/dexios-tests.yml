@@ -102,6 +102,34 @@ jobs:
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dsxHyk keyfile 100MB.enc 100MB.bin
     - name: Standalone Hash Mode (with output hashes above to confirm it works)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios hash 100MB.enc
+  bench-mode:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Retrieve Dexios
+      uses: actions/download-artifact@v3
+      with:
+        name: dexios
+        path: target/release/dexios
+    - name: Make Binary Executable
+      run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
+    - name: Generate test file (stream mode)
+      run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
+    - name: Generate test file (memory mode)
+      run: dd if=/dev/urandom of=1MB.bin bs=1M count=1
+    - name: Generate keyfile
+      run: dd if=/dev/urandom of=keyfile bs=1 count=4096
+    - name: Encrypt in memory mode (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -emxHyk keyfile 1MB.bin 1MB.enc
+    - name: Decrypt in memory+bench mode (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dmxbHyk keyfile 1MB.enc 1MB.nonexistent
+    - name: Encrypt in stream mode (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -esxHyk keyfile 100MB.bin 100MB.enc
+    - name: Decrypt in stream+bench mode (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dsxbHyk keyfile 100MB.enc 100MB.nonexistent
+    - name: Show all files in the directory
+      run: ls -lla
   erase:
     needs: build
     runs-on: ubuntu-latest

@@ -144,6 +144,28 @@ jobs:
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -egHyk keyfile 1GB.bin 1GB.enc
     - name: Decrypt 1GB file (AES-256-GCM)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dgHyk keyfile 1GB.enc 1GB.bin
+  pack:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Retrieve Dexios
+      uses: actions/download-artifact@v3
+      with:
+        name: dexios
+        path: target/release/dexios
+    - name: Make Binary Executable
+      run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
+    - name: Make Directory
+      run: mkdir test
+    - name: Generate test files
+      run: dd if=/dev/urandom of=1.bin bs=1M count=10 && dd if=/dev/urandom of=2.bin bs=1M count=10 && dd if=/dev/urandom of=3.bin bs=1M count=10 && dd if=/dev/urandom of=4.bin bs=1M count=10
+    - name: Generate keyfile
+      run: dd if=/dev/urandom of=keyfile bs=1 count=4096
+    - name: Pack+Encrypt test directory (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack -exyk keyfile test/ output.zip
+    - name: Decrypt+Unpack archive (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack -dxyk keyfile output.zip test/extracted
   small-file:
     needs: build
     runs-on: ubuntu-latest

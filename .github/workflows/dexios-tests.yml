@@ -159,13 +159,15 @@ jobs:
     - name: Make Directory
       run: mkdir test
     - name: Generate test files
-      run: dd if=/dev/urandom of=1.bin bs=1M count=10 && dd if=/dev/urandom of=2.bin bs=1M count=10 && dd if=/dev/urandom of=3.bin bs=1M count=10 && dd if=/dev/urandom of=4.bin bs=1M count=10
+      run: dd if=/dev/urandom of=test/1.bin bs=1M count=10 && dd if=/dev/urandom of=test/2.bin bs=1M count=10 && dd if=/dev/urandom of=test/3.bin bs=1M count=10 && dd if=/dev/urandom of=test/4.bin bs=1M count=10
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Pack+Encrypt test directory (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack -exyk keyfile test/ output.zip
     - name: Decrypt+Unpack archive (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack -dxyk keyfile output.zip test/extracted
+    - name: List files in directory
+      run: ls -lla test/extracted 
   small-file:
     needs: build
     runs-on: ubuntu-latest

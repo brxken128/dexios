@@ -1,4 +1,6 @@
-use crate::global::{BenchMode, CipherType, EncryptStreamCiphers, HashMode, BLOCK_SIZE, SALT_LEN, OutputFile};
+use crate::global::{
+    BenchMode, CipherType, EncryptStreamCiphers, HashMode, OutputFile, BLOCK_SIZE, SALT_LEN,
+};
 use aead::stream::EncryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};

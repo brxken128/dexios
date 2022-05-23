@@ -1,12 +1,12 @@
-use std::fs::File;
-use std::io::Write;
-use std::io::Result;
 use aead::{
     stream::{DecryptorLE31, EncryptorLE31},
     Payload,
 };
 use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
+use std::fs::File;
+use std::io::Result;
+use std::io::Write;
 
 // this file sets constants that are used throughout the codebase
 // these can be customised easily by anyone to suit their own needs

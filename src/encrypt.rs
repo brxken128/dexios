@@ -93,9 +93,11 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         exit(0);
     }
 
-
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
-        OutputFile::Some(File::create(output).with_context(|| format!("Unable to open output file: {}", output))?)
+        OutputFile::Some(
+            File::create(output)
+                .with_context(|| format!("Unable to open output file: {}", output))?,
+        )
     } else {
         OutputFile::None
     };
@@ -124,7 +126,7 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
                 output,
                 encrypt_duration.as_secs_f32(),
             );
-        },
+        }
         BenchMode::BenchmarkInMemory => {
             println!(
                 "Encryption successful! [took {:.2}s]",
@@ -132,7 +134,6 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
             );
         }
     }
-
 
     Ok(())
 }

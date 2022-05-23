@@ -4,10 +4,10 @@ use crate::file::get_encrypted_data;
 use crate::file::write_bytes;
 use crate::global::BenchMode;
 use crate::global::HashMode;
+use crate::global::OutputFile;
 use crate::global::Parameters;
 use crate::global::SkipMode;
 use crate::global::BLOCK_SIZE;
-use crate::global::OutputFile;
 use crate::global::SALT_LEN;
 use crate::hashing::hash_data_blake3;
 use crate::key::get_user_key;
@@ -114,7 +114,10 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
     //     File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
-        OutputFile::Some(File::create(output).with_context(|| format!("Unable to open output file: {}", output))?)
+        OutputFile::Some(
+            File::create(output)
+                .with_context(|| format!("Unable to open output file: {}", output))?,
+        )
     } else {
         OutputFile::None
     };
@@ -142,7 +145,7 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
                 output,
                 decrypt_duration.as_secs_f32(),
             );
-        },
+        }
         BenchMode::BenchmarkInMemory => {
             println!(
                 "Decryption successful! [took {:.2}s]",

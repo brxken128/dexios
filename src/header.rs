@@ -1,9 +1,9 @@
 use crate::{
     global::{BenchMode, CipherType, DexiosMode, HeaderType, SkipMode, SALT_LEN},
-    prompt::overwrite_check,
+    prompt::{overwrite_check, get_answer},
 };
 use anyhow::{Context, Result};
-use std::io::Read;
+use std::{io::Read, process::exit};
 use std::{fs::File, io::Write};
 
 fn calc_nonce_len(header_info: &HeaderType) -> usize {
@@ -56,6 +56,24 @@ pub fn dump(input: &str, output: &str, header_info: &HeaderType) -> Result<()> {
         .with_context(|| format!("Unable to write nonce to output file: {}", output))?;
 
     println!("Header dumped to {} successfully.", output);
+    Ok(())
+}
 
+pub fn strip(input: &str, skip: SkipMode, header_info: &HeaderType) -> Result<()> {
+    let prompt = format!("Are you sure you'd like to wipe the header for {}, and that {} in {} mode is correct?", input, header_info.cipher_type, header_info.dexios_mode);
+    if !get_answer(&prompt, false, skip == SkipMode::HidePrompts)? {
+        exit(0);
+    }
+
+    let nonce_len = calc_nonce_len(header_info);
+    
+    let mut buffer = vec![0u8; SALT_LEN + nonce_len];
+
+    let mut file =
+        File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
+    
+    file.write_all(&mut buffer).with_context(|| format!("Unable to wipe header for file: {}", input))?;
+
+    println!("Header stripped from {} successfully.", input);
     Ok(())
 }

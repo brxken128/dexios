@@ -34,6 +34,15 @@ pub enum DexiosMode {
     StreamMode,
 }
 
+impl std::fmt::Display for DexiosMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            DexiosMode::MemoryMode => write!(f, "memory mode"),
+            DexiosMode::StreamMode => write!(f, "stream mode"),
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {
     Singular,

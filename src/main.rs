@@ -230,7 +230,7 @@ fn main() -> Result<()> {
                     sub_matches_dump
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
-                    header_type,
+                    &header_type,
                 )?;
             }
             Some("restore") => {}

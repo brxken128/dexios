@@ -6,7 +6,7 @@ use anyhow::{Context, Result};
 use std::io::Read;
 use std::{fs::File, io::Write};
 
-pub fn dump(input: &str, output: &str, header_info: HeaderType) -> Result<()> {
+fn calc_nonce_len(header_info: &HeaderType) -> usize {
     let mut nonce_len = match header_info.cipher_type {
         CipherType::AesGcm => 12,
         CipherType::XChaCha20Poly1305 => 24,
@@ -15,6 +15,12 @@ pub fn dump(input: &str, output: &str, header_info: HeaderType) -> Result<()> {
     if header_info.dexios_mode == DexiosMode::StreamMode {
         nonce_len -= 4; // the last 4 bytes are dynamic in stream mode
     }
+
+    nonce_len
+}
+
+pub fn dump(input: &str, output: &str, header_info: &HeaderType) -> Result<()> {
+    let nonce_len = calc_nonce_len(header_info);
 
     let mut salt = [0u8; SALT_LEN];
     let mut nonce = vec![0u8; nonce_len];

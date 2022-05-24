@@ -17,6 +17,8 @@ jobs:
           toolchain: stable
     - name: Build
       uses: actions-rs/cargo@v1
+      env:
+        RUSTFLAGS: -Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
       with:
         command: build
         args: --release

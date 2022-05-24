@@ -109,7 +109,7 @@ pub fn header_type_handler(sub_matches: &ArgMatches) -> Result<HeaderType> {
     };
 
     Ok(HeaderType {
-        cipher_type,
         dexios_mode,
+        cipher_type,
     })
 }

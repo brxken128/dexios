@@ -79,7 +79,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode, header_info: &HeaderTy
         .with_context(|| format!("Unable to open output file: {}", output))?;
 
     output_file
-        .write_all(&mut buffer)
+        .write_all(&buffer)
         .with_context(|| format!("Unable to write header to file: {}", output))?;
 
     println!("Header restored to {} from {} successfully.", output, input);
@@ -97,14 +97,14 @@ pub fn strip(input: &str, skip: SkipMode, header_info: &HeaderType) -> Result<()
 
     let nonce_len = calc_nonce_len(header_info);
 
-    let mut buffer = vec![0u8; SALT_LEN + nonce_len];
+    let buffer = vec![0u8; SALT_LEN + nonce_len];
 
     let mut file = OpenOptions::new()
         .write(true)
         .open(input)
         .with_context(|| format!("Unable to open input file: {}", input))?;
 
-    file.write_all(&mut buffer)
+    file.write_all(&buffer)
         .with_context(|| format!("Unable to wipe header for file: {}", input))?;
 
     println!("Header stripped from {} successfully.", input);

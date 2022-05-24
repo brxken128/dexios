@@ -77,7 +77,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode, header_info: &HeaderTy
 
     let mut output_file = OpenOptions::new()
         .write(true)
-        .open(input)
+        .open(output)
         .with_context(|| format!("Unable to open output file: {}", output))?;
 
     output_file

@@ -272,10 +272,10 @@ pub fn get_matches() -> clap::ArgMatches {
                 .arg(
                     Arg::new("level")
                         .long("level")
-                        .value_name("level of compression (1-9)")
+                        .value_name("level of compression (0-9)")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("specify the bzip2 compression level (default is 6)")
+                        .help("specify the deflate compression level (default is 6)")
                         .min_values(0)
                         .default_missing_value("6"),
                 )

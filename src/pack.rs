@@ -54,7 +54,7 @@ pub fn encrypt_directory(
 
     let mut zip = zip::ZipWriter::new(file);
     let options = FileOptions::default()
-        .compression_method(zip::CompressionMethod::Bzip2)
+        .compression_method(zip::CompressionMethod::Deflated)
         .compression_level(Some(compression_level)) // this is the default anyway
         .large_file(true)
         .unix_permissions(0o755);

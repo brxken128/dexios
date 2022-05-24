@@ -11,7 +11,7 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::{DirectoryMode, Parameters, SkipMode, BLOCK_SIZE},
+    global::{DirectoryMode, Parameters, SkipMode, BLOCK_SIZE, HiddenFilesMode},
     prompt::get_answer,
 };
 
@@ -21,11 +21,12 @@ pub fn encrypt_directory(
     exclude: &[&str],
     keyfile: &str,
     mode: DirectoryMode,
+    hidden: HiddenFilesMode,
     memory: bool,
     compression_level: i32,
     params: &Parameters,
 ) -> Result<()> {
-    let (files, dirs) = get_paths_in_dir(input, mode, exclude)?;
+    let (files, dirs) = get_paths_in_dir(input, mode, exclude, &hidden)?;
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
 
     let tmp_name = format!("{}.{}", output, random_extension); // e.g. "output.kjHSD93l"

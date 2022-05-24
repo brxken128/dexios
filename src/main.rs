@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::{DirectoryMode, BLOCK_SIZE};
+use global::{DirectoryMode, BLOCK_SIZE, HiddenFilesMode};
 use param_handler::param_handler;
 use std::result::Result::Ok;
 
@@ -129,6 +129,12 @@ fn main() -> Result<()> {
                     DirectoryMode::Singular
                 };
 
+                let hidden = if sub_matches.is_present("hidden") {
+                    HiddenFilesMode::Include
+                } else {
+                    HiddenFilesMode::Exclude
+                };
+
                 let compression_level = if sub_matches.is_present("level") {
                     let result = sub_matches
                         .value_of("level")
@@ -171,6 +177,7 @@ fn main() -> Result<()> {
                     &excluded,
                     keyfile,
                     mode,
+                    hidden,
                     sub_matches_encrypt.is_present("memory"),
                     compression_level,
                     &params,

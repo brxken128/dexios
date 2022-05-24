@@ -28,6 +28,12 @@ pub enum DirectoryMode {
     Recursive,
 }
 
+#[derive(PartialEq, Eq)]
+pub enum HiddenFilesMode {
+    Include,
+    Exclude
+}
+
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum EraseMode {
     EraseFile(i32),

@@ -279,6 +279,12 @@ pub fn get_matches() -> clap::ArgMatches {
                         .min_values(0)
                         .default_missing_value("6"),
                 )
+                .arg(
+                    Arg::new("hidden")
+                        .long("include-hidden")
+                        .takes_value(false)
+                        .help("include hidden files and folders"),
+                )
                 .subcommand(encrypt.clone())
                 .subcommand(decrypt.clone()),
         )

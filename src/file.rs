@@ -1,5 +1,6 @@
 use crate::global::CipherType;
 use crate::global::DirectoryMode;
+use crate::global::HiddenFilesMode;
 use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
 use globset::Glob;
@@ -135,6 +136,7 @@ pub fn get_paths_in_dir(
     name: &str,
     mode: DirectoryMode,
     exclude: &[&str],
+    hidden: &HiddenFilesMode,
 ) -> Result<(Vec<PathBuf>, Option<Vec<PathBuf>>)> {
     let mut file_list = Vec::new(); // so we know what files to encrypt
     let mut dir_list = Vec::new(); // so we can recreate the structure inside of the zip file
@@ -153,13 +155,19 @@ pub fn get_paths_in_dir(
             .with_context(|| format!("Unable to get the item's path: {}", name))?
             .path(); // not great error message
 
+        let first_char = path.file_name().context("Unable to get file name from path")?.to_str().context("Unable to convert OsStr into str")?.chars().next().context("Unable to get first character of the file/folder's name")?;
+
+        if hidden == &HiddenFilesMode::Exclude && first_char == '.' {
+            continue;
+        }
+
         if set.is_match(path.clone().file_name().unwrap()) {
             // compare with both file name and path
             continue;
         }
 
         if path.is_dir() && mode == DirectoryMode::Recursive {
-            let (files, dirs) = get_paths_in_dir(path.to_str().unwrap(), mode, exclude)?;
+            let (files, dirs) = get_paths_in_dir(path.to_str().unwrap(), mode, exclude, hidden)?;
             dir_list.push(path);
 
             file_list.extend(files);

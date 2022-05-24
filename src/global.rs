@@ -31,7 +31,7 @@ pub enum DirectoryMode {
 #[derive(PartialEq, Eq)]
 pub enum HiddenFilesMode {
     Include,
-    Exclude
+    Exclude,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]

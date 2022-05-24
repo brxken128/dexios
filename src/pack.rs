@@ -11,7 +11,7 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::{DirectoryMode, Parameters, SkipMode, BLOCK_SIZE, HiddenFilesMode},
+    global::{DirectoryMode, HiddenFilesMode, Parameters, SkipMode, BLOCK_SIZE},
     prompt::get_answer,
 };
 
@@ -33,8 +33,11 @@ pub fn encrypt_directory(
 
     let file = File::create(&tmp_name)
         .with_context(|| format!("Unable to create the output file: {}", output))?;
-    
-    println!("Creating zip called {} with a compression level of {}.", tmp_name, compression_level);
+
+    println!(
+        "Creating zip called {} with a compression level of {}.",
+        tmp_name, compression_level
+    );
     let mut zip = zip::ZipWriter::new(file);
     let options = FileOptions::default()
         .compression_method(zip::CompressionMethod::Bzip2)

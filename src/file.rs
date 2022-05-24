@@ -147,8 +147,15 @@ pub fn get_paths_in_dir(
             .with_context(|| format!("Unable to get the item's path: {}", name))?
             .path(); // not great error message
 
-        let file_name = path.file_name().context("Unable to get file name from path")?.to_str().context("Unable to convert OsStr into str")?;
-        let first_char = file_name.chars().next().context("Unable to get first character of the file/folder's name")?;
+        let file_name = path
+            .file_name()
+            .context("Unable to get file name from path")?
+            .to_str()
+            .context("Unable to convert OsStr into str")?;
+        let first_char = file_name
+            .chars()
+            .next()
+            .context("Unable to get first character of the file/folder's name")?;
 
         if hidden == &HiddenFilesMode::Exclude && first_char == '.' {
             continue;
@@ -158,7 +165,7 @@ pub fn get_paths_in_dir(
             if file_name == *pattern {
                 println!("pattern: {pattern}");
                 println!("filename: {file_name}");
-                
+
                 continue 'dirs;
             }
         }

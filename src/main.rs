@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::{DirectoryMode, BLOCK_SIZE, HiddenFilesMode};
+use global::{DirectoryMode, HiddenFilesMode, BLOCK_SIZE};
 use param_handler::param_handler;
 use std::result::Result::Ok;
 
@@ -121,87 +121,89 @@ fn main() -> Result<()> {
                 hashing::hash_stream(file_name)?;
             }
         }
-        Some(("pack", sub_matches)) => match sub_matches.subcommand_name() {
-            Some("encrypt") => {
-                let mode = if sub_matches.is_present("recursive") {
-                    DirectoryMode::Recursive
-                } else {
-                    DirectoryMode::Singular
-                };
-
-                let hidden = if sub_matches.is_present("hidden") {
-                    HiddenFilesMode::Include
-                } else {
-                    HiddenFilesMode::Exclude
-                };
-
-                let compression_level = if sub_matches.is_present("level") {
-                    let result = sub_matches
-                        .value_of("level")
-                        .context("No compression level specified")?
-                        .parse();
-            
-                    let passes = if let Ok(value) = result {
-                        if value > 9 || value < 1 {
-                            println!("Compression level is out of specified bounds - using the default (6).");
-                            6
-                        } else {
-                            value
-                        }
+        Some(("pack", sub_matches)) => {
+            match sub_matches.subcommand_name() {
+                Some("encrypt") => {
+                    let mode = if sub_matches.is_present("recursive") {
+                        DirectoryMode::Recursive
                     } else {
-                        println!("Unable to read compression level provided - using the default (6).");
+                        DirectoryMode::Singular
+                    };
+
+                    let hidden = if sub_matches.is_present("hidden") {
+                        HiddenFilesMode::Include
+                    } else {
+                        HiddenFilesMode::Exclude
+                    };
+
+                    let compression_level = if sub_matches.is_present("level") {
+                        let result = sub_matches
+                            .value_of("level")
+                            .context("No compression level specified")?
+                            .parse();
+
+                        let passes = if let Ok(value) = result {
+                            if value > 9 || value < 1 {
+                                println!("Compression level is out of specified bounds - using the default (6).");
+                                6
+                            } else {
+                                value
+                            }
+                        } else {
+                            println!("Unable to read compression level provided - using the default (6).");
+                            6
+                        };
+                        passes
+                    } else {
                         6
                     };
-                    passes
-                } else {
-                    6
-                };
 
-                let excluded: Vec<&str> = if sub_matches.is_present("exclude") {
-                    sub_matches.values_of("exclude").unwrap().collect()
-                } else {
-                    Vec::new()
-                };
+                    let excluded: Vec<&str> = if sub_matches.is_present("exclude") {
+                        sub_matches.values_of("exclude").unwrap().collect()
+                    } else {
+                        Vec::new()
+                    };
 
-                let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
+                    let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
 
-                let (keyfile, params) = param_handler(sub_matches_encrypt)?;
+                    let (keyfile, params) = param_handler(sub_matches_encrypt)?;
 
-                pack::encrypt_directory(
-                    sub_matches_encrypt
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches_encrypt
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
-                    &excluded,
-                    keyfile,
-                    mode,
-                    hidden,
-                    sub_matches_encrypt.is_present("memory"),
-                    compression_level,
-                    &params,
-                )?;
+                    pack::encrypt_directory(
+                        sub_matches_encrypt
+                            .value_of("input")
+                            .context("No input file/invalid text provided")?,
+                        sub_matches_encrypt
+                            .value_of("output")
+                            .context("No output file/invalid text provided")?,
+                        &excluded,
+                        keyfile,
+                        mode,
+                        hidden,
+                        sub_matches_encrypt.is_present("memory"),
+                        compression_level,
+                        &params,
+                    )?;
+                }
+                Some("decrypt") => {
+                    let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
+
+                    let (keyfile, params) = param_handler(sub_matches_decrypt)?;
+
+                    pack::decrypt_directory(
+                        sub_matches_decrypt
+                            .value_of("input")
+                            .context("No input file/invalid text provided")?,
+                        sub_matches_decrypt
+                            .value_of("output")
+                            .context("No output file/invalid text provided")?,
+                        keyfile,
+                        sub_matches_decrypt.is_present("memory"),
+                        &params,
+                    )?;
+                }
+                _ => (),
             }
-            Some("decrypt") => {
-                let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
-
-                let (keyfile, params) = param_handler(sub_matches_decrypt)?;
-
-                pack::decrypt_directory(
-                    sub_matches_decrypt
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches_decrypt
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
-                    keyfile,
-                    sub_matches_decrypt.is_present("memory"),
-                    &params,
-                )?;
-            }
-            _ => (),
-        },
+        }
         _ => (),
     }
     Ok(())

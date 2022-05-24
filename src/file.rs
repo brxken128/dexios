@@ -163,9 +163,6 @@ pub fn get_paths_in_dir(
 
         for pattern in exclude {
             if file_name == *pattern {
-                println!("pattern: {pattern}");
-                println!("filename: {file_name}");
-
                 continue 'dirs;
             }
         }

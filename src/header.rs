@@ -20,6 +20,7 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
 }
 
 pub fn dump(input: &str, output: &str, skip: SkipMode, header_info: &HeaderType) -> Result<()> {
+    println!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
     let nonce_len = calc_nonce_len(header_info);
 
     let mut salt = [0u8; SALT_LEN];
@@ -59,6 +60,7 @@ pub fn dump(input: &str, output: &str, skip: SkipMode, header_info: &HeaderType)
 }
 
 pub fn restore(input: &str, output: &str, skip: SkipMode, header_info: &HeaderType) -> Result<()> {
+    println!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
     let prompt = format!("Are you sure you'd like to restore the header in {} to {}, and that it was created with {} in {}?", input, output, header_info.cipher_type, header_info.dexios_mode);
     if !get_answer(&prompt, false, skip == SkipMode::HidePrompts)? {
         exit(0);
@@ -87,6 +89,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode, header_info: &HeaderTy
 }
 
 pub fn strip(input: &str, skip: SkipMode, header_info: &HeaderType) -> Result<()> {
+    println!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
     let prompt = format!(
         "Are you sure you'd like to wipe the header for {}, and that it was created with {} in {}?",
         input, header_info.cipher_type, header_info.dexios_mode

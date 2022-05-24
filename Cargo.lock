@@ -280,7 +280,7 @@ dependencies = [
 
 [[package]]
 name = "dexios"
-version = "7.5.1"
+version = "7.5.2"
 dependencies = [
  "aead",
  "aes-gcm",

@@ -170,7 +170,8 @@ pub fn get_paths_in_dir(
         }
 
         if path.is_dir() && mode == DirectoryMode::Recursive {
-            let (files, dirs) = get_paths_in_dir(path.to_str().unwrap(), mode, exclude, hidden, print_mode)?;
+            let (files, dirs) =
+                get_paths_in_dir(path.to_str().unwrap(), mode, exclude, hidden, print_mode)?;
             dir_list.push(path);
 
             file_list.extend(files);

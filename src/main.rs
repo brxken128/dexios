@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::{DirectoryMode, HiddenFilesMode, BLOCK_SIZE, PrintMode};
+use global::{DirectoryMode, HiddenFilesMode, PrintMode, BLOCK_SIZE};
 use param_handler::param_handler;
 use std::result::Result::Ok;
 
@@ -197,7 +197,6 @@ fn main() -> Result<()> {
                     } else {
                         PrintMode::Quiet
                     };
-
 
                     let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
 

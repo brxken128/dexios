@@ -28,7 +28,8 @@ pub struct HeaderType {
 }
 
 #[derive(PartialEq, Eq)]
-pub enum DexiosMode { // could do with a better name
+pub enum DexiosMode {
+    // could do with a better name
     MemoryMode,
     StreamMode,
 }

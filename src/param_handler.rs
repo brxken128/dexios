@@ -1,5 +1,6 @@
 use crate::global::{
-    BenchMode, CipherType, EraseMode, HashMode, Parameters, PasswordMode, SkipMode, HeaderType, DexiosMode,
+    BenchMode, CipherType, DexiosMode, EraseMode, HashMode, HeaderType, Parameters, PasswordMode,
+    SkipMode,
 };
 use anyhow::{Context, Result};
 use clap::ArgMatches;
@@ -95,5 +96,8 @@ pub fn header_type_handler(sub_matches: &ArgMatches) -> Result<HeaderType> {
         CipherType::XChaCha20Poly1305
     };
 
-    Ok(HeaderType { cipher_type, dexios_mode })
+    Ok(HeaderType {
+        cipher_type,
+        dexios_mode,
+    })
 }

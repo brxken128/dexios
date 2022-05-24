@@ -97,6 +97,7 @@ pub fn encrypt_directory(
         }
     }
     zip.finish()?;
+    drop(zip);
 
     if memory {
         crate::encrypt::memory_mode(&tmp_name, output, keyfile, params)?;

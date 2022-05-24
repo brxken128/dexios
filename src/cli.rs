@@ -265,7 +265,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .value_name("pattern to exclude")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("exclude a pattern (e.g. --exclude=\".*\") (encrypt mode only)")
+                        .help("exclude a file/folder (e.g. --exclude=\"Documents\") (encrypt mode only)")
                         .min_values(0)
                         .multiple_occurrences(true),
                 )

@@ -3,8 +3,6 @@ use crate::global::DirectoryMode;
 use crate::global::HiddenFilesMode;
 use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
-use globset::Glob;
-use globset::GlobSetBuilder;
 use secrecy::Secret;
 use secrecy::SecretVec;
 use std::fs::read_dir;
@@ -144,26 +142,25 @@ pub fn get_paths_in_dir(
     let paths =
         read_dir(name).with_context(|| format!("Unable to open the directory: {}", name))?;
 
-    let mut glob = GlobSetBuilder::new();
-    for p in exclude {
-        glob.add(Glob::new(p)?);
-    }
-    let set = glob.build()?;
-
-    for item in paths {
+    'dirs: for item in paths {
         let path = item
             .with_context(|| format!("Unable to get the item's path: {}", name))?
             .path(); // not great error message
 
-        let first_char = path.file_name().context("Unable to get file name from path")?.to_str().context("Unable to convert OsStr into str")?.chars().next().context("Unable to get first character of the file/folder's name")?;
+        let file_name = path.file_name().context("Unable to get file name from path")?.to_str().context("Unable to convert OsStr into str")?;
+        let first_char = file_name.chars().next().context("Unable to get first character of the file/folder's name")?;
 
         if hidden == &HiddenFilesMode::Exclude && first_char == '.' {
             continue;
         }
 
-        if set.is_match(path.clone().file_name().unwrap()) {
-            // compare with file name only
-            continue;
+        for pattern in exclude {
+            if file_name == *pattern {
+                println!("pattern: {pattern}");
+                println!("filename: {file_name}");
+                
+                continue 'dirs;
+            }
         }
 
         if path.is_dir() && mode == DirectoryMode::Recursive {

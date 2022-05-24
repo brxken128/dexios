@@ -303,6 +303,7 @@ pub fn get_matches() -> clap::ArgMatches {
                 .subcommand(
                     Command::new("dump")
                         .about("dump a header")
+                        .arg_required_else_help(true)
                         .arg(
                             Arg::new("input")
                                 .value_name("input")
@@ -358,6 +359,7 @@ pub fn get_matches() -> clap::ArgMatches {
                 .subcommand(
                     Command::new("restore")
                         .about("restore a header")
+                        .arg_required_else_help(true)
                         .arg(
                             Arg::new("input")
                                 .value_name("input")
@@ -413,6 +415,7 @@ pub fn get_matches() -> clap::ArgMatches {
                 .subcommand(
                     Command::new("strip")
                         .about("strip a header")
+                        .arg_required_else_help(true)
                         .arg(
                             Arg::new("input")
                                 .value_name("input")

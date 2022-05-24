@@ -3,7 +3,7 @@ use crate::{
     prompt::{overwrite_check, get_answer},
 };
 use anyhow::{Context, Result};
-use std::{io::Read, process::exit};
+use std::{io::Read, process::exit, fs::OpenOptions};
 use std::{fs::File, io::Write};
 
 fn calc_nonce_len(header_info: &HeaderType) -> usize {
@@ -41,8 +41,7 @@ pub fn dump(input: &str, output: &str, skip: SkipMode, header_info: &HeaderType)
         ));
     }
 
-    if !overwrite_check(output, SkipMode::ShowPrompts, BenchMode::WriteToFilesystem)? {
-        // add -y support
+    if !overwrite_check(output, skip, BenchMode::WriteToFilesystem)? {
         std::process::exit(0);
     }
 
@@ -59,8 +58,30 @@ pub fn dump(input: &str, output: &str, skip: SkipMode, header_info: &HeaderType)
     Ok(())
 }
 
+pub fn restore(input: &str, output: &str, skip: SkipMode, header_info: &HeaderType) -> Result<()> {
+    let prompt = format!("Are you sure you'd like to restore the header in {} to {}, and that it was created with {} in {}?", input, output, header_info.cipher_type, header_info.dexios_mode);
+    if !get_answer(&prompt, false, skip == SkipMode::HidePrompts)? {
+        exit(0);
+    }
+
+    let nonce_len = calc_nonce_len(header_info);
+
+    let mut buffer = vec![0u8; SALT_LEN + nonce_len];
+    let mut input_file =
+        File::open(input).with_context(|| format!("Unable to open header file: {}", input))?;
+    input_file.read(&mut buffer).with_context(|| format!("Unable to read salt and nonce from file: {}", input))?;
+
+    let mut output_file =
+        OpenOptions::new().write(true).open(input).with_context(|| format!("Unable to open output file: {}", output))?;
+
+    output_file.write_all(&mut buffer).with_context(|| format!("Unable to write header to file: {}", output))?;
+
+    println!("Header restored to {} from {} successfully.", output, input);
+    Ok(())
+}
+
 pub fn strip(input: &str, skip: SkipMode, header_info: &HeaderType) -> Result<()> {
-    let prompt = format!("Are you sure you'd like to wipe the header for {}, and that {} in {} mode is correct?", input, header_info.cipher_type, header_info.dexios_mode);
+    let prompt = format!("Are you sure you'd like to wipe the header for {}, and that it was created with {} in {}?", input, header_info.cipher_type, header_info.dexios_mode);
     if !get_answer(&prompt, false, skip == SkipMode::HidePrompts)? {
         exit(0);
     }
@@ -70,7 +91,7 @@ pub fn strip(input: &str, skip: SkipMode, header_info: &HeaderType) -> Result<()
     let mut buffer = vec![0u8; SALT_LEN + nonce_len];
 
     let mut file =
-        File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
+        OpenOptions::new().write(true).open(input).with_context(|| format!("Unable to open input file: {}", input))?;
     
     file.write_all(&mut buffer).with_context(|| format!("Unable to wipe header for file: {}", input))?;
 

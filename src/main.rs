@@ -239,7 +239,26 @@ fn main() -> Result<()> {
                     &header_type,
                 )?;
             }
-            Some("restore") => {}
+            Some("restore") => {
+                let sub_matches_restore = sub_matches.subcommand_matches("restore").unwrap();
+                let header_type = header_type_handler(sub_matches_restore)?;
+                let skip = if sub_matches_restore.is_present("skip") {
+                    SkipMode::HidePrompts
+                } else {
+                    SkipMode::ShowPrompts
+                };
+
+                header::restore(
+                    sub_matches_restore
+                        .value_of("input")
+                        .context("No input file/invalid text provided")?,
+                        sub_matches_restore
+                        .value_of("output")
+                        .context("No input file/invalid text provided")?,
+                        skip,
+                    &header_type,
+                )?;
+            }
             Some("strip") => {
                 let sub_matches_strip = sub_matches.subcommand_matches("strip").unwrap();
                 let header_type = header_type_handler(sub_matches_strip)?;

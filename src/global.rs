@@ -27,6 +27,15 @@ pub struct HeaderType {
     pub cipher_type: CipherType,
 }
 
+pub struct PackMode {
+    pub dir_mode: DirectoryMode,
+    pub hidden: HiddenFilesMode,
+    pub exclude: Vec<String>,
+    pub memory: bool,
+    pub compression_level: i32,
+    pub print_mode: PrintMode,
+}
+
 #[derive(PartialEq, Eq)]
 pub enum DexiosMode {
     // could do with a better name

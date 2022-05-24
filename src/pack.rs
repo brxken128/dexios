@@ -12,30 +12,25 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::{DirectoryMode, HiddenFilesMode, Parameters, PrintMode, SkipMode, BLOCK_SIZE},
+    global::{DirectoryMode, Parameters, PrintMode, SkipMode, BLOCK_SIZE, PackMode},
     prompt::get_answer,
 };
 
 pub fn encrypt_directory(
     input: &str,
     output: &str,
-    exclude: &[&str],
     keyfile: &str,
-    mode: DirectoryMode,
-    hidden: &HiddenFilesMode,
-    memory: bool,
-    compression_level: i32,
-    print_mode: &PrintMode,
+    pack_params: PackMode,
     params: &Parameters,
 ) -> Result<()> {
-    if mode == DirectoryMode::Recursive {
+    if pack_params.dir_mode == DirectoryMode::Recursive {
         println!("Traversing {} recursively", input);
     } else {
         println!("Traversing {}", input);
     }
 
     let index_start_time = Instant::now();
-    let (files, dirs) = get_paths_in_dir(input, mode, exclude, hidden, print_mode)?;
+    let (files, dirs) = get_paths_in_dir(input, pack_params.dir_mode, &pack_params.exclude, &pack_params.hidden, &pack_params.print_mode)?;
     let index_duration = index_start_time.elapsed();
     let file_count = files.len();
     println!(
@@ -54,7 +49,7 @@ pub fn encrypt_directory(
 
     println!(
         "Creating and compressing files into {} with a compression level of {}",
-        tmp_name, compression_level
+        tmp_name, pack_params.compression_level
     );
 
     let zip_start_time = Instant::now();
@@ -62,14 +57,14 @@ pub fn encrypt_directory(
     let mut zip = zip::ZipWriter::new(file);
     let options = FileOptions::default()
         .compression_method(zip::CompressionMethod::Deflated)
-        .compression_level(Some(compression_level))
+        .compression_level(Some(pack_params.compression_level))
         .large_file(true)
         .unix_permissions(0o755);
 
     zip.add_directory(input, options)
         .context("Unable to add directory to zip")?;
 
-    if mode == DirectoryMode::Recursive {
+    if pack_params.dir_mode == DirectoryMode::Recursive {
         let directories = dirs.context("Error unwrapping Vec containing list of directories.")?; // this should always be *something* anyway
         for dir in directories {
             zip.add_directory(
@@ -89,7 +84,7 @@ pub fn encrypt_directory(
         )
         .context("Unable to add file to zip")?;
 
-        if print_mode == &PrintMode::Verbose {
+        if pack_params.print_mode == PrintMode::Verbose {
             println!("Compressing {} into {}", file.to_str().unwrap(), tmp_name);
         }
 
@@ -135,7 +130,7 @@ pub fn encrypt_directory(
         zip_duration.as_secs_f32()
     );
 
-    if memory {
+    if pack_params.memory {
         crate::encrypt::memory_mode(&tmp_name, output, keyfile, params)?;
     } else {
         crate::encrypt::stream_mode(&tmp_name, output, keyfile, params)?;

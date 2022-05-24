@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::{DirectoryMode, HiddenFilesMode, PrintMode, SkipMode, BLOCK_SIZE};
+use global::{DirectoryMode, HiddenFilesMode, PrintMode, SkipMode, BLOCK_SIZE, PackMode};
 use param_handler::{header_type_handler, param_handler};
 use std::result::Result::Ok;
 
@@ -125,7 +125,7 @@ fn main() -> Result<()> {
         Some(("pack", sub_matches)) => {
             match sub_matches.subcommand_name() {
                 Some("encrypt") => {
-                    let mode = if sub_matches.is_present("recursive") {
+                    let dir_mode = if sub_matches.is_present("recursive") {
                         DirectoryMode::Recursive
                     } else {
                         DirectoryMode::Singular
@@ -158,8 +158,9 @@ fn main() -> Result<()> {
                         6
                     };
 
-                    let excluded: Vec<&str> = if sub_matches.is_present("exclude") {
-                        sub_matches.values_of("exclude").unwrap().collect()
+                    let excluded: Vec<String> = if sub_matches.is_present("exclude") {
+                        let list: Vec<&str> = sub_matches.values_of("exclude").unwrap().collect();
+                        list.iter().map(|x| x.to_string()).collect() // this fixes 'static lifetime issues
                     } else {
                         Vec::new()
                     };
@@ -173,7 +174,8 @@ fn main() -> Result<()> {
                     let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
 
                     let (keyfile, params) = param_handler(sub_matches_encrypt)?;
-
+                    let pack_params = PackMode { compression_level, dir_mode, exclude: excluded, hidden, memory: sub_matches_encrypt.is_present("memory"), print_mode };
+                    
                     pack::encrypt_directory(
                         sub_matches_encrypt
                             .value_of("input")
@@ -181,13 +183,8 @@ fn main() -> Result<()> {
                         sub_matches_encrypt
                             .value_of("output")
                             .context("No output file/invalid text provided")?,
-                        &excluded,
                         keyfile,
-                        mode,
-                        &hidden,
-                        sub_matches_encrypt.is_present("memory"),
-                        compression_level,
-                        &print_mode,
+                        pack_params,
                         &params,
                     )?;
                 }

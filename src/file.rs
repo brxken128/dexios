@@ -134,7 +134,7 @@ pub fn write_bytes(name: &str, bytes: &[u8]) -> Result<()> {
 pub fn get_paths_in_dir(
     name: &str,
     mode: DirectoryMode,
-    exclude: &[&str],
+    exclude: &[String],
     hidden: &HiddenFilesMode,
     print_mode: &PrintMode,
 ) -> Result<(Vec<PathBuf>, Option<Vec<PathBuf>>)> {

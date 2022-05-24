@@ -6,7 +6,9 @@ Dexios is a fast, secure, and open source command-line encryption tool. It's wri
 
 You can install Dexios through cargo, with
 
-`cargo install dexios`
+`RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3" cargo install dexios`
+
+The `RUSTFLAGS` tell the rust compiler to optimise the binary for your processor's architecture, and to enable features that will speed up cryptographic functions. It really is a **lot** faster!
 
 Or you can download a pre-compiled binary from [the releases page](https://github.com/brxken128/dexios/releases)!
 

@@ -42,8 +42,8 @@ pub fn encrypt_directory(
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
     let tmp_name = format!("{}.{}", output, random_extension); // e.g. "output.kjHSD93l"
 
-    let file = File::create(&tmp_name)
-        .with_context(|| format!("Unable to create the output file: {}", output))?;
+    let file = std::io::BufWriter::new(File::create(&tmp_name)
+        .with_context(|| format!("Unable to create the output file: {}", output))?);
 
     println!(
         "Creating and compressing files into {} with a compression level of {}",

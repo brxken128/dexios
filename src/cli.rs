@@ -285,6 +285,13 @@ pub fn get_matches() -> clap::ArgMatches {
                         .takes_value(false)
                         .help("include hidden files and folders"),
                 )
+                .arg(
+                    Arg::new("verbose")
+                        .short('v')
+                        .long("verbose")
+                        .takes_value(false)
+                        .help("provide more output on what's happening"),
+                )
                 .subcommand(encrypt.clone())
                 .subcommand(decrypt.clone()),
         )

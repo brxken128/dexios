@@ -2,7 +2,7 @@ use std::{
     fs::File,
     io::{Read, Write},
     path::PathBuf,
-    str::FromStr,
+    str::FromStr, time::Instant,
 };
 
 use anyhow::{Context, Result};
@@ -11,7 +11,7 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::{DirectoryMode, HiddenFilesMode, Parameters, SkipMode, BLOCK_SIZE},
+    global::{DirectoryMode, HiddenFilesMode, Parameters, SkipMode, BLOCK_SIZE, PrintMode},
     prompt::get_answer,
 };
 
@@ -24,20 +24,34 @@ pub fn encrypt_directory(
     hidden: HiddenFilesMode,
     memory: bool,
     compression_level: i32,
+    print_mode: PrintMode,
     params: &Parameters,
 ) -> Result<()> {
-    let (files, dirs) = get_paths_in_dir(input, mode, exclude, &hidden)?;
-    let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
+    if mode == DirectoryMode::Recursive {
+        println!("Traversing {} recursively", input);
+    } else {
+        println!("Traversing {}", input);
+    }
 
+    let index_start_time = Instant::now();
+    let (files, dirs) = get_paths_in_dir(input, mode, exclude, &hidden, &print_mode)?;
+    let index_duration = index_start_time.elapsed();
+    let file_count = files.len();
+    println!("Indexed {} files [took {:.2}s]", file_count, index_duration.as_secs_f32());
+
+    let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
     let tmp_name = format!("{}.{}", output, random_extension); // e.g. "output.kjHSD93l"
 
     let file = File::create(&tmp_name)
         .with_context(|| format!("Unable to create the output file: {}", output))?;
 
     println!(
-        "Creating zip called {} with a compression level of {}.",
+        "Creating and compressing files into {} with a compression level of {}",
         tmp_name, compression_level
     );
+
+    let zip_start_time = Instant::now();
+
     let mut zip = zip::ZipWriter::new(file);
     let options = FileOptions::default()
         .compression_method(zip::CompressionMethod::Bzip2)
@@ -67,7 +81,11 @@ pub fn encrypt_directory(
             options,
         )
         .context("Unable to add file to zip")?;
-        println!("Compressing {} into {}", file.to_str().unwrap(), tmp_name);
+
+        if print_mode == PrintMode::Verbose {
+            println!("Compressing {} into {}", file.to_str().unwrap(), tmp_name);
+        }
+
         let zip_writer = zip.by_ref();
         let mut file_reader = File::open(file)?;
         let file_size = file_reader.metadata().unwrap().len();
@@ -102,6 +120,9 @@ pub fn encrypt_directory(
     zip.finish()?;
     drop(zip);
 
+    let zip_duration = zip_start_time.elapsed();
+    println!("Compressed {} files into {}! [took {:.2}s]", file_count, tmp_name, zip_duration.as_secs_f32());
+
     if memory {
         crate::encrypt::memory_mode(&tmp_name, output, keyfile, params)?;
     } else {
@@ -120,6 +141,7 @@ pub fn decrypt_directory(
     output: &str,        // directory
     keyfile: &str,       // for decrypt function
     memory: bool,        // memory or stream mode
+    print_mode: PrintMode,
     params: &Parameters, // params for decrypt function
 ) -> Result<()> {
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
@@ -133,6 +155,7 @@ pub fn decrypt_directory(
         crate::decrypt::stream_mode(input, &tmp_name, keyfile, params)?;
     }
 
+    let zip_start_time = Instant::now();
     let file = File::open(&tmp_name).context("Unable to open temporary archive")?;
     let mut archive = zip::ZipArchive::new(file)
         .context("Temporary archive can't be opened, is it a zip file?")?;
@@ -142,7 +165,11 @@ pub fn decrypt_directory(
         Err(_) => println!("Output directory ({}) already exists!", output),
     }
 
-    for i in 0..archive.len() {
+    let file_count = archive.len();
+
+    println!("Decompressing {} items into {}", file_count, output);
+
+    for i in 0..file_count {
         let mut full_path = PathBuf::from_str(output)
             .context("Unable to create a PathBuf from your output directory")?;
 
@@ -175,7 +202,9 @@ pub fn decrypt_directory(
                     continue;
                 }
             }
-            println!("Extracting {}", file_name);
+            if print_mode == PrintMode::Verbose {
+                println!("Extracting {}", file_name);
+            }
             let mut output_file =
                 File::create(full_path).context("Error creating an output file")?;
             std::io::copy(&mut file, &mut output_file)
@@ -183,9 +212,12 @@ pub fn decrypt_directory(
         }
     }
 
+    let zip_duration = zip_start_time.elapsed();
+    println!("Extracted {} items to {} [took {:.2}s]", file_count, output, zip_duration.as_secs_f32());
+
     crate::erase::secure_erase(&tmp_name, 16)?; // cleanup the tmp file
 
-    println!("Your files are in {}", output);
+    println!("Unpacking Successful! You will find your files in {}", output);
 
     Ok(())
 }

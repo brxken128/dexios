@@ -1,6 +1,7 @@
 use crate::global::CipherType;
 use crate::global::DirectoryMode;
 use crate::global::HiddenFilesMode;
+use crate::global::PrintMode;
 use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
 use secrecy::Secret;
@@ -135,6 +136,7 @@ pub fn get_paths_in_dir(
     mode: DirectoryMode,
     exclude: &[&str],
     hidden: &HiddenFilesMode,
+    print_mode: &PrintMode,
 ) -> Result<(Vec<PathBuf>, Option<Vec<PathBuf>>)> {
     let mut file_list = Vec::new(); // so we know what files to encrypt
     let mut dir_list = Vec::new(); // so we can recreate the structure inside of the zip file
@@ -168,18 +170,22 @@ pub fn get_paths_in_dir(
         }
 
         if path.is_dir() && mode == DirectoryMode::Recursive {
-            let (files, dirs) = get_paths_in_dir(path.to_str().unwrap(), mode, exclude, hidden)?;
+            let (files, dirs) = get_paths_in_dir(path.to_str().unwrap(), mode, exclude, hidden, print_mode)?;
             dir_list.push(path);
 
             file_list.extend(files);
             dir_list.extend(dirs.unwrap()); // this should never error and it should be there, at least empty - should still add context
         } else if path.is_dir() {
-            println!(
-                "Skipping {} as it's a directory and -r was not specified",
-                path.display()
-            );
+            if print_mode == &PrintMode::Verbose {
+                println!(
+                    "Skipping {} as it's a directory and -r was not specified",
+                    path.display()
+                );
+            }
         } else if path.is_symlink() {
-            println!("Skipping {} as it's a symlink", path.display());
+            if print_mode == &PrintMode::Verbose {
+                println!("Skipping {} as it's a symlink", path.display());
+            }
         } else {
             file_list.push(path);
         }

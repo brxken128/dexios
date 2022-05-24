@@ -34,6 +34,12 @@ pub enum HiddenFilesMode {
     Exclude,
 }
 
+#[derive(PartialEq, Eq)]
+pub enum PrintMode {
+    Verbose,
+    Quiet,
+}
+
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum EraseMode {
     EraseFile(i32),

@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::{DirectoryMode, HiddenFilesMode, BLOCK_SIZE};
+use global::{DirectoryMode, HiddenFilesMode, BLOCK_SIZE, PrintMode};
 use param_handler::param_handler;
 use std::result::Result::Ok;
 
@@ -164,6 +164,12 @@ fn main() -> Result<()> {
                         Vec::new()
                     };
 
+                    let print_mode = if sub_matches.is_present("verbose") {
+                        PrintMode::Verbose
+                    } else {
+                        PrintMode::Quiet
+                    };
+
                     let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
 
                     let (keyfile, params) = param_handler(sub_matches_encrypt)?;
@@ -181,10 +187,18 @@ fn main() -> Result<()> {
                         hidden,
                         sub_matches_encrypt.is_present("memory"),
                         compression_level,
+                        print_mode,
                         &params,
                     )?;
                 }
                 Some("decrypt") => {
+                    let print_mode = if sub_matches.is_present("verbose") {
+                        PrintMode::Verbose
+                    } else {
+                        PrintMode::Quiet
+                    };
+
+
                     let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
 
                     let (keyfile, params) = param_handler(sub_matches_decrypt)?;
@@ -198,6 +212,7 @@ fn main() -> Result<()> {
                             .context("No output file/invalid text provided")?,
                         keyfile,
                         sub_matches_decrypt.is_present("memory"),
+                        print_mode,
                         &params,
                     )?;
                 }

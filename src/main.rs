@@ -129,6 +129,28 @@ fn main() -> Result<()> {
                     DirectoryMode::Singular
                 };
 
+                let compression_level = if sub_matches.is_present("level") {
+                    let result = sub_matches
+                        .value_of("level")
+                        .context("No compression level specified")?
+                        .parse();
+            
+                    let passes = if let Ok(value) = result {
+                        if value > 9 || value < 1 {
+                            println!("Compression level is out of specified bounds - using the default (6).");
+                            6
+                        } else {
+                            value
+                        }
+                    } else {
+                        println!("Unable to read compression level provided - using the default (6).");
+                        6
+                    };
+                    passes
+                } else {
+                    6
+                };
+
                 let excluded: Vec<&str> = if sub_matches.is_present("exclude") {
                     sub_matches.values_of("exclude").unwrap().collect()
                 } else {
@@ -150,6 +172,7 @@ fn main() -> Result<()> {
                     keyfile,
                     mode,
                     sub_matches_encrypt.is_present("memory"),
+                    compression_level,
                     &params,
                 )?;
             }

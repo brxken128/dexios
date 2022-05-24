@@ -22,6 +22,7 @@ pub fn encrypt_directory(
     keyfile: &str,
     mode: DirectoryMode,
     memory: bool,
+    compression_level: i32,
     params: &Parameters,
 ) -> Result<()> {
     let (files, dirs) = get_paths_in_dir(input, mode, exclude)?;
@@ -31,10 +32,12 @@ pub fn encrypt_directory(
 
     let file = File::create(&tmp_name)
         .with_context(|| format!("Unable to create the output file: {}", output))?;
+    
+    println!("Creating zip called {} with a compression level of {}.", tmp_name, compression_level);
     let mut zip = zip::ZipWriter::new(file);
     let options = FileOptions::default()
         .compression_method(zip::CompressionMethod::Bzip2)
-        .compression_level(Some(6)) // this is the default anyway
+        .compression_level(Some(compression_level)) // this is the default anyway
         .large_file(true)
         .unix_permissions(0o755);
 
@@ -100,7 +103,7 @@ pub fn encrypt_directory(
         crate::encrypt::stream_mode(&tmp_name, output, keyfile, params)?;
     };
 
-    crate::erase::secure_erase(&tmp_name, 8)?; // cleanup our tmp file
+    crate::erase::secure_erase(&tmp_name, 16)?; // cleanup our tmp file
 
     println!("Your output file is: {}", output);
 
@@ -175,7 +178,7 @@ pub fn decrypt_directory(
         }
     }
 
-    crate::erase::secure_erase(&tmp_name, 8)?; // cleanup the tmp file
+    crate::erase::secure_erase(&tmp_name, 16)?; // cleanup the tmp file
 
     println!("Your files are in {}", output);
 

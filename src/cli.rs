@@ -269,6 +269,16 @@ pub fn get_matches() -> clap::ArgMatches {
                         .min_values(0)
                         .multiple_occurrences(true),
                 )
+                .arg(
+                    Arg::new("level")
+                        .long("level")
+                        .value_name("level of compression (1-9)")
+                        .takes_value(true)
+                        .require_equals(true)
+                        .help("specify the bzip2 compression level (default is 6)")
+                        .min_values(0)
+                        .default_missing_value("6"),
+                )
                 .subcommand(encrypt.clone())
                 .subcommand(decrypt.clone()),
         )

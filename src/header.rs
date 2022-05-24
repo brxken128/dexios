@@ -15,7 +15,7 @@ pub fn dump(input: &str, output: &str, header_info: HeaderType) -> Result<()> {
 
 
     let mut salt = [0u8; SALT_LEN];
-    let mut nonce: Vec<u8> = Vec::with_capacity(nonce_len);
+    let mut nonce = vec![0u8; nonce_len];
 
 
     let mut file = File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;

@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::{DirectoryMode, HiddenFilesMode, PrintMode, BLOCK_SIZE, HeaderType, DexiosMode, CipherType};
+use global::{DirectoryMode, HiddenFilesMode, PrintMode, BLOCK_SIZE};
 use param_handler::{param_handler, header_type_handler};
 use std::result::Result::Ok;
 

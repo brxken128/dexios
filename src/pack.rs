@@ -22,10 +22,10 @@ pub fn encrypt_directory(
     exclude: &[&str],
     keyfile: &str,
     mode: DirectoryMode,
-    hidden: HiddenFilesMode,
+    hidden: &HiddenFilesMode,
     memory: bool,
     compression_level: i32,
-    print_mode: PrintMode,
+    print_mode: &PrintMode,
     params: &Parameters,
 ) -> Result<()> {
     if mode == DirectoryMode::Recursive {
@@ -35,7 +35,7 @@ pub fn encrypt_directory(
     }
 
     let index_start_time = Instant::now();
-    let (files, dirs) = get_paths_in_dir(input, mode, exclude, &hidden, &print_mode)?;
+    let (files, dirs) = get_paths_in_dir(input, mode, exclude, hidden, print_mode)?;
     let index_duration = index_start_time.elapsed();
     let file_count = files.len();
     println!(
@@ -89,7 +89,7 @@ pub fn encrypt_directory(
         )
         .context("Unable to add file to zip")?;
 
-        if print_mode == PrintMode::Verbose {
+        if print_mode == &PrintMode::Verbose {
             println!("Compressing {} into {}", file.to_str().unwrap(), tmp_name);
         }
 
@@ -153,7 +153,7 @@ pub fn decrypt_directory(
     output: &str,  // directory
     keyfile: &str, // for decrypt function
     memory: bool,  // memory or stream mode
-    print_mode: PrintMode,
+    print_mode: &PrintMode,
     params: &Parameters, // params for decrypt function
 ) -> Result<()> {
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
@@ -214,7 +214,7 @@ pub fn decrypt_directory(
                     continue;
                 }
             }
-            if print_mode == PrintMode::Verbose {
+            if print_mode == &PrintMode::Verbose {
                 println!("Extracting {}", file_name);
             }
             let mut output_file =

@@ -142,18 +142,17 @@ fn main() -> Result<()> {
                             .context("No compression level specified")?
                             .parse();
 
-                        let passes = if let Ok(value) = result {
-                            if value > 9 || value < 1 {
+                        if let Ok(value) = result {
+                            if (0..=9).contains(&value) {
+                                value
+                            } else {
                                 println!("Compression level is out of specified bounds - using the default (6).");
                                 6
-                            } else {
-                                value
                             }
                         } else {
                             println!("Unable to read compression level provided - using the default (6).");
                             6
-                        };
-                        passes
+                        }
                     } else {
                         6
                     };
@@ -184,10 +183,10 @@ fn main() -> Result<()> {
                         &excluded,
                         keyfile,
                         mode,
-                        hidden,
+                        &hidden,
                         sub_matches_encrypt.is_present("memory"),
                         compression_level,
-                        print_mode,
+                        &print_mode,
                         &params,
                     )?;
                 }
@@ -211,7 +210,7 @@ fn main() -> Result<()> {
                             .context("No output file/invalid text provided")?,
                         keyfile,
                         sub_matches_decrypt.is_present("memory"),
-                        print_mode,
+                        &print_mode,
                         &params,
                     )?;
                 }

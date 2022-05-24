@@ -162,7 +162,7 @@ pub fn get_paths_in_dir(
         }
 
         if set.is_match(path.clone().file_name().unwrap()) {
-            // compare with both file name and path
+            // compare with file name only
             continue;
         }
 

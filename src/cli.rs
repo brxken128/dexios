@@ -252,6 +252,7 @@ pub fn get_matches() -> clap::ArgMatches {
         .subcommand(
             Command::new("pack")
                 .about("pack a directory and then encrypt/decrypt it")
+                .subcommand_required(true)
                 .arg(
                     Arg::new("recursive")
                         .short('r')
@@ -294,6 +295,148 @@ pub fn get_matches() -> clap::ArgMatches {
                 )
                 .subcommand(encrypt.clone())
                 .subcommand(decrypt.clone()),
+        )
+        .subcommand(
+            Command::new("header")
+                .about("dexios header functions (advanced users only!)")
+                .subcommand_required(true)
+                .subcommand(
+                    Command::new("dump")
+                        .about("dump a header")
+                        .arg(
+                            Arg::new("input")
+                                .value_name("input")
+                                .takes_value(true)
+                                .required(true)
+                                .help("the file who's header you wish to dump"),
+                        )
+                        .arg(
+                            Arg::new("output")
+                                .value_name("output")
+                                .takes_value(true)
+                                .required(true)
+                                .help("the output file"),
+                        )
+                        .arg(
+                            Arg::new("gcm")
+                                .short('g')
+                                .long("gcm")
+                                .takes_value(false)
+                                .help("dump an AES-256-GCM header"),
+                        )
+                        .arg(
+                            Arg::new("xchacha")
+                                .short('x')
+                                .long("xchacha")
+                                .takes_value(false)
+                                .help("dump an XChaCha20-Poly1305 header")
+                                .conflicts_with("gcm"),
+                        )
+                        .arg(
+                            Arg::new("stream")
+                                .short('s')
+                                .long("stream")
+                                .takes_value(false)
+                                .help("restore a stream mode header"),
+                        )
+                        .arg(
+                            Arg::new("memory")
+                                .short('m')
+                                .long("memory")
+                                .takes_value(false)
+                                .help("restore a memory mode header")
+                                .conflicts_with("stream"),
+                        )
+                )
+                .subcommand(
+                    Command::new("restore")
+                        .about("restore a header")
+                        .arg(
+                            Arg::new("input")
+                                .value_name("input")
+                                .takes_value(true)
+                                .required(true)
+                                .help("the header file"),
+                        )
+                        .arg(
+                            Arg::new("output")
+                                .value_name("output")
+                                .takes_value(true)
+                                .required(true)
+                                .help("the file to apply the header to"),
+                        )
+                        .arg(
+                            Arg::new("gcm")
+                                .short('g')
+                                .long("gcm")
+                                .takes_value(false)
+                                .help("restore an AES-256-GCM header"),
+                        )
+                        .arg(
+                            Arg::new("xchacha")
+                                .short('x')
+                                .long("xchacha")
+                                .takes_value(false)
+                                .help("restore an XChaCha20-Poly1305 header")
+                                .conflicts_with("gcm"),
+                        )
+                        .arg(
+                            Arg::new("stream")
+                                .short('s')
+                                .long("stream")
+                                .takes_value(false)
+                                .help("restore a stream mode header"),
+                        )
+                        .arg(
+                            Arg::new("memory")
+                                .short('m')
+                                .long("memory")
+                                .takes_value(false)
+                                .help("restore a memory mode header")
+                                .conflicts_with("stream"),
+                        )
+                )
+                .subcommand(
+                    Command::new("strip")
+                        .about("strip a header")
+                        .arg(
+                            Arg::new("input")
+                                .value_name("input")
+                                .takes_value(true)
+                                .required(true)
+                                .help("the header file"),
+                        )
+                        .arg(
+                            Arg::new("gcm")
+                                .short('g')
+                                .long("gcm")
+                                .takes_value(false)
+                                .help("strip an AES-256-GCM header"),
+                        )
+                        .arg(
+                            Arg::new("xchacha")
+                                .short('x')
+                                .long("xchacha")
+                                .takes_value(false)
+                                .help("strip an XChaCha20-Poly1305 header")
+                                .conflicts_with("gcm"),
+                        )
+                        .arg(
+                            Arg::new("stream")
+                                .short('s')
+                                .long("stream")
+                                .takes_value(false)
+                                .help("strip a stream mode header"),
+                        )
+                        .arg(
+                            Arg::new("memory")
+                                .short('m')
+                                .long("memory")
+                                .takes_value(false)
+                                .help("strip a memory mode header")
+                                .conflicts_with("stream"),
+                        )
+                )
         )
         .get_matches()
 }

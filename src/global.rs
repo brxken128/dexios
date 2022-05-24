@@ -22,6 +22,17 @@ pub struct Parameters {
     pub cipher_type: CipherType,
 }
 
+pub struct HeaderType {
+    pub dexios_mode: DexiosMode,
+    pub cipher_type: CipherType,
+}
+
+#[derive(PartialEq, Eq)]
+pub enum DexiosMode { // could do with a better name
+    MemoryMode,
+    StreamMode,
+}
+
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {
     Singular,

@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
-use global::{DirectoryMode, HiddenFilesMode, PrintMode, BLOCK_SIZE};
-use param_handler::param_handler;
+use global::{DirectoryMode, HiddenFilesMode, PrintMode, BLOCK_SIZE, HeaderType, DexiosMode, CipherType};
+use param_handler::{param_handler, header_type_handler};
 use std::result::Result::Ok;
 
 mod cli;
@@ -14,6 +14,7 @@ mod key;
 mod pack;
 mod param_handler;
 mod prompt;
+mod header;
 
 #[allow(clippy::too_many_lines)]
 fn main() -> Result<()> {
@@ -213,6 +214,24 @@ fn main() -> Result<()> {
                         &print_mode,
                         &params,
                     )?;
+                }
+                _ => (),
+            }
+        },
+        Some(("header", sub_matches)) => {
+            match sub_matches.subcommand_name() {
+                Some("dump") => {
+                    let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
+                    let header_type = header_type_handler(sub_matches_dump)?;
+
+                    header::dump(sub_matches_dump.value_of("input").context("No input file/invalid text provided")?, sub_matches_dump.value_of("output").context("No output file/invalid text provided")?, header_type)?;
+                  
+                }
+                Some("restore") => {
+                    
+                }
+                Some("strip") => {
+                    
                 }
                 _ => (),
             }

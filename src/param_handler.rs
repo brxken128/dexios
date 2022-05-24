@@ -1,5 +1,5 @@
 use crate::global::{
-    BenchMode, CipherType, EraseMode, HashMode, Parameters, PasswordMode, SkipMode,
+    BenchMode, CipherType, EraseMode, HashMode, Parameters, PasswordMode, SkipMode, HeaderType, DexiosMode,
 };
 use anyhow::{Context, Result};
 use clap::ArgMatches;
@@ -80,4 +80,20 @@ pub fn param_handler(sub_matches: &ArgMatches) -> Result<(&str, Parameters)> {
             cipher_type,
         },
     ))
+}
+
+pub fn header_type_handler(sub_matches: &ArgMatches) -> Result<HeaderType> {
+    let dexios_mode = if sub_matches.is_present("memory") {
+        DexiosMode::MemoryMode
+    } else {
+        DexiosMode::StreamMode
+    };
+
+    let cipher_type = if sub_matches.is_present("gcm") {
+        CipherType::AesGcm
+    } else {
+        CipherType::XChaCha20Poly1305
+    };
+
+    Ok(HeaderType { cipher_type, dexios_mode })
 }

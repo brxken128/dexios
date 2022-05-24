@@ -85,11 +85,15 @@ pub fn param_handler(sub_matches: &ArgMatches) -> Result<(&str, Parameters)> {
 
 pub fn header_type_handler(sub_matches: &ArgMatches) -> Result<HeaderType> {
     if !sub_matches.is_present("memory") && !sub_matches.is_present("stream") {
-        return Err(anyhow::anyhow!("You need to specify if the file was created in memory or stream mode."))
+        return Err(anyhow::anyhow!(
+            "You need to specify if the file was created in memory or stream mode."
+        ));
     }
 
     if !sub_matches.is_present("xchacha") && !sub_matches.is_present("gcm") {
-        return Err(anyhow::anyhow!("You need to specify if the file was created using XChaCha20-Poly1305 or AES-256-GCM."))
+        return Err(anyhow::anyhow!(
+            "You need to specify if the file was created using XChaCha20-Poly1305 or AES-256-GCM."
+        ));
     }
 
     let dexios_mode = if sub_matches.is_present("memory") {

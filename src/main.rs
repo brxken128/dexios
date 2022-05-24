@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::{DirectoryMode, HiddenFilesMode, PrintMode, BLOCK_SIZE, SkipMode};
+use global::{DirectoryMode, HiddenFilesMode, PrintMode, SkipMode, BLOCK_SIZE};
 use param_handler::{header_type_handler, param_handler};
 use std::result::Result::Ok;
 
@@ -235,7 +235,7 @@ fn main() -> Result<()> {
                     sub_matches_dump
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
-                        skip,
+                    skip,
                     &header_type,
                 )?;
             }
@@ -252,10 +252,10 @@ fn main() -> Result<()> {
                     sub_matches_restore
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
-                        sub_matches_restore
+                    sub_matches_restore
                         .value_of("output")
                         .context("No input file/invalid text provided")?,
-                        skip,
+                    skip,
                     &header_type,
                 )?;
             }
@@ -272,7 +272,7 @@ fn main() -> Result<()> {
                     sub_matches_strip
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
-                        skip,
+                    skip,
                     &header_type,
                 )?;
             }

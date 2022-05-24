@@ -22,6 +22,27 @@ pub struct Parameters {
     pub cipher_type: CipherType,
 }
 
+pub struct HeaderType {
+    pub dexios_mode: DexiosMode,
+    pub cipher_type: CipherType,
+}
+
+#[derive(PartialEq, Eq)]
+pub enum DexiosMode {
+    // could do with a better name
+    MemoryMode,
+    StreamMode,
+}
+
+impl std::fmt::Display for DexiosMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            DexiosMode::MemoryMode => write!(f, "memory mode"),
+            DexiosMode::StreamMode => write!(f, "stream mode"),
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {
     Singular,

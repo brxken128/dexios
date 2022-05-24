@@ -19,7 +19,7 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
     nonce_len
 }
 
-pub fn dump(input: &str, output: &str, header_info: &HeaderType) -> Result<()> {
+pub fn dump(input: &str, output: &str, skip: SkipMode, header_info: &HeaderType) -> Result<()> {
     let nonce_len = calc_nonce_len(header_info);
 
     let mut salt = [0u8; SALT_LEN];

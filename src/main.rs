@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::{DirectoryMode, HiddenFilesMode, PrintMode, BLOCK_SIZE};
+use global::{DirectoryMode, HiddenFilesMode, PrintMode, BLOCK_SIZE, SkipMode};
 use param_handler::{header_type_handler, param_handler};
 use std::result::Result::Ok;
 
@@ -222,6 +222,11 @@ fn main() -> Result<()> {
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
                 let header_type = header_type_handler(sub_matches_dump)?;
+                let skip = if sub_matches_dump.is_present("skip") {
+                    SkipMode::HidePrompts
+                } else {
+                    SkipMode::ShowPrompts
+                };
 
                 header::dump(
                     sub_matches_dump
@@ -230,11 +235,28 @@ fn main() -> Result<()> {
                     sub_matches_dump
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
+                        skip,
                     &header_type,
                 )?;
             }
             Some("restore") => {}
-            Some("strip") => {}
+            Some("strip") => {
+                let sub_matches_strip = sub_matches.subcommand_matches("strip").unwrap();
+                let header_type = header_type_handler(sub_matches_strip)?;
+                let skip = if sub_matches_strip.is_present("skip") {
+                    SkipMode::HidePrompts
+                } else {
+                    SkipMode::ShowPrompts
+                };
+
+                header::strip(
+                    sub_matches_strip
+                        .value_of("input")
+                        .context("No input file/invalid text provided")?,
+                        skip,
+                    &header_type,
+                )?;
+            }
             _ => (),
         },
         _ => (),

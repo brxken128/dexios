@@ -347,6 +347,13 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .help("restore a memory mode header")
                                 .conflicts_with("stream"),
                         )
+                        .arg(
+                            Arg::new("skip")
+                                .short('y')
+                                .long("skip")
+                                .takes_value(false)
+                                .help("skip all prompts"),
+                        )
                 )
                 .subcommand(
                     Command::new("restore")
@@ -395,6 +402,13 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .help("restore a memory mode header")
                                 .conflicts_with("stream"),
                         )
+                        .arg(
+                            Arg::new("skip")
+                                .short('y')
+                                .long("skip")
+                                .takes_value(false)
+                                .help("skip all prompts"),
+                        )
                 )
                 .subcommand(
                     Command::new("strip")
@@ -435,6 +449,13 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(false)
                                 .help("strip a memory mode header")
                                 .conflicts_with("stream"),
+                        )
+                        .arg(
+                            Arg::new("skip")
+                                .short('y')
+                                .long("skip")
+                                .takes_value(false)
+                                .help("skip all prompts"),
                         )
                 )
         )

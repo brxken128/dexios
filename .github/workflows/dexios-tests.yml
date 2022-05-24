@@ -80,6 +80,32 @@ jobs:
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -esgHyk keyfile 100MB.bin 100MB.enc
     - name: Decrypt in stream mode (AES-256-GCM)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dsgHyk keyfile 100MB.enc 100MB.bin
+  header-tests:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Retrieve Dexios
+      uses: actions/download-artifact@v3
+      with:
+        name: dexios
+        path: target/release/dexios
+    - name: Make Binary Executable
+      run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
+    - name: Generate test file
+      run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
+    - name: Generate keyfile
+      run: dd if=/dev/urandom of=keyfile bs=1 count=4096
+    - name: Encrypt in stream mode (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -esxHyk keyfile 100MB.bin 100MB.enc
+    - name: Dump Header
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header dump -sxy 100MB.enc 100MB.enc.header
+    - name: Strip Header
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header strip -sxy 100MB.enc
+    - name: Restore Header
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header restore -sxy 100MB.enc.header 100MB.enc
+    - name: Decrypt in stream mode (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dsxHyk keyfile 100MB.enc 100MB.bin
   hash-standalone-mode:
     needs: build
     runs-on: ubuntu-latest

@@ -103,7 +103,7 @@ jobs:
     - name: Strip Header
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header strip -y 100MB.enc
     - name: Print first 64 bytes of file (in hex) to ensure header is gone
-      run: od --format=x1 --read-bytes=64 100mb.enc
+      run: od --format=x1 --read-bytes=64 100MB.enc
     - name: Restore Header
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header restore -y 100MB.enc.header 100MB.enc
     - name: Decrypt in stream mode (XChaCha20-Poly1305)

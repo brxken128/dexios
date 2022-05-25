@@ -31,7 +31,7 @@ pub enum HeaderVersion {
 }
 
 // the data used returned after reading/deserialising a header
-pub struct HeaderData {
+pub struct Header {
     pub header_type: HeaderType,
     pub nonce: Vec<u8>,
     pub salt: [u8; SALT_LEN],

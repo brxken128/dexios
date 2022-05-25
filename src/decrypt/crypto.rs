@@ -1,5 +1,5 @@
 use crate::global::crypto::DecryptStreamCiphers;
-use crate::global::parameters::{Algorithm, BenchMode, HashMode, HeaderData, OutputFile};
+use crate::global::parameters::{Algorithm, BenchMode, HashMode, Header, OutputFile};
 use crate::global::BLOCK_SIZE;
 use crate::key::argon2_hash;
 use aead::stream::DecryptorLE31;
@@ -21,7 +21,7 @@ use std::time::Instant;
 // it hashes the key with the supplised salt, and decrypts all of the data
 // it returns the decrypted bytes
 pub fn decrypt_bytes_memory_mode(
-    header: &HeaderData,
+    header: &Header,
     data: &[u8],
     output: &mut OutputFile,
     raw_key: Secret<Vec<u8>>,
@@ -99,7 +99,7 @@ pub fn decrypt_bytes_stream_mode(
     input: &mut File,
     output: &mut OutputFile,
     raw_key: Secret<Vec<u8>>,
-    header: &HeaderData,
+    header: &Header,
     bench: BenchMode,
     hash: HashMode,
 ) -> Result<()> {

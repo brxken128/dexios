@@ -1,6 +1,6 @@
 use crate::{
     global::parameters::{
-        Algorithm, BenchMode, CipherMode, HeaderData, HeaderType, HeaderVersion, OutputFile,
+        Algorithm, BenchMode, CipherMode, Header, HeaderType, HeaderVersion, OutputFile,
         SkipMode,
     },
     global::SALT_LEN,
@@ -64,7 +64,7 @@ fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
 // it ensures the buffer is left at 64 bytes, so other functions can write the data without further hassle
 pub fn write_to_file(
     file: &mut OutputFile,
-    header: &HeaderData
+    header: &Header
 ) -> Result<()> {
     let nonce_len = calc_nonce_len(&header.header_type);
 
@@ -94,7 +94,7 @@ pub fn write_to_file(
 }
 
 // this hashes a header with the salt, nonce, and info provided
-pub fn hash(hasher: &mut Hasher, header: &HeaderData) {
+pub fn hash(hasher: &mut Hasher, header: &Header) {
     match &header.header_type.header_version {
         HeaderVersion::V1 => {
             let nonce_len = calc_nonce_len(&header.header_type);
@@ -145,7 +145,7 @@ fn deserialise(
 
 // this takes an input file, and gets all of the data necessary from the header of the file
 // it ensures that the buffer starts at 64 bytes, so that other functions can just read encrypted data immediately
-pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
+pub fn read_from_file(file: &mut File) -> Result<Header> {
     let mut version_info = [0u8; 2];
     let mut algorithm_info = [0u8; 2];
     let mut mode_info = [0u8; 2];
@@ -173,7 +173,7 @@ pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
             file.read_exact(&mut vec![0u8; 26 - nonce_len])
                 .context("Unable to read final padding from header")?; // read and discard the final padding
 
-            Ok(HeaderData {
+            Ok(Header {
                 header_type: header_info,
                 nonce,
                 salt,

@@ -1,6 +1,6 @@
 use crate::global::crypto::EncryptStreamCiphers;
 use crate::global::parameters::{
-    Algorithm, BenchMode, CipherMode, HashMode, HeaderType, OutputFile, HeaderData,
+    Algorithm, BenchMode, CipherMode, HashMode, HeaderType, OutputFile, Header,
 };
 use crate::global::{BLOCK_SIZE, SALT_LEN, VERSION};
 use crate::key::argon2_hash;
@@ -93,7 +93,7 @@ pub fn encrypt_bytes_memory_mode(
         }
     };
 
-    let header = HeaderData { salt, nonce: nonce_bytes, header_type };
+    let header = Header { salt, nonce: nonce_bytes, header_type };
 
     if bench == BenchMode::WriteToFilesystem {
         let write_start_time = Instant::now();
@@ -181,7 +181,7 @@ pub fn encrypt_bytes_stream_mode(
         }
     };
 
-    let header = HeaderData { salt, nonce: nonce_bytes, header_type };
+    let header = Header { salt, nonce: nonce_bytes, header_type };
 
     if bench == BenchMode::WriteToFilesystem {
         crate::header::write_to_file(output, &header)?;

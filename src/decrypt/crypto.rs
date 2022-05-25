@@ -69,9 +69,7 @@ pub fn decrypt_bytes_memory_mode(
         let hash_start_time = Instant::now();
         crate::header::hash(
             &mut hasher,
-            &header.salt,
-            &header.nonce,
-            &header.header_type,
+            &header
         );
         hasher.update(data);
         let hash = hasher.finalize().to_hex().to_string();
@@ -142,9 +140,7 @@ pub fn decrypt_bytes_stream_mode(
     if hash == HashMode::CalculateHash {
         crate::header::hash(
             &mut hasher,
-            &header.salt,
-            &header.nonce,
-            &header.header_type,
+            &header
         );
     }
 

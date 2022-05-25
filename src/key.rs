@@ -12,7 +12,11 @@ use secrecy::Zeroize;
 
 // this handles argon2 hashing with the provided key
 // it returns the key hashed with a specified salt
-pub fn argon2_hash(raw_key: Secret<Vec<u8>>, salt: &[u8; SALT_LEN], version: &HeaderVersion) -> Result<Secret<[u8; 32]>> {
+pub fn argon2_hash(
+    raw_key: Secret<Vec<u8>>,
+    salt: &[u8; SALT_LEN],
+    version: &HeaderVersion,
+) -> Result<Secret<[u8; 32]>> {
     let mut key = [0u8; 32];
 
     let params = match version {
@@ -25,11 +29,7 @@ pub fn argon2_hash(raw_key: Secret<Vec<u8>>, salt: &[u8; SALT_LEN], version: &He
         }
     };
 
-    let argon2 = Argon2::new(
-        argon2::Algorithm::Argon2id,
-        argon2::Version::V0x13,
-        params,
-    );
+    let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
     let result = argon2.hash_password_into(raw_key.expose_secret(), salt, &mut key);
     drop(raw_key);
 

@@ -1,6 +1,6 @@
 use crate::{
     global::parameters::{
-        Algorithm, BenchMode, CipherMode, HeaderVersion, HeaderData, HeaderType, OutputFile,
+        Algorithm, BenchMode, CipherMode, HeaderData, HeaderType, HeaderVersion, OutputFile,
         SkipMode,
     },
     global::SALT_LEN,

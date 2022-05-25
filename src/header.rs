@@ -234,7 +234,8 @@ pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
         exit(0);
     }
 
-    if !get_answer("This can be destructive! Make sure you dumped the header first. Would you like to continue?", false, skip == SkipMode::HidePrompts)? {
+    let prompt = "This can be destructive! Make sure you dumped the header first. Would you like to continue?";
+    if !get_answer(prompt, false, skip == SkipMode::HidePrompts)? {
         exit(0);
     }
 

@@ -1,5 +1,5 @@
 use crate::global::crypto::DecryptStreamCiphers;
-use crate::global::parameters::{BenchMode, Algorithm, HashMode, OutputFile, HeaderType, CipherMode};
+use crate::global::parameters::{BenchMode, Algorithm, HashMode, OutputFile, HeaderType, CipherMode, HeaderData};
 use crate::global::{BLOCK_SIZE, SALT_LEN, VERSION};
 use crate::key::hash_key;
 use aead::stream::DecryptorLE31;
@@ -70,6 +70,7 @@ pub fn decrypt_bytes_stream_mode(
     input: &mut File,
     output: &mut OutputFile,
     raw_key: Secret<Vec<u8>>,
+    header: HeaderData,
     bench: BenchMode,
     hash: HashMode,
 ) -> Result<()> {
@@ -77,8 +78,6 @@ pub fn decrypt_bytes_stream_mode(
     // input
     //     .read(&mut salt)
     //     .context("Unable to read salt from the file")?;
-
-    let header = crate::header::read_from_file(input)?;
 
     let mut hasher = blake3::Hasher::new();
 

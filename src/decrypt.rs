@@ -3,6 +3,7 @@ use crate::decrypt::crypto::decrypt_bytes_stream_mode;
 use crate::file::get_encrypted_data;
 use crate::file::write_bytes;
 use crate::global::parameters::BenchMode;
+use crate::global::parameters::CipherMode;
 use crate::global::parameters::CryptoParameters;
 use crate::global::parameters::EraseMode;
 use crate::global::parameters::HashMode;
@@ -103,21 +104,27 @@ pub fn stream_mode(
 ) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
-    let file_size = input_file
-        .metadata()
-        .with_context(|| format!("Unable to get input file metadata: {}", input))?
-        .len();
+    // let file_size = input_file
+    //     .metadata()
+    //     .with_context(|| format!("Unable to get input file metadata: {}", input))?
+    //     .len();
 
     // +16 for AEAD tag, +SALT_LEN to account for salt, +4 for the extra 4 bytes of nonce stored with each block
     // +8 to account for nonce itself (assuming the smallest nonce, which is aes-256-gcm's)
-    if file_size
-        <= (BLOCK_SIZE + 24 + SALT_LEN)
-            .try_into()
-            .context("Unable to parse stream block size as u64")?
-    {
-        println!(
-            "Encrypted data size is less than the stream block size - redirecting to memory mode"
-        );
+    // if file_size
+    //     <= (BLOCK_SIZE + 24 + SALT_LEN)
+    //         .try_into()
+    //         .context("Unable to parse stream block size as u64")?
+    // {
+    //     println!(
+    //         "Encrypted data size is less than the stream block size - redirecting to memory mode"
+    //     );
+    //     return memory_mode(input, output, keyfile, params);
+    // }
+
+    let header = crate::header::read_from_file(&mut input_file)?;
+
+    if header.header_type.cipher_mode == CipherMode::MemoryMode {
         return memory_mode(input, output, keyfile, params);
     }
 
@@ -151,6 +158,7 @@ pub fn stream_mode(
         &mut input_file,
         &mut output_file,
         raw_key,
+        header,
         params.bench,
         params.hash_mode,
     )?;

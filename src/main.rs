@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
-use global::{DirectoryMode, HiddenFilesMode, PrintMode, SkipMode, BLOCK_SIZE, PackMode};
-use param_handler::{header_type_handler, param_handler};
+use global::parameters::{DirectoryMode, HiddenFilesMode, PrintMode, SkipMode, PackMode};
+use global::BLOCK_SIZE;
+use global::parameters::{header_type_handler, parameter_handler};
 use std::result::Result::Ok;
 
 mod cli;
@@ -13,7 +14,7 @@ mod hashing;
 mod header;
 mod key;
 mod pack;
-mod param_handler;
+mod parameters;
 mod prompt;
 
 #[allow(clippy::too_many_lines)]
@@ -22,7 +23,7 @@ fn main() -> Result<()> {
 
     match matches.subcommand() {
         Some(("encrypt", sub_matches)) => {
-            let (keyfile, params) = param_handler(sub_matches)?;
+            let (keyfile, params) = parameter_handler(sub_matches)?;
 
             let result = if sub_matches.is_present("memory") {
                 crate::encrypt::memory_mode(
@@ -51,7 +52,7 @@ fn main() -> Result<()> {
             return result;
         }
         Some(("decrypt", sub_matches)) => {
-            let (keyfile, params) = param_handler(sub_matches)?;
+            let (keyfile, params) = parameter_handler(sub_matches)?;
 
             let result = if sub_matches.is_present("memory") {
                 crate::decrypt::memory_mode(
@@ -173,7 +174,7 @@ fn main() -> Result<()> {
 
                     let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
 
-                    let (keyfile, params) = param_handler(sub_matches_encrypt)?;
+                    let (keyfile, params) = parameter_handler(sub_matches_encrypt)?;
                     let pack_params = PackMode { compression_level, dir_mode, exclude: excluded, hidden, memory: sub_matches_encrypt.is_present("memory"), print_mode };
                     
                     pack::encrypt_directory(
@@ -197,7 +198,7 @@ fn main() -> Result<()> {
 
                     let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
 
-                    let (keyfile, params) = param_handler(sub_matches_decrypt)?;
+                    let (keyfile, params) = parameter_handler(sub_matches_decrypt)?;
 
                     pack::decrypt_directory(
                         sub_matches_decrypt

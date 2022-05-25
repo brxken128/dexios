@@ -12,7 +12,8 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::{DirectoryMode, Parameters, PrintMode, SkipMode, BLOCK_SIZE, PackMode},
+    global::parameters::{DirectoryMode, CryptoParameters, PrintMode, SkipMode, PackMode},
+    global::{BLOCK_SIZE, SALT_LEN},
     prompt::get_answer,
 };
 
@@ -21,7 +22,7 @@ pub fn encrypt_directory(
     output: &str,
     keyfile: &str,
     pack_params: PackMode,
-    params: &Parameters,
+    params: &CryptoParameters,
 ) -> Result<()> {
     if pack_params.dir_mode == DirectoryMode::Recursive {
         println!("Traversing {} recursively", input);
@@ -149,7 +150,7 @@ pub fn decrypt_directory(
     keyfile: &str, // for decrypt function
     memory: bool,  // memory or stream mode
     print_mode: &PrintMode,
-    params: &Parameters, // params for decrypt function
+    params: &CryptoParameters, // params for decrypt function
 ) -> Result<()> {
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
 

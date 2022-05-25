@@ -1,7 +1,7 @@
-use crate::global::CipherType;
-use crate::global::DirectoryMode;
-use crate::global::HiddenFilesMode;
-use crate::global::PrintMode;
+use crate::global::parameters::CipherType;
+use crate::global::parameters::DirectoryMode;
+use crate::global::parameters::HiddenFilesMode;
+use crate::global::parameters::PrintMode;
 use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
 use secrecy::Secret;

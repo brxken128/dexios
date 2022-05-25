@@ -1,5 +1,5 @@
 use crate::file::get_bytes;
-use crate::global::PasswordMode;
+use crate::global::parameters::PasswordMode;
 use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
 use argon2::Argon2;

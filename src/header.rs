@@ -1,5 +1,6 @@
 use crate::{
-    global::{BenchMode, CipherType, DexiosMode, HeaderType, SkipMode, SALT_LEN},
+    global::parameters::{BenchMode, CipherType, CipherMode, HeaderType, SkipMode},
+    global::SALT_LEN,
     prompt::{get_answer, overwrite_check},
 };
 use anyhow::{Context, Result};
@@ -12,7 +13,7 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
         CipherType::XChaCha20Poly1305 => 24,
     };
 
-    if header_info.dexios_mode == DexiosMode::StreamMode {
+    if header_info.dexios_mode == CipherMode::StreamMode {
         nonce_len -= 4; // the last 4 bytes are dynamic in stream mode
     }
 

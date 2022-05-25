@@ -2,12 +2,12 @@ use crate::decrypt::crypto::decrypt_bytes_memory_mode;
 use crate::decrypt::crypto::decrypt_bytes_stream_mode;
 use crate::file::get_encrypted_data;
 use crate::file::write_bytes;
-use crate::global::BenchMode;
-use crate::global::EraseMode;
-use crate::global::HashMode;
-use crate::global::OutputFile;
-use crate::global::Parameters;
-use crate::global::SkipMode;
+use crate::global::parameters::BenchMode;
+use crate::global::parameters::EraseMode;
+use crate::global::parameters::HashMode;
+use crate::global::parameters::OutputFile;
+use crate::global::parameters::CryptoParameters;
+use crate::global::parameters::SkipMode;
 use crate::global::BLOCK_SIZE;
 use crate::global::SALT_LEN;
 use crate::hashing::hash_data_blake3;
@@ -23,7 +23,7 @@ mod crypto;
 
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
-pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters) -> Result<()> {
+pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &CryptoParameters) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
@@ -90,7 +90,7 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
 
 // this function is for decrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
-pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters) -> Result<()> {
+pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &CryptoParameters) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
     let file_size = input_file

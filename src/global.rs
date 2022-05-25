@@ -8,141 +8,14 @@ use std::fs::File;
 use std::io::Result;
 use std::io::Write;
 
+pub mod parameters;
+
 // this file sets constants that are used throughout the codebase
 // these can be customised easily by anyone to suit their own needs
 pub const BLOCK_SIZE: usize = 1_048_576; // 1024*1024 bytes
 pub const SALT_LEN: usize = 16; // bytes
 
-pub struct Parameters {
-    pub hash_mode: HashMode,
-    pub skip: SkipMode,
-    pub bench: BenchMode,
-    pub password: PasswordMode,
-    pub erase: EraseMode,
-    pub cipher_type: CipherType,
-}
 
-pub struct HeaderType {
-    pub dexios_mode: DexiosMode,
-    pub cipher_type: CipherType,
-}
-
-pub struct PackMode {
-    pub dir_mode: DirectoryMode,
-    pub hidden: HiddenFilesMode,
-    pub exclude: Vec<String>,
-    pub memory: bool,
-    pub compression_level: i32,
-    pub print_mode: PrintMode,
-}
-
-#[derive(PartialEq, Eq)]
-pub enum DexiosMode {
-    // could do with a better name
-    MemoryMode,
-    StreamMode,
-}
-
-impl std::fmt::Display for DexiosMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
-            DexiosMode::MemoryMode => write!(f, "memory mode"),
-            DexiosMode::StreamMode => write!(f, "stream mode"),
-        }
-    }
-}
-
-#[derive(PartialEq, Eq, Clone, Copy)]
-pub enum DirectoryMode {
-    Singular,
-    Recursive,
-}
-
-#[derive(PartialEq, Eq)]
-pub enum HiddenFilesMode {
-    Include,
-    Exclude,
-}
-
-#[derive(PartialEq, Eq)]
-pub enum PrintMode {
-    Verbose,
-    Quiet,
-}
-
-#[derive(PartialEq, Eq, Clone, Copy)]
-pub enum EraseMode {
-    EraseFile(i32),
-    IgnoreFile(i32),
-}
-
-impl EraseMode {
-    pub fn get_passes(self) -> i32 {
-        match self {
-            EraseMode::EraseFile(passes) => passes,
-            EraseMode::IgnoreFile(_) => 0,
-        }
-    }
-}
-
-#[derive(PartialEq, Eq, Clone, Copy)]
-pub enum HashMode {
-    CalculateHash,
-    NoHash,
-}
-
-#[derive(PartialEq, Eq, Copy, Clone)]
-pub enum SkipMode {
-    ShowPrompts,
-    HidePrompts,
-}
-
-#[derive(PartialEq, Eq, Copy, Clone)]
-pub enum BenchMode {
-    WriteToFilesystem,
-    BenchmarkInMemory,
-}
-
-#[derive(PartialEq, Eq, Copy, Clone)]
-pub enum PasswordMode {
-    ForceUserProvidedPassword,
-    NormalKeySourcePriority,
-}
-
-pub enum OutputFile {
-    Some(File),
-    None,
-}
-
-impl OutputFile {
-    pub fn write_all(&mut self, buf: &[u8]) -> Result<()> {
-        match self {
-            OutputFile::Some(file) => file.write_all(buf),
-            OutputFile::None => Ok(()),
-        }
-    }
-    pub fn flush(&mut self) -> Result<()> {
-        match self {
-            OutputFile::Some(file) => file.flush(),
-            OutputFile::None => Ok(()),
-        }
-    }
-}
-
-#[derive(Copy, Clone)]
-pub enum CipherType {
-    AesGcm,
-    XChaCha20Poly1305,
-}
-
-impl std::fmt::Display for CipherType {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
-            CipherType::AesGcm => write!(f, "AES-256-GCM"),
-            CipherType::XChaCha20Poly1305 => write!(f, "XChaCha20-Poly1305"),
-        }
-    }
-}
 
 pub enum EncryptStreamCiphers {
     AesGcm(Box<EncryptorLE31<Aes256Gcm>>),

@@ -17,7 +17,7 @@ mod crypto;
 
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
-pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &CryptoParams) -> Result<()> {
+pub fn memory_mode(input: &str, output: &str, params: &CryptoParams) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
@@ -36,7 +36,7 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &CryptoPara
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
-    let raw_key = get_user_key(keyfile, false, params.password)?;
+    let raw_key = get_user_key(params.keyfile.clone(), false, params.password)?;
 
     println!(
         "Decrypting {} in memory mode (this may take a while)",
@@ -76,7 +76,7 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &CryptoPara
 
 // this function is for decrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
-pub fn stream_mode(input: &str, output: &str, header_file: &str, keyfile: &str, params: &CryptoParams) -> Result<()> {
+pub fn stream_mode(input: &str, output: &str, header_file: &str, params: &CryptoParams) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
@@ -91,7 +91,7 @@ pub fn stream_mode(input: &str, output: &str, header_file: &str, keyfile: &str, 
     
     if header.header_type.cipher_mode == CipherMode::MemoryMode {
         drop(input_file);
-        return memory_mode(input, output, keyfile, params);
+        return memory_mode(input, output, params);
     }
 
     if !overwrite_check(output, params.skip, params.bench)? {
@@ -113,7 +113,7 @@ pub fn stream_mode(input: &str, output: &str, header_file: &str, keyfile: &str, 
         OutputFile::None
     };
 
-    let raw_key = get_user_key(keyfile, false, params.password)?;
+    let raw_key = get_user_key(params.keyfile.clone(), false, params.password)?;
 
     println!(
         "Decrypting {} in stream mode with {} (this may take a while)",

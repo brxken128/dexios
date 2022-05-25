@@ -11,6 +11,7 @@ pub struct CryptoParams {
     pub bench: BenchMode,
     pub password: PasswordMode,
     pub erase: EraseMode,
+    pub keyfile: KeyFile,
 }
 
 // the information needed to easily serialise a header
@@ -92,6 +93,12 @@ pub enum OutputFile {
     None,
 }
 
+#[derive(PartialEq, Clone)]
+pub enum KeyFile {
+    Some(String),
+    None,
+}
+
 #[derive(Copy, Clone)]
 pub enum Algorithm {
     AesGcm,
@@ -103,6 +110,15 @@ impl EraseMode {
         match self {
             EraseMode::EraseFile(passes) => passes,
             EraseMode::IgnoreFile(_) => 0,
+        }
+    }
+}
+
+impl KeyFile {
+    pub fn get_contents(&self) -> Result<String> {
+        match self {
+            KeyFile::Some(data) => Ok(data.to_string()),
+            KeyFile::None => Err(anyhow::anyhow!("Tried using a keyfile when one wasn't provided")), // should never happen
         }
     }
 }
@@ -147,13 +163,11 @@ impl std::fmt::Display for CipherMode {
     }
 }
 
-pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<(&str, CryptoParams)> {
+pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
     let keyfile = if sub_matches.is_present("keyfile") {
-        sub_matches
-            .value_of("keyfile")
-            .context("No keyfile/invalid text provided")?
+        KeyFile::Some(sub_matches.value_of("keyfile").context("No keyfile/invalid text provided")?.to_string())
     } else {
-        ""
+        KeyFile::None
     };
 
     let hash_mode = if sub_matches.is_present("hash") {
@@ -205,14 +219,14 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<(&str, CryptoParams
         PasswordMode::NormalKeySourcePriority
     };
 
-    Ok((
-        keyfile,
+    Ok(
         CryptoParams {
+            keyfile,
             hash_mode,
             skip,
             bench,
             password,
             erase,
         },
-    ))
+    )
 }

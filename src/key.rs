@@ -1,5 +1,6 @@
 use crate::file::get_bytes;
 use crate::global::parameters::HeaderVersion;
+use crate::global::parameters::KeyFile;
 use crate::global::parameters::PasswordMode;
 use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
@@ -73,15 +74,16 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
 // if not, just get the key once
 #[allow(clippy::module_name_repetitions)] // possibly temporary - need a way to handle this (maybe key::handler?)
 pub fn get_user_key(
-    keyfile: &str,
+    keyfile: KeyFile,
     validation: bool,
-    password: PasswordMode,
+    password_mode: PasswordMode,
 ) -> Result<Secret<Vec<u8>>> {
-    Ok(if !keyfile.is_empty() {
-        println!("Reading key from {}", keyfile);
-        get_bytes(keyfile)?
+    Ok(if keyfile != KeyFile::None {
+        let keyfile_name = keyfile.get_contents()?;
+        println!("Reading key from {}", keyfile_name);
+        get_bytes(&keyfile_name)?
     } else if std::env::var("DEXIOS_KEY").is_ok()
-        && password == PasswordMode::NormalKeySourcePriority
+        && password_mode == PasswordMode::NormalKeySourcePriority
     {
         println!("Reading key from DEXIOS_KEY environment variable");
         SecretVec::new(

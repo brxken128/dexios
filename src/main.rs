@@ -22,7 +22,7 @@ fn main() -> Result<()> {
 
     match matches.subcommand() {
         Some(("encrypt", sub_matches)) => {
-            let (keyfile, params) = parameter_handler(sub_matches)?;
+            let params = parameter_handler(sub_matches)?;
             let algorithm = if sub_matches.is_present("gcm") {
                 Algorithm::AesGcm
             } else {
@@ -37,7 +37,6 @@ fn main() -> Result<()> {
                     sub_matches
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
-                    keyfile,
                     &params,
                     algorithm,
                 );
@@ -45,7 +44,7 @@ fn main() -> Result<()> {
             return result;
         }
         Some(("decrypt", sub_matches)) => {
-            let (keyfile, params) = parameter_handler(sub_matches)?;
+            let params = parameter_handler(sub_matches)?;
             let header = if sub_matches.is_present("header") {
                 sub_matches
                     .value_of("header")
@@ -63,7 +62,6 @@ fn main() -> Result<()> {
                     .value_of("output")
                     .context("No output file/invalid text provided")?,
                     header,
-                keyfile,
                 &params,
             );
 
@@ -161,7 +159,7 @@ fn main() -> Result<()> {
 
                     let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
 
-                    let (keyfile, params) = parameter_handler(sub_matches_encrypt)?;
+                    let params = parameter_handler(sub_matches_encrypt)?;
                     let pack_params = PackMode {
                         compression_level,
                         dir_mode,
@@ -183,7 +181,6 @@ fn main() -> Result<()> {
                         sub_matches_encrypt
                             .value_of("output")
                             .context("No output file/invalid text provided")?,
-                        keyfile,
                         &pack_params,
                         &params,
                         algorithm,
@@ -198,7 +195,7 @@ fn main() -> Result<()> {
 
                     let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
 
-                    let (keyfile, params) = parameter_handler(sub_matches_decrypt)?;
+                    let params = parameter_handler(sub_matches_decrypt)?;
                     let header = if sub_matches_decrypt.is_present("header") {
                         sub_matches
                             .value_of("header")
@@ -216,7 +213,6 @@ fn main() -> Result<()> {
                             .value_of("output")
                             .context("No output file/invalid text provided")?,
                         header,
-                        keyfile,
                         &print_mode,
                         &params,
                     )?;

@@ -93,7 +93,7 @@ pub enum OutputFile {
     None,
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq)]
 pub enum KeyFile {
     Some(String),
     None,
@@ -232,11 +232,11 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
     };
 
     Ok(CryptoParams {
-        keyfile,
         hash_mode,
         skip,
         bench,
         password,
         erase,
+        keyfile,
     })
 }

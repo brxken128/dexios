@@ -21,7 +21,7 @@ mod crypto;
 pub fn memory_mode(
     input: &str,
     output: &str,
-    header_file: HeaderFile,
+    header_file: &HeaderFile,
     params: &CryptoParams,
 ) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
@@ -31,12 +31,12 @@ pub fn memory_mode(
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let header = match &header_file {
+    let header = match header_file {
         HeaderFile::Some(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
             input_file
-                .read_exact(&mut vec![0u8; 64])
+                .read_exact(&mut [0u8; 64])
                 .with_context(|| format!("Unable to seek input file: {}", input))?;
             crate::header::read_from_file(&mut header_file)?
         }
@@ -52,7 +52,7 @@ pub fn memory_mode(
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
-    let raw_key = get_user_key(params.keyfile.clone(), false, params.password)?;
+    let raw_key = get_user_key(&params.keyfile, false, params.password)?;
 
     println!(
         "Decrypting {} in memory mode (this may take a while)",
@@ -95,18 +95,18 @@ pub fn memory_mode(
 pub fn stream_mode(
     input: &str,
     output: &str,
-    header_file: HeaderFile,
+    header_file: &HeaderFile,
     params: &CryptoParams,
 ) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let header = match &header_file {
+    let header = match header_file {
         HeaderFile::Some(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
             input_file
-                .read_exact(&mut vec![0u8; 64])
+                .read_exact(&mut [0u8; 64])
                 .with_context(|| format!("Unable to seek input file: {}", input))?;
             crate::header::read_from_file(&mut header_file)?
         }
@@ -137,7 +137,7 @@ pub fn stream_mode(
         OutputFile::None
     };
 
-    let raw_key = get_user_key(params.keyfile.clone(), false, params.password)?;
+    let raw_key = get_user_key(&params.keyfile, false, params.password)?;
 
     println!(
         "Decrypting {} in stream mode with {} (this may take a while)",

@@ -29,7 +29,7 @@ pub fn memory_mode(
         exit(0);
     }
 
-    let raw_key = get_user_key(params.keyfile.clone(), true, params.password)?;
+    let raw_key = get_user_key(&params.keyfile, true, params.password)?;
 
     let read_start_time = Instant::now();
     let file_contents = get_bytes(input)?;
@@ -114,7 +114,7 @@ pub fn stream_mode(
         OutputFile::None
     };
 
-    let raw_key = get_user_key(params.keyfile.clone(), true, params.password)?;
+    let raw_key = get_user_key(&params.keyfile, true, params.password)?;
 
     println!(
         "Encrypting {} in stream mode with {} (this may take a while)",

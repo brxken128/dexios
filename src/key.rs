@@ -74,11 +74,11 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
 // if not, just get the key once
 #[allow(clippy::module_name_repetitions)] // possibly temporary - need a way to handle this (maybe key::handler?)
 pub fn get_user_key(
-    keyfile: KeyFile,
+    keyfile: &KeyFile,
     validation: bool,
     password_mode: PasswordMode,
 ) -> Result<Secret<Vec<u8>>> {
-    Ok(if keyfile != KeyFile::None {
+    Ok(if keyfile != &KeyFile::None {
         let keyfile_name = keyfile.get_contents()?;
         println!("Reading key from {}", keyfile_name);
         get_bytes(&keyfile_name)?

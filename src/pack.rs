@@ -152,7 +152,7 @@ pub fn encrypt_directory(
 pub fn decrypt_directory(
     input: &str,        // encrypted zip file
     output: &str,       // directory
-    header: HeaderFile, // for decrypt function
+    header: &HeaderFile, // for decrypt function
     print_mode: &PrintMode,
     params: &CryptoParams, // params for decrypt function
 ) -> Result<()> {

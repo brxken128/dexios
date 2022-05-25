@@ -64,7 +64,7 @@ fn main() -> Result<()> {
                 sub_matches
                     .value_of("output")
                     .context("No output file/invalid text provided")?,
-                header,
+                &header,
                 &params,
             );
 
@@ -217,7 +217,7 @@ fn main() -> Result<()> {
                         sub_matches_decrypt
                             .value_of("output")
                             .context("No output file/invalid text provided")?,
-                        header,
+                        &header,
                         &print_mode,
                         &params,
                     )?;

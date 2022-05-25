@@ -115,7 +115,7 @@ pub fn get_matches() -> clap::ArgMatches {
                 .long("header")
                 .value_name("file")
                 .takes_value(true)
-                .help("use a headerfile that was dumped"),
+                .help("use a header file that was dumped"),
         )
         .arg(
             Arg::new("erase")

@@ -39,7 +39,7 @@ fn main() -> Result<()> {
                         .context("No output file/invalid text provided")?,
                     keyfile,
                     &params,
-                    &algorithm,
+                    algorithm,
                 );
 
             return result;
@@ -177,7 +177,7 @@ fn main() -> Result<()> {
                         keyfile,
                         pack_params,
                         &params,
-                        &algorithm,
+                        algorithm,
                     )?;
                 }
                 Some("decrypt") => {

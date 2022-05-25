@@ -21,7 +21,7 @@ use std::time::Instant;
 // it hashes the key with the supplised salt, and decrypts all of the data
 // it returns the decrypted bytes
 pub fn decrypt_bytes_memory_mode(
-    header: HeaderData,
+    header: &HeaderData,
     data: &[u8],
     output: &mut OutputFile,
     raw_key: Secret<Vec<u8>>,
@@ -73,7 +73,7 @@ pub fn decrypt_bytes_memory_mode(
             &header.nonce,
             &header.header_type,
         );
-        hasher.update(&data);
+        hasher.update(data);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
         println!(
@@ -102,7 +102,7 @@ pub fn decrypt_bytes_stream_mode(
     input: &mut File,
     output: &mut OutputFile,
     raw_key: Secret<Vec<u8>>,
-    header: HeaderData,
+    header: &HeaderData,
     bench: BenchMode,
     hash: HashMode,
 ) -> Result<()> {

@@ -24,7 +24,7 @@ pub fn memory_mode(
     output: &str,
     keyfile: &str,
     params: &CryptoParameters,
-    algorithm: &Algorithm,
+    algorithm: Algorithm,
 ) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
@@ -58,7 +58,7 @@ pub fn memory_mode(
         raw_key,
         params.bench,
         params.hash_mode,
-        *algorithm,
+        algorithm,
     )?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
@@ -80,7 +80,7 @@ pub fn stream_mode(
     output: &str,
     keyfile: &str,
     params: &CryptoParameters,
-    algorithm: &Algorithm,
+    algorithm: Algorithm,
 ) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
@@ -130,7 +130,7 @@ pub fn stream_mode(
         raw_key,
         params.bench,
         params.hash_mode,
-        *algorithm,
+        algorithm,
     )?;
     let encrypt_duration = encrypt_start_time.elapsed();
     match params.bench {

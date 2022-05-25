@@ -135,9 +135,9 @@ pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
     let mut mode_info = [0u8; 2];
     let mut salt = [0u8; SALT_LEN];
 
-    file.read(&mut version_info)?;
-    file.read(&mut cipher_info)?;
-    file.read(&mut mode_info)?;
+    file.read_exact(&mut version_info)?;
+    file.read_exact(&mut cipher_info)?;
+    file.read_exact(&mut mode_info)?;
 
     let header_info = deserialise(&version_info, &cipher_info, &mode_info)?;
     match header_info.dexios_version {
@@ -146,10 +146,10 @@ pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
             let mut nonce = vec![0u8; nonce_len];
             let mut _padding = vec![0u8; 26 - nonce_len];
 
-            file.read(&mut salt)?;
-            file.read(&mut [0; 16])?; // read and subsequently discard the next 16 bytes
-            file.read(&mut nonce)?;
-            file.read(&mut _padding)?;
+            file.read_exact(&mut salt)?;
+            file.read_exact(&mut [0; 16])?; // read and subsequently discard the next 16 bytes
+            file.read_exact(&mut nonce)?;
+            file.read_exact(&mut _padding)?;
 
             Ok(HeaderData {
                 header_type: header_info,

@@ -57,7 +57,7 @@ pub fn memory_mode(
 
     let decrypt_start_time = Instant::now();
     decrypt_bytes_memory_mode(
-        header,
+        &header,
         &encrypted_data,
         &mut output_file,
         raw_key,
@@ -124,7 +124,7 @@ pub fn stream_mode(
         &mut input_file,
         &mut output_file,
         raw_key,
-        header,
+        &header,
         params.bench,
         params.hash_mode,
     )?;

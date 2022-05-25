@@ -25,7 +25,7 @@ pub fn encrypt_directory(
     keyfile: &str,
     pack_params: PackMode,
     params: &CryptoParameters,
-    algorithm: &Algorithm,
+    algorithm: Algorithm,
 ) -> Result<()> {
     if pack_params.dir_mode == DirectoryMode::Recursive {
         println!("Traversing {} recursively", input);

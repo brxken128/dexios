@@ -7,7 +7,7 @@ use crate::global::parameters::CryptoParams;
 use crate::global::parameters::EraseMode;
 use crate::global::parameters::OutputFile;
 use crate::global::BLOCK_SIZE;
-use crate::key::get_user_key;
+use crate::key::get_secret;
 use crate::prompt::overwrite_check;
 use anyhow::Context;
 use anyhow::{Ok, Result};
@@ -29,7 +29,7 @@ pub fn memory_mode(
         exit(0);
     }
 
-    let raw_key = get_user_key(&params.keyfile, true, params.password)?;
+    let raw_key = get_secret(&params.keyfile, true, params.password)?;
 
     let read_start_time = Instant::now();
     let file_contents = get_bytes(input)?;
@@ -105,7 +105,7 @@ pub fn stream_mode(
         ));
     }
 
-    let raw_key = get_user_key(&params.keyfile, true, params.password)?;
+    let raw_key = get_secret(&params.keyfile, true, params.password)?;
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(

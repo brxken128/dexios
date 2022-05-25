@@ -1,10 +1,11 @@
 use anyhow::{Ok, Result};
-
 use crate::global::BLOCK_SIZE;
-
 use anyhow::Context;
 use std::io::Read;
 
+// this hashes the input file
+// it reads it in blocks, updates the hasher, and finalises/displays the hash
+// it's used by hash-standalone mode
 pub fn hash_stream(input: &str) -> Result<()> {
     let mut input_file =
         std::fs::File::open(input).with_context(|| format!("Unable to open file: {}", input))?;
@@ -31,6 +32,9 @@ pub fn hash_stream(input: &str) -> Result<()> {
     Ok(())
 }
 
+// this hashes the input file
+// it reads the file all at once, hashes it and displays the hash
+// it's used by hash-standalone mode
 pub fn hash_memory(input: &str) -> Result<()> {
     let mut input_file =
         std::fs::File::open(input).with_context(|| format!("Unable to open file: {}", input))?;

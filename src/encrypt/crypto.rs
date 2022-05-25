@@ -27,8 +27,8 @@ fn gen_salt() -> [u8; SALT_LEN] {
 
 // this encrypts data in memory mode
 // it takes the data and a Secret<> key
-// it generates the 12/24 byte nonce, hashes the key and encrypts the data
-// it returns the salt, nonce, and encrypted bytes
+// it generates the nonce, hashes the key and encrypts the data
+// it writes the header and then the encrypted data to the output file
 pub fn encrypt_bytes_memory_mode(
     data: Secret<Vec<u8>>,
     output: &mut OutputFile,
@@ -119,8 +119,8 @@ pub fn encrypt_bytes_memory_mode(
 }
 
 // this encrypts data in stream mode
-// it takes an input file handle, an output file handle, a Secret<> key, and bools for if we're in bench/hash mode
-// it generates the 8 byte nonce, creates the encryption cipher and then reads the file in blocks
+// it takes an input file handle, an output file handle, a Secret<> key, and enums for specific modes
+// it generates the nonce, creates the encryption cipher and then reads the file in blocks
 // on each read, it encrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
 // it also handles the prep of each individual stream, via the match statement
 pub fn encrypt_bytes_stream_mode(

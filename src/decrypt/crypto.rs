@@ -94,10 +94,9 @@ pub fn decrypt_bytes_memory_mode(
 }
 
 // this decrypts data in stream mode
-// it takes an input file handle, an output file handle, a Secret<> key, and bools for if we're in bench/hash mode
-// it reads the salt and the 8 byte nonce, creates the encryption cipher and then reads the file in blocks (including the gcm tag)
+// it takes an input file handle, an output file handle, a Secret<> key, and enums with specific modes
+// it creates the encryption cipher and then reads the file in blocks (including the gcm tag)
 // on each read, it decrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
-// this could probably do with some delegation - it does a lot of stuff on it's own
 pub fn decrypt_bytes_stream_mode(
     input: &mut File,
     output: &mut OutputFile,

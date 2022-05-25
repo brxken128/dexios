@@ -13,6 +13,7 @@ use secrecy::Zeroize;
 
 // this handles argon2 hashing with the provided key
 // it returns the key hashed with a specified salt
+// it also ensures that raw_key is zeroed out
 pub fn argon2_hash(
     raw_key: Secret<Vec<u8>>,
     salt: &[u8; SALT_LEN],
@@ -72,8 +73,9 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
 // if neither of the above are true, ask the user for their specified key
 // if validation is true, call get_password_with_validation and require it be entered twice
 // if not, just get the key once
+// it also checks that the key is not empty
 #[allow(clippy::module_name_repetitions)] // possibly temporary - need a way to handle this (maybe key::handler?)
-pub fn get_user_key(
+pub fn get_secret(
     keyfile: &KeyFile,
     validation: bool,
     password_mode: PasswordMode,

@@ -19,6 +19,11 @@ use crate::{
     prompt::get_answer,
 };
 
+// this first indexes the input directory
+// once it has the total number of files/folders, it creates a temporary zip file
+// it compresses all of the files into the temporary archive
+// once compressed, it encrypts the zip file
+// it erases the temporary archive afterwards, to stop any residual data from remaining
 #[allow(clippy::too_many_lines)]
 pub fn encrypt_directory(
     input: &str,
@@ -149,6 +154,10 @@ pub fn encrypt_directory(
     Ok(())
 }
 
+
+// this first decrypts the input file to a temporary zip file
+// it then unpacks that temporary zip file to the target directory
+// once finished, it erases the temporary file to avoid any residual data
 pub fn decrypt_directory(
     input: &str,         // encrypted zip file
     output: &str,        // directory

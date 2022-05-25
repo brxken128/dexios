@@ -6,7 +6,7 @@ use crate::global::parameters::CryptoParams;
 use crate::global::parameters::EraseMode;
 use crate::global::parameters::HeaderFile;
 use crate::global::parameters::OutputFile;
-use crate::key::get_user_key;
+use crate::key::get_secret;
 use crate::prompt::overwrite_check;
 use anyhow::{Context, Ok, Result};
 use std::fs::File;
@@ -18,6 +18,7 @@ mod crypto;
 
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
+// it also manages using a detached header file if selected
 pub fn memory_mode(
     input: &str,
     output: &str,
@@ -52,7 +53,7 @@ pub fn memory_mode(
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
-    let raw_key = get_user_key(&params.keyfile, false, params.password)?;
+    let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
     println!(
         "Decrypting {} in memory mode (this may take a while)",
@@ -92,6 +93,7 @@ pub fn memory_mode(
 
 // this function is for decrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
+// it also manages using a detached header file if selected
 pub fn stream_mode(
     input: &str,
     output: &str,
@@ -128,7 +130,7 @@ pub fn stream_mode(
         ));
     }
 
-    let raw_key = get_user_key(&params.keyfile, false, params.password)?;
+    let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(

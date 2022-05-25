@@ -11,6 +11,7 @@ use blake3::Hasher;
 use std::{fs::File, io::Write};
 use std::{fs::OpenOptions, io::Read, process::exit};
 
+// this calculates how long the nonce will be, based on the provided input
 fn calc_nonce_len(header_info: &HeaderType) -> usize {
     let mut nonce_len = match header_info.algorithm {
         Algorithm::XChaCha20Poly1305 => 24,
@@ -24,6 +25,8 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
     nonce_len
 }
 
+// this takes information about the header, and serialises it into raw bytes
+// this is the inverse of the deserialise function
 fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
     let version_info = match header_info.header_version {
         HeaderVersion::V1 => {
@@ -56,6 +59,10 @@ fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
     (version_info, algorithm_info, mode_info)
 }
 
+// this writes a header to a file
+// it handles padding and serialising the specific information
+// it ensures the buffer is left at 64 bytes, so other functions can write the data without further hassle
+// !!this could be changed to take a HeaderData struct
 pub fn write_to_file(
     file: &mut OutputFile,
     salt: &[u8; SALT_LEN],
@@ -89,6 +96,8 @@ pub fn write_to_file(
     Ok(())
 }
 
+// this hashes a header with the salt, nonce, and info provided
+// !!this could be changed to take a HeaderData struct, so we can make it easier to use this function
 pub fn hash(hasher: &mut Hasher, salt: &[u8; SALT_LEN], nonce: &[u8], header_info: &HeaderType) {
     match header_info.header_version {
         HeaderVersion::V1 => {
@@ -107,6 +116,8 @@ pub fn hash(hasher: &mut Hasher, salt: &[u8; SALT_LEN], nonce: &[u8], header_inf
     }
 }
 
+// this is used for converting raw bytes from the header to enums that dexios can understand
+// this involves the header version, encryption algorithm/mode, and possibly more in the future
 fn deserialise(
     version_info: [u8; 2],
     algorithm_info: [u8; 2],
@@ -136,6 +147,8 @@ fn deserialise(
     })
 }
 
+// this takes an input file, and gets all of the data necessary from the header of the file
+// it ensures that the buffer starts at 64 bytes, so that other functions can just read encrypted data immediately
 pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
     let mut version_info = [0u8; 2];
     let mut algorithm_info = [0u8; 2];
@@ -173,6 +186,9 @@ pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
     }
 }
 
+// this function dumps the first 64 bytes of
+// the input file into the output file
+// it's used for extracting an encrypted file's header for backups and such
 pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     println!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
 
@@ -197,6 +213,9 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     Ok(())
 }
 
+// this function reads the first 64 bytes (header) from the input file
+// and then overwrites the first 64 bytes of the output file with it
+// this can be used for restoring a dumped header to a file that had it's header stripped
 pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     println!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
     let prompt = format!(
@@ -227,6 +246,8 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     Ok(())
 }
 
+// this wipes the first 64 bytes (header) from the provided file
+// it can be useful for storing the header separate from the file, to make an attacker's life that little bit harder
 pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
     println!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
     let prompt = format!("Are you sure you'd like to wipe the header for {}?", input);

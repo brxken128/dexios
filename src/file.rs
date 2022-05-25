@@ -17,6 +17,10 @@ pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {
     Ok(SecretVec::new(data))
 }
 
+// this indexes all files/folders within a specific path
+// it's used by pack mode
+// it can run recursively if DirectoryMode::Recursive is passed to it
+// it returns the files and directories that it finds
 pub fn get_paths_in_dir(
     name: &str,
     mode: DirectoryMode,

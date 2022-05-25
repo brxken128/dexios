@@ -1,3 +1,8 @@
+// this file contains most of the enum's, structs and associated functions used throughout dexios
+// it includes all of the parameters passed to cryptographic functions
+// it also contains enums/structs relating to headers
+// this file is long, but necessary
+
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 use std::fs::File;

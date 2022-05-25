@@ -2,7 +2,7 @@
 
 ## Dexios - What is it?
 
-Dexios is a fast, secure, and open source command-line encryption tool. It's written entirely in Rust and prioritises security, performance and convenience the most. It uses modern cryptographic algorithms (XChaCha20-Poly1305 and AES-256-GCM), with audited backends to ensure the safety and integrity of your data. It's extremely easy to use Dexios before uploading your files to a cloud service, to ensure that no prying eyes can read them.
+Dexios is a fast, secure, and open source command-line encryption tool. It's written entirely in Rust and prioritises security, performance and convenience the most. It uses modern cryptographic AEADs (XChaCha20-Poly1305 and AES-256-GCM), with audited backends to ensure the safety and integrity of your data. It's extremely easy to use Dexios before uploading your files to a cloud service, to ensure that no prying eyes can read them.
 
 You can install Dexios through cargo, with
 
@@ -32,7 +32,7 @@ Here is a screenshot of Dexios in action! The performance is great (that is a 3.
 
 ## Multiple Files
 
-Dexios itself does not have support for encrypting multiple files, but you can do so with the `find` utility:
+Dexios itself does not have support for encrypting multiple files *individually*, but you can do so with the `find` utility:
 
 ```
 To encrypt all `.mp4` files in a directory, and remove the original files once encrypted:
@@ -44,9 +44,23 @@ To decrypt all `.mp4.enc` files in a directory, and remove the `.enc` suffix:
 find . -type f -iname "*.mp4.enc" -exec sh -c 'dexios -dk keyfile "$0" "${0%.enc}"' {} \;
 ```
 
+To "pack" and then encrypt multiple files, you can use:
+
+```
+dexios pack encrypt /home/user/Documents documents.enc
+
+and
+
+dexios pack decrypt documents.enc /home/user/Documents
+
+"pack decrypt" signifies that you are unpacking
+```
+
 ## Update Status
 
-Dexios will receive frequent updates, and they are always tested before being released. Starting with v7.0.0, there should be no breaking changes made to anything - this means your files will be backwards-compatible, and always supported.
+Dexios will receive frequent updates, and they are always tested before being released.
+
+Version 8.0.0 did make some breaking changes, and we'd like to apologise for this. The previous headers (containing salt, nonce, etc) we not standardised, and varied in size from 24 bytes to 40 bytes. With v8.0.0, this has been changed completely - now each header is the first 64 bytes of the file, and it contains information such as what mode the file was encrypted in, and which AEAD algorithm was used. It also contains a version tag, meaning we can update things while still supporting older files. We apologise for the inconvenience caused.
 
 ## Reporting a Vulnerability
 
@@ -58,15 +72,18 @@ As an alternative, you may contact `brxken128@tutanota.com`
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 8.x.x   | :white_check_mark: |
 | 7.x.x   | :white_check_mark: |
-| 6.x.x   | :white_check_mark: |
+| 6.x.x   | :x:                |
 | 5.0.x   | :x:                |
 | 4.0.x   | :x:                |
 | < 4.0   | :x:                |
 
 ## More Information
 
-Please view the [Github Wiki](https://github.com/brxken128/dexios/wiki) to find all the information related to this project.
+Please view the [Github Wiki](https://github.com/brxken128/dexios/wiki) to find all of the information related to this project.
+
+It receives frequent updates and is the main source of documentation for Dexios.
 
 ### Quick Wiki Links:
 

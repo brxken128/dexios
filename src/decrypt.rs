@@ -46,7 +46,6 @@ pub fn memory_mode(
         input
     );
 
-
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
             File::create(output)
@@ -57,7 +56,14 @@ pub fn memory_mode(
     };
 
     let decrypt_start_time = Instant::now();
-    decrypt_bytes_memory_mode(header, &encrypted_data, &mut output_file, raw_key, params.bench, params.hash_mode)?;
+    decrypt_bytes_memory_mode(
+        header,
+        &encrypted_data,
+        &mut output_file,
+        raw_key,
+        params.bench,
+        params.hash_mode,
+    )?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! [took {:.2}s]",

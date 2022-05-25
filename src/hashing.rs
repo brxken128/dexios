@@ -1,6 +1,6 @@
 use anyhow::{Ok, Result};
 
-use crate::global::{BLOCK_SIZE};
+use crate::global::BLOCK_SIZE;
 
 use anyhow::Context;
 use std::io::Read;

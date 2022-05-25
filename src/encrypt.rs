@@ -42,7 +42,6 @@ pub fn memory_mode(
         input
     );
 
-
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
             File::create(output)
@@ -53,13 +52,19 @@ pub fn memory_mode(
     };
 
     let encrypt_start_time = Instant::now();
-    encrypt_bytes_memory_mode(file_contents, &mut output_file, raw_key, params.bench, params.hash_mode, *algorithm)?;
+    encrypt_bytes_memory_mode(
+        file_contents,
+        &mut output_file,
+        raw_key,
+        params.bench,
+        params.hash_mode,
+        *algorithm,
+    )?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",
         encrypt_duration.as_secs_f32()
     );
-
 
     if params.erase != EraseMode::IgnoreFile(0) {
         crate::erase::secure_erase(input, params.erase.get_passes())?;

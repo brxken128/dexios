@@ -21,7 +21,7 @@ pub struct HeaderType {
 }
 
 pub enum DexiosVersion {
-    V8
+    V8,
 }
 
 // the data used returned after reading/deserialising a header

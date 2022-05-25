@@ -1,5 +1,7 @@
 use crate::global::crypto::EncryptStreamCiphers;
-use crate::global::parameters::{BenchMode, Algorithm, HashMode, OutputFile, HeaderType, CipherMode};
+use crate::global::parameters::{
+    Algorithm, BenchMode, CipherMode, HashMode, HeaderType, OutputFile,
+};
 use crate::global::{BLOCK_SIZE, SALT_LEN, VERSION};
 use crate::key::hash_key;
 use aead::stream::EncryptorLE31;
@@ -37,7 +39,11 @@ pub fn encrypt_bytes_memory_mode(
 ) -> Result<()> {
     let salt = gen_salt();
 
-    let header_type = HeaderType { dexios_version: VERSION, cipher_mode: CipherMode::MemoryMode, algorithm };
+    let header_type = HeaderType {
+        dexios_version: VERSION,
+        cipher_mode: CipherMode::MemoryMode,
+        algorithm,
+    };
 
     let (nonce_bytes, encrypted_bytes) = match algorithm {
         Algorithm::AesGcm => {
@@ -92,14 +98,11 @@ pub fn encrypt_bytes_memory_mode(
         crate::header::write_to_file(output, &salt, &nonce_bytes, &header_type)?;
         output.write_all(&encrypted_bytes)?;
         let write_duration = write_start_time.elapsed();
-        println!(
-            "Wrote to file [took {:.2}s]",
-            write_duration.as_secs_f32()
-        );
+        println!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
     }
 
     let mut hasher = blake3::Hasher::new();
-    if hash == HashMode::CalculateHash { 
+    if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
         crate::header::hash(&mut hasher, &salt, &nonce_bytes, &header_type);
         hasher.update(&encrypted_bytes);
@@ -130,7 +133,11 @@ pub fn encrypt_bytes_stream_mode(
 ) -> Result<()> {
     let salt = gen_salt();
 
-    let header_type = HeaderType { dexios_version: VERSION, cipher_mode: CipherMode::StreamMode, algorithm };
+    let header_type = HeaderType {
+        dexios_version: VERSION,
+        cipher_mode: CipherMode::StreamMode,
+        algorithm,
+    };
 
     let (mut streams, nonce_bytes): (EncryptStreamCiphers, Vec<u8>) = match algorithm {
         Algorithm::AesGcm => {

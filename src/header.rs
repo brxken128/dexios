@@ -1,5 +1,8 @@
 use crate::{
-    global::parameters::{BenchMode, CipherMode, Algorithm, HeaderType, SkipMode, HeaderData, OutputFile, DexiosVersion},
+    global::parameters::{
+        Algorithm, BenchMode, CipherMode, DexiosVersion, HeaderData, HeaderType, OutputFile,
+        SkipMode,
+    },
     global::SALT_LEN,
     prompt::{get_answer, overwrite_check},
 };
@@ -32,35 +35,40 @@ fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
         Algorithm::XChaCha20Poly1305 => {
             let info: [u8; 2] = [0x0E, 0x01];
             info
-        },
+        }
         Algorithm::AesGcm => {
             let info: [u8; 2] = [0x0E, 0x02];
             info
-        },
+        }
     };
 
     let mode_info = match header_info.cipher_mode {
         CipherMode::StreamMode => {
             let info: [u8; 2] = [0x0C, 0x01];
             info
-        },
+        }
         CipherMode::MemoryMode => {
             let info: [u8; 2] = [0x0C, 0x02];
             info
-        },
+        }
     };
 
     (version_info, cipher_info, mode_info)
 }
 
-pub fn write_to_file(file: &mut OutputFile, salt: &[u8; SALT_LEN], nonce: &[u8], header_info: &HeaderType) -> Result<()> {
+pub fn write_to_file(
+    file: &mut OutputFile,
+    salt: &[u8; SALT_LEN],
+    nonce: &[u8],
+    header_info: &HeaderType,
+) -> Result<()> {
     let nonce_len = calc_nonce_len(header_info);
 
     match header_info.dexios_version {
         DexiosVersion::V8 => {
             let padding = vec![0u8; 26 - nonce_len];
             let (version_info, cipher_info, mode_info) = serialise(header_info);
-        
+
             file.write_all(&version_info)?;
             file.write_all(&cipher_info)?;
             file.write_all(&mode_info)?; // 6 bytes total
@@ -80,7 +88,7 @@ pub fn hash(hasher: &mut Hasher, salt: &[u8; SALT_LEN], nonce: &[u8], header_inf
             let nonce_len = calc_nonce_len(header_info);
             let padding = vec![0u8; 26 - nonce_len];
             let (version_info, cipher_info, mode_info) = serialise(header_info);
-        
+
             hasher.update(&version_info);
             hasher.update(&cipher_info);
             hasher.update(&mode_info);
@@ -92,10 +100,14 @@ pub fn hash(hasher: &mut Hasher, salt: &[u8; SALT_LEN], nonce: &[u8], header_inf
     }
 }
 
-fn deserialise(version_info: &[u8; 2], cipher_info: &[u8; 2], mode_info: &[u8; 2]) -> Result<HeaderType> {
+fn deserialise(
+    version_info: &[u8; 2],
+    cipher_info: &[u8; 2],
+    mode_info: &[u8; 2],
+) -> Result<HeaderType> {
     let dexios_version = match version_info {
         [0xDE, 0x08] => DexiosVersion::V8,
-        _ => return Err(anyhow::anyhow!("Error getting cipher mode from header"))
+        _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
     };
 
     let algorithm = match cipher_info {
@@ -110,9 +122,12 @@ fn deserialise(version_info: &[u8; 2], cipher_info: &[u8; 2], mode_info: &[u8; 2
         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
     };
 
-    Ok(HeaderType { dexios_version, algorithm, cipher_mode })
+    Ok(HeaderType {
+        dexios_version,
+        algorithm,
+        cipher_mode,
+    })
 }
-
 
 pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
     let mut version_info = [0u8; 2];
@@ -130,16 +145,19 @@ pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
             let nonce_len = calc_nonce_len(&header_info);
             let mut nonce = vec![0u8; nonce_len];
             let mut _padding = vec![0u8; 26 - nonce_len];
-        
+
             file.read(&mut salt)?;
             file.read(&mut [0; 16])?; // read and subsequently discard the next 16 bytes
             file.read(&mut nonce)?;
             file.read(&mut _padding)?;
-        
-            Ok(HeaderData { header_type: header_info, nonce, salt })
+
+            Ok(HeaderData {
+                header_type: header_info,
+                nonce,
+                salt,
+            })
         }
     }
-
 }
 
 pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
@@ -167,7 +185,10 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
 pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     println!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
-    let prompt = format!("Are you sure you'd like to restore the header in {} to {}?", input, output);
+    let prompt = format!(
+        "Are you sure you'd like to restore the header in {} to {}?",
+        input, output
+    );
     if !get_answer(&prompt, false, skip == SkipMode::HidePrompts)? {
         exit(0);
     }
@@ -194,10 +215,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
 pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
     println!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
-    let prompt = format!(
-        "Are you sure you'd like to wipe the header for {}?",
-        input
-    );
+    let prompt = format!("Are you sure you'd like to wipe the header for {}?", input);
     if !get_answer(&prompt, false, skip == SkipMode::HidePrompts)? {
         exit(0);
     }

@@ -48,17 +48,16 @@ fn main() -> Result<()> {
             let (keyfile, params) = parameter_handler(sub_matches)?;
 
             // stream decrypt is the default as it will redirect to memory mode if the header says so
-            let result = 
-                decrypt::stream_mode(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
-                    keyfile,
-                    &params,
-                );
+            let result = decrypt::stream_mode(
+                sub_matches
+                    .value_of("input")
+                    .context("No input file/invalid text provided")?,
+                sub_matches
+                    .value_of("output")
+                    .context("No output file/invalid text provided")?,
+                keyfile,
+                &params,
+            );
 
             return result;
         }

@@ -12,7 +12,9 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::parameters::{CryptoParameters, DirectoryMode, PackMode, PrintMode, SkipMode, Algorithm},
+    global::parameters::{
+        Algorithm, CryptoParameters, DirectoryMode, PackMode, PrintMode, SkipMode,
+    },
     global::BLOCK_SIZE,
     prompt::get_answer,
 };
@@ -138,7 +140,6 @@ pub fn encrypt_directory(
         zip_duration.as_secs_f32()
     );
 
-
     crate::encrypt::stream_mode(&tmp_name, output, keyfile, params, algorithm)?;
 
     crate::erase::secure_erase(&tmp_name, 16)?; // cleanup our tmp file
@@ -161,7 +162,6 @@ pub fn decrypt_directory(
     let tmp_name = format!("{}.{}", input, random_extension); // e.g. "input.kjHSD93l"
 
     crate::decrypt::stream_mode(input, &tmp_name, keyfile, params)?;
-
 
     let zip_start_time = Instant::now();
     let file = File::open(&tmp_name).context("Unable to open temporary archive")?;

@@ -1,6 +1,6 @@
 use crate::global::crypto::DecryptStreamCiphers;
-use crate::global::parameters::{BenchMode, Algorithm, HashMode, OutputFile, HeaderData};
-use crate::global::{BLOCK_SIZE};
+use crate::global::parameters::{Algorithm, BenchMode, HashMode, HeaderData, OutputFile};
+use crate::global::BLOCK_SIZE;
 use crate::key::hash_key;
 use aead::stream::DecryptorLE31;
 use aead::{Aead, NewAead};
@@ -67,7 +67,12 @@ pub fn decrypt_bytes_memory_mode(
 
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::header::hash(&mut hasher, &header.salt, &header.nonce, &header.header_type);
+        crate::header::hash(
+            &mut hasher,
+            &header.salt,
+            &header.nonce,
+            &header.header_type,
+        );
         hasher.update(&data);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -82,10 +87,7 @@ pub fn decrypt_bytes_memory_mode(
         let write_start_time = Instant::now();
         output.write_all(&decrypted_bytes)?;
         let write_duration = write_start_time.elapsed();
-        println!(
-            "Wrote to file [took {:.2}s]",
-            write_duration.as_secs_f32()
-        );
+        println!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
     }
 
     Ok(())
@@ -128,7 +130,6 @@ pub fn decrypt_bytes_stream_mode(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-
             let nonce = Nonce::from_slice(header.nonce.as_slice());
 
             let stream = DecryptorLE31::from_aead(cipher, nonce);
@@ -150,7 +151,12 @@ pub fn decrypt_bytes_stream_mode(
     };
 
     if hash == HashMode::CalculateHash {
-        crate::header::hash(&mut hasher, &header.salt, &header.nonce, &header.header_type);
+        crate::header::hash(
+            &mut hasher,
+            &header.salt,
+            &header.nonce,
+            &header.header_type,
+        );
     }
 
     let mut buffer = [0u8; BLOCK_SIZE + 16]; // 16 bytes is the length of the AEAD tag

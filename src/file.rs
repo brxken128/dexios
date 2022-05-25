@@ -10,15 +10,14 @@ use std::fs::read_dir;
 use std::path::PathBuf;
 use std::{
     fs::File,
-    io::{BufReader, Read, Write},
+    io::{Read, Write},
 };
 
 // this takes the name/relative path of a file, and returns the bytes wrapped in a secret
 pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {
-    let file = File::open(name).with_context(|| format!("Unable to open file: {}", name))?;
-    let mut reader = BufReader::new(file);
+    let mut file = File::open(name).with_context(|| format!("Unable to open file: {}", name))?;
     let mut data = Vec::new();
-    reader
+    file
         .read_to_end(&mut data)
         .with_context(|| format!("Unable to read file: {}", name))?;
     Ok(SecretVec::new(data))
@@ -34,8 +33,7 @@ pub fn get_encrypted_data(
     name: &str,
     cipher_type: CipherType,
 ) -> Result<([u8; SALT_LEN], Vec<u8>, Vec<u8>)> {
-    let file = File::open(name).with_context(|| format!("Unable to open input file: {}", name))?;
-    let mut reader = BufReader::new(file);
+    let mut file = File::open(name).with_context(|| format!("Unable to open input file: {}", name))?;
 
     return match cipher_type {
         CipherType::AesGcm => {
@@ -43,13 +41,13 @@ pub fn get_encrypted_data(
             let mut nonce = [0u8; 12];
             let mut encrypted_data: Vec<u8> = Vec::new();
 
-            let salt_size = reader
+            let salt_size = file
                 .read(&mut salt)
                 .with_context(|| format!("Unable to read salt from file: {}", name))?;
-            let nonce_size = reader
+            let nonce_size = file
                 .read(&mut nonce)
                 .with_context(|| format!("Unable to read nonce from file: {}", name))?;
-            reader
+            file
                 .read_to_end(&mut encrypted_data)
                 .with_context(|| format!("Unable to read data from file: {}", name))?;
 
@@ -67,13 +65,13 @@ pub fn get_encrypted_data(
             let mut nonce = [0u8; 24];
             let mut encrypted_data: Vec<u8> = Vec::new();
 
-            let salt_size = reader
+            let salt_size = file
                 .read(&mut salt)
                 .with_context(|| format!("Unable to read salt from file: {}", name))?;
-            let nonce_size = reader
+            let nonce_size = file
                 .read(&mut nonce)
                 .with_context(|| format!("Unable to read nonce from file: {}", name))?;
-            reader
+            file
                 .read_to_end(&mut encrypted_data)
                 .with_context(|| format!("Unable to read data from file: {}", name))?;
 

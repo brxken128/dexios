@@ -13,7 +13,7 @@ use zip::write::FileOptions;
 use crate::{
     file::get_paths_in_dir,
     global::parameters::{DirectoryMode, CryptoParameters, PrintMode, SkipMode, PackMode},
-    global::{BLOCK_SIZE, SALT_LEN},
+    global::BLOCK_SIZE,
     prompt::get_answer,
 };
 

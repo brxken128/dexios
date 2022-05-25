@@ -66,7 +66,7 @@ pub fn get_user_key(
 ) -> Result<Secret<Vec<u8>>> {
     Ok(if !keyfile.is_empty() {
         println!("Reading key from {}", keyfile);
-        get_bytes(keyfile)? // already a secret
+        get_bytes(keyfile)?
     } else if std::env::var("DEXIOS_KEY").is_ok()
         && password == PasswordMode::NormalKeySourcePriority
     {
@@ -77,6 +77,6 @@ pub fn get_user_key(
                 .into_bytes(),
         )
     } else {
-        get_password(validation)? // already a secret
+        get_password(validation)?
     })
 }

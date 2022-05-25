@@ -14,7 +14,6 @@ mod hashing;
 mod header;
 mod key;
 mod pack;
-mod parameters;
 mod prompt;
 
 #[allow(clippy::too_many_lines)]
@@ -26,7 +25,7 @@ fn main() -> Result<()> {
             let (keyfile, params) = parameter_handler(sub_matches)?;
 
             let result = if sub_matches.is_present("memory") {
-                crate::encrypt::memory_mode(
+                encrypt::memory_mode(
                     sub_matches
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
@@ -37,7 +36,7 @@ fn main() -> Result<()> {
                     &params,
                 )
             } else {
-                crate::encrypt::stream_mode(
+                encrypt::stream_mode(
                     sub_matches
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
@@ -55,7 +54,7 @@ fn main() -> Result<()> {
             let (keyfile, params) = parameter_handler(sub_matches)?;
 
             let result = if sub_matches.is_present("memory") {
-                crate::decrypt::memory_mode(
+                decrypt::memory_mode(
                     sub_matches
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
@@ -66,7 +65,7 @@ fn main() -> Result<()> {
                     &params,
                 )
             } else {
-                crate::decrypt::stream_mode(
+                decrypt::stream_mode(
                     sub_matches
                         .value_of("input")
                         .context("No input file/invalid text provided")?,

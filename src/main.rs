@@ -154,7 +154,6 @@ fn main() -> Result<()> {
                         dir_mode,
                         exclude: excluded,
                         hidden,
-                        memory: sub_matches_encrypt.is_present("memory"),
                         print_mode,
                     };
 
@@ -189,7 +188,6 @@ fn main() -> Result<()> {
                             .value_of("output")
                             .context("No output file/invalid text provided")?,
                         keyfile,
-                        sub_matches_decrypt.is_present("memory"),
                         &print_mode,
                         &params,
                     )?;

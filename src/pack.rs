@@ -137,11 +137,8 @@ pub fn encrypt_directory(
         zip_duration.as_secs_f32()
     );
 
-    if pack_params.memory {
-        crate::encrypt::memory_mode(&tmp_name, output, keyfile, params)?;
-    } else {
-        crate::encrypt::stream_mode(&tmp_name, output, keyfile, params)?;
-    };
+
+    crate::encrypt::stream_mode(&tmp_name, output, keyfile, params)?;
 
     crate::erase::secure_erase(&tmp_name, 16)?; // cleanup our tmp file
 
@@ -154,7 +151,6 @@ pub fn decrypt_directory(
     input: &str,   // encrypted zip file
     output: &str,  // directory
     keyfile: &str, // for decrypt function
-    memory: bool,  // memory or stream mode
     print_mode: &PrintMode,
     params: &CryptoParameters, // params for decrypt function
 ) -> Result<()> {
@@ -163,11 +159,8 @@ pub fn decrypt_directory(
     // this is the name of the decrypted zip file
     let tmp_name = format!("{}.{}", input, random_extension); // e.g. "input.kjHSD93l"
 
-    if memory {
-        crate::decrypt::memory_mode(input, &tmp_name, keyfile, params)?;
-    } else {
-        crate::decrypt::stream_mode(input, &tmp_name, keyfile, params)?;
-    }
+    crate::decrypt::stream_mode(input, &tmp_name, keyfile, params)?;
+
 
     let zip_start_time = Instant::now();
     let file = File::open(&tmp_name).context("Unable to open temporary archive")?;

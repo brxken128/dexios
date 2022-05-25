@@ -62,21 +62,6 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
         )
         .arg(
-            Arg::new("stream")
-                .short('s')
-                .long("stream")
-                .takes_value(false)
-                .help("use stream encryption (default)")
-                .conflicts_with("memory"),
-        )
-        .arg(
-            Arg::new("memory")
-                .short('m')
-                .long("memory")
-                .takes_value(false)
-                .help("load the file into memory before encrypting"),
-        )
-        .arg(
             Arg::new("password")
                 .short('p')
                 .long("password")
@@ -155,21 +140,6 @@ pub fn get_matches() -> clap::ArgMatches {
                 .long("benchmark")
                 .takes_value(false)
                 .help("don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
-        )
-        .arg(
-            Arg::new("stream")
-                .short('s')
-                .long("stream")
-                .takes_value(false)
-                .help("use stream decryption (default)")
-                .conflicts_with("memory"),
-        )
-        .arg(
-            Arg::new("memory")
-                .short('m')
-                .long("memory")
-                .takes_value(false)
-                .help("load the file into memory before decrypting"),
         )
         .arg(
             Arg::new("password")

@@ -69,13 +69,20 @@ pub fn write_to_file(
             let padding = vec![0u8; 26 - nonce_len];
             let (version_info, algorithm_info, mode_info) = serialise(header_info);
 
-            file.write_all(&version_info).context("Unable to write version to header")?;
-            file.write_all(&algorithm_info).context("Unable to write algorithm to header")?;
-            file.write_all(&mode_info).context("Unable to write encryption mode to header")?; // 6 bytes total
-            file.write_all(salt).context("Unable to write salt to header")?; // 22 bytes total
-            file.write_all(&[0; 16]).context("Unable to write empty bytes to header")?; // 38 bytes total (26 remaining)
-            file.write_all(nonce).context("Unable to write nonce to header")?; // (26 - nonce_len remaining)
-            file.write_all(&padding).context("Unable to write final padding to header")?; // this has reached the 64 bytes
+            file.write_all(&version_info)
+                .context("Unable to write version to header")?;
+            file.write_all(&algorithm_info)
+                .context("Unable to write algorithm to header")?;
+            file.write_all(&mode_info)
+                .context("Unable to write encryption mode to header")?; // 6 bytes total
+            file.write_all(salt)
+                .context("Unable to write salt to header")?; // 22 bytes total
+            file.write_all(&[0; 16])
+                .context("Unable to write empty bytes to header")?; // 38 bytes total (26 remaining)
+            file.write_all(nonce)
+                .context("Unable to write nonce to header")?; // (26 - nonce_len remaining)
+            file.write_all(&padding)
+                .context("Unable to write final padding to header")?; // this has reached the 64 bytes
         }
     }
 
@@ -135,9 +142,12 @@ pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
     let mut mode_info = [0u8; 2];
     let mut salt = [0u8; SALT_LEN];
 
-    file.read_exact(&mut version_info).context("Unable to read version from header")?;
-    file.read_exact(&mut algorithm_info).context("Unable to read algorithm from header")?;
-    file.read_exact(&mut mode_info).context("Unable to read encryption mode from header")?;
+    file.read_exact(&mut version_info)
+        .context("Unable to read version from header")?;
+    file.read_exact(&mut algorithm_info)
+        .context("Unable to read algorithm from header")?;
+    file.read_exact(&mut mode_info)
+        .context("Unable to read encryption mode from header")?;
 
     let header_info = deserialise(version_info, algorithm_info, mode_info)?;
     match header_info.dexios_version {
@@ -145,10 +155,14 @@ pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
             let nonce_len = calc_nonce_len(&header_info);
             let mut nonce = vec![0u8; nonce_len];
 
-            file.read_exact(&mut salt).context("Unable to read salt from header")?;
-            file.read_exact(&mut [0; 16]).context("Unable to empty bytes from header")?; // read and subsequently discard the next 16 bytes
-            file.read_exact(&mut nonce).context("Unable to read nonce from header")?;
-            file.read_exact(&mut vec![0u8; 26 - nonce_len]).context("Unable to read final padding from header")?; // read and discard the final padding
+            file.read_exact(&mut salt)
+                .context("Unable to read salt from header")?;
+            file.read_exact(&mut [0; 16])
+                .context("Unable to empty bytes from header")?; // read and subsequently discard the next 16 bytes
+            file.read_exact(&mut nonce)
+                .context("Unable to read nonce from header")?;
+            file.read_exact(&mut vec![0u8; 26 - nonce_len])
+                .context("Unable to read final padding from header")?; // read and discard the final padding
 
             Ok(HeaderData {
                 header_type: header_info,
@@ -166,7 +180,8 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
     let mut file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
-    file.read_exact(&mut header).with_context(|| format!("Unable to read header from file: {}", input))?;
+    file.read_exact(&mut header)
+        .with_context(|| format!("Unable to read header from file: {}", input))?;
 
     if !overwrite_check(output, skip, BenchMode::WriteToFilesystem)? {
         std::process::exit(0);

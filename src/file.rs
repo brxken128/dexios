@@ -6,10 +6,7 @@ use secrecy::Secret;
 use secrecy::SecretVec;
 use std::fs::read_dir;
 use std::path::PathBuf;
-use std::{
-    fs::File,
-    io::Read,
-};
+use std::{fs::File, io::Read};
 
 // this takes the name/relative path of a file, and returns the bytes wrapped in a secret
 pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {
@@ -19,7 +16,6 @@ pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {
         .with_context(|| format!("Unable to read file: {}", name))?;
     Ok(SecretVec::new(data))
 }
-
 
 pub fn get_paths_in_dir(
     name: &str,

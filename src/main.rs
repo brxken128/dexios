@@ -139,7 +139,8 @@ fn main() -> Result<()> {
 
                     let excluded: Vec<String> = if sub_matches.is_present("exclude") {
                         let list: Vec<&str> = sub_matches.values_of("exclude").unwrap().collect();
-                        list.iter().map(std::string::ToString::to_string).collect() // this fixes 'static lifetime issues
+                        list.iter().map(std::string::ToString::to_string).collect()
+                    // this fixes 'static lifetime issues
                     } else {
                         Vec::new()
                     };

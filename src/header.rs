@@ -64,14 +64,14 @@ fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
 // it ensures the buffer is left at 64 bytes, so other functions can write the data without further hassle
 pub fn write_to_file(
     file: &mut OutputFile,
-    header_data: &HeaderData
+    header: &HeaderData
 ) -> Result<()> {
-    let nonce_len = calc_nonce_len(&header_data.header_type);
+    let nonce_len = calc_nonce_len(&header.header_type);
 
-    match &header_data.header_type.header_version {
+    match &header.header_type.header_version {
         HeaderVersion::V1 => {
             let padding = vec![0u8; 26 - nonce_len];
-            let (version_info, algorithm_info, mode_info) = serialise(&header_data.header_type);
+            let (version_info, algorithm_info, mode_info) = serialise(&header.header_type);
 
             file.write_all(&version_info)
                 .context("Unable to write version to header")?;
@@ -79,11 +79,11 @@ pub fn write_to_file(
                 .context("Unable to write algorithm to header")?;
             file.write_all(&mode_info)
                 .context("Unable to write encryption mode to header")?; // 6 bytes total
-            file.write_all(&header_data.salt)
+            file.write_all(&header.salt)
                 .context("Unable to write salt to header")?; // 22 bytes total
             file.write_all(&[0; 16])
                 .context("Unable to write empty bytes to header")?; // 38 bytes total (26 remaining)
-            file.write_all(&header_data.nonce)
+            file.write_all(&header.nonce)
                 .context("Unable to write nonce to header")?; // (26 - nonce_len remaining)
             file.write_all(&padding)
                 .context("Unable to write final padding to header")?; // this has reached the 64 bytes
@@ -94,19 +94,19 @@ pub fn write_to_file(
 }
 
 // this hashes a header with the salt, nonce, and info provided
-pub fn hash(hasher: &mut Hasher, header_data: &HeaderData) {
-    match &header_data.header_type.header_version {
+pub fn hash(hasher: &mut Hasher, header: &HeaderData) {
+    match &header.header_type.header_version {
         HeaderVersion::V1 => {
-            let nonce_len = calc_nonce_len(&header_data.header_type);
+            let nonce_len = calc_nonce_len(&header.header_type);
             let padding = vec![0u8; 26 - nonce_len];
-            let (version_info, algorithm_info, mode_info) = serialise(&header_data.header_type);
+            let (version_info, algorithm_info, mode_info) = serialise(&header.header_type);
 
             hasher.update(&version_info);
             hasher.update(&algorithm_info);
             hasher.update(&mode_info);
-            hasher.update(&header_data.salt);
+            hasher.update(&header.salt);
             hasher.update(&[0; 16]);
-            hasher.update(&header_data.nonce);
+            hasher.update(&header.nonce);
             hasher.update(&padding);
         }
     }

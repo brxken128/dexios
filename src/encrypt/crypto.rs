@@ -93,11 +93,11 @@ pub fn encrypt_bytes_memory_mode(
         }
     };
 
-    let header_data = HeaderData { salt, nonce: nonce_bytes, header_type };
+    let header = HeaderData { salt, nonce: nonce_bytes, header_type };
 
     if bench == BenchMode::WriteToFilesystem {
         let write_start_time = Instant::now();
-        crate::header::write_to_file(output, &header_data)?;
+        crate::header::write_to_file(output, &header)?;
         output.write_all(&encrypted_bytes)?;
         let write_duration = write_start_time.elapsed();
         println!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
@@ -106,7 +106,7 @@ pub fn encrypt_bytes_memory_mode(
     let mut hasher = blake3::Hasher::new();
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::header::hash(&mut hasher,  &header_data);
+        crate::header::hash(&mut hasher,  &header);
         hasher.update(&encrypted_bytes);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -181,16 +181,16 @@ pub fn encrypt_bytes_stream_mode(
         }
     };
 
-    let header_data = HeaderData { salt, nonce: nonce_bytes, header_type };
+    let header = HeaderData { salt, nonce: nonce_bytes, header_type };
 
     if bench == BenchMode::WriteToFilesystem {
-        crate::header::write_to_file(output, &header_data)?;
+        crate::header::write_to_file(output, &header)?;
     }
 
     let mut hasher = blake3::Hasher::new();
 
     if hash == HashMode::CalculateHash {
-        crate::header::hash(&mut hasher, &header_data);
+        crate::header::hash(&mut hasher, &header);
     }
 
     let mut buffer = [0u8; BLOCK_SIZE];

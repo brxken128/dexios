@@ -3,7 +3,7 @@ use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
 use crate::global::parameters::Algorithm;
 use crate::global::parameters::BenchMode;
-use crate::global::parameters::CryptoParameters;
+use crate::global::parameters::CryptoParams;
 use crate::global::parameters::EraseMode;
 use crate::global::parameters::OutputFile;
 use crate::global::BLOCK_SIZE;
@@ -23,7 +23,7 @@ pub fn memory_mode(
     input: &str,
     output: &str,
     keyfile: &str,
-    params: &CryptoParameters,
+    params: &CryptoParams,
     algorithm: Algorithm,
 ) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
@@ -79,7 +79,7 @@ pub fn stream_mode(
     input: &str,
     output: &str,
     keyfile: &str,
-    params: &CryptoParameters,
+    params: &CryptoParams,
     algorithm: Algorithm,
 ) -> Result<()> {
     let mut input_file =

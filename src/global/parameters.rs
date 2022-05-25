@@ -5,7 +5,7 @@ use std::io::Write;
 
 use super::SALT_LEN;
 
-pub struct CryptoParameters {
+pub struct CryptoParams {
     pub hash_mode: HashMode,
     pub skip: SkipMode,
     pub bench: BenchMode,
@@ -147,7 +147,7 @@ impl std::fmt::Display for CipherMode {
     }
 }
 
-pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<(&str, CryptoParameters)> {
+pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<(&str, CryptoParams)> {
     let mut keyfile = "";
     if sub_matches.is_present("keyfile") {
         keyfile = sub_matches
@@ -206,7 +206,7 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<(&str, CryptoParame
 
     Ok((
         keyfile,
-        CryptoParameters {
+        CryptoParams {
             hash_mode,
             skip,
             bench,

@@ -2,7 +2,7 @@ use crate::decrypt::crypto::decrypt_bytes_memory_mode;
 use crate::decrypt::crypto::decrypt_bytes_stream_mode;
 use crate::global::parameters::BenchMode;
 use crate::global::parameters::CipherMode;
-use crate::global::parameters::CryptoParameters;
+use crate::global::parameters::CryptoParams;
 use crate::global::parameters::EraseMode;
 use crate::global::parameters::OutputFile;
 use crate::key::get_user_key;
@@ -21,7 +21,7 @@ pub fn memory_mode(
     input: &str,
     output: &str,
     keyfile: &str,
-    params: &CryptoParameters,
+    params: &CryptoParams,
 ) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
@@ -83,7 +83,7 @@ pub fn stream_mode(
     input: &str,
     output: &str,
     keyfile: &str,
-    params: &CryptoParameters,
+    params: &CryptoParams,
 ) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;

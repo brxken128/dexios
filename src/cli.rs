@@ -111,6 +111,13 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("use a keyfile instead of a password"),
         )
         .arg(
+            Arg::new("header")
+                .long("header")
+                .value_name("file")
+                .takes_value(true)
+                .help("use a headerfile that was dumped"),
+        )
+        .arg(
             Arg::new("erase")
                 .long("erase")
                 .value_name("# of passes")

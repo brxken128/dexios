@@ -108,6 +108,10 @@ jobs:
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header restore -y 100MB.enc.header 100MB.enc
     - name: Decrypt in stream mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 100MB.enc 100MB.bin
+    - name: Strip Header
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header strip -y 100MB.enc
+    - name: Decrypt in stream mode with detached header (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile --header 100MB.enc.header 100MB.enc 100MB.bin
   hash-standalone-mode:
     needs: build
     runs-on: ubuntu-latest

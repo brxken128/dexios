@@ -24,22 +24,22 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
 fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2]) {
     let cipher_info = match header_info.cipher_type {
         CipherType::XChaCha20Poly1305 => {
-            let info: [u8; 2] = [0x00, 0x00];
+            let info: [u8; 2] = [0x0E, 0x01];
             info
         },
         CipherType::AesGcm => {
-            let info: [u8; 2] = [0x00, 0x01];
+            let info: [u8; 2] = [0x0E, 0x02];
             info
         },
     };
 
     let mode_info = match header_info.cipher_mode {
         CipherMode::StreamMode => {
-            let info: [u8; 2] = [0x0A, 0x00];
+            let info: [u8; 2] = [0x0C, 0x01];
             info
         },
         CipherMode::MemoryMode => {
-            let info: [u8; 2] = [0x0A, 0x01];
+            let info: [u8; 2] = [0x0C, 0x02];
             info
         },
     };
@@ -76,14 +76,14 @@ pub fn hash(hasher: &mut Hasher, salt: &[u8; SALT_LEN], nonce: &[u8], header_inf
 
 fn deserialise(cipher_info: &[u8; 2], mode_info: &[u8; 2]) -> Result<HeaderType> {
     let cipher_type = match cipher_info {
-        [0x00, 0x00] => CipherType::XChaCha20Poly1305,
-        [0x00, 0x01] => CipherType::AesGcm,
+        [0x0E, 0x01] => CipherType::XChaCha20Poly1305,
+        [0x0E, 0x02] => CipherType::AesGcm,
         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
     };
 
     let cipher_mode = match mode_info {
-        [0x0A, 0x00] => CipherMode::StreamMode,
-        [0x0A, 0x01] => CipherMode::MemoryMode,
+        [0x0C, 0x01] => CipherMode::StreamMode,
+        [0x0C, 0x02] => CipherMode::MemoryMode,
         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
     };
 

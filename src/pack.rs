@@ -12,7 +12,9 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::parameters::{Algorithm, CryptoParams, DirectoryMode, PackMode, PrintMode, SkipMode, HeaderFile},
+    global::parameters::{
+        Algorithm, CryptoParams, DirectoryMode, HeaderFile, PackMode, PrintMode, SkipMode,
+    },
     global::BLOCK_SIZE,
     prompt::get_answer,
 };
@@ -148,8 +150,8 @@ pub fn encrypt_directory(
 }
 
 pub fn decrypt_directory(
-    input: &str,   // encrypted zip file
-    output: &str,  // directory
+    input: &str,        // encrypted zip file
+    output: &str,       // directory
     header: HeaderFile, // for decrypt function
     print_mode: &PrintMode,
     params: &CryptoParams, // params for decrypt function

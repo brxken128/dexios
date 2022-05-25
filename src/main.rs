@@ -46,9 +46,12 @@ fn main() -> Result<()> {
         Some(("decrypt", sub_matches)) => {
             let params = parameter_handler(sub_matches)?;
             let header = if sub_matches.is_present("header") {
-                HeaderFile::Some(sub_matches
-                    .value_of("header")
-                    .context("No header/invalid text provided")?.to_string())
+                HeaderFile::Some(
+                    sub_matches
+                        .value_of("header")
+                        .context("No header/invalid text provided")?
+                        .to_string(),
+                )
             } else {
                 HeaderFile::None
             };
@@ -61,7 +64,7 @@ fn main() -> Result<()> {
                 sub_matches
                     .value_of("output")
                     .context("No output file/invalid text provided")?,
-                    header,
+                header,
                 &params,
             );
 
@@ -197,13 +200,15 @@ fn main() -> Result<()> {
 
                     let params = parameter_handler(sub_matches_decrypt)?;
                     let header = if sub_matches.is_present("header") {
-                        HeaderFile::Some(sub_matches
-                            .value_of("header")
-                            .context("No header/invalid text provided")?.to_string())
+                        HeaderFile::Some(
+                            sub_matches
+                                .value_of("header")
+                                .context("No header/invalid text provided")?
+                                .to_string(),
+                        )
                     } else {
                         HeaderFile::None
                     };
-
 
                     pack::decrypt_directory(
                         sub_matches_decrypt

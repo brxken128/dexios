@@ -123,7 +123,9 @@ impl KeyFile {
     pub fn get_contents(&self) -> Result<String> {
         match self {
             KeyFile::Some(data) => Ok(data.to_string()),
-            KeyFile::None => Err(anyhow::anyhow!("Tried using a keyfile when one wasn't provided")), // should never happen
+            KeyFile::None => Err(anyhow::anyhow!(
+                "Tried using a keyfile when one wasn't provided"
+            )), // should never happen
         }
     }
 }
@@ -170,7 +172,12 @@ impl std::fmt::Display for CipherMode {
 
 pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
     let keyfile = if sub_matches.is_present("keyfile") {
-        KeyFile::Some(sub_matches.value_of("keyfile").context("No keyfile/invalid text provided")?.to_string())
+        KeyFile::Some(
+            sub_matches
+                .value_of("keyfile")
+                .context("No keyfile/invalid text provided")?
+                .to_string(),
+        )
     } else {
         KeyFile::None
     };
@@ -224,14 +231,12 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         PasswordMode::NormalKeySourcePriority
     };
 
-    Ok(
-        CryptoParams {
-            keyfile,
-            hash_mode,
-            skip,
-            bench,
-            password,
-            erase,
-        },
-    )
+    Ok(CryptoParams {
+        keyfile,
+        hash_mode,
+        skip,
+        bench,
+        password,
+        erase,
+    })
 }

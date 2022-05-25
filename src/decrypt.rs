@@ -18,7 +18,12 @@ mod crypto;
 
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
-pub fn memory_mode(input: &str, output: &str, header_file: HeaderFile, params: &CryptoParams) -> Result<()> {
+pub fn memory_mode(
+    input: &str,
+    output: &str,
+    header_file: HeaderFile,
+    params: &CryptoParams,
+) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
@@ -28,13 +33,14 @@ pub fn memory_mode(input: &str, output: &str, header_file: HeaderFile, params: &
 
     let header = match &header_file {
         HeaderFile::Some(contents) => {
-            let mut header_file = File::open(contents).with_context(|| format!("Unable to open header file: {}", input))?;
-            input_file.read_exact(&mut vec![0u8; 64]).with_context(|| format!("Unable to seek input file: {}", input))?;
+            let mut header_file = File::open(contents)
+                .with_context(|| format!("Unable to open header file: {}", input))?;
+            input_file
+                .read_exact(&mut vec![0u8; 64])
+                .with_context(|| format!("Unable to seek input file: {}", input))?;
             crate::header::read_from_file(&mut header_file)?
-        },
-        HeaderFile::None => {
-            crate::header::read_from_file(&mut input_file)?
         }
+        HeaderFile::None => crate::header::read_from_file(&mut input_file)?,
     };
 
     let read_start_time = Instant::now();
@@ -86,22 +92,27 @@ pub fn memory_mode(input: &str, output: &str, header_file: HeaderFile, params: &
 
 // this function is for decrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
-pub fn stream_mode(input: &str, output: &str, header_file: HeaderFile, params: &CryptoParams) -> Result<()> {
+pub fn stream_mode(
+    input: &str,
+    output: &str,
+    header_file: HeaderFile,
+    params: &CryptoParams,
+) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
     let header = match &header_file {
         HeaderFile::Some(contents) => {
-            let mut header_file = File::open(contents).with_context(|| format!("Unable to open header file: {}", input))?;
-            input_file.read_exact(&mut vec![0u8; 64]).with_context(|| format!("Unable to seek input file: {}", input))?;
+            let mut header_file = File::open(contents)
+                .with_context(|| format!("Unable to open header file: {}", input))?;
+            input_file
+                .read_exact(&mut vec![0u8; 64])
+                .with_context(|| format!("Unable to seek input file: {}", input))?;
             crate::header::read_from_file(&mut header_file)?
-        },
-        HeaderFile::None => {
-            crate::header::read_from_file(&mut input_file)?
         }
+        HeaderFile::None => crate::header::read_from_file(&mut input_file)?,
     };
 
-    
     if header.header_type.cipher_mode == CipherMode::MemoryMode {
         drop(input_file);
         return memory_mode(input, output, header_file, params);

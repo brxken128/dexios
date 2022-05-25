@@ -1,5 +1,5 @@
 use crate::{
-    global::parameters::{BenchMode, CipherMode, CipherType, HeaderType, SkipMode, HeaderData, OutputFile, DexiosVersion},
+    global::parameters::{BenchMode, CipherMode, Algorithm, HeaderType, SkipMode, HeaderData, OutputFile, DexiosVersion},
     global::SALT_LEN,
     prompt::{get_answer, overwrite_check},
 };
@@ -9,9 +9,9 @@ use std::{fs::File, io::Write};
 use std::{fs::OpenOptions, io::Read, process::exit};
 
 fn calc_nonce_len(header_info: &HeaderType) -> usize {
-    let mut nonce_len = match header_info.cipher_type {
-        CipherType::XChaCha20Poly1305 => 24,
-        CipherType::AesGcm => 12,
+    let mut nonce_len = match header_info.algorithm {
+        Algorithm::XChaCha20Poly1305 => 24,
+        Algorithm::AesGcm => 12,
     };
 
     if header_info.cipher_mode == CipherMode::StreamMode {
@@ -28,12 +28,12 @@ fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
             info
         }
     };
-    let cipher_info = match header_info.cipher_type {
-        CipherType::XChaCha20Poly1305 => {
+    let cipher_info = match header_info.algorithm {
+        Algorithm::XChaCha20Poly1305 => {
             let info: [u8; 2] = [0x0E, 0x01];
             info
         },
-        CipherType::AesGcm => {
+        Algorithm::AesGcm => {
             let info: [u8; 2] = [0x0E, 0x02];
             info
         },
@@ -98,9 +98,9 @@ fn deserialise(version_info: &[u8; 2], cipher_info: &[u8; 2], mode_info: &[u8; 2
         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header"))
     };
 
-    let cipher_type = match cipher_info {
-        [0x0E, 0x01] => CipherType::XChaCha20Poly1305,
-        [0x0E, 0x02] => CipherType::AesGcm,
+    let algorithm = match cipher_info {
+        [0x0E, 0x01] => Algorithm::XChaCha20Poly1305,
+        [0x0E, 0x02] => Algorithm::AesGcm,
         _ => return Err(anyhow::anyhow!("Error getting encryption mode from header")),
     };
 
@@ -110,7 +110,7 @@ fn deserialise(version_info: &[u8; 2], cipher_info: &[u8; 2], mode_info: &[u8; 2
         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
     };
 
-    Ok(HeaderType { dexios_version, cipher_type, cipher_mode })
+    Ok(HeaderType { dexios_version, algorithm, cipher_mode })
 }
 
 

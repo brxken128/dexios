@@ -1,5 +1,5 @@
 use crate::global::crypto::DecryptStreamCiphers;
-use crate::global::parameters::{BenchMode, CipherType, HashMode, OutputFile};
+use crate::global::parameters::{BenchMode, Algorithm, HashMode, OutputFile};
 use crate::global::{BLOCK_SIZE, SALT_LEN};
 use crate::key::hash_key;
 use aead::stream::DecryptorLE31;
@@ -23,12 +23,12 @@ pub fn decrypt_bytes_memory_mode(
     nonce: &[u8],
     data: &[u8],
     raw_key: Secret<Vec<u8>>,
-    cipher_type: CipherType,
+    algorithm: Algorithm,
 ) -> Result<Vec<u8>> {
     let key = hash_key(raw_key, &salt)?;
 
-    return match cipher_type {
-        CipherType::AesGcm => {
+    return match algorithm {
+        Algorithm::AesGcm => {
             let nonce = Nonce::from_slice(nonce);
             let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
@@ -43,7 +43,7 @@ pub fn decrypt_bytes_memory_mode(
                 Err(_) => Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
             }
         }
-        CipherType::XChaCha20Poly1305 => {
+        Algorithm::XChaCha20Poly1305 => {
             let nonce = XNonce::from_slice(nonce);
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
@@ -72,7 +72,7 @@ pub fn decrypt_bytes_stream_mode(
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,
-    cipher_type: CipherType,
+    algorithm: Algorithm,
 ) -> Result<()> {
     let mut salt = [0u8; SALT_LEN];
     input
@@ -87,8 +87,8 @@ pub fn decrypt_bytes_stream_mode(
 
     let key = hash_key(raw_key, &salt)?;
 
-    let mut streams: DecryptStreamCiphers = match cipher_type {
-        CipherType::AesGcm => {
+    let mut streams: DecryptStreamCiphers = match algorithm {
+        Algorithm::AesGcm => {
             let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
                     drop(key);
@@ -112,7 +112,7 @@ pub fn decrypt_bytes_stream_mode(
 
             DecryptStreamCiphers::AesGcm(Box::new(stream))
         }
-        CipherType::XChaCha20Poly1305 => {
+        Algorithm::XChaCha20Poly1305 => {
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
                     drop(key);

@@ -1,5 +1,5 @@
 use crate::global::crypto::EncryptStreamCiphers;
-use crate::global::parameters::{BenchMode, CipherType, HashMode, OutputFile, HeaderType, CipherMode};
+use crate::global::parameters::{BenchMode, Algorithm, HashMode, OutputFile, HeaderType, CipherMode};
 use crate::global::{BLOCK_SIZE, SALT_LEN, VERSION};
 use crate::key::hash_key;
 use aead::stream::EncryptorLE31;
@@ -33,14 +33,14 @@ pub fn encrypt_bytes_memory_mode(
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,
-    cipher_type: CipherType,
+    algorithm: Algorithm,
 ) -> Result<()> {
     let salt = gen_salt();
 
-    let header_type = HeaderType { dexios_version: VERSION, cipher_mode: CipherMode::MemoryMode, cipher_type };
+    let header_type = HeaderType { dexios_version: VERSION, cipher_mode: CipherMode::MemoryMode, algorithm };
 
-    let (nonce_bytes, encrypted_bytes) = match cipher_type {
-        CipherType::AesGcm => {
+    let (nonce_bytes, encrypted_bytes) = match algorithm {
+        Algorithm::AesGcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
             let nonce = Nonce::from_slice(nonce_bytes.as_slice());
 
@@ -63,7 +63,7 @@ pub fn encrypt_bytes_memory_mode(
 
             (nonce_bytes.to_vec(), encrypted_bytes)
         }
-        CipherType::XChaCha20Poly1305 => {
+        Algorithm::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 24]>();
             let nonce = XNonce::from_slice(&nonce_bytes);
             let key = hash_key(raw_key, &salt)?;
@@ -126,14 +126,14 @@ pub fn encrypt_bytes_stream_mode(
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,
-    cipher_type: CipherType,
+    algorithm: Algorithm,
 ) -> Result<()> {
     let salt = gen_salt();
 
-    let header_type = HeaderType { dexios_version: VERSION, cipher_mode: CipherMode::StreamMode, cipher_type };
+    let header_type = HeaderType { dexios_version: VERSION, cipher_mode: CipherMode::StreamMode, algorithm };
 
-    let (mut streams, nonce_bytes): (EncryptStreamCiphers, Vec<u8>) = match cipher_type {
-        CipherType::AesGcm => {
+    let (mut streams, nonce_bytes): (EncryptStreamCiphers, Vec<u8>) = match algorithm {
+        Algorithm::AesGcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
             let nonce = Nonce::from_slice(&nonce_bytes);
 
@@ -152,7 +152,7 @@ pub fn encrypt_bytes_stream_mode(
                 nonce_bytes.to_vec(),
             )
         }
-        CipherType::XChaCha20Poly1305 => {
+        Algorithm::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
 
             let key = hash_key(raw_key, &salt)?;

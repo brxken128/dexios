@@ -1,4 +1,4 @@
-use crate::global::parameters::CipherType;
+use crate::global::parameters::Algorithm;
 use crate::global::parameters::DirectoryMode;
 use crate::global::parameters::HiddenFilesMode;
 use crate::global::parameters::PrintMode;
@@ -30,13 +30,13 @@ pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {
 // all of these values are returned
 pub fn get_encrypted_data(
     name: &str,
-    cipher_type: CipherType,
+    algorithm: Algorithm,
 ) -> Result<([u8; SALT_LEN], Vec<u8>, Vec<u8>)> {
     let mut file =
         File::open(name).with_context(|| format!("Unable to open input file: {}", name))?;
 
-    return match cipher_type {
-        CipherType::AesGcm => {
+    return match algorithm {
+        Algorithm::AesGcm => {
             let mut salt = [0u8; SALT_LEN];
             let mut nonce = [0u8; 12];
             let mut encrypted_data: Vec<u8> = Vec::new();
@@ -59,7 +59,7 @@ pub fn get_encrypted_data(
 
             Ok((salt, nonce.to_vec(), encrypted_data))
         }
-        CipherType::XChaCha20Poly1305 => {
+        Algorithm::XChaCha20Poly1305 => {
             let mut salt = [0u8; SALT_LEN];
             let mut nonce = [0u8; 24];
             let mut encrypted_data: Vec<u8> = Vec::new();

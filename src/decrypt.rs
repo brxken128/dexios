@@ -34,7 +34,7 @@ pub fn memory_mode(
     }
 
     let read_start_time = Instant::now();
-    let (salt, nonce, encrypted_data) = get_encrypted_data(input, params.cipher_type)?;
+    let (salt, nonce, encrypted_data) = get_encrypted_data(input, params.algorithm)?;
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
@@ -68,7 +68,7 @@ pub fn memory_mode(
     );
     let decrypt_start_time = Instant::now();
     let decrypted_bytes =
-        decrypt_bytes_memory_mode(salt, &nonce, &encrypted_data, raw_key, params.cipher_type)?;
+        decrypt_bytes_memory_mode(salt, &nonce, &encrypted_data, raw_key, params.algorithm)?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! [took {:.2}s]",
@@ -144,7 +144,7 @@ pub fn stream_mode(
 
     println!(
         "Decrypting {} in stream mode with {} (this may take a while)",
-        input, params.cipher_type,
+        input, params.algorithm,
     );
     let decrypt_start_time = Instant::now();
     decrypt_bytes_stream_mode(
@@ -153,7 +153,7 @@ pub fn stream_mode(
         raw_key,
         params.bench,
         params.hash_mode,
-        params.cipher_type,
+        params.algorithm,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
     match params.bench {

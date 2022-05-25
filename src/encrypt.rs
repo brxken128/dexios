@@ -54,7 +54,7 @@ pub fn memory_mode(
     };
 
     let encrypt_start_time = Instant::now();
-    encrypt_bytes_memory_mode(file_contents, &mut output_file, raw_key, params.bench, params.hash_mode, params.cipher_type)?;
+    encrypt_bytes_memory_mode(file_contents, &mut output_file, raw_key, params.bench, params.hash_mode, params.algorithm)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",
@@ -116,7 +116,7 @@ pub fn stream_mode(
 
     println!(
         "Encrypting {} in stream mode with {} (this may take a while)",
-        input, params.cipher_type
+        input, params.algorithm
     );
     let encrypt_start_time = Instant::now();
 
@@ -126,7 +126,7 @@ pub fn stream_mode(
         raw_key,
         params.bench,
         params.hash_mode,
-        params.cipher_type,
+        params.algorithm,
     )?;
     let encrypt_duration = encrypt_start_time.elapsed();
     match params.bench {

@@ -11,14 +11,14 @@ pub struct CryptoParameters {
     pub bench: BenchMode,
     pub password: PasswordMode,
     pub erase: EraseMode,
-    pub cipher_type: CipherType,
+    pub algorithm: Algorithm,
 }
 
 // the information needed to easily serialise a header
 pub struct HeaderType {
     pub dexios_version: DexiosVersion,
     pub cipher_mode: CipherMode,
-    pub cipher_type: CipherType,
+    pub algorithm: Algorithm,
 }
 
 pub enum DexiosVersion {
@@ -95,7 +95,7 @@ pub enum OutputFile {
 }
 
 #[derive(Copy, Clone)]
-pub enum CipherType {
+pub enum Algorithm {
     AesGcm,
     XChaCha20Poly1305,
 }
@@ -124,11 +124,11 @@ impl OutputFile {
     }
 }
 
-impl std::fmt::Display for CipherType {
+impl std::fmt::Display for Algorithm {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            CipherType::AesGcm => write!(f, "AES-256-GCM"),
-            CipherType::XChaCha20Poly1305 => write!(f, "XChaCha20-Poly1305"),
+            Algorithm::AesGcm => write!(f, "AES-256-GCM"),
+            Algorithm::XChaCha20Poly1305 => write!(f, "XChaCha20-Poly1305"),
         }
     }
 }
@@ -206,12 +206,12 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<(&str, CryptoParame
         PasswordMode::NormalKeySourcePriority
     };
 
-    let cipher_type = if sub_matches.is_present("gcm") {
+    let algorithm = if sub_matches.is_present("gcm") {
         // specify gcm manually
-        CipherType::AesGcm
+        Algorithm::AesGcm
     } else {
         // default
-        CipherType::XChaCha20Poly1305
+        Algorithm::XChaCha20Poly1305
     };
 
     Ok((
@@ -222,7 +222,7 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<(&str, CryptoParame
             bench,
             password,
             erase,
-            cipher_type,
+            algorithm,
         },
     ))
 }

@@ -211,7 +211,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open header file: {}", input))?;
     input_file
-        .read(&mut header)
+        .read_exact(&mut header)
         .with_context(|| format!("Unable to read header from file: {}", input))?;
 
     let mut output_file = OpenOptions::new()

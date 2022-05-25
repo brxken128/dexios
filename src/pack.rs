@@ -154,7 +154,6 @@ pub fn encrypt_directory(
     Ok(())
 }
 
-
 // this first decrypts the input file to a temporary zip file
 // it then unpacks that temporary zip file to the target directory
 // once finished, it erases the temporary file to avoid any residual data

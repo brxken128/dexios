@@ -1,6 +1,6 @@
 use crate::global::crypto::EncryptStreamCiphers;
 use crate::global::parameters::{
-    Algorithm, BenchMode, CipherMode, HashMode, HeaderType, OutputFile, Header,
+    Algorithm, BenchMode, CipherMode, HashMode, Header, HeaderType, OutputFile,
 };
 use crate::global::{BLOCK_SIZE, SALT_LEN, VERSION};
 use crate::key::argon2_hash;
@@ -93,7 +93,11 @@ pub fn encrypt_bytes_memory_mode(
         }
     };
 
-    let header = Header { salt, nonce: nonce_bytes, header_type };
+    let header = Header {
+        salt,
+        nonce: nonce_bytes,
+        header_type,
+    };
 
     if bench == BenchMode::WriteToFilesystem {
         let write_start_time = Instant::now();
@@ -106,7 +110,7 @@ pub fn encrypt_bytes_memory_mode(
     let mut hasher = blake3::Hasher::new();
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::header::hash(&mut hasher,  &header);
+        crate::header::hash(&mut hasher, &header);
         hasher.update(&encrypted_bytes);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -181,7 +185,11 @@ pub fn encrypt_bytes_stream_mode(
         }
     };
 
-    let header = Header { salt, nonce: nonce_bytes, header_type };
+    let header = Header {
+        salt,
+        nonce: nonce_bytes,
+        header_type,
+    };
 
     if bench == BenchMode::WriteToFilesystem {
         crate::header::write_to_file(output, &header)?;

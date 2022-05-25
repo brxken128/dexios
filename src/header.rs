@@ -1,7 +1,6 @@
 use crate::{
     global::parameters::{
-        Algorithm, BenchMode, CipherMode, Header, HeaderType, HeaderVersion, OutputFile,
-        SkipMode,
+        Algorithm, BenchMode, CipherMode, Header, HeaderType, HeaderVersion, OutputFile, SkipMode,
     },
     global::SALT_LEN,
     prompt::{get_answer, overwrite_check},
@@ -62,10 +61,7 @@ fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
 // this writes a header to a file
 // it handles padding and serialising the specific information
 // it ensures the buffer is left at 64 bytes, so other functions can write the data without further hassle
-pub fn write_to_file(
-    file: &mut OutputFile,
-    header: &Header
-) -> Result<()> {
+pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
     let nonce_len = calc_nonce_len(&header.header_type);
 
     match &header.header_type.header_version {

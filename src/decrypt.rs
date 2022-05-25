@@ -155,7 +155,7 @@ pub fn stream_mode(
         params.hash_mode,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
-    
+
     match params.bench {
         BenchMode::WriteToFilesystem => {
             println!(

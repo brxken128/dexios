@@ -16,7 +16,6 @@ mod key;
 mod pack;
 mod prompt;
 
-
 // this is where subcommand/argument matching is mostly handled
 // similarly to get_matches(), this is long, clunky, and a nightmare to work with
 // it works so that's good enough, and any changes are rather simple to make to it

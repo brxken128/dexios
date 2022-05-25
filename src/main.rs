@@ -24,18 +24,7 @@ fn main() -> Result<()> {
         Some(("encrypt", sub_matches)) => {
             let (keyfile, params) = parameter_handler(sub_matches)?;
 
-            let result = if sub_matches.is_present("memory") {
-                encrypt::memory_mode(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
-                    keyfile,
-                    &params,
-                )
-            } else {
+            let result = // stream mode is the default - it'll redirect to memory mode if the file is too small
                 encrypt::stream_mode(
                     sub_matches
                         .value_of("input")
@@ -45,26 +34,15 @@ fn main() -> Result<()> {
                         .context("No output file/invalid text provided")?,
                     keyfile,
                     &params,
-                )
-            };
+                );
 
             return result;
         }
         Some(("decrypt", sub_matches)) => {
             let (keyfile, params) = parameter_handler(sub_matches)?;
 
-            let result = if sub_matches.is_present("memory") {
-                decrypt::memory_mode(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
-                    keyfile,
-                    &params,
-                )
-            } else {
+            // stream decrypt is the default as it will redirect to memory mode if the header says so
+            let result = 
                 decrypt::stream_mode(
                     sub_matches
                         .value_of("input")
@@ -74,8 +52,7 @@ fn main() -> Result<()> {
                         .context("No output file/invalid text provided")?,
                     keyfile,
                     &params,
-                )
-            };
+                );
 
             return result;
         }

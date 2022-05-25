@@ -1,14 +1,11 @@
 use crate::encrypt::crypto::encrypt_bytes_memory_mode;
 use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
-use crate::file::write_encrypted_data;
 use crate::global::parameters::BenchMode;
 use crate::global::parameters::CryptoParameters;
 use crate::global::parameters::EraseMode;
-use crate::global::parameters::HashMode;
 use crate::global::parameters::OutputFile;
 use crate::global::BLOCK_SIZE;
-use crate::hashing::hash_data_blake3;
 use crate::key::get_user_key;
 use crate::prompt::overwrite_check;
 use anyhow::Context;
@@ -89,7 +86,6 @@ pub fn stream_mode(
             .try_into()
             .context("Unable to parse stream block size as u64")?
     {
-        println!("Input file size is less than the stream block size - redirecting to memory mode");
         return memory_mode(input, output, keyfile, params);
     }
 

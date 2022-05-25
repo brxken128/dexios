@@ -1,6 +1,6 @@
 use crate::global::crypto::DecryptStreamCiphers;
-use crate::global::parameters::{BenchMode, Algorithm, HashMode, OutputFile, HeaderType, CipherMode, HeaderData};
-use crate::global::{BLOCK_SIZE, SALT_LEN, VERSION};
+use crate::global::parameters::{BenchMode, Algorithm, HashMode, OutputFile, HeaderData};
+use crate::global::{BLOCK_SIZE};
 use crate::key::hash_key;
 use aead::stream::DecryptorLE31;
 use aead::{Aead, NewAead};

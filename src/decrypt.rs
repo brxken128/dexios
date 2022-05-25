@@ -4,6 +4,7 @@ use crate::global::parameters::BenchMode;
 use crate::global::parameters::CipherMode;
 use crate::global::parameters::CryptoParams;
 use crate::global::parameters::EraseMode;
+use crate::global::parameters::HeaderFile;
 use crate::global::parameters::OutputFile;
 use crate::key::get_user_key;
 use crate::prompt::overwrite_check;
@@ -17,7 +18,7 @@ mod crypto;
 
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
-pub fn memory_mode(input: &str, output: &str, params: &CryptoParams) -> Result<()> {
+pub fn memory_mode(input: &str, output: &str, header_file: HeaderFile, params: &CryptoParams) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
@@ -25,7 +26,16 @@ pub fn memory_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let header = crate::header::read_from_file(&mut input_file)?;
+    let header = match &header_file {
+        HeaderFile::Some(contents) => {
+            let mut header_file = File::open(contents).with_context(|| format!("Unable to open header file: {}", input))?;
+            input_file.read_exact(&mut vec![0u8; 64]).with_context(|| format!("Unable to seek input file: {}", input))?;
+            crate::header::read_from_file(&mut header_file)?
+        },
+        HeaderFile::None => {
+            crate::header::read_from_file(&mut input_file)?
+        }
+    };
 
     let read_start_time = Instant::now();
 
@@ -76,22 +86,33 @@ pub fn memory_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
 
 // this function is for decrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
-pub fn stream_mode(input: &str, output: &str, header_file: &str, params: &CryptoParams) -> Result<()> {
+pub fn stream_mode(input: &str, output: &str, header_file: HeaderFile, params: &CryptoParams) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let header = if header_file.is_empty() {
-        crate::header::read_from_file(&mut input_file)?
-    } else {
-        let mut header_file = File::open(header_file).with_context(|| format!("Unable to open header file: {}", input))?;
-        input_file.read_exact(&mut vec![0u8; 64]).with_context(|| format!("Unable to seek input file: {}", input))?;
-        crate::header::read_from_file(&mut header_file)?
+    // let header = if header_file.is_empty() {
+    //     crate::header::read_from_file(&mut input_file)?
+    // } else {
+        // let mut header_file = File::open(header_file).with_context(|| format!("Unable to open header file: {}", input))?;
+        // input_file.read_exact(&mut vec![0u8; 64]).with_context(|| format!("Unable to seek input file: {}", input))?;
+        // crate::header::read_from_file(&mut header_file)?
+    // };
+
+    let header = match &header_file {
+        HeaderFile::Some(contents) => {
+            let mut header_file = File::open(contents).with_context(|| format!("Unable to open header file: {}", input))?;
+            input_file.read_exact(&mut vec![0u8; 64]).with_context(|| format!("Unable to seek input file: {}", input))?;
+            crate::header::read_from_file(&mut header_file)?
+        },
+        HeaderFile::None => {
+            crate::header::read_from_file(&mut input_file)?
+        }
     };
 
     
     if header.header_type.cipher_mode == CipherMode::MemoryMode {
         drop(input_file);
-        return memory_mode(input, output, params);
+        return memory_mode(input, output, header_file, params);
     }
 
     if !overwrite_check(output, params.skip, params.bench)? {

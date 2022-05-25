@@ -99,6 +99,11 @@ pub enum KeyFile {
     None,
 }
 
+pub enum HeaderFile {
+    Some(String),
+    None,
+}
+
 #[derive(Copy, Clone)]
 pub enum Algorithm {
     AesGcm,

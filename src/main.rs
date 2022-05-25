@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::parameters::{parameter_handler, Algorithm};
+use global::parameters::{parameter_handler, Algorithm, HeaderFile};
 use global::parameters::{DirectoryMode, HiddenFilesMode, PackMode, PrintMode, SkipMode};
 use global::BLOCK_SIZE;
 use std::result::Result::Ok;
@@ -46,11 +46,11 @@ fn main() -> Result<()> {
         Some(("decrypt", sub_matches)) => {
             let params = parameter_handler(sub_matches)?;
             let header = if sub_matches.is_present("header") {
-                sub_matches
+                HeaderFile::Some(sub_matches
                     .value_of("header")
-                    .context("No header/invalid text provided")?
+                    .context("No header/invalid text provided")?.to_string())
             } else {
-                ""
+                HeaderFile::None
             };
 
             // stream decrypt is the default as it will redirect to memory mode if the header says so
@@ -196,12 +196,12 @@ fn main() -> Result<()> {
                     let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
 
                     let params = parameter_handler(sub_matches_decrypt)?;
-                    let header = if sub_matches_decrypt.is_present("header") {
-                        sub_matches
+                    let header = if sub_matches.is_present("header") {
+                        HeaderFile::Some(sub_matches
                             .value_of("header")
-                            .context("No header/invalid text provided")?
+                            .context("No header/invalid text provided")?.to_string())
                     } else {
-                        ""
+                        HeaderFile::None
                     };
 
 

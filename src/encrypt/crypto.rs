@@ -14,6 +14,7 @@ use secrecy::{ExposeSecret, Secret};
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
+use std::time::Instant;
 
 // this generates a salt for password hashing
 fn gen_salt() -> [u8; SALT_LEN] {
@@ -28,11 +29,17 @@ fn gen_salt() -> [u8; SALT_LEN] {
 // it returns the salt, nonce, and encrypted bytes
 pub fn encrypt_bytes_memory_mode(
     data: Secret<Vec<u8>>,
+    output: &mut OutputFile,
     raw_key: Secret<Vec<u8>>,
+    bench: BenchMode,
+    hash: HashMode,
     cipher_type: CipherType,
-) -> Result<([u8; SALT_LEN], Vec<u8>, Vec<u8>)> {
+) -> Result<()> {
     let salt = gen_salt();
-    return match cipher_type {
+
+    let header_type = HeaderType { cipher_mode: CipherMode::MemoryMode, cipher_type };
+
+    let (nonce_bytes, encrypted_bytes) = match cipher_type {
         CipherType::AesGcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
             let nonce = Nonce::from_slice(nonce_bytes.as_slice());
@@ -54,7 +61,7 @@ pub fn encrypt_bytes_memory_mode(
 
             drop(data);
 
-            Ok((salt, nonce_bytes.to_vec(), encrypted_bytes))
+            (nonce_bytes.to_vec(), encrypted_bytes)
         }
         CipherType::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 24]>();
@@ -76,9 +83,36 @@ pub fn encrypt_bytes_memory_mode(
 
             drop(data);
 
-            Ok((salt, nonce_bytes.to_vec(), encrypted_bytes))
+            (nonce_bytes.to_vec(), encrypted_bytes)
         }
     };
+
+    if bench == BenchMode::WriteToFilesystem {
+        let write_start_time = Instant::now();
+        crate::header::write_to_file(output, &salt, &nonce_bytes, &header_type)?;
+        output.write_all(&encrypted_bytes)?;
+        let write_duration = write_start_time.elapsed();
+        println!(
+            "Wrote to file [took {:.2}s]",
+            write_duration.as_secs_f32()
+        );
+    }
+
+    let mut hasher = blake3::Hasher::new();
+    if hash == HashMode::CalculateHash { 
+        let hash_start_time = Instant::now();
+        crate::header::hash(&mut hasher, &salt, &nonce_bytes, &header_type);
+        hasher.update(&encrypted_bytes);
+        let hash = hasher.finalize().to_hex().to_string();
+        let hash_duration = hash_start_time.elapsed();
+        println!(
+            "Hash of the encrypted file is: {} [took {:.2}s]",
+            hash,
+            hash_duration.as_secs_f32()
+        );
+    }
+
+    Ok(())
 }
 
 // this encrypts data in stream mode
@@ -96,7 +130,7 @@ pub fn encrypt_bytes_stream_mode(
 ) -> Result<()> {
     let salt = gen_salt();
 
-    let mut header_type = HeaderType { cipher_mode: CipherMode::StreamMode, cipher_type };
+    let header_type = HeaderType { cipher_mode: CipherMode::StreamMode, cipher_type };
 
     let (mut streams, nonce_bytes): (EncryptStreamCiphers, Vec<u8>) = match cipher_type {
         CipherType::AesGcm => {

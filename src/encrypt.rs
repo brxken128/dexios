@@ -42,36 +42,25 @@ pub fn memory_mode(
         "Encrypting {} in memory mode (this may take a while)",
         input
     );
+
+
+    let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
+        OutputFile::Some(
+            File::create(output)
+                .with_context(|| format!("Unable to open output file: {}", output))?,
+        )
+    } else {
+        OutputFile::None
+    };
+
     let encrypt_start_time = Instant::now();
-    let (salt, nonce, data) =
-        encrypt_bytes_memory_mode(file_contents, raw_key, params.cipher_type)?;
+    encrypt_bytes_memory_mode(file_contents, &mut output_file, raw_key, params.bench, params.hash_mode, params.cipher_type)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",
         encrypt_duration.as_secs_f32()
     );
 
-    if params.bench == BenchMode::WriteToFilesystem {
-        let write_start_time = Instant::now();
-        write_encrypted_data(output, &salt, &nonce, &data)?;
-        let write_duration = write_start_time.elapsed();
-        println!(
-            "Wrote to {} [took {:.2}s]",
-            output,
-            write_duration.as_secs_f32()
-        );
-    }
-
-    if params.hash_mode == HashMode::CalculateHash {
-        let hash_start_time = Instant::now();
-        let hash = hash_data_blake3(&salt, &nonce, &data)?;
-        let hash_duration = hash_start_time.elapsed();
-        println!(
-            "Hash of the encrypted file is: {} [took {:.2}s]",
-            hash,
-            hash_duration.as_secs_f32()
-        );
-    }
 
     if params.erase != EraseMode::IgnoreFile(0) {
         crate::erase::secure_erase(input, params.erase.get_passes())?;

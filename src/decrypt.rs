@@ -129,7 +129,7 @@ pub fn stream_mode(
     }
 
     let raw_key = get_user_key(&params.keyfile, false, params.password)?;
-    
+
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
             File::create(output)
@@ -153,6 +153,7 @@ pub fn stream_mode(
         params.hash_mode,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
+    
     match params.bench {
         BenchMode::WriteToFilesystem => {
             println!(

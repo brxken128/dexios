@@ -46,43 +46,43 @@ pub enum DirectoryMode {
     Recursive,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq)]
 pub enum HiddenFilesMode {
     Include,
     Exclude,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq)]
 pub enum PrintMode {
     Verbose,
     Quiet,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum EraseMode {
     EraseFile(i32),
     IgnoreFile(i32),
 }
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum HashMode {
     CalculateHash,
     NoHash,
 }
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum SkipMode {
     ShowPrompts,
     HidePrompts,
 }
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum BenchMode {
     WriteToFilesystem,
     BenchmarkInMemory,
 }
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum PasswordMode {
     ForceUserProvidedPassword,
     NormalKeySourcePriority,

@@ -28,7 +28,7 @@ pub fn decrypt_bytes_memory_mode(
     bench: BenchMode,
     hash: HashMode,
 ) -> Result<()> {
-    let key = argon2_hash(raw_key, &header.salt)?;
+    let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
     let decrypted_bytes = match header.header_type.algorithm {
         Algorithm::AesGcm => {
@@ -108,7 +108,7 @@ pub fn decrypt_bytes_stream_mode(
 ) -> Result<()> {
     let mut hasher = blake3::Hasher::new();
 
-    let key = argon2_hash(raw_key, &header.salt)?;
+    let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
     let mut streams: DecryptStreamCiphers = match header.header_type.algorithm {
         Algorithm::AesGcm => {

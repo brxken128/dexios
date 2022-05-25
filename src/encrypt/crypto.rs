@@ -139,12 +139,6 @@ pub fn encrypt_bytes_stream_mode(
     };
 
     if bench == BenchMode::WriteToFilesystem {
-        // output
-        //     .write_all(&salt)
-        //     .context("Unable to write salt to the output file")?;
-        // output
-        //     .write_all(&nonce_bytes)
-        //     .context("Unable to write nonce to the output file")?;
         crate::header::write_to_file(output, &salt, &nonce_bytes, &header_type)?;
     }
 

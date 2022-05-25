@@ -187,7 +187,7 @@ pub fn decrypt_directory(
             None => continue,
         };
 
-        if file.name().ends_with('/') {
+        if file.is_dir() {
             // if it's a directory, recreate the structure
             std::fs::create_dir_all(full_path).context("Unable to create an output directory")?;
         } else {

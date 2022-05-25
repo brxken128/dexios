@@ -24,9 +24,9 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
     nonce_len
 }
 
-// this takes information about the header, and serialises it into raw bytes
-// this is the inverse of the deserialise function
-fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
+// this takes information about the header, and serializes it into raw bytes
+// this is the inverse of the deserialize function
+fn serialize(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
     let version_info = match header_info.header_version {
         HeaderVersion::V1 => {
             let info: [u8; 2] = [0xDE, 0x01];
@@ -67,7 +67,7 @@ pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
     match &header.header_type.header_version {
         HeaderVersion::V1 => {
             let padding = vec![0u8; 26 - nonce_len];
-            let (version_info, algorithm_info, mode_info) = serialise(&header.header_type);
+            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
 
             file.write_all(&version_info)
                 .context("Unable to write version to header")?;
@@ -95,7 +95,7 @@ pub fn hash(hasher: &mut Hasher, header: &Header) {
         HeaderVersion::V1 => {
             let nonce_len = calc_nonce_len(&header.header_type);
             let padding = vec![0u8; 26 - nonce_len];
-            let (version_info, algorithm_info, mode_info) = serialise(&header.header_type);
+            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
 
             hasher.update(&version_info);
             hasher.update(&algorithm_info);
@@ -110,7 +110,7 @@ pub fn hash(hasher: &mut Hasher, header: &Header) {
 
 // this is used for converting raw bytes from the header to enums that dexios can understand
 // this involves the header version, encryption algorithm/mode, and possibly more in the future
-fn deserialise(
+fn deserialize(
     version_info: [u8; 2],
     algorithm_info: [u8; 2],
     mode_info: [u8; 2],
@@ -154,7 +154,7 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
     file.read_exact(&mut mode_info)
         .context("Unable to read encryption mode from header")?;
 
-    let header_info = deserialise(version_info, algorithm_info, mode_info)?;
+    let header_info = deserialize(version_info, algorithm_info, mode_info)?;
     match header_info.header_version {
         HeaderVersion::V1 => {
             let nonce_len = calc_nonce_len(&header_info);

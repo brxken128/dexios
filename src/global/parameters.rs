@@ -19,7 +19,7 @@ pub struct CryptoParams {
     pub keyfile: KeyFile,
 }
 
-// the information needed to easily serialise a header
+// the information needed to easily serialize a header
 pub struct HeaderType {
     pub header_version: HeaderVersion,
     pub cipher_mode: CipherMode,

@@ -151,6 +151,7 @@ pub fn encrypt_directory(
 pub fn decrypt_directory(
     input: &str,   // encrypted zip file
     output: &str,  // directory
+    header: &str, // for decrypt function
     keyfile: &str, // for decrypt function
     print_mode: &PrintMode,
     params: &CryptoParams, // params for decrypt function
@@ -160,7 +161,7 @@ pub fn decrypt_directory(
     // this is the name of the decrypted zip file
     let tmp_name = format!("{}.{}", input, random_extension); // e.g. "input.kjHSD93l"
 
-    crate::decrypt::stream_mode(input, &tmp_name, keyfile, params)?;
+    crate::decrypt::stream_mode(input, &tmp_name, header, keyfile, params)?;
 
     let zip_start_time = Instant::now();
     let file = File::open(&tmp_name).context("Unable to open temporary archive")?;

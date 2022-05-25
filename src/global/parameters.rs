@@ -148,12 +148,13 @@ impl std::fmt::Display for CipherMode {
 }
 
 pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<(&str, CryptoParams)> {
-    let mut keyfile = "";
-    if sub_matches.is_present("keyfile") {
-        keyfile = sub_matches
+    let keyfile = if sub_matches.is_present("keyfile") {
+        sub_matches
             .value_of("keyfile")
-            .context("No keyfile/invalid text provided")?;
-    }
+            .context("No keyfile/invalid text provided")?
+    } else {
+        ""
+    };
 
     let hash_mode = if sub_matches.is_present("hash") {
         //specify to emit hash after operation

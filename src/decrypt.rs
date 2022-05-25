@@ -76,11 +76,19 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &CryptoPara
 
 // this function is for decrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
-pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &CryptoParams) -> Result<()> {
+pub fn stream_mode(input: &str, output: &str, header_file: &str, keyfile: &str, params: &CryptoParams) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let header = crate::header::read_from_file(&mut input_file)?;
+    let header = if header_file.is_empty() {
+        crate::header::read_from_file(&mut input_file)?
+    } else {
+        let mut header_file = File::open(header_file).with_context(|| format!("Unable to open header file: {}", input))?;
+        input_file.read_exact(&mut vec![0u8; 64]).with_context(|| format!("Unable to seek input file: {}", input))?;
+        crate::header::read_from_file(&mut header_file)?
+    };
+
+    
     if header.header_type.cipher_mode == CipherMode::MemoryMode {
         drop(input_file);
         return memory_mode(input, output, keyfile, params);

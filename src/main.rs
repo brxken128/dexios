@@ -46,6 +46,13 @@ fn main() -> Result<()> {
         }
         Some(("decrypt", sub_matches)) => {
             let (keyfile, params) = parameter_handler(sub_matches)?;
+            let header = if sub_matches.is_present("header") {
+                sub_matches
+                    .value_of("header")
+                    .context("No header/invalid text provided")?
+            } else {
+                ""
+            };
 
             // stream decrypt is the default as it will redirect to memory mode if the header says so
             let result = decrypt::stream_mode(
@@ -55,6 +62,7 @@ fn main() -> Result<()> {
                 sub_matches
                     .value_of("output")
                     .context("No output file/invalid text provided")?,
+                    header,
                 keyfile,
                 &params,
             );
@@ -191,6 +199,14 @@ fn main() -> Result<()> {
                     let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
 
                     let (keyfile, params) = parameter_handler(sub_matches_decrypt)?;
+                    let header = if sub_matches_decrypt.is_present("header") {
+                        sub_matches
+                            .value_of("header")
+                            .context("No header/invalid text provided")?
+                    } else {
+                        ""
+                    };
+
 
                     pack::decrypt_directory(
                         sub_matches_decrypt
@@ -199,6 +215,7 @@ fn main() -> Result<()> {
                         sub_matches_decrypt
                             .value_of("output")
                             .context("No output file/invalid text provided")?,
+                        header,
                         keyfile,
                         &print_mode,
                         &params,

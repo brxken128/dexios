@@ -1,4 +1,5 @@
 use crate::file::get_bytes;
+use crate::global::parameters::HeaderVersion;
 use crate::global::parameters::PasswordMode;
 use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
@@ -11,13 +12,22 @@ use secrecy::Zeroize;
 
 // this handles argon2 hashing with the provided key
 // it returns the key hashed with a specified salt
-pub fn argon2_hash(raw_key: Secret<Vec<u8>>, salt: &[u8; SALT_LEN]) -> Result<Secret<[u8; 32]>> {
+pub fn argon2_hash(raw_key: Secret<Vec<u8>>, salt: &[u8; SALT_LEN], version: &HeaderVersion) -> Result<Secret<[u8; 32]>> {
     let mut key = [0u8; 32];
+
+    let params = match version {
+        HeaderVersion::V1 => {
+            let params = argon2::ParamsBuilder::new();
+            params.t_cost(8); // number of iterations
+            params.p_cost(4);
+            params.params().unwrap()
+        }
+    };
 
     let argon2 = Argon2::new(
         argon2::Algorithm::Argon2id,
         argon2::Version::V0x13,
-        Params::default(),
+        params,
     );
     let result = argon2.hash_password_into(raw_key.expose_secret(), salt, &mut key);
     drop(raw_key);

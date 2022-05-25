@@ -1,6 +1,6 @@
 use crate::{
     global::parameters::{
-        Algorithm, BenchMode, CipherMode, DexiosVersion, HeaderData, HeaderType, OutputFile,
+        Algorithm, BenchMode, CipherMode, HeaderVersion, HeaderData, HeaderType, OutputFile,
         SkipMode,
     },
     global::SALT_LEN,
@@ -25,9 +25,9 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
 }
 
 fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
-    let version_info = match header_info.dexios_version {
-        DexiosVersion::V8 => {
-            let info: [u8; 2] = [0xDE, 0x08];
+    let version_info = match header_info.header_version {
+        HeaderVersion::V1 => {
+            let info: [u8; 2] = [0xDE, 0x01];
             info
         }
     };
@@ -64,8 +64,8 @@ pub fn write_to_file(
 ) -> Result<()> {
     let nonce_len = calc_nonce_len(header_info);
 
-    match header_info.dexios_version {
-        DexiosVersion::V8 => {
+    match header_info.header_version {
+        HeaderVersion::V1 => {
             let padding = vec![0u8; 26 - nonce_len];
             let (version_info, algorithm_info, mode_info) = serialise(header_info);
 
@@ -90,8 +90,8 @@ pub fn write_to_file(
 }
 
 pub fn hash(hasher: &mut Hasher, salt: &[u8; SALT_LEN], nonce: &[u8], header_info: &HeaderType) {
-    match header_info.dexios_version {
-        DexiosVersion::V8 => {
+    match header_info.header_version {
+        HeaderVersion::V1 => {
             let nonce_len = calc_nonce_len(header_info);
             let padding = vec![0u8; 26 - nonce_len];
             let (version_info, algorithm_info, mode_info) = serialise(header_info);
@@ -112,8 +112,8 @@ fn deserialise(
     algorithm_info: [u8; 2],
     mode_info: [u8; 2],
 ) -> Result<HeaderType> {
-    let dexios_version = match version_info {
-        [0xDE, 0x08] => DexiosVersion::V8,
+    let header_version = match version_info {
+        [0xDE, 0x01] => HeaderVersion::V1,
         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
     };
 
@@ -130,7 +130,7 @@ fn deserialise(
     };
 
     Ok(HeaderType {
-        dexios_version,
+        header_version,
         cipher_mode,
         algorithm,
     })
@@ -150,8 +150,8 @@ pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
         .context("Unable to read encryption mode from header")?;
 
     let header_info = deserialise(version_info, algorithm_info, mode_info)?;
-    match header_info.dexios_version {
-        DexiosVersion::V8 => {
+    match header_info.header_version {
+        HeaderVersion::V1 => {
             let nonce_len = calc_nonce_len(&header_info);
             let mut nonce = vec![0u8; nonce_len];
 

@@ -40,7 +40,7 @@ pub fn encrypt_bytes_memory_mode(
     let salt = gen_salt();
 
     let header_type = HeaderType {
-        dexios_version: VERSION,
+        header_version: VERSION,
         cipher_mode: CipherMode::MemoryMode,
         algorithm,
     };
@@ -134,7 +134,7 @@ pub fn encrypt_bytes_stream_mode(
     let salt = gen_salt();
 
     let header_type = HeaderType {
-        dexios_version: VERSION,
+        header_version: VERSION,
         cipher_mode: CipherMode::StreamMode,
         algorithm,
     };

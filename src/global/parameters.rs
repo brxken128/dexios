@@ -15,13 +15,13 @@ pub struct CryptoParams {
 
 // the information needed to easily serialise a header
 pub struct HeaderType {
-    pub dexios_version: DexiosVersion,
+    pub header_version: HeaderVersion,
     pub cipher_mode: CipherMode,
     pub algorithm: Algorithm,
 }
 
-pub enum DexiosVersion {
-    V8,
+pub enum HeaderVersion {
+    V1,
 }
 
 // the data used returned after reading/deserialising a header

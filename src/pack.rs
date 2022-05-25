@@ -12,7 +12,7 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::parameters::{DirectoryMode, CryptoParameters, PrintMode, SkipMode, PackMode},
+    global::parameters::{CryptoParameters, DirectoryMode, PackMode, PrintMode, SkipMode},
     global::BLOCK_SIZE,
     prompt::get_answer,
 };
@@ -31,7 +31,13 @@ pub fn encrypt_directory(
     }
 
     let index_start_time = Instant::now();
-    let (files, dirs) = get_paths_in_dir(input, pack_params.dir_mode, &pack_params.exclude, &pack_params.hidden, &pack_params.print_mode)?;
+    let (files, dirs) = get_paths_in_dir(
+        input,
+        pack_params.dir_mode,
+        &pack_params.exclude,
+        &pack_params.hidden,
+        &pack_params.print_mode,
+    )?;
     let index_duration = index_start_time.elapsed();
     let file_count = files.len();
     println!(

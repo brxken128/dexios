@@ -1,5 +1,5 @@
 use crate::{
-    global::parameters::{BenchMode, CipherType, CipherMode, HeaderType, SkipMode},
+    global::parameters::{BenchMode, CipherMode, CipherType, HeaderType, SkipMode},
     global::SALT_LEN,
     prompt::{get_answer, overwrite_check},
 };

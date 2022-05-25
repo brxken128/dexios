@@ -1,8 +1,7 @@
-use crate::global::{
-    BLOCK_SIZE, SALT_LEN,
-};
 use crate::global::crypto::EncryptStreamCiphers;
 use crate::global::parameters::{BenchMode, CipherType, HashMode, OutputFile};
+use crate::global::{BLOCK_SIZE, SALT_LEN};
+use crate::key::hash_key;
 use aead::stream::EncryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -15,7 +14,6 @@ use secrecy::{ExposeSecret, Secret};
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
-use crate::key::hash_key;
 
 // this generates a salt for password hashing
 fn gen_salt() -> [u8; SALT_LEN] {
@@ -97,50 +95,45 @@ pub fn encrypt_bytes_stream_mode(
     cipher_type: CipherType,
 ) -> Result<()> {
     let salt = gen_salt();
-    let (mut streams, nonce_bytes): (EncryptStreamCiphers, Vec<u8>) =
-        match cipher_type {
-            CipherType::AesGcm => {
-                let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
-                let nonce = Nonce::from_slice(&nonce_bytes);
+    let (mut streams, nonce_bytes): (EncryptStreamCiphers, Vec<u8>) = match cipher_type {
+        CipherType::AesGcm => {
+            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
+            let nonce = Nonce::from_slice(&nonce_bytes);
 
-                let key = hash_key(raw_key, &salt)?;
-                let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
-                    Ok(cipher) => {
-                        drop(key);
-                        cipher
-                    }
-                    Err(_) => {
-                        return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
-                    }
-                };
+            let key = hash_key(raw_key, &salt)?;
+            let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                }
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
+            };
 
-                let stream = EncryptorLE31::from_aead(cipher, nonce);
-                (
-                    EncryptStreamCiphers::AesGcm(Box::new(stream)),
-                    nonce_bytes.to_vec(),
-                )
-            }
-            CipherType::XChaCha20Poly1305 => {
-                let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
+            let stream = EncryptorLE31::from_aead(cipher, nonce);
+            (
+                EncryptStreamCiphers::AesGcm(Box::new(stream)),
+                nonce_bytes.to_vec(),
+            )
+        }
+        CipherType::XChaCha20Poly1305 => {
+            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
 
-                let key = hash_key(raw_key, &salt)?;
-                let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
-                    Ok(cipher) => {
-                        drop(key);
-                        cipher
-                    }
-                    Err(_) => {
-                        return Err(anyhow!("Unable to create cipher with argon2id hashed key."))
-                    }
-                };
+            let key = hash_key(raw_key, &salt)?;
+            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                }
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
+            };
 
-                let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
-                (
-                    EncryptStreamCiphers::XChaCha(Box::new(stream)),
-                    nonce_bytes.to_vec(),
-                )
-            }
-        };
+            let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
+            (
+                EncryptStreamCiphers::XChaCha(Box::new(stream)),
+                nonce_bytes.to_vec(),
+            )
+        }
+    };
 
     if bench == BenchMode::WriteToFilesystem {
         output

@@ -17,8 +17,7 @@ use std::{
 pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {
     let mut file = File::open(name).with_context(|| format!("Unable to open file: {}", name))?;
     let mut data = Vec::new();
-    file
-        .read_to_end(&mut data)
+    file.read_to_end(&mut data)
         .with_context(|| format!("Unable to read file: {}", name))?;
     Ok(SecretVec::new(data))
 }
@@ -33,7 +32,8 @@ pub fn get_encrypted_data(
     name: &str,
     cipher_type: CipherType,
 ) -> Result<([u8; SALT_LEN], Vec<u8>, Vec<u8>)> {
-    let mut file = File::open(name).with_context(|| format!("Unable to open input file: {}", name))?;
+    let mut file =
+        File::open(name).with_context(|| format!("Unable to open input file: {}", name))?;
 
     return match cipher_type {
         CipherType::AesGcm => {
@@ -47,8 +47,7 @@ pub fn get_encrypted_data(
             let nonce_size = file
                 .read(&mut nonce)
                 .with_context(|| format!("Unable to read nonce from file: {}", name))?;
-            file
-                .read_to_end(&mut encrypted_data)
+            file.read_to_end(&mut encrypted_data)
                 .with_context(|| format!("Unable to read data from file: {}", name))?;
 
             if salt_size != SALT_LEN || nonce_size != 12 {
@@ -71,8 +70,7 @@ pub fn get_encrypted_data(
             let nonce_size = file
                 .read(&mut nonce)
                 .with_context(|| format!("Unable to read nonce from file: {}", name))?;
-            file
-                .read_to_end(&mut encrypted_data)
+            file.read_to_end(&mut encrypted_data)
                 .with_context(|| format!("Unable to read data from file: {}", name))?;
 
             if salt_size != SALT_LEN || nonce_size != 24 {

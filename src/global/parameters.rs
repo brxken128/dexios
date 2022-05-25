@@ -1,7 +1,7 @@
-use std::fs::File;
-use std::io::Write;
 use anyhow::{Context, Result};
 use clap::ArgMatches;
+use std::fs::File;
+use std::io::Write;
 
 pub struct CryptoParameters {
     pub hash_mode: HashMode,
@@ -93,7 +93,6 @@ impl EraseMode {
         }
     }
 }
-
 
 impl OutputFile {
     pub fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()> {

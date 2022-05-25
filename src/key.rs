@@ -23,12 +23,13 @@ pub fn hash_key(raw_key: Secret<Vec<u8>>, salt: &[u8; SALT_LEN]) -> Result<Secre
     drop(raw_key);
 
     if result.is_err() {
-        return Err(anyhow::anyhow!("Error while hashing your password with argon2id"));
+        return Err(anyhow::anyhow!(
+            "Error while hashing your password with argon2id"
+        ));
     }
 
     Ok(Secret::new(key))
 }
-
 
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes

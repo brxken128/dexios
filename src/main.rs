@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
-use global::parameters::{DirectoryMode, HiddenFilesMode, PrintMode, SkipMode, PackMode};
-use global::BLOCK_SIZE;
 use global::parameters::{header_type_handler, parameter_handler};
+use global::parameters::{DirectoryMode, HiddenFilesMode, PackMode, PrintMode, SkipMode};
+use global::BLOCK_SIZE;
 use std::result::Result::Ok;
 
 mod cli;
@@ -174,8 +174,15 @@ fn main() -> Result<()> {
                     let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
 
                     let (keyfile, params) = parameter_handler(sub_matches_encrypt)?;
-                    let pack_params = PackMode { compression_level, dir_mode, exclude: excluded, hidden, memory: sub_matches_encrypt.is_present("memory"), print_mode };
-                    
+                    let pack_params = PackMode {
+                        compression_level,
+                        dir_mode,
+                        exclude: excluded,
+                        hidden,
+                        memory: sub_matches_encrypt.is_present("memory"),
+                        print_mode,
+                    };
+
                     pack::encrypt_directory(
                         sub_matches_encrypt
                             .value_of("input")

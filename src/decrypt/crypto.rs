@@ -1,8 +1,7 @@
-use crate::global::parameters::{
-    BenchMode, CipherType, HashMode, OutputFile,
-};
-use crate::global::{BLOCK_SIZE, SALT_LEN};
 use crate::global::crypto::DecryptStreamCiphers;
+use crate::global::parameters::{BenchMode, CipherType, HashMode, OutputFile};
+use crate::global::{BLOCK_SIZE, SALT_LEN};
+use crate::key::hash_key;
 use aead::stream::DecryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -14,7 +13,6 @@ use secrecy::{ExposeSecret, Secret};
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
-use crate::key::hash_key;
 
 // this decrypts the data in memory mode
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce

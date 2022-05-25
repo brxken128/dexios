@@ -1,9 +1,34 @@
 use crate::file::get_bytes;
 use crate::global::PasswordMode;
+use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
+use argon2::Argon2;
+use argon2::Params;
+use secrecy::ExposeSecret;
 use secrecy::Secret;
 use secrecy::SecretVec;
 use secrecy::Zeroize;
+
+// this handles argon2 hashing with the provided key
+// it returns the key hashed with a specified salt
+pub fn hash_key(raw_key: Secret<Vec<u8>>, salt: &[u8; SALT_LEN]) -> Result<Secret<[u8; 32]>> {
+    let mut key = [0u8; 32];
+
+    let argon2 = Argon2::new(
+        argon2::Algorithm::Argon2id,
+        argon2::Version::V0x13,
+        Params::default(),
+    );
+    let result = argon2.hash_password_into(raw_key.expose_secret(), salt, &mut key);
+    drop(raw_key);
+
+    if result.is_err() {
+        return Err(anyhow::anyhow!("Error while hashing your password with argon2id"));
+    }
+
+    Ok(Secret::new(key))
+}
+
 
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes

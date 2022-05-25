@@ -7,41 +7,19 @@ use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
-use argon2::Argon2;
-use argon2::Params;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
 use secrecy::{ExposeSecret, Secret};
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
+use crate::key::hash_key;
 
 // this generates a salt for password hashing
 fn gen_salt() -> [u8; SALT_LEN] {
     let mut salt: [u8; SALT_LEN] = [0; SALT_LEN];
     StdRng::from_entropy().fill_bytes(&mut salt);
     salt
-}
-
-// this handles argon2 hashing with the provided key
-// it returns the key and a salt
-fn gen_key(raw_key: Secret<Vec<u8>>) -> Result<(Secret<[u8; 32]>, [u8; SALT_LEN])> {
-    let mut key = [0u8; 32];
-    let salt = gen_salt();
-
-    let argon2 = Argon2::new(
-        argon2::Algorithm::Argon2id,
-        argon2::Version::V0x13,
-        Params::default(),
-    );
-    let result = argon2.hash_password_into(raw_key.expose_secret(), &salt, &mut key);
-    drop(raw_key);
-
-    if result.is_err() {
-        return Err(anyhow!("Error while hashing your password with argon2id"));
-    }
-
-    Ok((Secret::new(key), salt))
 }
 
 // this encrypts data in memory mode
@@ -53,12 +31,13 @@ pub fn encrypt_bytes_memory_mode(
     raw_key: Secret<Vec<u8>>,
     cipher_type: CipherType,
 ) -> Result<([u8; SALT_LEN], Vec<u8>, Vec<u8>)> {
+    let salt = gen_salt();
     return match cipher_type {
         CipherType::AesGcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
             let nonce = Nonce::from_slice(nonce_bytes.as_slice());
 
-            let (key, salt) = gen_key(raw_key)?;
+            let key = hash_key(raw_key, &salt)?;
 
             let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
@@ -80,7 +59,7 @@ pub fn encrypt_bytes_memory_mode(
         CipherType::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 24]>();
             let nonce = XNonce::from_slice(&nonce_bytes);
-            let (key, salt) = gen_key(raw_key)?;
+            let key = hash_key(raw_key, &salt)?;
 
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
@@ -115,13 +94,14 @@ pub fn encrypt_bytes_stream_mode(
     hash: HashMode,
     cipher_type: CipherType,
 ) -> Result<()> {
-    let (mut streams, salt, nonce_bytes): (EncryptStreamCiphers, [u8; SALT_LEN], Vec<u8>) =
+    let salt = gen_salt();
+    let (mut streams, nonce_bytes): (EncryptStreamCiphers, Vec<u8>) =
         match cipher_type {
             CipherType::AesGcm => {
                 let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
                 let nonce = Nonce::from_slice(&nonce_bytes);
 
-                let (key, salt) = gen_key(raw_key)?;
+                let key = hash_key(raw_key, &salt)?;
                 let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
                     Ok(cipher) => {
                         drop(key);
@@ -135,14 +115,13 @@ pub fn encrypt_bytes_stream_mode(
                 let stream = EncryptorLE31::from_aead(cipher, nonce);
                 (
                     EncryptStreamCiphers::AesGcm(Box::new(stream)),
-                    salt,
                     nonce_bytes.to_vec(),
                 )
             }
             CipherType::XChaCha20Poly1305 => {
                 let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
 
-                let (key, salt) = gen_key(raw_key)?;
+                let key = hash_key(raw_key, &salt)?;
                 let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
                     Ok(cipher) => {
                         drop(key);
@@ -156,7 +135,6 @@ pub fn encrypt_bytes_stream_mode(
                 let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
                 (
                     EncryptStreamCiphers::XChaCha(Box::new(stream)),
-                    salt,
                     nonce_bytes.to_vec(),
                 )
             }

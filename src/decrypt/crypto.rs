@@ -7,32 +7,12 @@ use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
-use argon2::Argon2;
-use argon2::Params;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use secrecy::{ExposeSecret, Secret};
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
-
-// this handles argon2id hashing with the provided key and salt
-fn get_key(raw_key: Secret<Vec<u8>>, salt: [u8; SALT_LEN]) -> Result<Secret<[u8; 32]>> {
-    let mut key = [0u8; 32];
-
-    let argon2 = Argon2::new(
-        argon2::Algorithm::Argon2id,
-        argon2::Version::V0x13,
-        Params::default(),
-    );
-    let result = argon2.hash_password_into(raw_key.expose_secret(), &salt, &mut key);
-    drop(raw_key);
-
-    if result.is_err() {
-        return Err(anyhow!("Error while hashing your password with argon2id"));
-    }
-
-    Ok(Secret::new(key))
-}
+use crate::key::hash_key;
 
 // this decrypts the data in memory mode
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce
@@ -45,7 +25,7 @@ pub fn decrypt_bytes_memory_mode(
     raw_key: Secret<Vec<u8>>,
     cipher_type: CipherType,
 ) -> Result<Vec<u8>> {
-    let key = get_key(raw_key, salt)?;
+    let key = hash_key(raw_key, &salt)?;
 
     return match cipher_type {
         CipherType::AesGcm => {
@@ -105,7 +85,7 @@ pub fn decrypt_bytes_stream_mode(
         hasher.update(&salt);
     }
 
-    let key = get_key(raw_key, salt)?;
+    let key = hash_key(raw_key, &salt)?;
 
     let mut streams: DecryptStreamCiphers = match cipher_type {
         CipherType::AesGcm => {

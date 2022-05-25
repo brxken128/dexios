@@ -4,7 +4,6 @@ use crate::global::parameters::PasswordMode;
 use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
 use argon2::Argon2;
-use argon2::Params;
 use secrecy::ExposeSecret;
 use secrecy::Secret;
 use secrecy::SecretVec;
@@ -18,9 +17,12 @@ pub fn argon2_hash(raw_key: Secret<Vec<u8>>, salt: &[u8; SALT_LEN], version: &He
     let params = match version {
         HeaderVersion::V1 => {
             let params = argon2::ParamsBuilder::new();
-            params.t_cost(8); // number of iterations
-            params.p_cost(4);
-            params.params().unwrap()
+            params.t_cost(6); // number of iterations
+            params.p_cost(4); // parallelism
+            match params.params() {
+                std::result::Result::Ok(parameters) => parameters,
+                Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
+            }
         }
     };
 

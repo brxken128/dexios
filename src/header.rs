@@ -101,9 +101,9 @@ pub fn hash(hasher: &mut Hasher, salt: &[u8; SALT_LEN], nonce: &[u8], header_inf
 }
 
 fn deserialise(
-    version_info: &[u8; 2],
-    cipher_info: &[u8; 2],
-    mode_info: &[u8; 2],
+    version_info: [u8; 2],
+    cipher_info: [u8; 2],
+    mode_info: [u8; 2],
 ) -> Result<HeaderType> {
     let dexios_version = match version_info {
         [0xDE, 0x08] => DexiosVersion::V8,
@@ -124,8 +124,8 @@ fn deserialise(
 
     Ok(HeaderType {
         dexios_version,
-        algorithm,
         cipher_mode,
+        algorithm,
     })
 }
 
@@ -139,17 +139,16 @@ pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
     file.read_exact(&mut cipher_info)?;
     file.read_exact(&mut mode_info)?;
 
-    let header_info = deserialise(&version_info, &cipher_info, &mode_info)?;
+    let header_info = deserialise(version_info, cipher_info, mode_info)?;
     match header_info.dexios_version {
         DexiosVersion::V8 => {
             let nonce_len = calc_nonce_len(&header_info);
             let mut nonce = vec![0u8; nonce_len];
-            let mut _padding = vec![0u8; 26 - nonce_len];
 
             file.read_exact(&mut salt)?;
             file.read_exact(&mut [0; 16])?; // read and subsequently discard the next 16 bytes
             file.read_exact(&mut nonce)?;
-            file.read_exact(&mut _padding)?;
+            file.read_exact(&mut vec![0u8; 26 - nonce_len])?; // read and discard the final padding
 
             Ok(HeaderData {
                 header_type: header_info,

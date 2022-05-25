@@ -1,7 +1,7 @@
 use crate::global::crypto::DecryptStreamCiphers;
 use crate::global::parameters::{Algorithm, BenchMode, HashMode, HeaderData, OutputFile};
 use crate::global::BLOCK_SIZE;
-use crate::key::hash_key;
+use crate::key::argon2_hash;
 use aead::stream::DecryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -28,7 +28,7 @@ pub fn decrypt_bytes_memory_mode(
     bench: BenchMode,
     hash: HashMode,
 ) -> Result<()> {
-    let key = hash_key(raw_key, &header.salt)?;
+    let key = argon2_hash(raw_key, &header.salt)?;
 
     let decrypted_bytes = match header.header_type.algorithm {
         Algorithm::AesGcm => {
@@ -106,19 +106,9 @@ pub fn decrypt_bytes_stream_mode(
     bench: BenchMode,
     hash: HashMode,
 ) -> Result<()> {
-    // let mut salt = [0u8; SALT_LEN];
-    // input
-    //     .read(&mut salt)
-    //     .context("Unable to read salt from the file")?;
-
     let mut hasher = blake3::Hasher::new();
 
-    // if hash == HashMode::CalculateHash {
-    //     hasher.update(&salt);
-    // }
-
-    // let key = hash_key(raw_key, &salt)?;
-    let key = hash_key(raw_key, &header.salt)?;
+    let key = argon2_hash(raw_key, &header.salt)?;
 
     let mut streams: DecryptStreamCiphers = match header.header_type.algorithm {
         Algorithm::AesGcm => {

@@ -3,7 +3,7 @@ use crate::global::parameters::{
     Algorithm, BenchMode, CipherMode, HashMode, HeaderType, OutputFile,
 };
 use crate::global::{BLOCK_SIZE, SALT_LEN, VERSION};
-use crate::key::hash_key;
+use crate::key::argon2_hash;
 use aead::stream::EncryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -50,7 +50,7 @@ pub fn encrypt_bytes_memory_mode(
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
             let nonce = Nonce::from_slice(nonce_bytes.as_slice());
 
-            let key = hash_key(raw_key, &salt)?;
+            let key = argon2_hash(raw_key, &salt)?;
 
             let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
@@ -72,7 +72,7 @@ pub fn encrypt_bytes_memory_mode(
         Algorithm::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 24]>();
             let nonce = XNonce::from_slice(&nonce_bytes);
-            let key = hash_key(raw_key, &salt)?;
+            let key = argon2_hash(raw_key, &salt)?;
 
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
@@ -144,7 +144,7 @@ pub fn encrypt_bytes_stream_mode(
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
             let nonce = Nonce::from_slice(&nonce_bytes);
 
-            let key = hash_key(raw_key, &salt)?;
+            let key = argon2_hash(raw_key, &salt)?;
             let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
                     drop(key);
@@ -162,7 +162,7 @@ pub fn encrypt_bytes_stream_mode(
         Algorithm::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
 
-            let key = hash_key(raw_key, &salt)?;
+            let key = argon2_hash(raw_key, &salt)?;
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
                     drop(key);

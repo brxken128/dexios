@@ -19,11 +19,12 @@ use crate::{
     prompt::get_answer,
 };
 
+#[allow(clippy::too_many_lines)]
 pub fn encrypt_directory(
     input: &str,
     output: &str,
     keyfile: &str,
-    pack_params: PackMode,
+    pack_params: &PackMode,
     params: &CryptoParams,
     algorithm: Algorithm,
 ) -> Result<()> {

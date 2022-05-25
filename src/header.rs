@@ -69,13 +69,13 @@ pub fn write_to_file(
             let padding = vec![0u8; 26 - nonce_len];
             let (version_info, algorithm_info, mode_info) = serialise(header_info);
 
-            file.write_all(&version_info)?;
-            file.write_all(&algorithm_info)?;
-            file.write_all(&mode_info)?; // 6 bytes total
-            file.write_all(salt)?; // 22 bytes total
-            file.write_all(&[0; 16])?; // 38 bytes total (26 remaining)
-            file.write_all(nonce)?; // (26 - nonce_len remaining)
-            file.write_all(&padding)?; // this has reached the 64 bytes
+            file.write_all(&version_info).context("Unable to write version to header")?;
+            file.write_all(&algorithm_info).context("Unable to write algorithm to header")?;
+            file.write_all(&mode_info).context("Unable to write encryption mode to header")?; // 6 bytes total
+            file.write_all(salt).context("Unable to write salt to header")?; // 22 bytes total
+            file.write_all(&[0; 16]).context("Unable to write empty bytes to header")?; // 38 bytes total (26 remaining)
+            file.write_all(nonce).context("Unable to write nonce to header")?; // (26 - nonce_len remaining)
+            file.write_all(&padding).context("Unable to write final padding to header")?; // this has reached the 64 bytes
         }
     }
 
@@ -136,7 +136,7 @@ pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
     let mut salt = [0u8; SALT_LEN];
 
     file.read_exact(&mut version_info).context("Unable to read version from header")?;
-    file.read_exact(&mut algorithm_info).context("Unable to read cipher from header")?;
+    file.read_exact(&mut algorithm_info).context("Unable to read algorithm from header")?;
     file.read_exact(&mut mode_info).context("Unable to read encryption mode from header")?;
 
     let header_info = deserialise(version_info, algorithm_info, mode_info)?;

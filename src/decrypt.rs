@@ -35,7 +35,7 @@ pub fn memory_mode(
     let read_start_time = Instant::now();
 
     let mut encrypted_data = Vec::new();
-    input_file.read_to_end(&mut encrypted_data)?; // !!! error handl
+    input_file.read_to_end(&mut encrypted_data).with_context(|| format!("Unable to read encrypted data from file: {}", input))?;
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 

@@ -225,6 +225,13 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         .read_exact(&mut header)
         .with_context(|| format!("Unable to read header from file: {}", input))?;
 
+    if header[..1] != [0xDE] {
+        let prompt = "This doesn't seem to be a Dexios header file, are you sure you'd like to continue?";
+        if !get_answer(prompt, false, skip == SkipMode::HidePrompts)? {
+            exit(0);
+        }
+    }
+
     let mut output_file = OpenOptions::new()
         .write(true)
         .open(output)

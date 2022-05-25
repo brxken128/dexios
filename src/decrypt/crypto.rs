@@ -67,7 +67,7 @@ pub fn decrypt_bytes_memory_mode(
 
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::header::hash(&mut hasher, &header);
+        crate::header::hash(&mut hasher, header);
         hasher.update(data);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -135,7 +135,7 @@ pub fn decrypt_bytes_stream_mode(
     };
 
     if hash == HashMode::CalculateHash {
-        crate::header::hash(&mut hasher, &header);
+        crate::header::hash(&mut hasher, header);
     }
 
     let mut buffer = [0u8; BLOCK_SIZE + 16]; // 16 bytes is the length of the AEAD tag

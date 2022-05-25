@@ -96,7 +96,7 @@ pub fn get_secret(
     } else {
         get_password(validation)?
     };
-    if key.expose_secret().len() == 0 {
+    if key.expose_secret().is_empty() {
         Err(anyhow::anyhow!("The specified key is empty!"))
     } else {
         Ok(key)

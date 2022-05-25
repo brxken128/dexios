@@ -1,5 +1,5 @@
 use crate::{
-    global::parameters::{BenchMode, CipherMode, CipherType, HeaderType, SkipMode, HeaderData, OutputFile},
+    global::parameters::{BenchMode, CipherMode, CipherType, HeaderType, SkipMode, HeaderData, OutputFile, DexiosVersion},
     global::SALT_LEN,
     prompt::{get_answer, overwrite_check},
 };
@@ -21,7 +21,13 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
     nonce_len
 }
 
-fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2]) {
+fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
+    let version_info = match header_info.dexios_version {
+        DexiosVersion::V8 => {
+            let info: [u8; 2] = [0xDE, 0x08];
+            info
+        }
+    };
     let cipher_info = match header_info.cipher_type {
         CipherType::XChaCha20Poly1305 => {
             let info: [u8; 2] = [0x0E, 0x01];
@@ -44,41 +50,58 @@ fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2]) {
         },
     };
 
-    (cipher_info, mode_info)
+    (version_info, cipher_info, mode_info)
 }
 
 pub fn write_to_file(file: &mut OutputFile, salt: &[u8; SALT_LEN], nonce: &[u8], header_info: &HeaderType) -> Result<()> {
     let nonce_len = calc_nonce_len(header_info);
-    let padding = vec![0u8; 28 - nonce_len];
-    let (cipher_info, mode_info) = serialise(header_info);
 
-    file.write_all(&cipher_info)?;
-    file.write_all(&mode_info)?; // 4 bytes total
-    file.write_all(salt)?; // 20 bytes total
-    file.write_all(&[0; 16])?; // 36 bytes total (28 remaining)
-    file.write_all(nonce)?; // (28 - nonce_len remaining)
-    file.write_all(&padding)?; // this has reached the 64 bytes
+    match header_info.dexios_version {
+        DexiosVersion::V8 => {
+            let padding = vec![0u8; 26 - nonce_len];
+            let (version_info, cipher_info, mode_info) = serialise(header_info);
+        
+            file.write_all(&version_info)?;
+            file.write_all(&cipher_info)?;
+            file.write_all(&mode_info)?; // 6 bytes total
+            file.write_all(salt)?; // 22 bytes total
+            file.write_all(&[0; 16])?; // 38 bytes total (26 remaining)
+            file.write_all(nonce)?; // (26 - nonce_len remaining)
+            file.write_all(&padding)?; // this has reached the 64 bytes
+        }
+    }
+
     Ok(())
 }
 
 pub fn hash(hasher: &mut Hasher, salt: &[u8; SALT_LEN], nonce: &[u8], header_info: &HeaderType) {
-    let nonce_len = calc_nonce_len(header_info);
-    let padding = vec![0u8; 28 - nonce_len];
-    let (cipher_info, mode_info) = serialise(header_info);
-
-    hasher.update(&cipher_info);
-    hasher.update(&mode_info); // 4 bytes total
-    hasher.update(salt); // 20 bytes total
-    hasher.update(&[0; 16]); // 36 bytes total (28 remaining)
-    hasher.update(nonce); // (28 - nonce_len remaining)
-    hasher.update(&padding); // this has reached the 64 bytes
+    match header_info.dexios_version {
+        DexiosVersion::V8 => {
+            let nonce_len = calc_nonce_len(header_info);
+            let padding = vec![0u8; 26 - nonce_len];
+            let (version_info, cipher_info, mode_info) = serialise(header_info);
+        
+            hasher.update(&version_info);
+            hasher.update(&cipher_info);
+            hasher.update(&mode_info);
+            hasher.update(salt);
+            hasher.update(&[0; 16]);
+            hasher.update(nonce);
+            hasher.update(&padding);
+        }
+    }
 }
 
-fn deserialise(cipher_info: &[u8; 2], mode_info: &[u8; 2]) -> Result<HeaderType> {
+fn deserialise(version_info: &[u8; 2], cipher_info: &[u8; 2], mode_info: &[u8; 2]) -> Result<HeaderType> {
+    let dexios_version = match version_info {
+        [0xDE, 0x08] => DexiosVersion::V8,
+        _ => return Err(anyhow::anyhow!("Error getting cipher mode from header"))
+    };
+
     let cipher_type = match cipher_info {
         [0x0E, 0x01] => CipherType::XChaCha20Poly1305,
         [0x0E, 0x02] => CipherType::AesGcm,
-        _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
+        _ => return Err(anyhow::anyhow!("Error getting encryption mode from header")),
     };
 
     let cipher_mode = match mode_info {
@@ -87,29 +110,36 @@ fn deserialise(cipher_info: &[u8; 2], mode_info: &[u8; 2]) -> Result<HeaderType>
         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
     };
 
-    Ok(HeaderType { cipher_type, cipher_mode })
+    Ok(HeaderType { dexios_version, cipher_type, cipher_mode })
 }
 
 
 pub fn read_from_file(file: &mut File) -> Result<HeaderData> {
+    let mut version_info = [0u8; 2];
     let mut cipher_info = [0u8; 2];
     let mut mode_info = [0u8; 2];
     let mut salt = [0u8; SALT_LEN];
 
+    file.read(&mut version_info)?;
     file.read(&mut cipher_info)?;
     file.read(&mut mode_info)?;
 
-    let header_info = deserialise(&cipher_info, &mode_info)?;
-    let nonce_len = calc_nonce_len(&header_info);
-    let mut nonce = vec![0u8; nonce_len];
-    let mut _padding = vec![0u8; 28 - nonce_len];
+    let header_info = deserialise(&version_info, &cipher_info, &mode_info)?;
+    match header_info.dexios_version {
+        DexiosVersion::V8 => {
+            let nonce_len = calc_nonce_len(&header_info);
+            let mut nonce = vec![0u8; nonce_len];
+            let mut _padding = vec![0u8; 26 - nonce_len];
+        
+            file.read(&mut salt)?;
+            file.read(&mut [0; 16])?; // read and subsequently discard the next 16 bytes
+            file.read(&mut nonce)?;
+            file.read(&mut _padding)?;
+        
+            Ok(HeaderData { header_type: header_info, nonce, salt })
+        }
+    }
 
-    file.read(&mut salt)?;
-    file.read(&mut [0; 16])?; // read and subsequently discard the next 16 bytes
-    file.read(&mut nonce)?;
-    file.read(&mut _padding)?;
-
-    Ok(HeaderData { header_type: header_info, nonce, salt })
 }
 
 pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {

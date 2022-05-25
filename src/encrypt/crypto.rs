@@ -1,6 +1,6 @@
 use crate::global::crypto::EncryptStreamCiphers;
 use crate::global::parameters::{BenchMode, CipherType, HashMode, OutputFile, HeaderType, CipherMode};
-use crate::global::{BLOCK_SIZE, SALT_LEN};
+use crate::global::{BLOCK_SIZE, SALT_LEN, VERSION};
 use crate::key::hash_key;
 use aead::stream::EncryptorLE31;
 use aead::{Aead, NewAead};
@@ -37,7 +37,7 @@ pub fn encrypt_bytes_memory_mode(
 ) -> Result<()> {
     let salt = gen_salt();
 
-    let header_type = HeaderType { cipher_mode: CipherMode::MemoryMode, cipher_type };
+    let header_type = HeaderType { dexios_version: VERSION, cipher_mode: CipherMode::MemoryMode, cipher_type };
 
     let (nonce_bytes, encrypted_bytes) = match cipher_type {
         CipherType::AesGcm => {
@@ -130,7 +130,7 @@ pub fn encrypt_bytes_stream_mode(
 ) -> Result<()> {
     let salt = gen_salt();
 
-    let header_type = HeaderType { cipher_mode: CipherMode::StreamMode, cipher_type };
+    let header_type = HeaderType { dexios_version: VERSION, cipher_mode: CipherMode::StreamMode, cipher_type };
 
     let (mut streams, nonce_bytes): (EncryptStreamCiphers, Vec<u8>) = match cipher_type {
         CipherType::AesGcm => {

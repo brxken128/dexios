@@ -234,6 +234,10 @@ pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
         exit(0);
     }
 
+    if !get_answer("This can be destructive! Make sure you dumped the header first. Would you like to continue?", false, skip == SkipMode::HidePrompts)? {
+        exit(0);
+    }
+
     let buffer = vec![0u8; 64];
 
     let mut file = OpenOptions::new()

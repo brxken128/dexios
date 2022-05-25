@@ -1,5 +1,5 @@
 use crate::global::crypto::EncryptStreamCiphers;
-use crate::global::parameters::{BenchMode, CipherType, HashMode, OutputFile};
+use crate::global::parameters::{BenchMode, CipherType, HashMode, OutputFile, HeaderType, CipherMode};
 use crate::global::{BLOCK_SIZE, SALT_LEN};
 use crate::key::hash_key;
 use aead::stream::EncryptorLE31;
@@ -95,6 +95,9 @@ pub fn encrypt_bytes_stream_mode(
     cipher_type: CipherType,
 ) -> Result<()> {
     let salt = gen_salt();
+
+    let mut header_type = HeaderType { cipher_mode: CipherMode::StreamMode, cipher_type };
+
     let (mut streams, nonce_bytes): (EncryptStreamCiphers, Vec<u8>) = match cipher_type {
         CipherType::AesGcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
@@ -136,19 +139,19 @@ pub fn encrypt_bytes_stream_mode(
     };
 
     if bench == BenchMode::WriteToFilesystem {
-        output
-            .write_all(&salt)
-            .context("Unable to write salt to the output file")?;
-        output
-            .write_all(&nonce_bytes)
-            .context("Unable to write nonce to the output file")?;
+        // output
+        //     .write_all(&salt)
+        //     .context("Unable to write salt to the output file")?;
+        // output
+        //     .write_all(&nonce_bytes)
+        //     .context("Unable to write nonce to the output file")?;
+        crate::header::write_to_file(output, &salt, &nonce_bytes, &header_type)?;
     }
 
     let mut hasher = blake3::Hasher::new();
 
     if hash == HashMode::CalculateHash {
-        hasher.update(&salt);
-        hasher.update(&nonce_bytes);
+        crate::header::hash(&mut hasher, &salt, &nonce_bytes, &header_type);
     }
 
     let mut buffer = [0u8; BLOCK_SIZE];

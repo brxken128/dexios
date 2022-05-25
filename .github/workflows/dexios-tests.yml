@@ -123,9 +123,9 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in stream mode (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -esxHyk keyfile 100MB.bin 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 100MB.bin 100MB.enc
     - name: Decrypt in stream mode (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dsxHyk keyfile 100MB.enc 100MB.bin
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 100MB.enc 100MB.bin
     - name: Standalone Hash Mode (with output hashes above to confirm it works)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios hash 100MB.enc
   bench-mode:

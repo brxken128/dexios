@@ -90,14 +90,6 @@ pub fn stream_mode(input: &str, output: &str, header_file: HeaderFile, params: &
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    // let header = if header_file.is_empty() {
-    //     crate::header::read_from_file(&mut input_file)?
-    // } else {
-        // let mut header_file = File::open(header_file).with_context(|| format!("Unable to open header file: {}", input))?;
-        // input_file.read_exact(&mut vec![0u8; 64]).with_context(|| format!("Unable to seek input file: {}", input))?;
-        // crate::header::read_from_file(&mut header_file)?
-    // };
-
     let header = match &header_file {
         HeaderFile::Some(contents) => {
             let mut header_file = File::open(contents).with_context(|| format!("Unable to open header file: {}", input))?;

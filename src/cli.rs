@@ -62,21 +62,6 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
         )
         .arg(
-            Arg::new("stream")
-                .short('s')
-                .long("stream")
-                .takes_value(false)
-                .help("use stream encryption (default)")
-                .conflicts_with("memory"),
-        )
-        .arg(
-            Arg::new("memory")
-                .short('m')
-                .long("memory")
-                .takes_value(false)
-                .help("load the file into memory before encrypting"),
-        )
-        .arg(
             Arg::new("password")
                 .short('p')
                 .long("password")
@@ -126,6 +111,13 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("use a keyfile instead of a password"),
         )
         .arg(
+            Arg::new("header")
+                .long("header")
+                .value_name("file")
+                .takes_value(true)
+                .help("use a header file that was dumped"),
+        )
+        .arg(
             Arg::new("erase")
                 .long("erase")
                 .value_name("# of passes")
@@ -157,42 +149,12 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
         )
         .arg(
-            Arg::new("stream")
-                .short('s')
-                .long("stream")
-                .takes_value(false)
-                .help("use stream decryption (default)")
-                .conflicts_with("memory"),
-        )
-        .arg(
-            Arg::new("memory")
-                .short('m')
-                .long("memory")
-                .takes_value(false)
-                .help("load the file into memory before decrypting"),
-        )
-        .arg(
             Arg::new("password")
                 .short('p')
                 .long("password")
                 .takes_value(false)
                 .help("interactively ask for your password")
                 .conflicts_with("keyfile"),
-        )
-        .arg(
-            Arg::new("gcm")
-                .short('g')
-                .long("gcm")
-                .takes_value(false)
-                .help("use aes-256-gcm"),
-        )
-        .arg(
-            Arg::new("xchacha")
-                .short('x')
-                .long("xchacha")
-                .takes_value(false)
-                .help("use xchacha20-poly1305 (default)")
-                .conflicts_with("gcm"),
         );
 
     Command::new("dexios")
@@ -232,21 +194,6 @@ pub fn get_matches() -> clap::ArgMatches {
                         .takes_value(true)
                         .required(true)
                         .help("the file to hash"),
-                )
-                .arg(
-                    Arg::new("memory")
-                        .short('m')
-                        .long("memory")
-                        .takes_value(false)
-                        .help("load the file into memory before hashing"),
-                )
-                .arg(
-                    Arg::new("stream")
-                        .short('s')
-                        .long("stream")
-                        .takes_value(false)
-                        .help("use stream hashing (default)")
-                        .conflicts_with("memory"),
                 ),
         )
         .subcommand(
@@ -319,36 +266,6 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .help("the output file"),
                         )
                         .arg(
-                            Arg::new("gcm")
-                                .short('g')
-                                .long("gcm")
-                                .takes_value(false)
-                                .help("dump an AES-256-GCM header"),
-                        )
-                        .arg(
-                            Arg::new("xchacha")
-                                .short('x')
-                                .long("xchacha")
-                                .takes_value(false)
-                                .help("dump an XChaCha20-Poly1305 header")
-                                .conflicts_with("gcm"),
-                        )
-                        .arg(
-                            Arg::new("stream")
-                                .short('s')
-                                .long("stream")
-                                .takes_value(false)
-                                .help("restore a stream mode header"),
-                        )
-                        .arg(
-                            Arg::new("memory")
-                                .short('m')
-                                .long("memory")
-                                .takes_value(false)
-                                .help("restore a memory mode header")
-                                .conflicts_with("stream"),
-                        )
-                        .arg(
                             Arg::new("skip")
                                 .short('y')
                                 .long("skip")
@@ -375,36 +292,6 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .help("the file to apply the header to"),
                         )
                         .arg(
-                            Arg::new("gcm")
-                                .short('g')
-                                .long("gcm")
-                                .takes_value(false)
-                                .help("restore an AES-256-GCM header"),
-                        )
-                        .arg(
-                            Arg::new("xchacha")
-                                .short('x')
-                                .long("xchacha")
-                                .takes_value(false)
-                                .help("restore an XChaCha20-Poly1305 header")
-                                .conflicts_with("gcm"),
-                        )
-                        .arg(
-                            Arg::new("stream")
-                                .short('s')
-                                .long("stream")
-                                .takes_value(false)
-                                .help("restore a stream mode header"),
-                        )
-                        .arg(
-                            Arg::new("memory")
-                                .short('m')
-                                .long("memory")
-                                .takes_value(false)
-                                .help("restore a memory mode header")
-                                .conflicts_with("stream"),
-                        )
-                        .arg(
                             Arg::new("skip")
                                 .short('y')
                                 .long("skip")
@@ -422,36 +309,6 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(true)
                                 .required(true)
                                 .help("the header file"),
-                        )
-                        .arg(
-                            Arg::new("gcm")
-                                .short('g')
-                                .long("gcm")
-                                .takes_value(false)
-                                .help("strip an AES-256-GCM header"),
-                        )
-                        .arg(
-                            Arg::new("xchacha")
-                                .short('x')
-                                .long("xchacha")
-                                .takes_value(false)
-                                .help("strip an XChaCha20-Poly1305 header")
-                                .conflicts_with("gcm"),
-                        )
-                        .arg(
-                            Arg::new("stream")
-                                .short('s')
-                                .long("stream")
-                                .takes_value(false)
-                                .help("strip a stream mode header"),
-                        )
-                        .arg(
-                            Arg::new("memory")
-                                .short('m')
-                                .long("memory")
-                                .takes_value(false)
-                                .help("strip a memory mode header")
-                                .conflicts_with("stream"),
                         )
                         .arg(
                             Arg::new("skip")

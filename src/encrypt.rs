@@ -1,14 +1,12 @@
 use crate::encrypt::crypto::encrypt_bytes_memory_mode;
 use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
-use crate::file::write_encrypted_data;
-use crate::global::BenchMode;
-use crate::global::EraseMode;
-use crate::global::HashMode;
-use crate::global::OutputFile;
-use crate::global::Parameters;
+use crate::global::parameters::Algorithm;
+use crate::global::parameters::BenchMode;
+use crate::global::parameters::CryptoParams;
+use crate::global::parameters::EraseMode;
+use crate::global::parameters::OutputFile;
 use crate::global::BLOCK_SIZE;
-use crate::hashing::hash_data_blake3;
 use crate::key::get_user_key;
 use crate::prompt::overwrite_check;
 use anyhow::Context;
@@ -21,12 +19,17 @@ mod crypto;
 
 // this function is for encrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
-pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters) -> Result<()> {
+pub fn memory_mode(
+    input: &str,
+    output: &str,
+    params: &CryptoParams,
+    algorithm: Algorithm,
+) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
 
-    let raw_key = get_user_key(keyfile, true, params.password)?;
+    let raw_key = get_user_key(&params.keyfile, true, params.password)?;
 
     let read_start_time = Instant::now();
     let file_contents = get_bytes(input)?;
@@ -37,36 +40,30 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         "Encrypting {} in memory mode (this may take a while)",
         input
     );
+
+    let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
+        OutputFile::Some(
+            File::create(output)
+                .with_context(|| format!("Unable to open output file: {}", output))?,
+        )
+    } else {
+        OutputFile::None
+    };
+
     let encrypt_start_time = Instant::now();
-    let (salt, nonce, data) =
-        encrypt_bytes_memory_mode(file_contents, raw_key, params.cipher_type)?;
+    encrypt_bytes_memory_mode(
+        file_contents,
+        &mut output_file,
+        raw_key,
+        params.bench,
+        params.hash_mode,
+        algorithm,
+    )?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",
         encrypt_duration.as_secs_f32()
     );
-
-    if params.bench == BenchMode::WriteToFilesystem {
-        let write_start_time = Instant::now();
-        write_encrypted_data(output, &salt, &nonce, &data)?;
-        let write_duration = write_start_time.elapsed();
-        println!(
-            "Wrote to {} [took {:.2}s]",
-            output,
-            write_duration.as_secs_f32()
-        );
-    }
-
-    if params.hash_mode == HashMode::CalculateHash {
-        let hash_start_time = Instant::now();
-        let hash = hash_data_blake3(&salt, &nonce, &data)?;
-        let hash_duration = hash_start_time.elapsed();
-        println!(
-            "Hash of the encrypted file is: {} [took {:.2}s]",
-            hash,
-            hash_duration.as_secs_f32()
-        );
-    }
 
     if params.erase != EraseMode::IgnoreFile(0) {
         crate::erase::secure_erase(input, params.erase.get_passes())?;
@@ -77,7 +74,12 @@ pub fn memory_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
 
 // this function is for encrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
-pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters) -> Result<()> {
+pub fn stream_mode(
+    input: &str,
+    output: &str,
+    params: &CryptoParams,
+    algorithm: Algorithm,
+) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
     let file_size = input_file
@@ -90,8 +92,7 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
             .try_into()
             .context("Unable to parse stream block size as u64")?
     {
-        println!("Input file size is less than the stream block size - redirecting to memory mode");
-        return memory_mode(input, output, keyfile, params);
+        return memory_mode(input, output, params, algorithm);
     }
 
     if !overwrite_check(output, params.skip, params.bench)? {
@@ -104,6 +105,8 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         ));
     }
 
+    let raw_key = get_user_key(&params.keyfile, true, params.password)?;
+
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
             File::create(output)
@@ -113,11 +116,9 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         OutputFile::None
     };
 
-    let raw_key = get_user_key(keyfile, true, params.password)?;
-
     println!(
         "Encrypting {} in stream mode with {} (this may take a while)",
-        input, params.cipher_type
+        input, algorithm
     );
     let encrypt_start_time = Instant::now();
 
@@ -127,7 +128,7 @@ pub fn stream_mode(input: &str, output: &str, keyfile: &str, params: &Parameters
         raw_key,
         params.bench,
         params.hash_mode,
-        params.cipher_type,
+        algorithm,
     )?;
     let encrypt_duration = encrypt_start_time.elapsed();
     match params.bench {

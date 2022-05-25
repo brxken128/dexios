@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
-use global::{DirectoryMode, HiddenFilesMode, PrintMode, SkipMode, BLOCK_SIZE};
-use param_handler::{header_type_handler, param_handler};
+use global::parameters::{parameter_handler, Algorithm, HeaderFile};
+use global::parameters::{DirectoryMode, HiddenFilesMode, PackMode, PrintMode, SkipMode};
+use global::BLOCK_SIZE;
 use std::result::Result::Ok;
 
 mod cli;
@@ -13,7 +14,6 @@ mod hashing;
 mod header;
 mod key;
 mod pack;
-mod param_handler;
 mod prompt;
 
 #[allow(clippy::too_many_lines)]
@@ -22,60 +22,51 @@ fn main() -> Result<()> {
 
     match matches.subcommand() {
         Some(("encrypt", sub_matches)) => {
-            let (keyfile, params) = param_handler(sub_matches)?;
-
-            let result = if sub_matches.is_present("memory") {
-                crate::encrypt::memory_mode(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
-                    keyfile,
-                    &params,
-                )
+            let params = parameter_handler(sub_matches)?;
+            let algorithm = if sub_matches.is_present("gcm") {
+                Algorithm::AesGcm
             } else {
-                crate::encrypt::stream_mode(
+                Algorithm::XChaCha20Poly1305
+            };
+
+            let result = // stream mode is the default - it'll redirect to memory mode if the file is too small
+                encrypt::stream_mode(
                     sub_matches
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
                     sub_matches
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
-                    keyfile,
                     &params,
-                )
-            };
+                    algorithm,
+                );
 
             return result;
         }
         Some(("decrypt", sub_matches)) => {
-            let (keyfile, params) = param_handler(sub_matches)?;
-
-            let result = if sub_matches.is_present("memory") {
-                crate::decrypt::memory_mode(
+            let params = parameter_handler(sub_matches)?;
+            let header = if sub_matches.is_present("header") {
+                HeaderFile::Some(
                     sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
-                    keyfile,
-                    &params,
+                        .value_of("header")
+                        .context("No header/invalid text provided")?
+                        .to_string(),
                 )
             } else {
-                crate::decrypt::stream_mode(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
-                    keyfile,
-                    &params,
-                )
+                HeaderFile::None
             };
+
+            // stream decrypt is the default as it will redirect to memory mode if the header says so
+            let result = decrypt::stream_mode(
+                sub_matches
+                    .value_of("input")
+                    .context("No input file/invalid text provided")?,
+                sub_matches
+                    .value_of("output")
+                    .context("No output file/invalid text provided")?,
+                &header,
+                &params,
+            );
 
             return result;
         }
@@ -109,14 +100,11 @@ fn main() -> Result<()> {
             let file_size = std::fs::metadata(file_name)
                 .with_context(|| format!("Unable to get file metadata: {}", file_name))?;
 
-            if sub_matches.is_present("memory") {
-                hashing::hash_memory(file_name)?;
-            } else if file_size.len()
+            if file_size.len()
                 <= BLOCK_SIZE
                     .try_into()
                     .context("Unable to parse stream block size as u64")?
             {
-                println!("Input file size is less than the stream block size - redirecting to memory mode");
                 hashing::hash_memory(file_name)?;
             } else {
                 hashing::hash_stream(file_name)?;
@@ -125,7 +113,7 @@ fn main() -> Result<()> {
         Some(("pack", sub_matches)) => {
             match sub_matches.subcommand_name() {
                 Some("encrypt") => {
-                    let mode = if sub_matches.is_present("recursive") {
+                    let dir_mode = if sub_matches.is_present("recursive") {
                         DirectoryMode::Recursive
                     } else {
                         DirectoryMode::Singular
@@ -158,8 +146,10 @@ fn main() -> Result<()> {
                         6
                     };
 
-                    let excluded: Vec<&str> = if sub_matches.is_present("exclude") {
-                        sub_matches.values_of("exclude").unwrap().collect()
+                    let excluded: Vec<String> = if sub_matches.is_present("exclude") {
+                        let list: Vec<&str> = sub_matches.values_of("exclude").unwrap().collect();
+                        list.iter().map(std::string::ToString::to_string).collect()
+                    // this fixes 'static lifetime issues
                     } else {
                         Vec::new()
                     };
@@ -172,7 +162,20 @@ fn main() -> Result<()> {
 
                     let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
 
-                    let (keyfile, params) = param_handler(sub_matches_encrypt)?;
+                    let params = parameter_handler(sub_matches_encrypt)?;
+                    let pack_params = PackMode {
+                        compression_level,
+                        dir_mode,
+                        exclude: excluded,
+                        hidden,
+                        print_mode,
+                    };
+
+                    let algorithm = if sub_matches.is_present("gcm") {
+                        Algorithm::AesGcm
+                    } else {
+                        Algorithm::XChaCha20Poly1305
+                    };
 
                     pack::encrypt_directory(
                         sub_matches_encrypt
@@ -181,14 +184,9 @@ fn main() -> Result<()> {
                         sub_matches_encrypt
                             .value_of("output")
                             .context("No output file/invalid text provided")?,
-                        &excluded,
-                        keyfile,
-                        mode,
-                        &hidden,
-                        sub_matches_encrypt.is_present("memory"),
-                        compression_level,
-                        &print_mode,
+                        &pack_params,
                         &params,
+                        algorithm,
                     )?;
                 }
                 Some("decrypt") => {
@@ -200,7 +198,17 @@ fn main() -> Result<()> {
 
                     let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
 
-                    let (keyfile, params) = param_handler(sub_matches_decrypt)?;
+                    let params = parameter_handler(sub_matches_decrypt)?;
+                    let header = if sub_matches.is_present("header") {
+                        HeaderFile::Some(
+                            sub_matches
+                                .value_of("header")
+                                .context("No header/invalid text provided")?
+                                .to_string(),
+                        )
+                    } else {
+                        HeaderFile::None
+                    };
 
                     pack::decrypt_directory(
                         sub_matches_decrypt
@@ -209,8 +217,7 @@ fn main() -> Result<()> {
                         sub_matches_decrypt
                             .value_of("output")
                             .context("No output file/invalid text provided")?,
-                        keyfile,
-                        sub_matches_decrypt.is_present("memory"),
+                        &header,
                         &print_mode,
                         &params,
                     )?;
@@ -221,7 +228,6 @@ fn main() -> Result<()> {
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
-                let header_type = header_type_handler(sub_matches_dump)?;
                 let skip = if sub_matches_dump.is_present("skip") {
                     SkipMode::HidePrompts
                 } else {
@@ -236,12 +242,10 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     skip,
-                    &header_type,
                 )?;
             }
             Some("restore") => {
                 let sub_matches_restore = sub_matches.subcommand_matches("restore").unwrap();
-                let header_type = header_type_handler(sub_matches_restore)?;
                 let skip = if sub_matches_restore.is_present("skip") {
                     SkipMode::HidePrompts
                 } else {
@@ -256,12 +260,10 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No input file/invalid text provided")?,
                     skip,
-                    &header_type,
                 )?;
             }
             Some("strip") => {
                 let sub_matches_strip = sub_matches.subcommand_matches("strip").unwrap();
-                let header_type = header_type_handler(sub_matches_strip)?;
                 let skip = if sub_matches_strip.is_present("skip") {
                     SkipMode::HidePrompts
                 } else {
@@ -273,7 +275,6 @@ fn main() -> Result<()> {
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
                     skip,
-                    &header_type,
                 )?;
             }
             _ => (),

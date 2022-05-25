@@ -1,9 +1,48 @@
 use crate::file::get_bytes;
-use crate::global::PasswordMode;
+use crate::global::parameters::HeaderVersion;
+use crate::global::parameters::KeyFile;
+use crate::global::parameters::PasswordMode;
+use crate::global::SALT_LEN;
 use anyhow::{Context, Ok, Result};
+use argon2::Argon2;
+use argon2::Params;
+use secrecy::ExposeSecret;
 use secrecy::Secret;
 use secrecy::SecretVec;
 use secrecy::Zeroize;
+
+// this handles argon2 hashing with the provided key
+// it returns the key hashed with a specified salt
+pub fn argon2_hash(
+    raw_key: Secret<Vec<u8>>,
+    salt: &[u8; SALT_LEN],
+    version: &HeaderVersion,
+) -> Result<Secret<[u8; 32]>> {
+    let mut key = [0u8; 32];
+
+    let params = match version {
+        HeaderVersion::V1 => {
+            // 8192KiB of memory, 8 iterations, 4 levels of parallelism
+            let params = Params::new(8192, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN));
+            match params {
+                std::result::Result::Ok(parameters) => parameters,
+                Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
+            }
+        }
+    };
+
+    let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
+    let result = argon2.hash_password_into(raw_key.expose_secret(), salt, &mut key);
+    drop(raw_key);
+
+    if result.is_err() {
+        return Err(anyhow::anyhow!(
+            "Error while hashing your password with argon2id"
+        ));
+    }
+
+    Ok(Secret::new(key))
+}
 
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes
@@ -35,15 +74,16 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
 // if not, just get the key once
 #[allow(clippy::module_name_repetitions)] // possibly temporary - need a way to handle this (maybe key::handler?)
 pub fn get_user_key(
-    keyfile: &str,
+    keyfile: &KeyFile,
     validation: bool,
-    password: PasswordMode,
+    password_mode: PasswordMode,
 ) -> Result<Secret<Vec<u8>>> {
-    Ok(if !keyfile.is_empty() {
-        println!("Reading key from {}", keyfile);
-        get_bytes(keyfile)? // already a secret
+    let key = if keyfile != &KeyFile::None {
+        let keyfile_name = keyfile.get_contents()?;
+        println!("Reading key from {}", keyfile_name);
+        get_bytes(&keyfile_name)?
     } else if std::env::var("DEXIOS_KEY").is_ok()
-        && password == PasswordMode::NormalKeySourcePriority
+        && password_mode == PasswordMode::NormalKeySourcePriority
     {
         println!("Reading key from DEXIOS_KEY environment variable");
         SecretVec::new(
@@ -52,6 +92,11 @@ pub fn get_user_key(
                 .into_bytes(),
         )
     } else {
-        get_password(validation)? // already a secret
-    })
+        get_password(validation)?
+    };
+    if key.expose_secret().len() == 0 {
+        Err(anyhow::anyhow!("The specified key is empty!"))
+    } else {
+        Ok(key)
+    }
 }

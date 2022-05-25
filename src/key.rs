@@ -21,6 +21,7 @@ pub fn argon2_hash(
 
     let params = match version {
         HeaderVersion::V1 => {
+            // 8192KiB of memory, 8 iterations, 4 levels of parallelism
             let params = Params::new(8192, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN));
             match params {
                 std::result::Result::Ok(parameters) => parameters,

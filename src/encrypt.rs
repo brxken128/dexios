@@ -105,6 +105,8 @@ pub fn stream_mode(
         ));
     }
 
+    let raw_key = get_user_key(&params.keyfile, true, params.password)?;
+
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
             File::create(output)
@@ -113,8 +115,6 @@ pub fn stream_mode(
     } else {
         OutputFile::None
     };
-
-    let raw_key = get_user_key(&params.keyfile, true, params.password)?;
 
     println!(
         "Encrypting {} in stream mode with {} (this may take a while)",

@@ -78,7 +78,7 @@ pub fn get_user_key(
     validation: bool,
     password_mode: PasswordMode,
 ) -> Result<Secret<Vec<u8>>> {
-    Ok(if keyfile != &KeyFile::None {
+    let key = if keyfile != &KeyFile::None {
         let keyfile_name = keyfile.get_contents()?;
         println!("Reading key from {}", keyfile_name);
         get_bytes(&keyfile_name)?
@@ -93,5 +93,10 @@ pub fn get_user_key(
         )
     } else {
         get_password(validation)?
-    })
+    };
+    if key.expose_secret().len() == 0 {
+        Err(anyhow::anyhow!("The specified key is empty!"))
+    } else {
+        Ok(key)
+    }
 }

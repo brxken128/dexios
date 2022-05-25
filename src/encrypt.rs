@@ -1,6 +1,7 @@
 use crate::encrypt::crypto::encrypt_bytes_memory_mode;
 use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
+use crate::global::parameters::Algorithm;
 use crate::global::parameters::BenchMode;
 use crate::global::parameters::CryptoParameters;
 use crate::global::parameters::EraseMode;
@@ -23,6 +24,7 @@ pub fn memory_mode(
     output: &str,
     keyfile: &str,
     params: &CryptoParameters,
+    algorithm: &Algorithm,
 ) -> Result<()> {
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
@@ -51,7 +53,7 @@ pub fn memory_mode(
     };
 
     let encrypt_start_time = Instant::now();
-    encrypt_bytes_memory_mode(file_contents, &mut output_file, raw_key, params.bench, params.hash_mode, params.algorithm)?;
+    encrypt_bytes_memory_mode(file_contents, &mut output_file, raw_key, params.bench, params.hash_mode, *algorithm)?;
     let encrypt_duration = encrypt_start_time.elapsed();
     println!(
         "Encryption successful! [took {:.2}s]",
@@ -73,6 +75,7 @@ pub fn stream_mode(
     output: &str,
     keyfile: &str,
     params: &CryptoParameters,
+    algorithm: &Algorithm,
 ) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
@@ -86,7 +89,7 @@ pub fn stream_mode(
             .try_into()
             .context("Unable to parse stream block size as u64")?
     {
-        return memory_mode(input, output, keyfile, params);
+        return memory_mode(input, output, keyfile, params, algorithm);
     }
 
     if !overwrite_check(output, params.skip, params.bench)? {
@@ -112,7 +115,7 @@ pub fn stream_mode(
 
     println!(
         "Encrypting {} in stream mode with {} (this may take a while)",
-        input, params.algorithm
+        input, algorithm
     );
     let encrypt_start_time = Instant::now();
 
@@ -122,7 +125,7 @@ pub fn stream_mode(
         raw_key,
         params.bench,
         params.hash_mode,
-        params.algorithm,
+        *algorithm,
     )?;
     let encrypt_duration = encrypt_start_time.elapsed();
     match params.bench {

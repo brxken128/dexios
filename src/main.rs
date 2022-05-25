@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::parameters::{parameter_handler};
+use global::parameters::{parameter_handler, Algorithm};
 use global::parameters::{DirectoryMode, HiddenFilesMode, PackMode, PrintMode, SkipMode};
 use global::BLOCK_SIZE;
 use std::result::Result::Ok;
@@ -23,6 +23,11 @@ fn main() -> Result<()> {
     match matches.subcommand() {
         Some(("encrypt", sub_matches)) => {
             let (keyfile, params) = parameter_handler(sub_matches)?;
+            let algorithm = if sub_matches.is_present("gcm") {
+                Algorithm::AesGcm
+            } else {
+                Algorithm::XChaCha20Poly1305
+            };
 
             let result = // stream mode is the default - it'll redirect to memory mode if the file is too small
                 encrypt::stream_mode(
@@ -34,6 +39,7 @@ fn main() -> Result<()> {
                         .context("No output file/invalid text provided")?,
                     keyfile,
                     &params,
+                    &algorithm,
                 );
 
             return result;
@@ -91,7 +97,6 @@ fn main() -> Result<()> {
                     .try_into()
                     .context("Unable to parse stream block size as u64")?
             {
-                println!("Input file size is less than the stream block size - redirecting to memory mode"); // remove?
                 hashing::hash_memory(file_name)?;
             } else {
                 hashing::hash_stream(file_name)?;
@@ -157,6 +162,12 @@ fn main() -> Result<()> {
                         print_mode,
                     };
 
+                    let algorithm = if sub_matches.is_present("gcm") {
+                        Algorithm::AesGcm
+                    } else {
+                        Algorithm::XChaCha20Poly1305
+                    };
+
                     pack::encrypt_directory(
                         sub_matches_encrypt
                             .value_of("input")
@@ -167,6 +178,7 @@ fn main() -> Result<()> {
                         keyfile,
                         pack_params,
                         &params,
+                        &algorithm,
                     )?;
                 }
                 Some("decrypt") => {

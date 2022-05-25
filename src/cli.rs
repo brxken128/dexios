@@ -148,21 +148,6 @@ pub fn get_matches() -> clap::ArgMatches {
                 .takes_value(false)
                 .help("interactively ask for your password")
                 .conflicts_with("keyfile"),
-        )
-        .arg(
-            Arg::new("gcm")
-                .short('g')
-                .long("gcm")
-                .takes_value(false)
-                .help("use aes-256-gcm"),
-        )
-        .arg(
-            Arg::new("xchacha")
-                .short('x')
-                .long("xchacha")
-                .takes_value(false)
-                .help("use xchacha20-poly1305 (default)")
-                .conflicts_with("gcm"),
         );
 
     Command::new("dexios")

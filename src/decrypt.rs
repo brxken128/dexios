@@ -111,7 +111,7 @@ pub fn stream_mode(
 
     println!(
         "Decrypting {} in stream mode with {} (this may take a while)",
-        input, params.algorithm,
+        input, header.header_type.algorithm,
     );
     let decrypt_start_time = Instant::now();
     decrypt_bytes_stream_mode(

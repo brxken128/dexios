@@ -12,7 +12,7 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::parameters::{CryptoParameters, DirectoryMode, PackMode, PrintMode, SkipMode},
+    global::parameters::{CryptoParameters, DirectoryMode, PackMode, PrintMode, SkipMode, Algorithm},
     global::BLOCK_SIZE,
     prompt::get_answer,
 };
@@ -23,6 +23,7 @@ pub fn encrypt_directory(
     keyfile: &str,
     pack_params: PackMode,
     params: &CryptoParameters,
+    algorithm: &Algorithm,
 ) -> Result<()> {
     if pack_params.dir_mode == DirectoryMode::Recursive {
         println!("Traversing {} recursively", input);
@@ -138,7 +139,7 @@ pub fn encrypt_directory(
     );
 
 
-    crate::encrypt::stream_mode(&tmp_name, output, keyfile, params)?;
+    crate::encrypt::stream_mode(&tmp_name, output, keyfile, params, algorithm)?;
 
     crate::erase::secure_erase(&tmp_name, 16)?; // cleanup our tmp file
 

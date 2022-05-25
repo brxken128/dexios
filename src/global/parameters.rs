@@ -11,7 +11,6 @@ pub struct CryptoParameters {
     pub bench: BenchMode,
     pub password: PasswordMode,
     pub erase: EraseMode,
-    pub algorithm: Algorithm,
 }
 
 // the information needed to easily serialise a header
@@ -205,14 +204,6 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<(&str, CryptoParame
         PasswordMode::NormalKeySourcePriority
     };
 
-    let algorithm = if sub_matches.is_present("gcm") {
-        // specify gcm manually
-        Algorithm::AesGcm
-    } else {
-        // default
-        Algorithm::XChaCha20Poly1305
-    };
-
     Ok((
         keyfile,
         CryptoParameters {
@@ -221,7 +212,6 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<(&str, CryptoParame
             bench,
             password,
             erase,
-            algorithm,
         },
     ))
 }

@@ -226,7 +226,8 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         .with_context(|| format!("Unable to read header from file: {}", input))?;
 
     if header[..1] != [0xDE] {
-        let prompt = "This doesn't seem to be a Dexios header file, are you sure you'd like to continue?";
+        let prompt =
+            "This doesn't seem to be a Dexios header file, are you sure you'd like to continue?";
         if !get_answer(prompt, false, skip == SkipMode::HidePrompts)? {
             exit(0);
         }

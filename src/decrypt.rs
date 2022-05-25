@@ -18,6 +18,7 @@ use crate::prompt::overwrite_check;
 use anyhow::{Context, Ok, Result};
 use std::fs::File;
 
+use std::io::Read;
 use std::process::exit;
 use std::time::Instant;
 mod crypto;
@@ -34,32 +35,39 @@ pub fn memory_mode(
         exit(0);
     }
 
+    let mut input_file =
+        File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
+
+    let header = crate::header::read_from_file(&mut input_file)?;
+
     let read_start_time = Instant::now();
-    let (salt, nonce, encrypted_data) = get_encrypted_data(input, params.algorithm)?;
+
+    let mut encrypted_data = Vec::new();
+    input_file.read_to_end(&mut encrypted_data)?; // !!! error handl
     let read_duration = read_start_time.elapsed();
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
-    if params.hash_mode == HashMode::CalculateHash {
-        let start_time = Instant::now();
-        let hash = hash_data_blake3(&salt, &nonce, &encrypted_data)?;
-        let duration = start_time.elapsed();
-        println!(
-            "Hash of the encrypted file is: {} [took {:.2}s]",
-            hash,
-            duration.as_secs_f32()
-        );
+    // if params.hash_mode == HashMode::CalculateHash {
+    //     let start_time = Instant::now();
+    //     let hash = hash_data_blake3(&salt, &nonce, &encrypted_data)?;
+    //     let duration = start_time.elapsed();
+    //     println!(
+    //         "Hash of the encrypted file is: {} [took {:.2}s]",
+    //         hash,
+    //         duration.as_secs_f32()
+    //     );
 
-        let skip_if_hidden = params.skip == SkipMode::HidePrompts;
+    //     let skip_if_hidden = params.skip == SkipMode::HidePrompts;
 
-        let answer = get_answer(
-            "Would you like to continue with the decryption?",
-            true,
-            skip_if_hidden,
-        )?;
-        if !answer {
-            exit(0);
-        }
-    }
+    //     let answer = get_answer(
+    //         "Would you like to continue with the decryption?",
+    //         true,
+    //         skip_if_hidden,
+    //     )?;
+    //     if !answer {
+    //         exit(0);
+    //     }
+    // }
 
     let raw_key = get_user_key(keyfile, false, params.password)?;
 
@@ -67,25 +75,36 @@ pub fn memory_mode(
         "Decrypting {} in memory mode (this may take a while)",
         input
     );
+
+
+    let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
+        OutputFile::Some(
+            File::create(output)
+                .with_context(|| format!("Unable to open output file: {}", output))?,
+        )
+    } else {
+        OutputFile::None
+    };
+
     let decrypt_start_time = Instant::now();
     let decrypted_bytes =
-        decrypt_bytes_memory_mode(salt, &nonce, &encrypted_data, raw_key, params.algorithm)?;
+        decrypt_bytes_memory_mode(header, &encrypted_data, &mut output_file, raw_key, params.bench, params.hash_mode)?;
     let decrypt_duration = decrypt_start_time.elapsed();
     println!(
         "Decryption successful! [took {:.2}s]",
         decrypt_duration.as_secs_f32()
     );
 
-    if params.bench == BenchMode::WriteToFilesystem {
-        let write_start_time = Instant::now();
-        write_bytes(output, &decrypted_bytes)?;
-        let write_duration = write_start_time.elapsed();
-        println!(
-            "Wrote to {} [took {:.2}s]",
-            output,
-            write_duration.as_secs_f32()
-        );
-    }
+    // if params.bench == BenchMode::WriteToFilesystem {
+    //     let write_start_time = Instant::now();
+    //     write_bytes(output, &decrypted_bytes)?;
+    //     let write_duration = write_start_time.elapsed();
+    //     println!(
+    //         "Wrote to {} [took {:.2}s]",
+    //         output,
+    //         write_duration.as_secs_f32()
+    //     );
+    // }
 
     if params.erase != EraseMode::IgnoreFile(0) {
         crate::erase::secure_erase(input, params.erase.get_passes())?;
@@ -123,8 +142,8 @@ pub fn stream_mode(
     // }
 
     let header = crate::header::read_from_file(&mut input_file)?;
-
     if header.header_type.cipher_mode == CipherMode::MemoryMode {
+        drop(input_file);
         return memory_mode(input, output, keyfile, params);
     }
 

@@ -8,28 +8,31 @@ use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
+use blake3::Hasher;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use secrecy::{ExposeSecret, Secret};
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
+use std::time::Instant;
 
 // this decrypts the data in memory mode
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce
 // it hashes the key with the supplised salt, and decrypts all of the data
 // it returns the decrypted bytes
 pub fn decrypt_bytes_memory_mode(
-    salt: [u8; 16],
-    nonce: &[u8],
+    header: HeaderData,
     data: &[u8],
+    output: &mut OutputFile,
     raw_key: Secret<Vec<u8>>,
-    algorithm: Algorithm,
-) -> Result<Vec<u8>> {
-    let key = hash_key(raw_key, &salt)?;
+    bench: BenchMode,
+    hash: HashMode,
+) -> Result<()> {
+    let key = hash_key(raw_key, &header.salt)?;
 
-    return match algorithm {
+    let decrypted_bytes = match header.header_type.algorithm {
         Algorithm::AesGcm => {
-            let nonce = Nonce::from_slice(nonce);
+            let nonce = Nonce::from_slice(&header.nonce);
             let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
                     drop(key);
@@ -39,12 +42,12 @@ pub fn decrypt_bytes_memory_mode(
             };
 
             match cipher.decrypt(nonce, data) {
-                Ok(decrypted_bytes) => Ok(decrypted_bytes),
-                Err(_) => Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
+                Ok(decrypted_bytes) => decrypted_bytes,
+                Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
             }
         }
         Algorithm::XChaCha20Poly1305 => {
-            let nonce = XNonce::from_slice(nonce);
+            let nonce = XNonce::from_slice(&header.nonce);
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
                 Ok(cipher) => {
                     drop(key);
@@ -54,11 +57,38 @@ pub fn decrypt_bytes_memory_mode(
             };
 
             match cipher.decrypt(nonce, data) {
-                Ok(decrypted_bytes) => Ok(decrypted_bytes),
-                Err(_) => Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
+                Ok(decrypted_bytes) => decrypted_bytes,
+                Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
             }
         }
     };
+
+    let mut hasher = Hasher::new();
+
+    if hash == HashMode::CalculateHash {
+        let hash_start_time = Instant::now();
+        crate::header::hash(&mut hasher, &header.salt, &header.nonce, &header.header_type);
+        hasher.update(&data);
+        let hash = hasher.finalize().to_hex().to_string();
+        let hash_duration = hash_start_time.elapsed();
+        println!(
+            "Hash of the encrypted file is: {} [took {:.2}s]",
+            hash,
+            hash_duration.as_secs_f32()
+        );
+    }
+
+    if bench == BenchMode::WriteToFilesystem {
+        let write_start_time = Instant::now();
+        output.write_all(&decrypted_bytes)?;
+        let write_duration = write_start_time.elapsed();
+        println!(
+            "Wrote to file [took {:.2}s]",
+            write_duration.as_secs_f32()
+        );
+    }
+
+    Ok(())
 }
 
 // this decrypts data in stream mode

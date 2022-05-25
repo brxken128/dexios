@@ -153,7 +153,6 @@ pub fn stream_mode(
         raw_key,
         params.bench,
         params.hash_mode,
-        params.algorithm,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
     match params.bench {

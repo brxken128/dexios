@@ -1,9 +1,10 @@
 use crate::{
-    global::parameters::{BenchMode, CipherMode, CipherType, HeaderType, SkipMode, HeaderData},
+    global::parameters::{BenchMode, CipherMode, CipherType, HeaderType, SkipMode, HeaderData, OutputFile},
     global::SALT_LEN,
     prompt::{get_answer, overwrite_check},
 };
 use anyhow::{Context, Result};
+use blake3::Hasher;
 use std::{fs::File, io::Write};
 use std::{fs::OpenOptions, io::Read, process::exit};
 
@@ -46,7 +47,7 @@ fn serialise(header_info: &HeaderType) -> ([u8; 2], [u8; 2]) {
     (cipher_info, mode_info)
 }
 
-pub fn write_to_file(file: &mut File, salt: &[u8; SALT_LEN], nonce: &[u8], header_info: &HeaderType) -> Result<()> {
+pub fn write_to_file(file: &mut OutputFile, salt: &[u8; SALT_LEN], nonce: &[u8], header_info: &HeaderType) -> Result<()> {
     let nonce_len = calc_nonce_len(header_info);
     let padding = vec![0u8; 28 - nonce_len];
     let (cipher_info, mode_info) = serialise(header_info);
@@ -58,6 +59,19 @@ pub fn write_to_file(file: &mut File, salt: &[u8; SALT_LEN], nonce: &[u8], heade
     file.write_all(nonce)?; // (28 - nonce_len remaining)
     file.write_all(&padding)?; // this has reached the 64 bytes
     Ok(())
+}
+
+pub fn hash(hasher: &mut Hasher, salt: &[u8; SALT_LEN], nonce: &[u8], header_info: &HeaderType) {
+    let nonce_len = calc_nonce_len(header_info);
+    let padding = vec![0u8; 28 - nonce_len];
+    let (cipher_info, mode_info) = serialise(header_info);
+
+    hasher.update(&cipher_info);
+    hasher.update(&mode_info); // 4 bytes total
+    hasher.update(salt); // 20 bytes total
+    hasher.update(&[0; 16]); // 36 bytes total (28 remaining)
+    hasher.update(nonce); // (28 - nonce_len remaining)
+    hasher.update(&padding); // this has reached the 64 bytes
 }
 
 fn deserialise(cipher_info: &[u8; 2], mode_info: &[u8; 2]) -> Result<HeaderType> {

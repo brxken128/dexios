@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::parameters::{header_type_handler, parameter_handler};
+use global::parameters::{parameter_handler};
 use global::parameters::{DirectoryMode, HiddenFilesMode, PackMode, PrintMode, SkipMode};
 use global::BLOCK_SIZE;
 use std::result::Result::Ok;
@@ -109,14 +109,12 @@ fn main() -> Result<()> {
             let file_size = std::fs::metadata(file_name)
                 .with_context(|| format!("Unable to get file metadata: {}", file_name))?;
 
-            if sub_matches.is_present("memory") {
-                hashing::hash_memory(file_name)?;
-            } else if file_size.len()
+            if file_size.len()
                 <= BLOCK_SIZE
                     .try_into()
                     .context("Unable to parse stream block size as u64")?
             {
-                println!("Input file size is less than the stream block size - redirecting to memory mode");
+                println!("Input file size is less than the stream block size - redirecting to memory mode"); // remove?
                 hashing::hash_memory(file_name)?;
             } else {
                 hashing::hash_stream(file_name)?;
@@ -225,7 +223,6 @@ fn main() -> Result<()> {
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
-                let header_type = header_type_handler(sub_matches_dump)?;
                 let skip = if sub_matches_dump.is_present("skip") {
                     SkipMode::HidePrompts
                 } else {
@@ -240,12 +237,10 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No output file/invalid text provided")?,
                     skip,
-                    &header_type,
                 )?;
             }
             Some("restore") => {
                 let sub_matches_restore = sub_matches.subcommand_matches("restore").unwrap();
-                let header_type = header_type_handler(sub_matches_restore)?;
                 let skip = if sub_matches_restore.is_present("skip") {
                     SkipMode::HidePrompts
                 } else {
@@ -260,12 +255,10 @@ fn main() -> Result<()> {
                         .value_of("output")
                         .context("No input file/invalid text provided")?,
                     skip,
-                    &header_type,
                 )?;
             }
             Some("strip") => {
                 let sub_matches_strip = sub_matches.subcommand_matches("strip").unwrap();
-                let header_type = header_type_handler(sub_matches_strip)?;
                 let skip = if sub_matches_strip.is_present("skip") {
                     SkipMode::HidePrompts
                 } else {
@@ -277,7 +270,6 @@ fn main() -> Result<()> {
                         .value_of("input")
                         .context("No input file/invalid text provided")?,
                     skip,
-                    &header_type,
                 )?;
             }
             _ => (),

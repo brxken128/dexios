@@ -3,6 +3,8 @@ use clap::ArgMatches;
 use std::fs::File;
 use std::io::Write;
 
+use super::SALT_LEN;
+
 pub struct CryptoParameters {
     pub hash_mode: HashMode,
     pub skip: SkipMode,
@@ -12,9 +14,17 @@ pub struct CryptoParameters {
     pub cipher_type: CipherType,
 }
 
+// the information needed to easily serialise a header
 pub struct HeaderType {
-    pub dexios_mode: CipherMode,
+    pub cipher_mode: CipherMode,
     pub cipher_type: CipherType,
+}
+
+// the data used returned after reading/deserialising a header
+pub struct HeaderData {
+    pub header_type: HeaderType,
+    pub nonce: Vec<u8>,
+    pub salt: [u8; SALT_LEN],
 }
 
 pub struct PackMode {
@@ -210,35 +220,4 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<(&str, CryptoParame
             cipher_type,
         },
     ))
-}
-
-pub fn header_type_handler(sub_matches: &ArgMatches) -> Result<HeaderType> {
-    if !sub_matches.is_present("memory") && !sub_matches.is_present("stream") {
-        return Err(anyhow::anyhow!(
-            "You need to specify if the file was created in memory or stream mode."
-        ));
-    }
-
-    if !sub_matches.is_present("xchacha") && !sub_matches.is_present("gcm") {
-        return Err(anyhow::anyhow!(
-            "You need to specify if the file was created using XChaCha20-Poly1305 or AES-256-GCM."
-        ));
-    }
-
-    let dexios_mode = if sub_matches.is_present("memory") {
-        CipherMode::MemoryMode
-    } else {
-        CipherMode::StreamMode
-    };
-
-    let cipher_type = if sub_matches.is_present("gcm") {
-        CipherType::AesGcm
-    } else {
-        CipherType::XChaCha20Poly1305
-    };
-
-    Ok(HeaderType {
-        dexios_mode,
-        cipher_type,
-    })
 }

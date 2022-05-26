@@ -12,6 +12,14 @@ The `RUSTFLAGS` tell the rust compiler to optimise the binary for your processor
 
 Or you can download a pre-compiled binary from [the releases page](https://github.com/brxken128/dexios/releases)!
 
+## Why is the version so high?
+
+We made a lot of (necessary) changes to how Dexios works. In hindsight, earlier versions should've been v0.x.x, but it's too late for that.
+
+Going forward, starting with version 8, we have zero plans to make any incompatible changes. The header prepended to the start of each encrypted file contains a version identifier, and with that, we can be sure to always keep and maintain support for older versions.
+
+We encourage anyone who used an older version of Dexios to decrypt their files, update, and re-encrypt at your earliest convenience. This is to ensure that your files use the new [header standard](https://github.com/brxken128/dexios/wiki/Headers).
+
 ## Basic Usage
 
 To encrypt a file:

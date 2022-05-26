@@ -1,15 +1,21 @@
+use std::io::Write;
+use std::io::stdin;
+use std::io::stdout;
+
 use crate::file::get_bytes;
 use crate::global::parameters::HeaderVersion;
 use crate::global::parameters::KeyFile;
 use crate::global::parameters::PasswordMode;
 use crate::global::SALT_LEN;
-use anyhow::{Context, Ok, Result};
+use anyhow::{Context, Result};
 use argon2::Argon2;
 use argon2::Params;
 use secrecy::ExposeSecret;
 use secrecy::Secret;
 use secrecy::SecretVec;
 use secrecy::Zeroize;
+use termion::input::TermRead;
+use std::result::Result::Ok;
 
 // this handles argon2 hashing with the provided key
 // it returns the key hashed with a specified salt
@@ -45,16 +51,37 @@ pub fn argon2_hash(
     Ok(Secret::new(key))
 }
 
+// this function interacts with stdin and stdout to hide password input
+// it uses termion's `read_passwd` function for terminal manipulation
+fn read_password_from_stdin(prompt: &str) -> Result<String> {
+    let mut stdout = stdout().lock();
+    let mut stdin = stdin().lock();
+
+    stdout.write_all(prompt.as_bytes()).context("Unable to write to stdout")?;
+    stdout.flush().context("Unable to flush stdout")?;
+
+    match stdin.read_passwd(&mut stdout) {
+        Ok(Some(password)) => {
+            stdout.write_all("\n".as_bytes()).context("Unable to write to stdout")?;
+            Ok(password)
+        },
+        _ => {
+            stdout.write_all("\n".as_bytes()).context("Unable to write to stdout")?;
+            Err(anyhow::anyhow!("Error reading password from terminal"))
+        }
+    }
+}
+
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes
 fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
     Ok(loop {
-        let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
+        let input = read_password_from_stdin("Password: ").context("Unable to read password")?;
         if !validation {
             return Ok(SecretVec::new(input.into_bytes()));
         }
 
-        let mut input_validation = rpassword::prompt_password("Password (for validation): ")
+        let mut input_validation = read_password_from_stdin("Password (for validation): ")
             .context("Unable to read password")?;
 
         if input == input_validation && !input.is_empty() {

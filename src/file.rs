@@ -1,9 +1,8 @@
 use crate::global::parameters::DirectoryMode;
 use crate::global::parameters::HiddenFilesMode;
 use crate::global::parameters::PrintMode;
+use crate::secret::Secret;
 use anyhow::{Context, Ok, Result};
-use secrecy::Secret;
-use secrecy::SecretVec;
 use std::fs::read_dir;
 use std::path::PathBuf;
 use std::{fs::File, io::Read};
@@ -14,7 +13,7 @@ pub fn get_bytes(name: &str) -> Result<Secret<Vec<u8>>> {
     let mut data = Vec::new();
     file.read_to_end(&mut data)
         .with_context(|| format!("Unable to read file: {}", name))?;
-    Ok(SecretVec::new(data))
+    Ok(Secret::new(data))
 }
 
 // this indexes all files/folders within a specific path

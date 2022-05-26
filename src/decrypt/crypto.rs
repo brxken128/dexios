@@ -2,6 +2,7 @@ use crate::global::crypto::DecryptStreamCiphers;
 use crate::global::parameters::{Algorithm, BenchMode, HashMode, Header, OutputFile};
 use crate::global::BLOCK_SIZE;
 use crate::key::argon2_hash;
+use crate::secret::Secret;
 use aead::stream::DecryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -10,7 +11,6 @@ use anyhow::Context;
 use anyhow::Result;
 use blake3::Hasher;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
-use secrecy::{ExposeSecret, Secret};
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
@@ -33,7 +33,7 @@ pub fn decrypt_bytes_memory_mode(
     let decrypted_bytes = match header.header_type.algorithm {
         Algorithm::AesGcm => {
             let nonce = Nonce::from_slice(&header.nonce);
-            let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
+            let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
                     cipher
@@ -48,7 +48,7 @@ pub fn decrypt_bytes_memory_mode(
         }
         Algorithm::XChaCha20Poly1305 => {
             let nonce = XNonce::from_slice(&header.nonce);
-            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
+            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
                     cipher
@@ -106,7 +106,7 @@ pub fn decrypt_bytes_stream_mode(
 
     let mut streams: DecryptStreamCiphers = match header.header_type.algorithm {
         Algorithm::AesGcm => {
-            let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
+            let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
                     cipher
@@ -121,7 +121,7 @@ pub fn decrypt_bytes_stream_mode(
             DecryptStreamCiphers::AesGcm(Box::new(stream))
         }
         Algorithm::XChaCha20Poly1305 => {
-            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
+            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
                     cipher

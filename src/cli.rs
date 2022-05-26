@@ -162,6 +162,7 @@ pub fn get_matches() -> clap::ArgMatches {
         .author("brxken128 <brxken128@tutanota.com>")
         .about("Secure, fast and modern command-line encryption of files.")
         .subcommand_required(true)
+        .arg_required_else_help(true)
         .subcommand(encrypt.clone())
         .subcommand(decrypt.clone())
         .subcommand(
@@ -198,7 +199,7 @@ pub fn get_matches() -> clap::ArgMatches {
         )
         .subcommand(
             Command::new("pack")
-                .about("Pack a directory and then encrypt/decrypt it")
+                .about("Pack a directory")
                 .subcommand_required(true)
                 .arg(
                     Arg::new("recursive")
@@ -245,7 +246,7 @@ pub fn get_matches() -> clap::ArgMatches {
         )
         .subcommand(
             Command::new("header")
-                .about("Dexios header functions (advanced users only!)")
+                .about("Manipulate encrypted headers (for advanced users)")
                 .subcommand_required(true)
                 .subcommand(
                     Command::new("dump")

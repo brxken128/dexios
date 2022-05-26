@@ -199,6 +199,7 @@ pub fn get_matches() -> clap::ArgMatches {
         )
         .subcommand(
             Command::new("pack")
+                .short_flag('p')
                 .about("Pack a directory")
                 .subcommand_required(true)
                 .arg(

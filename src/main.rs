@@ -15,6 +15,7 @@ mod header;
 mod key;
 mod pack;
 mod prompt;
+mod secret;
 
 // this is where subcommand/argument matching is mostly handled
 // similarly to get_matches(), this is long, clunky, and a nightmare to work with

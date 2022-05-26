@@ -4,6 +4,7 @@ use crate::global::parameters::{
 };
 use crate::global::{BLOCK_SIZE, SALT_LEN, VERSION};
 use crate::key::argon2_hash;
+use crate::secret::Secret;
 use aead::stream::EncryptorLE31;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
@@ -12,7 +13,6 @@ use anyhow::Context;
 use anyhow::Result;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
-use secrecy::{ExposeSecret, Secret};
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
@@ -52,7 +52,7 @@ pub fn encrypt_bytes_memory_mode(
 
             let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
 
-            let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
+            let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
                     cipher
@@ -60,7 +60,7 @@ pub fn encrypt_bytes_memory_mode(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let encrypted_bytes = match cipher.encrypt(nonce, data.expose_secret().as_slice()) {
+            let encrypted_bytes = match cipher.encrypt(nonce, data.expose().as_slice()) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };
@@ -74,7 +74,7 @@ pub fn encrypt_bytes_memory_mode(
             let nonce = XNonce::from_slice(&nonce_bytes);
             let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
 
-            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
+            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
                     cipher
@@ -82,7 +82,7 @@ pub fn encrypt_bytes_memory_mode(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let encrypted_bytes = match cipher.encrypt(nonce, data.expose_secret().as_slice()) {
+            let encrypted_bytes = match cipher.encrypt(nonce, data.expose().as_slice()) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };
@@ -151,7 +151,7 @@ pub fn encrypt_bytes_stream_mode(
             let nonce = Nonce::from_slice(&nonce_bytes);
 
             let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
-            let cipher = match Aes256Gcm::new_from_slice(key.expose_secret()) {
+            let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
                     cipher
@@ -169,7 +169,7 @@ pub fn encrypt_bytes_stream_mode(
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
 
             let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
-            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose_secret()) {
+            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
                     cipher

@@ -7,15 +7,13 @@ use crate::global::parameters::HeaderVersion;
 use crate::global::parameters::KeyFile;
 use crate::global::parameters::PasswordMode;
 use crate::global::SALT_LEN;
+use crate::secret::Secret;
 use anyhow::{Context, Result};
 use argon2::Argon2;
 use argon2::Params;
-use secrecy::ExposeSecret;
-use secrecy::Secret;
-use secrecy::SecretVec;
-use secrecy::Zeroize;
 use std::result::Result::Ok;
 use termion::input::TermRead;
+use zeroize::Zeroize;
 
 // this handles argon2 hashing with the provided key
 // it returns the key hashed with a specified salt
@@ -39,7 +37,7 @@ pub fn argon2_hash(
     };
 
     let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
-    let result = argon2.hash_password_into(raw_key.expose_secret(), salt, &mut key);
+    let result = argon2.hash_password_into(raw_key.expose(), salt, &mut key);
     drop(raw_key);
 
     if result.is_err() {
@@ -81,7 +79,7 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
     Ok(loop {
         let input = read_password_from_stdin("Password: ").context("Unable to read password")?;
         if !validation {
-            return Ok(SecretVec::new(input.into_bytes()));
+            return Ok(Secret::new(input.into_bytes()));
         }
 
         let mut input_validation = read_password_from_stdin("Password (for validation): ")
@@ -89,7 +87,7 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
 
         if input == input_validation && !input.is_empty() {
             input_validation.zeroize();
-            break SecretVec::new(input.into_bytes());
+            break Secret::new(input.into_bytes());
         } else if input.is_empty() {
             println!("Password cannot be empty, please try again.");
         } else {
@@ -118,7 +116,7 @@ pub fn get_secret(
         && password_mode == PasswordMode::NormalKeySourcePriority
     {
         println!("Reading key from DEXIOS_KEY environment variable");
-        SecretVec::new(
+        Secret::new(
             std::env::var("DEXIOS_KEY")
                 .context("Unable to read DEXIOS_KEY from environment variable")?
                 .into_bytes(),
@@ -126,7 +124,7 @@ pub fn get_secret(
     } else {
         get_password(validation)?
     };
-    if key.expose_secret().is_empty() {
+    if key.expose().is_empty() {
         Err(anyhow::anyhow!("The specified key is empty!"))
     } else {
         Ok(key)

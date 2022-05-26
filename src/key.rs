@@ -11,9 +11,9 @@ use crate::secret::Secret;
 use anyhow::{Context, Result};
 use argon2::Argon2;
 use argon2::Params;
-use zeroize::Zeroize;
 use std::result::Result::Ok;
 use termion::input::TermRead;
+use zeroize::Zeroize;
 
 // this handles argon2 hashing with the provided key
 // it returns the key hashed with a specified salt

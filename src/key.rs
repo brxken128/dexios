@@ -60,15 +60,12 @@ fn read_password_from_stdin(prompt: &str) -> Result<String> {
     stdout.write_all(prompt.as_bytes()).context("Unable to write to stdout")?;
     stdout.flush().context("Unable to flush stdout")?;
 
-    match stdin.read_passwd(&mut stdout) {
-        Ok(Some(password)) => {
-            stdout.write_all("\n".as_bytes()).context("Unable to write to stdout")?;
-            Ok(password)
-        },
-        _ => {
-            stdout.write_all("\n".as_bytes()).context("Unable to write to stdout")?;
-            Err(anyhow::anyhow!("Error reading password from terminal"))
-        }
+    if let Ok(Some(password)) = stdin.read_passwd(&mut stdout) {
+        stdout.write_all("\n".as_bytes()).context("Unable to write to stdout")?;
+        Ok(password)
+    } else {
+        stdout.write_all("\n".as_bytes()).context("Unable to write to stdout")?;
+        Err(anyhow::anyhow!("Error reading password from terminal"))
     }
 }
 

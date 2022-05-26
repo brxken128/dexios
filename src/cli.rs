@@ -7,20 +7,20 @@ use clap::{Arg, Command};
 pub fn get_matches() -> clap::ArgMatches {
     let encrypt = Command::new("encrypt")
         .short_flag('e')
-        .about("encrypt a file")
+        .about("Encrypt a file")
         .arg(
             Arg::new("input")
                 .value_name("input")
                 .takes_value(true)
                 .required(true)
-                .help("the input file"),
+                .help("The file to encrypt"),
         )
         .arg(
             Arg::new("output")
                 .value_name("output")
                 .takes_value(true)
                 .required(true)
-                .help("the output file"),
+                .help("The output file"),
         )
         .arg(
             Arg::new("keyfile")
@@ -28,7 +28,7 @@ pub fn get_matches() -> clap::ArgMatches {
                 .long("keyfile")
                 .value_name("file")
                 .takes_value(true)
-                .help("use a keyfile instead of a password"),
+                .help("Use a keyfile instead of a password"),
         )
         .arg(
             Arg::new("erase")
@@ -36,7 +36,7 @@ pub fn get_matches() -> clap::ArgMatches {
                 .value_name("# of passes")
                 .takes_value(true)
                 .require_equals(true)
-                .help("securely erase the input file once complete (default is 16 passes)")
+                .help("Securely erase the input file once complete (default is 16 passes)")
                 .min_values(0)
                 .default_missing_value("16"),
         )
@@ -45,28 +45,28 @@ pub fn get_matches() -> clap::ArgMatches {
                 .short('H')
                 .long("hash")
                 .takes_value(false)
-                .help("return a blake3 hash of the encrypted file"),
+                .help("Return a BLAKE3 hash of the encrypted file"),
         )
         .arg(
             Arg::new("skip")
                 .short('y')
                 .long("skip")
                 .takes_value(false)
-                .help("skip all prompts"),
+                .help("Skip all prompts"),
         )
         .arg(
             Arg::new("bench")
                 .short('b')
                 .long("benchmark")
                 .takes_value(false)
-                .help("don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
+                .help("Don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
         )
         .arg(
             Arg::new("password")
                 .short('p')
                 .long("password")
                 .takes_value(false)
-                .help("interactively ask for your password")
+                .help("Interactively ask for your password")
                 .conflicts_with("keyfile"),
         )
         .arg(
@@ -74,33 +74,33 @@ pub fn get_matches() -> clap::ArgMatches {
                 .short('g')
                 .long("gcm")
                 .takes_value(false)
-                .help("use aes-256-gcm"),
+                .help("Use AES-256-GCM"),
         )
         .arg(
             Arg::new("xchacha")
                 .short('x')
                 .long("xchacha")
                 .takes_value(false)
-                .help("use xchacha20-poly1305 (default)")
+                .help("Use XChaCha20-Poly1305 (default)")
                 .conflicts_with("gcm"),
         );
 
     let decrypt = Command::new("decrypt")
         .short_flag('d')
-        .about("decrypt a previously encrypted file")
+        .about("Decrypt a previously encrypted file")
         .arg(
             Arg::new("input")
                 .value_name("input")
                 .takes_value(true)
                 .required(true)
-                .help("the input file"),
+                .help("The file to decrypt"),
         )
         .arg(
             Arg::new("output")
                 .value_name("output")
                 .takes_value(true)
                 .required(true)
-                .help("the output file"),
+                .help("The output file"),
         )
         .arg(
             Arg::new("keyfile")
@@ -108,14 +108,14 @@ pub fn get_matches() -> clap::ArgMatches {
                 .long("keyfile")
                 .value_name("file")
                 .takes_value(true)
-                .help("use a keyfile instead of a password"),
+                .help("Use a keyfile instead of a password"),
         )
         .arg(
             Arg::new("header")
                 .long("header")
                 .value_name("file")
                 .takes_value(true)
-                .help("use a header file that was dumped"),
+                .help("Use a header file that was dumped"),
         )
         .arg(
             Arg::new("erase")
@@ -123,7 +123,7 @@ pub fn get_matches() -> clap::ArgMatches {
                 .value_name("# of passes")
                 .takes_value(true)
                 .require_equals(true)
-                .help("securely erase the input file once complete (default is 16 passes)")
+                .help("Securely erase the input file once complete (default is 16 passes)")
                 .min_values(0)
                 .default_missing_value("16"),
         )
@@ -132,47 +132,47 @@ pub fn get_matches() -> clap::ArgMatches {
                 .short('H')
                 .long("hash")
                 .takes_value(false)
-                .help("return a blake3 hash of the encrypted file"),
+                .help("Return a BLAKE3 hash of the encrypted file"),
         )
         .arg(
             Arg::new("skip")
                 .short('y')
                 .long("skip")
                 .takes_value(false)
-                .help("skip all prompts"),
+                .help("Skip all prompts"),
         )
         .arg(
             Arg::new("bench")
                 .short('b')
                 .long("benchmark")
                 .takes_value(false)
-                .help("don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
+                .help("Don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
         )
         .arg(
             Arg::new("password")
                 .short('p')
                 .long("password")
                 .takes_value(false)
-                .help("interactively ask for your password")
+                .help("Interactively ask for your password")
                 .conflicts_with("keyfile"),
         );
 
     Command::new("dexios")
         .version(clap::crate_version!())
         .author("brxken128 <brxken128@tutanota.com>")
-        .about("Secure command-line encryption of files.")
+        .about("Secure, fast and modern command-line encryption of files.")
         .subcommand_required(true)
         .subcommand(encrypt.clone())
         .subcommand(decrypt.clone())
         .subcommand(
             Command::new("erase")
-                .about("erase a file completely")
+                .about("Erase a file completely")
                 .arg(
                     Arg::new("input")
                         .value_name("input")
                         .takes_value(true)
                         .required(true)
-                        .help("the file to erase"),
+                        .help("The file to erase"),
                 )
                 .arg(
                     Arg::new("passes")
@@ -180,32 +180,32 @@ pub fn get_matches() -> clap::ArgMatches {
                         .value_name("# of passes")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("specify the number of passes (default is 16)")
+                        .help("Specify the number of passes (default is 16)")
                         .min_values(0)
                         .default_missing_value("16"),
                 ),
         )
         .subcommand(
             Command::new("hash")
-                .about("hash a file")
+                .about("Hash a file")
                 .arg(
                     Arg::new("input")
                         .value_name("input")
                         .takes_value(true)
                         .required(true)
-                        .help("the file to hash"),
+                        .help("The file to hash"),
                 ),
         )
         .subcommand(
             Command::new("pack")
-                .about("pack a directory and then encrypt/decrypt it")
+                .about("Pack a directory and then encrypt/decrypt it")
                 .subcommand_required(true)
                 .arg(
                     Arg::new("recursive")
                         .short('r')
                         .long("recursive")
                         .takes_value(false)
-                        .help("index files/folders recursively (encrypt mode only)"),
+                        .help("Index files/folders recursively (encrypt mode only)"),
                 )
                 .arg(
                     Arg::new("exclude")
@@ -213,7 +213,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .value_name("pattern to exclude")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("exclude a file/folder (e.g. --exclude=\"Documents\") (encrypt mode only)")
+                        .help("Exclude a file/folder (e.g. --exclude=\"Documents\") (encrypt mode only)")
                         .min_values(0)
                         .multiple_occurrences(true),
                 )
@@ -223,7 +223,7 @@ pub fn get_matches() -> clap::ArgMatches {
                         .value_name("level of compression (0-9)")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("specify the deflate compression level (default is 6)")
+                        .help("Specify the deflate compression level (default is 6)")
                         .min_values(0)
                         .default_missing_value("6"),
                 )
@@ -231,91 +231,91 @@ pub fn get_matches() -> clap::ArgMatches {
                     Arg::new("hidden")
                         .long("include-hidden")
                         .takes_value(false)
-                        .help("include hidden files and folders"),
+                        .help("Include hidden files and folders"),
                 )
                 .arg(
                     Arg::new("verbose")
                         .short('v')
                         .long("verbose")
                         .takes_value(false)
-                        .help("provide more output on what's happening"),
+                        .help("Provide more output on what's happening"),
                 )
                 .subcommand(encrypt.clone())
                 .subcommand(decrypt.clone()),
         )
         .subcommand(
             Command::new("header")
-                .about("dexios header functions (advanced users only!)")
+                .about("Dexios header functions (advanced users only!)")
                 .subcommand_required(true)
                 .subcommand(
                     Command::new("dump")
-                        .about("dump a header")
+                        .about("Dump a header")
                         .arg_required_else_help(true)
                         .arg(
                             Arg::new("input")
                                 .value_name("input")
                                 .takes_value(true)
                                 .required(true)
-                                .help("the file who's header you wish to dump"),
+                                .help("The encrypted file"),
                         )
                         .arg(
                             Arg::new("output")
                                 .value_name("output")
                                 .takes_value(true)
                                 .required(true)
-                                .help("the output file"),
+                                .help("The output file"),
                         )
                         .arg(
                             Arg::new("skip")
                                 .short('y')
                                 .long("skip")
                                 .takes_value(false)
-                                .help("skip all prompts"),
+                                .help("Skip all prompts"),
                         )
                 )
                 .subcommand(
                     Command::new("restore")
-                        .about("restore a header")
+                        .about("Restore a header")
                         .arg_required_else_help(true)
                         .arg(
                             Arg::new("input")
                                 .value_name("input")
                                 .takes_value(true)
                                 .required(true)
-                                .help("the header file"),
+                                .help("The header file"),
                         )
                         .arg(
                             Arg::new("output")
                                 .value_name("output")
                                 .takes_value(true)
                                 .required(true)
-                                .help("the file to apply the header to"),
+                                .help("The encrypted file to restore the header to"),
                         )
                         .arg(
                             Arg::new("skip")
                                 .short('y')
                                 .long("skip")
                                 .takes_value(false)
-                                .help("skip all prompts"),
+                                .help("Skip all prompts"),
                         )
                 )
                 .subcommand(
                     Command::new("strip")
-                        .about("strip a header")
+                        .about("Strip a header")
                         .arg_required_else_help(true)
                         .arg(
                             Arg::new("input")
                                 .value_name("input")
                                 .takes_value(true)
                                 .required(true)
-                                .help("the header file"),
+                                .help("The encrypted file"),
                         )
                         .arg(
                             Arg::new("skip")
                                 .short('y')
                                 .long("skip")
                                 .takes_value(false)
-                                .help("skip all prompts"),
+                                .help("Skip all prompts"),
                         )
                 )
         )

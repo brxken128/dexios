@@ -1,6 +1,6 @@
-use std::io::Write;
 use std::io::stdin;
 use std::io::stdout;
+use std::io::Write;
 
 use crate::file::get_bytes;
 use crate::global::parameters::HeaderVersion;
@@ -14,8 +14,8 @@ use secrecy::ExposeSecret;
 use secrecy::Secret;
 use secrecy::SecretVec;
 use secrecy::Zeroize;
-use termion::input::TermRead;
 use std::result::Result::Ok;
+use termion::input::TermRead;
 
 // this handles argon2 hashing with the provided key
 // it returns the key hashed with a specified salt
@@ -57,14 +57,20 @@ fn read_password_from_stdin(prompt: &str) -> Result<String> {
     let mut stdout = stdout().lock();
     let mut stdin = stdin().lock();
 
-    stdout.write_all(prompt.as_bytes()).context("Unable to write to stdout")?;
+    stdout
+        .write_all(prompt.as_bytes())
+        .context("Unable to write to stdout")?;
     stdout.flush().context("Unable to flush stdout")?;
 
     if let Ok(Some(password)) = stdin.read_passwd(&mut stdout) {
-        stdout.write_all("\n".as_bytes()).context("Unable to write to stdout")?;
+        stdout
+            .write_all("\n".as_bytes())
+            .context("Unable to write to stdout")?;
         Ok(password)
     } else {
-        stdout.write_all("\n".as_bytes()).context("Unable to write to stdout")?;
+        stdout
+            .write_all("\n".as_bytes())
+            .context("Unable to write to stdout")?;
         Err(anyhow::anyhow!("Error reading password from terminal"))
     }
 }

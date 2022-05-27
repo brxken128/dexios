@@ -116,7 +116,7 @@ pub enum Algorithm {
     DeoxysII256,
 }
 
-const ALGORITHMS: [Algorithm; 3] = [
+pub const ALGORITHMS: [Algorithm; 3] = [
     Algorithm::XChaCha20Poly1305,
     Algorithm::Aes256Gcm,
     Algorithm::DeoxysII256,

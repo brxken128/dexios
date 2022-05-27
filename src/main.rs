@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use global::parameters::{encrypt_additional_params, parameter_handler, HeaderFile};
 use global::parameters::{DirectoryMode, HiddenFilesMode, PackMode, PrintMode, SkipMode};
 use global::BLOCK_SIZE;
+use list::list_values;
 use std::result::Result::Ok;
 
 mod cli;
@@ -16,6 +17,7 @@ mod key;
 mod pack;
 mod prompt;
 mod secret;
+mod list;
 
 // this is where subcommand/argument matching is mostly handled
 // similarly to get_matches(), this is long, clunky, and a nightmare to work with
@@ -110,6 +112,11 @@ fn main() -> Result<()> {
             } else {
                 hashing::hash_stream(file_name)?;
             }
+        }
+        Some(("list", sub_matches)) => {
+            list_values(sub_matches
+                .value_of("input")
+                .context("No input file provided")?)?;
         }
         Some(("pack", sub_matches)) => {
             match sub_matches.subcommand_name() {

@@ -18,6 +18,7 @@ use std::time::Instant;
 
 // this decrypts the data in memory mode
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce
+// most of the information for decryption is stored within the header
 // it hashes the key with the supplised salt, and decrypts all of the data
 // it returns the decrypted bytes
 pub fn decrypt_bytes_memory_mode(
@@ -104,7 +105,9 @@ pub fn decrypt_bytes_memory_mode(
 }
 
 // this decrypts data in stream mode
-// it takes an input file handle, an output file handle, a Secret<> key, and enums with specific modes
+// it takes an input file handle, an output file handle, a Secret<> raw key, and enums with specific modes
+// most of the information for decryption is stored within the header
+// it gets the streams enum from `init_decryption_stream`
 // it creates the encryption cipher and then reads the file in blocks (including the gcm tag)
 // on each read, it decrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
 pub fn decrypt_bytes_stream_mode(

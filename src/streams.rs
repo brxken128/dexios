@@ -15,6 +15,8 @@ use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use std::result::Result::Ok;
 
+// this function hashes the provided key, and then initialises the stream ciphers
+// it's used for encrypt/stream mode and is the central place for managing streams for encryption
 pub fn init_encryption_stream(
     raw_key: Secret<Vec<u8>>,
     header_type: &HeaderType,
@@ -81,6 +83,9 @@ pub fn init_encryption_stream(
     }
 }
 
+
+// this function hashes the provided key, and then initialises the stream ciphers
+// it's used for decrypt/stream mode and is the central place for managing streams for decryption
 pub fn init_decryption_stream(
     raw_key: Secret<Vec<u8>>,
     header: &Header,

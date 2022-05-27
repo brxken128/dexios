@@ -32,7 +32,7 @@ pub fn decrypt_bytes_memory_mode(
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
     let decrypted_bytes = match header.header_type.algorithm {
-        Algorithm::AesGcm => {
+        Algorithm::Aes256Gcm => {
             let nonce = Nonce::from_slice(&header.nonce);
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
@@ -121,7 +121,7 @@ pub fn decrypt_bytes_stream_mode(
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
     let mut streams: DecryptStreamCiphers = match header.header_type.algorithm {
-        Algorithm::AesGcm => {
+        Algorithm::Aes256Gcm => {
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
@@ -134,7 +134,7 @@ pub fn decrypt_bytes_stream_mode(
 
             let stream = DecryptorLE31::from_aead(cipher, nonce);
 
-            DecryptStreamCiphers::AesGcm(Box::new(stream))
+            DecryptStreamCiphers::Aes256Gcm(Box::new(stream))
         }
         Algorithm::XChaCha20Poly1305 => {
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {

@@ -14,7 +14,7 @@ use std::{fs::OpenOptions, io::Read, process::exit};
 fn calc_nonce_len(header_info: &HeaderType) -> usize {
     let mut nonce_len = match header_info.algorithm {
         Algorithm::XChaCha20Poly1305 => 24,
-        Algorithm::AesGcm => 12,
+        Algorithm::Aes256Gcm => 12,
         Algorithm::DeoxysII256 => 15,
     };
 
@@ -39,7 +39,7 @@ fn serialize(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
             let info: [u8; 2] = [0x0E, 0x01];
             info
         }
-        Algorithm::AesGcm => {
+        Algorithm::Aes256Gcm => {
             let info: [u8; 2] = [0x0E, 0x02];
             info
         }
@@ -127,7 +127,7 @@ fn deserialize(
 
     let algorithm = match algorithm_info {
         [0x0E, 0x01] => Algorithm::XChaCha20Poly1305,
-        [0x0E, 0x02] => Algorithm::AesGcm,
+        [0x0E, 0x02] => Algorithm::Aes256Gcm,
         [0x0E, 0x03] => Algorithm::DeoxysII256,
         _ => return Err(anyhow::anyhow!("Error getting encryption mode from header")),
     };

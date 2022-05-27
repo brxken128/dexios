@@ -47,7 +47,7 @@ pub fn encrypt_bytes_memory_mode(
     };
 
     let (nonce_bytes, encrypted_bytes) = match algorithm {
-        Algorithm::AesGcm => {
+        Algorithm::Aes256Gcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
             let nonce = Nonce::from_slice(nonce_bytes.as_slice());
 
@@ -169,7 +169,7 @@ pub fn encrypt_bytes_stream_mode(
     };
 
     let (mut streams, nonce_bytes): (EncryptStreamCiphers, Vec<u8>) = match algorithm {
-        Algorithm::AesGcm => {
+        Algorithm::Aes256Gcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
             let nonce = Nonce::from_slice(&nonce_bytes);
 
@@ -184,7 +184,7 @@ pub fn encrypt_bytes_stream_mode(
 
             let stream = EncryptorLE31::from_aead(cipher, nonce);
             (
-                EncryptStreamCiphers::AesGcm(Box::new(stream)),
+                EncryptStreamCiphers::Aes256Gcm(Box::new(stream)),
                 nonce_bytes.to_vec(),
             )
         }

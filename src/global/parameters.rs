@@ -111,14 +111,14 @@ pub enum HeaderFile {
 
 #[derive(Copy, Clone)]
 pub enum Algorithm {
-    AesGcm,
+    Aes256Gcm,
     XChaCha20Poly1305,
     DeoxysII256,
 }
 
 const ALGORITHMS: [Algorithm; 3] = [
     Algorithm::XChaCha20Poly1305,
-    Algorithm::AesGcm,
+    Algorithm::Aes256Gcm,
     Algorithm::DeoxysII256,
 ];
 
@@ -160,7 +160,7 @@ impl OutputFile {
 impl std::fmt::Display for Algorithm {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            Algorithm::AesGcm => write!(f, "AES-256-GCM"),
+            Algorithm::Aes256Gcm => write!(f, "AES-256-GCM"),
             Algorithm::XChaCha20Poly1305 => write!(f, "XChaCha20-Poly1305"),
             Algorithm::DeoxysII256 => write!(f, "Deoxys-II-256"),
         }

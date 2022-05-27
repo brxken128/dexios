@@ -56,8 +56,9 @@ pub fn memory_mode(
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
     println!(
-        "Decrypting {} in memory mode (this may take a while)",
-        input
+        "Decrypting {} in memory mode with {} (this may take a while)",
+        input,
+        header.header_type.algorithm,
     );
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {

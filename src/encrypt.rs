@@ -37,8 +37,9 @@ pub fn memory_mode(
     println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
 
     println!(
-        "Encrypting {} in memory mode (this may take a while)",
-        input
+        "Encrypting {} in memory mode with {} (this may take a while)",
+        input,
+        algorithm
     );
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {

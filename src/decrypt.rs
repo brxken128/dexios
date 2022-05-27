@@ -57,8 +57,7 @@ pub fn memory_mode(
 
     println!(
         "Decrypting {} in memory mode with {} (this may take a while)",
-        input,
-        header.header_type.algorithm,
+        input, header.header_type.algorithm,
     );
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {

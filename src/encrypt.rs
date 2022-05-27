@@ -38,8 +38,7 @@ pub fn memory_mode(
 
     println!(
         "Encrypting {} in memory mode with {} (this may take a while)",
-        input,
-        algorithm
+        input, algorithm
     );
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {

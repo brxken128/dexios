@@ -14,10 +14,10 @@ mod global;
 mod hashing;
 mod header;
 mod key;
+mod list;
 mod pack;
 mod prompt;
 mod secret;
-mod list;
 
 // this is where subcommand/argument matching is mostly handled
 // similarly to get_matches(), this is long, clunky, and a nightmare to work with
@@ -114,9 +114,11 @@ fn main() -> Result<()> {
             }
         }
         Some(("list", sub_matches)) => {
-            list_values(sub_matches
-                .value_of("input")
-                .context("No input file provided")?)?;
+            list_values(
+                sub_matches
+                    .value_of("input")
+                    .context("No input file provided")?,
+            )?;
         }
         Some(("pack", sub_matches)) => {
             match sub_matches.subcommand_name() {

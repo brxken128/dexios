@@ -83,7 +83,6 @@ pub fn init_encryption_stream(
     }
 }
 
-
 // this function hashes the provided key, and then initialises the stream ciphers
 // it's used for decrypt/stream mode and is the central place for managing streams for decryption
 pub fn init_decryption_stream(

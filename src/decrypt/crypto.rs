@@ -11,6 +11,7 @@ use anyhow::Context;
 use anyhow::Result;
 use blake3::Hasher;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
+use deoxys::DeoxysII256;
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
@@ -49,6 +50,21 @@ pub fn decrypt_bytes_memory_mode(
         Algorithm::XChaCha20Poly1305 => {
             let nonce = XNonce::from_slice(&header.nonce);
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                }
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
+            };
+
+            match cipher.decrypt(nonce, data) {
+                Ok(decrypted_bytes) => decrypted_bytes,
+                Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
+            }
+        }
+        Algorithm::DeoxysII256 => {
+            let nonce = deoxys::Nonce::from_slice(&header.nonce);
+            let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
                     cipher
@@ -131,6 +147,18 @@ pub fn decrypt_bytes_stream_mode(
 
             let stream = DecryptorLE31::from_aead(cipher, header.nonce.as_slice().into());
             DecryptStreamCiphers::XChaCha(Box::new(stream))
+        }
+        Algorithm::DeoxysII256 => {
+            let cipher = match DeoxysII256::new_from_slice(key.expose()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                }
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
+            };
+
+            let stream = DecryptorLE31::from_aead(cipher, header.nonce.as_slice().into());
+            DecryptStreamCiphers::DeoxysII(Box::new(stream))
         }
     };
 

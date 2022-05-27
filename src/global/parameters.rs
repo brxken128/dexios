@@ -113,6 +113,7 @@ pub enum HeaderFile {
 pub enum Algorithm {
     AesGcm,
     XChaCha20Poly1305,
+    DeoxysII,
 }
 
 impl EraseMode {
@@ -155,6 +156,7 @@ impl std::fmt::Display for Algorithm {
         match *self {
             Algorithm::AesGcm => write!(f, "AES-256-GCM"),
             Algorithm::XChaCha20Poly1305 => write!(f, "XChaCha20-Poly1305"),
+            Algorithm::DeoxysII => write!(f, "Deoxys-II")
         }
     }
 }

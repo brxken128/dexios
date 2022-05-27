@@ -15,6 +15,7 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
     let mut nonce_len = match header_info.algorithm {
         Algorithm::XChaCha20Poly1305 => 24,
         Algorithm::AesGcm => 12,
+        Algorithm::DeoxysII => 15,
     };
 
     if header_info.cipher_mode == CipherMode::StreamMode {
@@ -40,6 +41,10 @@ fn serialize(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
         }
         Algorithm::AesGcm => {
             let info: [u8; 2] = [0x0E, 0x02];
+            info
+        }
+        Algorithm::DeoxysII => {
+            let info: [u8; 2] = [0x0E, 0x03];
             info
         }
     };
@@ -123,6 +128,7 @@ fn deserialize(
     let algorithm = match algorithm_info {
         [0x0E, 0x01] => Algorithm::XChaCha20Poly1305,
         [0x0E, 0x02] => Algorithm::AesGcm,
+        [0x0E, 0x03] => Algorithm::DeoxysII,
         _ => return Err(anyhow::anyhow!("Error getting encryption mode from header")),
     };
 

@@ -12,6 +12,7 @@ use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
+use deoxys::DeoxysII256;
 use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
 use std::fs::File;
 use std::io::Read;
@@ -75,6 +76,28 @@ pub fn encrypt_bytes_memory_mode(
             let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
 
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                }
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
+            };
+
+            let encrypted_bytes = match cipher.encrypt(nonce, data.expose().as_slice()) {
+                Ok(bytes) => bytes,
+                Err(_) => return Err(anyhow!("Unable to encrypt the data")),
+            };
+
+            drop(data);
+
+            (nonce_bytes.to_vec(), encrypted_bytes)
+        }
+        Algorithm::DeoxysII => {
+            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 15]>();
+            let nonce = deoxys::Nonce::from_slice(&nonce_bytes);
+            let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
+
+            let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
                     cipher
@@ -180,6 +203,24 @@ pub fn encrypt_bytes_stream_mode(
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
             (
                 EncryptStreamCiphers::XChaCha(Box::new(stream)),
+                nonce_bytes.to_vec(),
+            )
+        }
+        Algorithm::DeoxysII => {
+            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 11]>();
+
+            let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
+            let cipher = match DeoxysII256::new_from_slice(key.expose()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                }
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
+            };
+
+            let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
+            (
+                EncryptStreamCiphers::DeoxysII(Box::new(stream)),
                 nonce_bytes.to_vec(),
             )
         }

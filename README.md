@@ -10,7 +10,7 @@ You can install Dexios through cargo, with
 
 `RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3" cargo install dexios`
 
-The `RUSTFLAGS` tell the rust compiler to optimise the binary for your processor's architecture, and to enable features that will speed up cryptographic functions. It really is a **lot** faster!
+The `RUSTFLAGS` tell the Rust compiler to optimise the binary for your processor's architecture, and to enable features that will speed up cryptographic functions. It really is a **lot** faster!
 
 Or you can download a pre-compiled binary from [the releases page](https://github.com/brxken128/dexios/releases)!
 
@@ -31,6 +31,7 @@ I personally have no plans to support Windows at this moment in time. Most thing
 ## Contributing
 
 Contributions are very welcome! You're free to submit a PR and I'll take a look at it, provide feedback and (most likely) merge it, provided the tests pass.
+
 ## Basic Usage
 
 To encrypt a file:
@@ -56,6 +57,8 @@ Version 8.0.0 did make some breaking changes, and we'd like to apologise for thi
 Please report any vulnerabilities as a Github issue - we believe all issues should be known, and they are likely to get resolved very quickly this way. Thank you.
 
 As an alternative, you may contact `brxken128@tutanota.com`
+
+If you find any vulnerabilities within Dexios, and can provide steps/pointers to reproduce, please report them. You may do this anonymously via the email above. I'm afraid I cannot offer any money in return, but I can add you to the list of contributors (at your request).
 
 ## Supported Versions
 

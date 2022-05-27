@@ -14,6 +14,12 @@ The `RUSTFLAGS` tell the Rust compiler to optimise the binary for your processor
 
 Or you can download a pre-compiled binary from [the releases page](https://github.com/brxken128/dexios/releases)!
 
+## Donating
+
+If you like my work, and want to help support the project, feel free to donate! This is not necessary by any means, so please don't feel obliged to do so.
+
+`XMR: 84zSGS18aHtT3CZjZUnnWpCsz1wmA5f65G6BXisbrvAiH7PxZpP8GorbdjAQYRtfeiANZywwUPjZcHu8eXJeWdafJQFK46G`
+
 ## Why is the version so high?
 
 We made a lot of (necessary) changes to how Dexios works. In hindsight, earlier versions should've been v0.x.x, but it's too late for that.

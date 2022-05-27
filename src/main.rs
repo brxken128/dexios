@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use global::parameters::{encrypt_additional_params, parameter_handler, HeaderFile};
 use global::parameters::{DirectoryMode, HiddenFilesMode, PackMode, PrintMode, SkipMode};
 use global::BLOCK_SIZE;
-use list::list_values;
+use list::show_values;
 use std::result::Result::Ok;
 
 mod cli;
@@ -30,7 +30,7 @@ fn main() -> Result<()> {
     match matches.subcommand() {
         Some(("encrypt", sub_matches)) => {
             let params = parameter_handler(sub_matches)?;
-            let algorithm = encrypt_additional_params(&sub_matches)?;
+            let algorithm = encrypt_additional_params(sub_matches)?;
 
             let result = // stream mode is the default - it'll redirect to memory mode if the file is too small
                 encrypt::stream_mode(
@@ -114,7 +114,7 @@ fn main() -> Result<()> {
             }
         }
         Some(("list", sub_matches)) => {
-            list_values(
+            show_values(
                 sub_matches
                     .value_of("input")
                     .context("No input file provided")?,
@@ -181,7 +181,7 @@ fn main() -> Result<()> {
                         print_mode,
                     };
 
-                    let algorithm = encrypt_additional_params(&sub_matches_encrypt)?;
+                    let algorithm = encrypt_additional_params(sub_matches_encrypt)?;
 
                     pack::encrypt_directory(
                         sub_matches_encrypt

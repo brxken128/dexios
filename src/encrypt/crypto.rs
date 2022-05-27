@@ -152,6 +152,7 @@ pub fn encrypt_bytes_memory_mode(
 // it generates the nonce, creates the encryption cipher and then reads the file in blocks
 // on each read, it encrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
 // it also handles the prep of each individual stream, via the match statement
+#[allow(clippy::too_many_lines)] // we can probably delegate the algorithm initialisation to another function
 pub fn encrypt_bytes_stream_mode(
     input: &mut File,
     output: &mut OutputFile,

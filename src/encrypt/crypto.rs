@@ -92,7 +92,7 @@ pub fn encrypt_bytes_memory_mode(
 
             (nonce_bytes.to_vec(), encrypted_bytes)
         }
-        Algorithm::DeoxysII => {
+        Algorithm::DeoxysII256 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 15]>();
             let nonce = deoxys::Nonce::from_slice(&nonce_bytes);
             let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
@@ -206,7 +206,7 @@ pub fn encrypt_bytes_stream_mode(
                 nonce_bytes.to_vec(),
             )
         }
-        Algorithm::DeoxysII => {
+        Algorithm::DeoxysII256 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 11]>();
 
             let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;

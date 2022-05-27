@@ -116,7 +116,11 @@ pub enum Algorithm {
     DeoxysII256,
 }
 
-const ALGORITHMS: [Algorithm; 3] = [Algorithm::XChaCha20Poly1305, Algorithm::AesGcm, Algorithm::DeoxysII256]; 
+const ALGORITHMS: [Algorithm; 3] = [
+    Algorithm::XChaCha20Poly1305,
+    Algorithm::AesGcm,
+    Algorithm::DeoxysII256,
+];
 
 impl EraseMode {
     pub fn get_passes(self) -> i32 {
@@ -158,7 +162,7 @@ impl std::fmt::Display for Algorithm {
         match *self {
             Algorithm::AesGcm => write!(f, "AES-256-GCM"),
             Algorithm::XChaCha20Poly1305 => write!(f, "XChaCha20-Poly1305"),
-            Algorithm::DeoxysII256 => write!(f, "Deoxys-II-256")
+            Algorithm::DeoxysII256 => write!(f, "Deoxys-II-256"),
         }
     }
 }
@@ -252,15 +256,22 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
 
 pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Result<Algorithm> {
     let provided_aead: usize = if sub_matches.is_present("aead") {
-        sub_matches.value_of("aead").context("Error reading value of --aead")?.parse().context("Invalid AEAD selected! Use \"dexios list aead\" to see all possible values.")? // add context here
+        sub_matches
+            .value_of("aead")
+            .context("Error reading value of --aead")?
+            .parse()
+            .context(
+                "Invalid AEAD selected! Use \"dexios list aead\" to see all possible values.",
+            )? // add context here
     } else {
         1
     };
 
     if provided_aead < 1 || provided_aead > ALGORITHMS.len() {
-        Err(anyhow::anyhow!("Invalid AEAD selected! Use \"dexios list aead\" to see all possible values."))
+        Err(anyhow::anyhow!(
+            "Invalid AEAD selected! Use \"dexios list aead\" to see all possible values."
+        ))
     } else {
         Ok(ALGORITHMS[provided_aead - 1]) // -1 to account for indexing starting at 0
     }
-    
 }

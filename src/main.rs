@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::parameters::{parameter_handler, Algorithm, HeaderFile, encrypt_additional_params};
+use global::parameters::{encrypt_additional_params, parameter_handler, HeaderFile};
 use global::parameters::{DirectoryMode, HiddenFilesMode, PackMode, PrintMode, SkipMode};
 use global::BLOCK_SIZE;
 use std::result::Result::Ok;

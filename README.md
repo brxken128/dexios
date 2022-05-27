@@ -45,36 +45,6 @@ To securely erase a file:
 
 `dexios erase secret.txt`
 
-Here is a screenshot of Dexios in action! The performance is great (that is a 3.5GiB file), and the checksums match meaning the file is exactly the same as it was before encryption.
-
-![Dexios in action](https://github.com/brxken128/dexios/wiki/assets/dexios-in-action.png)
-
-## Multiple Files
-
-Dexios itself does not have support for encrypting multiple files *individually*, but you can do so with the `find` utility:
-
-```
-To encrypt all `.mp4` files in a directory, and remove the original files once encrypted:
-
-find *.mp4 -type f -maxdepth 1 -exec dexios -ey --erase -k keyfile {} {}.enc \;
-
-To decrypt all `.mp4.enc` files in a directory, and remove the `.enc` suffix:
-
-find . -type f -iname "*.mp4.enc" -exec sh -c 'dexios -dk keyfile "$0" "${0%.enc}"' {} \;
-```
-
-To "pack" and then encrypt multiple files, you can use:
-
-```
-dexios pack encrypt /home/user/Documents documents.enc
-
-and
-
-dexios pack decrypt documents.enc /home/user/Documents
-
-pack decrypt signifies that you are unpacking the encrypted archive
-```
-
 ## Update Status
 
 Dexios will receive frequent updates, and they are always tested before being released.

@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use global::parameters::{parameter_handler, Algorithm, HeaderFile};
+use global::parameters::{parameter_handler, Algorithm, HeaderFile, encrypt_additional_params};
 use global::parameters::{DirectoryMode, HiddenFilesMode, PackMode, PrintMode, SkipMode};
 use global::BLOCK_SIZE;
 use std::result::Result::Ok;
@@ -28,11 +28,7 @@ fn main() -> Result<()> {
     match matches.subcommand() {
         Some(("encrypt", sub_matches)) => {
             let params = parameter_handler(sub_matches)?;
-            let algorithm = if sub_matches.is_present("gcm") {
-                Algorithm::AesGcm
-            } else {
-                Algorithm::XChaCha20Poly1305
-            };
+            let algorithm = encrypt_additional_params(&sub_matches)?;
 
             let result = // stream mode is the default - it'll redirect to memory mode if the file is too small
                 encrypt::stream_mode(
@@ -176,11 +172,7 @@ fn main() -> Result<()> {
                         print_mode,
                     };
 
-                    let algorithm = if sub_matches.is_present("gcm") {
-                        Algorithm::AesGcm
-                    } else {
-                        Algorithm::XChaCha20Poly1305
-                    };
+                    let algorithm = encrypt_additional_params(&sub_matches_encrypt)?;
 
                     pack::encrypt_directory(
                         sub_matches_encrypt

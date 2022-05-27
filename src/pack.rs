@@ -195,7 +195,9 @@ pub fn decrypt_directory(
             None => continue,
         };
 
-        if file.is_dir() {
+        if file.name().contains("..") { // skip directories that may try to zip slip
+            continue
+        } else if file.is_dir() {
             // if it's a directory, recreate the structure
             std::fs::create_dir_all(full_path).context("Unable to create an output directory")?;
         } else {

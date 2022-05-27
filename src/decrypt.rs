@@ -146,14 +146,23 @@ pub fn stream_mode(
         input, header.header_type.algorithm,
     );
     let decrypt_start_time = Instant::now();
-    decrypt_bytes_stream_mode(
+    let decryption_result = decrypt_bytes_stream_mode(
         &mut input_file,
         &mut output_file,
         raw_key,
         &header,
         params.bench,
         params.hash_mode,
-    )?;
+    );
+
+    if decryption_result.is_err() {
+        drop(output_file);
+        if params.bench == BenchMode::WriteToFilesystem {
+            std::fs::remove_file(output).context("Unable to remove the malformed file")?;
+        }
+        return decryption_result
+    }
+
     let decrypt_duration = decrypt_start_time.elapsed();
 
     match params.bench {

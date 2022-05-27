@@ -122,14 +122,23 @@ pub fn stream_mode(
     );
     let encrypt_start_time = Instant::now();
 
-    encrypt_bytes_stream_mode(
+    let encryption_result = encrypt_bytes_stream_mode(
         &mut input_file,
         &mut output_file,
         raw_key,
         params.bench,
         params.hash_mode,
         algorithm,
-    )?;
+    );
+
+    if encryption_result.is_err() {
+        drop(output_file);
+        if params.bench == BenchMode::WriteToFilesystem {
+            std::fs::remove_file(output).context("Unable to remove the malformed file")?;
+        }
+        return encryption_result
+    }
+
     let encrypt_duration = encrypt_start_time.elapsed();
     match params.bench {
         BenchMode::WriteToFilesystem => {

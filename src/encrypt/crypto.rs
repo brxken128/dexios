@@ -1,11 +1,10 @@
-use crate::global::crypto::EncryptStreamCiphers;
 use crate::global::parameters::{
     Algorithm, BenchMode, CipherMode, HashMode, Header, HeaderType, OutputFile,
 };
-use crate::global::{BLOCK_SIZE, SALT_LEN, VERSION};
-use crate::key::argon2_hash;
+use crate::global::{BLOCK_SIZE, VERSION};
+use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;
-use aead::stream::EncryptorLE31;
+use crate::streams::init_encryption_stream;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
@@ -13,18 +12,11 @@ use anyhow::Context;
 use anyhow::Result;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use deoxys::DeoxysII256;
-use rand::{prelude::StdRng, Rng, RngCore, SeedableRng};
+use rand::{prelude::StdRng, Rng, SeedableRng};
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
 use std::time::Instant;
-
-// this generates a salt for password hashing
-fn gen_salt() -> [u8; SALT_LEN] {
-    let mut salt: [u8; SALT_LEN] = [0; SALT_LEN];
-    StdRng::from_entropy().fill_bytes(&mut salt);
-    salt
-}
 
 // this encrypts data in memory mode
 // it takes the data and a Secret<> key
@@ -161,71 +153,13 @@ pub fn encrypt_bytes_stream_mode(
     hash: HashMode,
     algorithm: Algorithm,
 ) -> Result<()> {
-    let salt = gen_salt();
-
     let header_type = HeaderType {
         header_version: VERSION,
         cipher_mode: CipherMode::StreamMode,
         algorithm,
     };
 
-    let (mut streams, nonce_bytes): (EncryptStreamCiphers, Vec<u8>) = match algorithm {
-        Algorithm::Aes256Gcm => {
-            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
-            let nonce = Nonce::from_slice(&nonce_bytes);
-
-            let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
-            let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    drop(key);
-                    cipher
-                }
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            };
-
-            let stream = EncryptorLE31::from_aead(cipher, nonce);
-            (
-                EncryptStreamCiphers::Aes256Gcm(Box::new(stream)),
-                nonce_bytes.to_vec(),
-            )
-        }
-        Algorithm::XChaCha20Poly1305 => {
-            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
-
-            let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
-            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    drop(key);
-                    cipher
-                }
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            };
-
-            let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
-            (
-                EncryptStreamCiphers::XChaCha(Box::new(stream)),
-                nonce_bytes.to_vec(),
-            )
-        }
-        Algorithm::DeoxysII256 => {
-            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 11]>();
-
-            let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
-            let cipher = match DeoxysII256::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    drop(key);
-                    cipher
-                }
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            };
-
-            let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
-            (
-                EncryptStreamCiphers::DeoxysII(Box::new(stream)),
-                nonce_bytes.to_vec(),
-            )
-        }
-    };
+    let (mut streams, salt, nonce_bytes) = init_encryption_stream(raw_key, &header_type)?;
 
     let header = Header {
         salt,

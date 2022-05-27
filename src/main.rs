@@ -17,6 +17,7 @@ mod key;
 mod list;
 mod pack;
 mod prompt;
+mod streams;
 mod secret;
 
 // this is where subcommand/argument matching is mostly handled

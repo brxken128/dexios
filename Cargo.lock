@@ -264,6 +264,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "deoxys"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ac20d8b63a9718cc38ae79c026eb5395d612d53904c15c0793a6fc508a1d3b7"
+dependencies = [
+ "aead",
+ "aes",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
 name = "dexios"
 version = "8.0.1"
 dependencies = [
@@ -274,6 +286,7 @@ dependencies = [
  "blake3",
  "chacha20poly1305",
  "clap",
+ "deoxys",
  "rand",
  "termion",
  "zeroize",

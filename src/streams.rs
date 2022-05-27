@@ -1,21 +1,24 @@
-use anyhow::Result;
-use rand::prelude::StdRng;
 use crate::global::crypto::DecryptStreamCiphers;
+use crate::global::parameters::{Header, HeaderType};
+use crate::global::SALT_LEN;
 use crate::global::{crypto::EncryptStreamCiphers, parameters::Algorithm};
-use crate::global::parameters::{HeaderType, Header};
-use crate::global::{SALT_LEN};
 use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;
-use aead::stream::{EncryptorLE31, DecryptorLE31};
-use aead::{NewAead};
+use aead::stream::{DecryptorLE31, EncryptorLE31};
+use aead::NewAead;
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
-use chacha20poly1305::{XChaCha20Poly1305};
+use anyhow::Result;
+use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
+use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use std::result::Result::Ok;
 
-pub fn init_encryption_stream(raw_key: Secret<Vec<u8>>, header_type: &HeaderType) -> Result<(EncryptStreamCiphers, [u8; SALT_LEN], Vec<u8>)> {
+pub fn init_encryption_stream(
+    raw_key: Secret<Vec<u8>>,
+    header_type: &HeaderType,
+) -> Result<(EncryptStreamCiphers, [u8; SALT_LEN], Vec<u8>)> {
     let salt = gen_salt();
     let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
 
@@ -23,7 +26,7 @@ pub fn init_encryption_stream(raw_key: Secret<Vec<u8>>, header_type: &HeaderType
         Algorithm::Aes256Gcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
             let nonce = Nonce::from_slice(&nonce_bytes);
-    
+
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
@@ -31,7 +34,7 @@ pub fn init_encryption_stream(raw_key: Secret<Vec<u8>>, header_type: &HeaderType
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
-    
+
             let stream = EncryptorLE31::from_aead(cipher, nonce);
             Ok((
                 EncryptStreamCiphers::Aes256Gcm(Box::new(stream)),
@@ -41,7 +44,7 @@ pub fn init_encryption_stream(raw_key: Secret<Vec<u8>>, header_type: &HeaderType
         }
         Algorithm::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
-    
+
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
@@ -49,7 +52,7 @@ pub fn init_encryption_stream(raw_key: Secret<Vec<u8>>, header_type: &HeaderType
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
-    
+
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
             Ok((
                 EncryptStreamCiphers::XChaCha(Box::new(stream)),
@@ -59,7 +62,7 @@ pub fn init_encryption_stream(raw_key: Secret<Vec<u8>>, header_type: &HeaderType
         }
         Algorithm::DeoxysII256 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 11]>();
-    
+
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
@@ -67,7 +70,7 @@ pub fn init_encryption_stream(raw_key: Secret<Vec<u8>>, header_type: &HeaderType
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
-    
+
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
             Ok((
                 EncryptStreamCiphers::DeoxysII(Box::new(stream)),
@@ -78,7 +81,10 @@ pub fn init_encryption_stream(raw_key: Secret<Vec<u8>>, header_type: &HeaderType
     }
 }
 
-pub fn init_decryption_stream(raw_key: Secret<Vec<u8>>, header: &Header) -> Result<DecryptStreamCiphers> {
+pub fn init_decryption_stream(
+    raw_key: Secret<Vec<u8>>,
+    header: &Header,
+) -> Result<DecryptStreamCiphers> {
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
     match header.header_type.algorithm {

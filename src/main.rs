@@ -17,8 +17,8 @@ mod key;
 mod list;
 mod pack;
 mod prompt;
-mod streams;
 mod secret;
+mod streams;
 
 // this is where subcommand/argument matching is mostly handled
 // similarly to get_matches(), this is long, clunky, and a nightmare to work with

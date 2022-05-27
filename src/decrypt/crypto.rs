@@ -1,9 +1,8 @@
-use crate::global::crypto::DecryptStreamCiphers;
 use crate::global::parameters::{Algorithm, BenchMode, HashMode, Header, OutputFile};
 use crate::global::BLOCK_SIZE;
 use crate::key::argon2_hash;
 use crate::secret::Secret;
-use aead::stream::DecryptorLE31;
+use crate::streams::init_decryption_stream;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
@@ -118,49 +117,7 @@ pub fn decrypt_bytes_stream_mode(
 ) -> Result<()> {
     let mut hasher = blake3::Hasher::new();
 
-    let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
-
-    let mut streams: DecryptStreamCiphers = match header.header_type.algorithm {
-        Algorithm::Aes256Gcm => {
-            let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    drop(key);
-                    cipher
-                }
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            };
-
-            let nonce = Nonce::from_slice(header.nonce.as_slice());
-
-            let stream = DecryptorLE31::from_aead(cipher, nonce);
-
-            DecryptStreamCiphers::Aes256Gcm(Box::new(stream))
-        }
-        Algorithm::XChaCha20Poly1305 => {
-            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    drop(key);
-                    cipher
-                }
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            };
-
-            let stream = DecryptorLE31::from_aead(cipher, header.nonce.as_slice().into());
-            DecryptStreamCiphers::XChaCha(Box::new(stream))
-        }
-        Algorithm::DeoxysII256 => {
-            let cipher = match DeoxysII256::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    drop(key);
-                    cipher
-                }
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            };
-
-            let stream = DecryptorLE31::from_aead(cipher, header.nonce.as_slice().into());
-            DecryptStreamCiphers::DeoxysII(Box::new(stream))
-        }
-    };
+    let mut streams = init_decryption_stream(raw_key, header)?;
 
     if hash == HashMode::CalculateHash {
         crate::header::hash(&mut hasher, header);

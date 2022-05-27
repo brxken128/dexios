@@ -22,6 +22,15 @@ Going forward, starting with version 8, we have zero plans to make any incompati
 
 We encourage anyone who used an older version of Dexios to decrypt their files, update, and re-encrypt at your earliest convenience. This is to ensure that your files use the new [header standard](https://github.com/brxken128/dexios/wiki/Headers).
 
+## Supported Operating Systems
+
+Currently, we only provide support for two operating systems - Linux (all distributions), and FreeBSD. Dexios has been tested by myself as working on many Linux distributions, and on FreeBSD 13, 13.1 and 14.
+
+I personally have no plans to support Windows at this moment in time. Most things within Dexios should work on Windows, except `termion` and reading the password input from the terminal. You are welcome to submit a PR if you'd like to add this functionality, or a Github issue requesting it - I'm not fully against the idea at all (it's just not at the top of my priorities right now).
+
+## Contributing
+
+Contributions are very welcome! You're free to submit a PR and I'll take a look at it, provide feedback and (most likely) merge it, provided the tests pass.
 ## Basic Usage
 
 To encrypt a file:

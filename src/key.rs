@@ -62,8 +62,10 @@ pub fn argon2_hash(
 // this function interacts with stdin and stdout to hide password input
 // it uses termion's `read_passwd` function for terminal manipulation
 fn read_password_from_stdin(prompt: &str) -> Result<String> {
-    let mut stdout = stdout().lock();
-    let mut stdin = stdin().lock();
+    let stdout = stdout();
+    let mut stdout = stdout.lock();
+    let stdin = stdin();
+    let mut stdin = stdin.lock();
 
     stdout
         .write_all(prompt.as_bytes())

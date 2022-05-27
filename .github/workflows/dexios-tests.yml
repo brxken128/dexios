@@ -169,7 +169,7 @@ jobs:
     - name: Decrypt in memory+bench mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dbHyk keyfile 1MB.enc 1MB.nonexistent
     - name: Encrypt in stream mode (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk --aead 1 keyfile 100MB.bin 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 1 100MB.bin 100MB.enc
     - name: Decrypt in stream+bench mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dbHyk keyfile 100MB.enc 100MB.nonexistent
     - name: Show all files in the directory

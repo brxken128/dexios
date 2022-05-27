@@ -45,14 +45,20 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in memory mode (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 8KB.bin 8KB.enc 
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 1 8KB.bin 8KB.enc 
     - name: Decrypt in memory mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 8KB.enc 8KB.bin
     - name: Generate test file
       run: dd if=/dev/urandom of=8KB.bin bs=1K count=8
     - name: Encrypt in memory mode (AES-256-GCM)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -egHyk keyfile 8KB.bin 8KB.enc 
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 2 8KB.bin 8KB.enc 
     - name: Decrypt in memory mode (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 8KB.enc 8KB.bin
+    - name: Generate test file
+      run: dd if=/dev/urandom of=8KB.bin bs=1K count=8
+    - name: Encrypt in memory mode (Deoxys-II-256)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 3 8KB.bin 8KB.enc 
+    - name: Decrypt in memory mode (Deoxys-II-256)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 8KB.enc 8KB.bin
   stream-mode:
     needs: build
@@ -71,14 +77,20 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in stream mode (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 100MB.bin 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 1 100MB.bin 100MB.enc
     - name: Decrypt in stream mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 100MB.enc 100MB.bin
     - name: Generate test file
       run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
     - name: Encrypt in stream mode (AES-256-GCM)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -egHyk keyfile 100MB.bin 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 2 100MB.bin 100MB.enc
     - name: Decrypt in stream mode (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 100MB.enc 100MB.bin
+    - name: Generate test file
+      run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
+    - name: Encrypt in stream mode (Deoxys-II-256)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 3 100MB.bin 100MB.enc
+    - name: Decrypt in stream mode (Deoxys-II-256)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 100MB.enc 100MB.bin
   header-tests:
     needs: build
@@ -153,11 +165,11 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in memory mode (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 1MB.bin 1MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 1 1MB.bin 1MB.enc
     - name: Decrypt in memory+bench mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dbHyk keyfile 1MB.enc 1MB.nonexistent
     - name: Encrypt in stream mode (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 100MB.bin 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 1 100MB.bin 100MB.enc
     - name: Decrypt in stream+bench mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dbHyk keyfile 100MB.enc 100MB.nonexistent
     - name: Show all files in the directory
@@ -195,14 +207,20 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt 1GB file (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 1GB.bin 1GB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 1 1GB.bin 1GB.enc
     - name: Decrypt 1GB file (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 1GB.enc 1GB.bin
     - name: Generate test file
       run: dd if=/dev/urandom of=1GB.bin bs=1M count=1000
     - name: Encrypt 1GB file (AES-256-GCM)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 1GB.bin 1GB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 2 1GB.bin 1GB.enc
     - name: Decrypt 1GB file (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 1GB.enc 1GB.bin
+    - name: Generate test file
+      run: dd if=/dev/urandom of=1GB.bin bs=1M count=1000
+    - name: Encrypt 1GB file (Deoxys-II-256)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 3 1GB.bin 1GB.enc
+    - name: Decrypt 1GB file (Deoxys-II-256)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 1GB.enc 1GB.bin
   pack:
     needs: build
@@ -223,7 +241,7 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Pack+Encrypt test directory with exclude (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack --exclude="1.bin" -eyk keyfile test/ output.zip
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack --exclude="1.bin" -eyk keyfile --aead 1 test/ output.zip
     - name: Decrypt+Unpack archive (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack -dyk keyfile output.zip test/extracted
     - name: List files in directory
@@ -244,12 +262,18 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt 1KB file (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 1KB.bin 1KB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 1 1KB.bin 1KB.enc
     - name: Decrypt 1KB file (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 1KB.enc 1KB.bin
     - name: Generate test file
       run: dd if=/dev/urandom of=1KB.bin bs=1 count=1024
     - name: Encrypt 1KB file (AES-256-GCM)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -egHyk keyfile 1KB.bin 1KB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 2 1KB.bin 1KB.enc
     - name: Decrypt 1KB file (AES-256-GCM)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 1KB.enc 1KB.bin
+    - name: Generate test file
+      run: dd if=/dev/urandom of=1KB.bin bs=1 count=1024
+    - name: Encrypt 1KB file (Deoxys-II-256)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 3 1KB.bin 1KB.enc
+    - name: Decrypt 1KB file (Deoxys-II-256)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 1KB.enc 1KB.bin

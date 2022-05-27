@@ -9,15 +9,18 @@ use aead::{
 };
 use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
+use deoxys::DeoxysII256;
 
 pub enum EncryptStreamCiphers {
-    AesGcm(Box<EncryptorLE31<Aes256Gcm>>),
+    Aes256Gcm(Box<EncryptorLE31<Aes256Gcm>>),
     XChaCha(Box<EncryptorLE31<XChaCha20Poly1305>>),
+    DeoxysII(Box<EncryptorLE31<DeoxysII256>>),
 }
 
 pub enum DecryptStreamCiphers {
-    AesGcm(Box<DecryptorLE31<Aes256Gcm>>),
+    Aes256Gcm(Box<DecryptorLE31<Aes256Gcm>>),
     XChaCha(Box<DecryptorLE31<XChaCha20Poly1305>>),
+    DeoxysII(Box<DecryptorLE31<DeoxysII256>>),
 }
 
 impl EncryptStreamCiphers {
@@ -26,8 +29,9 @@ impl EncryptStreamCiphers {
         payload: impl Into<Payload<'msg, 'aad>>,
     ) -> aead::Result<Vec<u8>> {
         match self {
-            EncryptStreamCiphers::AesGcm(s) => s.encrypt_next(payload),
+            EncryptStreamCiphers::Aes256Gcm(s) => s.encrypt_next(payload),
             EncryptStreamCiphers::XChaCha(s) => s.encrypt_next(payload),
+            EncryptStreamCiphers::DeoxysII(s) => s.encrypt_next(payload),
         }
     }
 
@@ -36,8 +40,9 @@ impl EncryptStreamCiphers {
         payload: impl Into<Payload<'msg, 'aad>>,
     ) -> aead::Result<Vec<u8>> {
         match self {
-            EncryptStreamCiphers::AesGcm(s) => s.encrypt_last(payload),
+            EncryptStreamCiphers::Aes256Gcm(s) => s.encrypt_last(payload),
             EncryptStreamCiphers::XChaCha(s) => s.encrypt_last(payload),
+            EncryptStreamCiphers::DeoxysII(s) => s.encrypt_last(payload),
         }
     }
 }
@@ -48,8 +53,9 @@ impl DecryptStreamCiphers {
         payload: impl Into<Payload<'msg, 'aad>>,
     ) -> aead::Result<Vec<u8>> {
         match self {
-            DecryptStreamCiphers::AesGcm(s) => s.decrypt_next(payload),
+            DecryptStreamCiphers::Aes256Gcm(s) => s.decrypt_next(payload),
             DecryptStreamCiphers::XChaCha(s) => s.decrypt_next(payload),
+            DecryptStreamCiphers::DeoxysII(s) => s.decrypt_next(payload),
         }
     }
 
@@ -58,8 +64,9 @@ impl DecryptStreamCiphers {
         payload: impl Into<Payload<'msg, 'aad>>,
     ) -> aead::Result<Vec<u8>> {
         match self {
-            DecryptStreamCiphers::AesGcm(s) => s.decrypt_last(payload),
+            DecryptStreamCiphers::Aes256Gcm(s) => s.decrypt_last(payload),
             DecryptStreamCiphers::XChaCha(s) => s.decrypt_last(payload),
+            DecryptStreamCiphers::DeoxysII(s) => s.decrypt_last(payload),
         }
     }
 }

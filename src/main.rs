@@ -1,7 +1,8 @@
 use anyhow::{Context, Result};
-use global::parameters::{parameter_handler, Algorithm, HeaderFile};
+use global::parameters::{encrypt_additional_params, parameter_handler, HeaderFile};
 use global::parameters::{DirectoryMode, HiddenFilesMode, PackMode, PrintMode, SkipMode};
 use global::BLOCK_SIZE;
+use list::show_values;
 use std::result::Result::Ok;
 
 mod cli;
@@ -13,9 +14,11 @@ mod global;
 mod hashing;
 mod header;
 mod key;
+mod list;
 mod pack;
 mod prompt;
 mod secret;
+mod streams;
 
 // this is where subcommand/argument matching is mostly handled
 // similarly to get_matches(), this is long, clunky, and a nightmare to work with
@@ -28,11 +31,7 @@ fn main() -> Result<()> {
     match matches.subcommand() {
         Some(("encrypt", sub_matches)) => {
             let params = parameter_handler(sub_matches)?;
-            let algorithm = if sub_matches.is_present("gcm") {
-                Algorithm::AesGcm
-            } else {
-                Algorithm::XChaCha20Poly1305
-            };
+            let algorithm = encrypt_additional_params(sub_matches)?;
 
             let result = // stream mode is the default - it'll redirect to memory mode if the file is too small
                 encrypt::stream_mode(
@@ -115,6 +114,13 @@ fn main() -> Result<()> {
                 hashing::hash_stream(file_name)?;
             }
         }
+        Some(("list", sub_matches)) => {
+            show_values(
+                sub_matches
+                    .value_of("input")
+                    .context("No input file provided")?,
+            )?;
+        }
         Some(("pack", sub_matches)) => {
             match sub_matches.subcommand_name() {
                 Some("encrypt") => {
@@ -176,11 +182,7 @@ fn main() -> Result<()> {
                         print_mode,
                     };
 
-                    let algorithm = if sub_matches.is_present("gcm") {
-                        Algorithm::AesGcm
-                    } else {
-                        Algorithm::XChaCha20Poly1305
-                    };
+                    let algorithm = encrypt_additional_params(sub_matches_encrypt)?;
 
                     pack::encrypt_directory(
                         sub_matches_encrypt

@@ -1,9 +1,8 @@
-use crate::global::crypto::DecryptStreamCiphers;
 use crate::global::parameters::{Algorithm, BenchMode, HashMode, Header, OutputFile};
 use crate::global::BLOCK_SIZE;
 use crate::key::argon2_hash;
 use crate::secret::Secret;
-use aead::stream::DecryptorLE31;
+use crate::streams::init_decryption_stream;
 use aead::{Aead, NewAead};
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
@@ -11,6 +10,7 @@ use anyhow::Context;
 use anyhow::Result;
 use blake3::Hasher;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
+use deoxys::DeoxysII256;
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
@@ -18,6 +18,7 @@ use std::time::Instant;
 
 // this decrypts the data in memory mode
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce
+// most of the information for decryption is stored within the header
 // it hashes the key with the supplised salt, and decrypts all of the data
 // it returns the decrypted bytes
 pub fn decrypt_bytes_memory_mode(
@@ -31,7 +32,7 @@ pub fn decrypt_bytes_memory_mode(
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
     let decrypted_bytes = match header.header_type.algorithm {
-        Algorithm::AesGcm => {
+        Algorithm::Aes256Gcm => {
             let nonce = Nonce::from_slice(&header.nonce);
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
@@ -49,6 +50,21 @@ pub fn decrypt_bytes_memory_mode(
         Algorithm::XChaCha20Poly1305 => {
             let nonce = XNonce::from_slice(&header.nonce);
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
+                Ok(cipher) => {
+                    drop(key);
+                    cipher
+                }
+                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
+            };
+
+            match cipher.decrypt(nonce, data) {
+                Ok(decrypted_bytes) => decrypted_bytes,
+                Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
+            }
+        }
+        Algorithm::DeoxysII256 => {
+            let nonce = deoxys::Nonce::from_slice(&header.nonce);
+            let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => {
                     drop(key);
                     cipher
@@ -89,7 +105,9 @@ pub fn decrypt_bytes_memory_mode(
 }
 
 // this decrypts data in stream mode
-// it takes an input file handle, an output file handle, a Secret<> key, and enums with specific modes
+// it takes an input file handle, an output file handle, a Secret<> raw key, and enums with specific modes
+// most of the information for decryption is stored within the header
+// it gets the streams enum from `init_decryption_stream`
 // it creates the encryption cipher and then reads the file in blocks (including the gcm tag)
 // on each read, it decrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
 pub fn decrypt_bytes_stream_mode(
@@ -102,37 +120,7 @@ pub fn decrypt_bytes_stream_mode(
 ) -> Result<()> {
     let mut hasher = blake3::Hasher::new();
 
-    let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
-
-    let mut streams: DecryptStreamCiphers = match header.header_type.algorithm {
-        Algorithm::AesGcm => {
-            let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    drop(key);
-                    cipher
-                }
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            };
-
-            let nonce = Nonce::from_slice(header.nonce.as_slice());
-
-            let stream = DecryptorLE31::from_aead(cipher, nonce);
-
-            DecryptStreamCiphers::AesGcm(Box::new(stream))
-        }
-        Algorithm::XChaCha20Poly1305 => {
-            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    drop(key);
-                    cipher
-                }
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            };
-
-            let stream = DecryptorLE31::from_aead(cipher, header.nonce.as_slice().into());
-            DecryptStreamCiphers::XChaCha(Box::new(stream))
-        }
-    };
+    let mut streams = init_decryption_stream(raw_key, header)?;
 
     if hash == HashMode::CalculateHash {
         crate::header::hash(&mut hasher, header);

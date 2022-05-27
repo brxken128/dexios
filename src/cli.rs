@@ -70,19 +70,12 @@ pub fn get_matches() -> clap::ArgMatches {
                 .conflicts_with("keyfile"),
         )
         .arg(
-            Arg::new("gcm")
-                .short('g')
-                .long("gcm")
-                .takes_value(false)
-                .help("Use AES-256-GCM"),
-        )
-        .arg(
-            Arg::new("xchacha")
-                .short('x')
-                .long("xchacha")
-                .takes_value(false)
-                .help("Use XChaCha20-Poly1305 (default)")
-                .conflicts_with("gcm"),
+            Arg::new("aead")
+                .short('a')
+                .long("aead")
+                .value_name("aead to use for encryption (\"dexios list aead\" to see all possible values)")
+                .takes_value(true)
+                .help("select an AEAD"),
         );
 
     let decrypt = Command::new("decrypt")
@@ -195,6 +188,18 @@ pub fn get_matches() -> clap::ArgMatches {
                         .takes_value(true)
                         .required(true)
                         .help("The file to hash"),
+                ),
+        )
+        .subcommand(
+            Command::new("list")
+                .short_flag('l')
+                .about("List Dexios values")
+                .arg(
+                    Arg::new("input")
+                        .value_name("input")
+                        .takes_value(true)
+                        .required(true)
+                        .help("The item to list"),
                 ),
         )
         .subcommand(

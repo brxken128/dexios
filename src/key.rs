@@ -11,9 +11,19 @@ use crate::secret::Secret;
 use anyhow::{Context, Result};
 use argon2::Argon2;
 use argon2::Params;
+use rand::prelude::StdRng;
+use rand::RngCore;
+use rand::SeedableRng;
 use std::result::Result::Ok;
 use termion::input::TermRead;
 use zeroize::Zeroize;
+
+// this generates a salt for password hashing
+pub fn gen_salt() -> [u8; SALT_LEN] {
+    let mut salt: [u8; SALT_LEN] = [0; SALT_LEN];
+    StdRng::from_entropy().fill_bytes(&mut salt);
+    salt
+}
 
 // this handles argon2 hashing with the provided key
 // it returns the key hashed with a specified salt

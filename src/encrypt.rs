@@ -1,11 +1,11 @@
 use crate::encrypt::crypto::encrypt_bytes_memory_mode;
 use crate::encrypt::crypto::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
-use crate::global::parameters::Algorithm;
-use crate::global::parameters::BenchMode;
-use crate::global::parameters::CryptoParams;
-use crate::global::parameters::EraseMode;
-use crate::global::parameters::OutputFile;
+use crate::global::enums::Algorithm;
+use crate::global::enums::BenchMode;
+use crate::global::enums::EraseMode;
+use crate::global::enums::OutputFile;
+use crate::global::structs::CryptoParams;
 use crate::global::BLOCK_SIZE;
 use crate::key::get_secret;
 use crate::prompt::overwrite_check;
@@ -92,6 +92,7 @@ pub fn stream_mode(
             .try_into()
             .context("Unable to parse stream block size as u64")?
     {
+        drop(input_file);
         return memory_mode(input, output, params, algorithm);
     }
 
@@ -136,7 +137,7 @@ pub fn stream_mode(
         if params.bench == BenchMode::WriteToFilesystem {
             std::fs::remove_file(output).context("Unable to remove the malformed file")?;
         }
-        return encryption_result
+        return encryption_result;
     }
 
     let encrypt_duration = encrypt_start_time.elapsed();

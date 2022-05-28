@@ -1,11 +1,11 @@
 use crate::decrypt::crypto::decrypt_bytes_memory_mode;
 use crate::decrypt::crypto::decrypt_bytes_stream_mode;
-use crate::global::parameters::BenchMode;
-use crate::global::parameters::CipherMode;
-use crate::global::parameters::CryptoParams;
-use crate::global::parameters::EraseMode;
-use crate::global::parameters::HeaderFile;
-use crate::global::parameters::OutputFile;
+use crate::global::enums::BenchMode;
+use crate::global::enums::CipherMode;
+use crate::global::enums::EraseMode;
+use crate::global::enums::HeaderFile;
+use crate::global::enums::OutputFile;
+use crate::global::structs::CryptoParams;
 use crate::key::get_secret;
 use crate::prompt::overwrite_check;
 use anyhow::{Context, Ok, Result};
@@ -160,7 +160,7 @@ pub fn stream_mode(
         if params.bench == BenchMode::WriteToFilesystem {
             std::fs::remove_file(output).context("Unable to remove the malformed file")?;
         }
-        return decryption_result
+        return decryption_result;
     }
 
     let decrypt_duration = decrypt_start_time.elapsed();

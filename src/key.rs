@@ -3,9 +3,9 @@ use std::io::stdout;
 use std::io::Write;
 
 use crate::file::get_bytes;
-use crate::global::parameters::HeaderVersion;
-use crate::global::parameters::KeyFile;
-use crate::global::parameters::PasswordMode;
+use crate::global::enums::HeaderVersion;
+use crate::global::enums::KeyFile;
+use crate::global::enums::PasswordMode;
 use crate::global::SALT_LEN;
 use crate::secret::Secret;
 use anyhow::{Context, Result};

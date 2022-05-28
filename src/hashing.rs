@@ -10,6 +10,18 @@ pub fn hash_stream(input: &str) -> Result<()> {
     let mut input_file =
         std::fs::File::open(input).with_context(|| format!("Unable to open file: {}", input))?;
 
+    let file_size = std::fs::metadata(input)
+        .with_context(|| format!("Unable to get file metadata: {}", input))?;
+
+    if file_size.len()
+        <= BLOCK_SIZE
+            .try_into()
+            .context("Unable to parse stream block size as u64")?
+    {
+        drop(input_file);
+        return hash_memory(input);
+    }
+
     println!("Hashing {} in stream mode (this may take a while)", input);
     let mut hasher = blake3::Hasher::new();
 

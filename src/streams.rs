@@ -1,7 +1,7 @@
 use crate::global::crypto::DecryptStreamCiphers;
-use crate::global::parameters::{Header, HeaderType};
+use crate::global::structs::{Header, HeaderType};
 use crate::global::SALT_LEN;
-use crate::global::{crypto::EncryptStreamCiphers, parameters::Algorithm};
+use crate::global::{crypto::EncryptStreamCiphers, enums::Algorithm};
 use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;
 use aead::stream::{DecryptorLE31, EncryptorLE31};

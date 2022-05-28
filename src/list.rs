@@ -1,6 +1,6 @@
 use anyhow::{Ok, Result};
 
-use crate::global::parameters::ALGORITHMS;
+use crate::global::ALGORITHMS;
 
 pub fn show_values(input: &str) -> Result<()> {
     match input.to_lowercase().as_str() {

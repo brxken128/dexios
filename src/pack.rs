@@ -12,8 +12,11 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::parameters::{
-        Algorithm, CryptoParams, DirectoryMode, HeaderFile, PackMode, PrintMode, SkipMode,
+    global::enums::{
+        Algorithm, DirectoryMode, HeaderFile, PrintMode, SkipMode,
+    },
+    global::structs::{
+        CryptoParams, PackMode,
     },
     global::BLOCK_SIZE,
     prompt::get_answer,

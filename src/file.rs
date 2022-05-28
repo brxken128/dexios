@@ -1,6 +1,6 @@
-use crate::global::parameters::DirectoryMode;
-use crate::global::parameters::HiddenFilesMode;
-use crate::global::parameters::PrintMode;
+use crate::global::enums::DirectoryMode;
+use crate::global::enums::HiddenFilesMode;
+use crate::global::enums::PrintMode;
 use crate::secret::Secret;
 use anyhow::{Context, Ok, Result};
 use std::fs::read_dir;

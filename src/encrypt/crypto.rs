@@ -1,6 +1,7 @@
-use crate::global::parameters::{
-    Algorithm, BenchMode, CipherMode, HashMode, Header, HeaderType, OutputFile,
+use crate::global::enums::{
+    Algorithm, BenchMode, CipherMode, HashMode, OutputFile,
 };
+use crate::global::structs::{Header, HeaderType};
 use crate::global::{BLOCK_SIZE, VERSION};
 use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;

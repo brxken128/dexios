@@ -1,6 +1,9 @@
 use crate::{
-    global::parameters::{
-        Algorithm, BenchMode, CipherMode, Header, HeaderType, HeaderVersion, OutputFile, SkipMode,
+    global::enums::{
+        Algorithm, BenchMode, CipherMode, HeaderVersion, OutputFile, SkipMode,
+    },
+    global::structs::{
+        Header, HeaderType
     },
     global::SALT_LEN,
     prompt::{get_answer, overwrite_check},

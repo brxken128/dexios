@@ -1,4 +1,4 @@
-use self::parameters::HeaderVersion;
+use self::enums::HeaderVersion;
 
 // this file sets constants that are used throughout the codebase
 // these can be customised easily by anyone to suit their own needs
@@ -8,3 +8,5 @@ pub const VERSION: HeaderVersion = HeaderVersion::V1;
 
 pub mod crypto;
 pub mod parameters;
+pub mod enums;
+pub mod structs;

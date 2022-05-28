@@ -59,7 +59,7 @@ pub fn pack(sub_matches: &ArgMatches) -> Result<()> {
 }
 
 pub fn unpack(sub_matches: &ArgMatches) -> Result<()> {
-    let print_mode = unpack_additional_params(sub_matches)?;
+    let print_mode = unpack_additional_params(sub_matches);
 
     let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
     let params = parameter_handler(sub_matches_decrypt)?;

@@ -3,8 +3,11 @@
 // it also contains enums/structs relating to headers
 // this file is long, but necessary
 
-use crate::global::enums::*;
-use crate::global::structs::*;
+use crate::global::enums::{
+    Algorithm, BenchMode, DirectoryMode, EraseMode, HashMode, HeaderFile, HiddenFilesMode, KeyFile,
+    PasswordMode, PrintMode, SkipMode,
+};
+use crate::global::structs::{CryptoParams, PackMode};
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 
@@ -205,10 +208,10 @@ pub fn pack_additional_params(sub_matches: &ArgMatches) -> Result<PackMode> {
     Ok(pack_params)
 }
 
-pub fn unpack_additional_params(sub_matches: &ArgMatches) -> Result<PrintMode> {
+pub fn unpack_additional_params(sub_matches: &ArgMatches) -> PrintMode {
     if sub_matches.is_present("verbose") {
-        Ok(PrintMode::Verbose)
+        PrintMode::Verbose
     } else {
-        Ok(PrintMode::Quiet)
+        PrintMode::Quiet
     }
 }

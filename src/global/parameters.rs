@@ -183,6 +183,13 @@ impl std::fmt::Display for CipherMode {
     }
 }
 
+pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
+    let value = sub_matches
+        .value_of(name)
+        .with_context(|| { format!("No {} provided", name) })?.to_string();
+    Ok(value)
+}
+
 pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
     let keyfile = if sub_matches.is_present("keyfile") {
         KeyFile::Some(
@@ -277,14 +284,103 @@ pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Result<Algorithm> 
 }
 
 pub fn decrypt_additional_params(sub_matches: &ArgMatches) -> Result<HeaderFile> {
-    if sub_matches.is_present("header") {
-        Ok(HeaderFile::Some(
+    let header = if sub_matches.is_present("header") {
+        HeaderFile::Some(
             sub_matches
                 .value_of("header")
                 .context("No header/invalid text provided")?
                 .to_string(),
-        ))
+        )
     } else {
-        Ok(HeaderFile::None)
+        HeaderFile::None
+    };
+
+    Ok(header)
+}
+
+pub fn erase_additional_params(sub_matches: &ArgMatches) -> Result<i32> {
+    let passes = if sub_matches.is_present("passes") {
+        let result = sub_matches
+            .value_of("passes")
+            .context("No amount of passes specified")?
+            .parse::<i32>();
+        if let Ok(value) = result {
+            value
+        } else {
+            println!("Unable to read number of passes provided - using the default.");
+            16
+        }
+    } else {
+        println!("Number of passes not provided - using the default.");
+        16
+    };
+
+    Ok(passes)
+}
+
+pub fn pack_additional_params(sub_matches: &ArgMatches) -> Result<PackMode> {
+    let dir_mode = if sub_matches.is_present("recursive") {
+        DirectoryMode::Recursive
+    } else {
+        DirectoryMode::Singular
+    };
+
+    let hidden = if sub_matches.is_present("hidden") {
+        HiddenFilesMode::Include
+    } else {
+        HiddenFilesMode::Exclude
+    };
+
+    let compression_level = if sub_matches.is_present("level") {
+        let result = sub_matches
+            .value_of("level")
+            .context("No compression level specified")?
+            .parse();
+
+        if let Ok(value) = result {
+            if (0..=9).contains(&value) {
+                value
+            } else {
+                println!("Compression level is out of specified bounds - using the default (6).");
+                6
+            }
+        } else {
+            println!("Unable to read compression level provided - using the default (6).");
+            6
+        }
+    } else {
+        6
+    };
+
+    let excluded: Vec<String> = if sub_matches.is_present("exclude") {
+        let list: Vec<&str> = sub_matches.values_of("exclude").unwrap().collect();
+        list.iter().map(std::string::ToString::to_string).collect()
+    // this fixes 'static lifetime issues
+    } else {
+        Vec::new()
+    };
+
+    let print_mode = if sub_matches.is_present("verbose") {
+        PrintMode::Verbose
+    } else {
+        PrintMode::Quiet
+    };
+
+    let pack_params = PackMode {
+        compression_level,
+        dir_mode,
+        exclude: excluded,
+        hidden,
+        print_mode,
+    };
+
+    Ok(pack_params)
+} 
+
+pub fn unpack_additional_params(sub_matches: &ArgMatches) -> Result<PrintMode> {
+    if sub_matches.is_present("verbose") {
+        Ok(PrintMode::Verbose)
+    } else {
+        Ok(PrintMode::Quiet)
     }
 }

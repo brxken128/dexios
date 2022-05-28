@@ -1,7 +1,5 @@
-use anyhow::{Context, Result};
-use global::parameters::{encrypt_additional_params, parameter_handler, HeaderFile};
-use global::parameters::{DirectoryMode, HiddenFilesMode, PackMode, PrintMode, SkipMode};
-use global::BLOCK_SIZE;
+use anyhow::Result;
+use global::parameters::{SkipMode, get_param};
 use list::show_values;
 use std::result::Result::Ok;
 
@@ -37,159 +35,24 @@ fn main() -> Result<()> {
             subcommands::decrypt(sub_matches)?;
         }
         Some(("erase", sub_matches)) => {
-            let passes = if sub_matches.is_present("passes") {
-                let result = sub_matches
-                    .value_of("passes")
-                    .context("No amount of passes specified")?
-                    .parse::<i32>();
-                if let Ok(value) = result {
-                    value
-                } else {
-                    println!("Unable to read number of passes provided - using the default.");
-                    16
-                }
-            } else {
-                println!("Number of passes not provided - using the default.");
-                16
-            };
-            erase::secure_erase(
-                sub_matches
-                    .value_of("input")
-                    .context("No input file/invalid text provided")?,
-                passes,
-            )?;
+            subcommands::erase(sub_matches)?;
         }
         Some(("hash", sub_matches)) => {
-            let file_name = sub_matches
-                .value_of("input")
-                .context("No input file provided")?;
-            let file_size = std::fs::metadata(file_name)
-                .with_context(|| format!("Unable to get file metadata: {}", file_name))?;
-
-            if file_size.len()
-                <= BLOCK_SIZE
-                    .try_into()
-                    .context("Unable to parse stream block size as u64")?
-            {
-                hashing::hash_memory(file_name)?;
-            } else {
-                hashing::hash_stream(file_name)?;
-            }
+            let input = get_param("input", sub_matches)?;
+            hashing::hash_stream(&input)?;
         }
         Some(("list", sub_matches)) => {
             show_values(
-                sub_matches
-                    .value_of("input")
-                    .context("No input file provided")?,
+                &get_param("input", sub_matches)?,
             )?;
         }
         Some(("pack", sub_matches)) => {
             match sub_matches.subcommand_name() {
                 Some("encrypt") => {
-                    let dir_mode = if sub_matches.is_present("recursive") {
-                        DirectoryMode::Recursive
-                    } else {
-                        DirectoryMode::Singular
-                    };
-
-                    let hidden = if sub_matches.is_present("hidden") {
-                        HiddenFilesMode::Include
-                    } else {
-                        HiddenFilesMode::Exclude
-                    };
-
-                    let compression_level = if sub_matches.is_present("level") {
-                        let result = sub_matches
-                            .value_of("level")
-                            .context("No compression level specified")?
-                            .parse();
-
-                        if let Ok(value) = result {
-                            if (0..=9).contains(&value) {
-                                value
-                            } else {
-                                println!("Compression level is out of specified bounds - using the default (6).");
-                                6
-                            }
-                        } else {
-                            println!("Unable to read compression level provided - using the default (6).");
-                            6
-                        }
-                    } else {
-                        6
-                    };
-
-                    let excluded: Vec<String> = if sub_matches.is_present("exclude") {
-                        let list: Vec<&str> = sub_matches.values_of("exclude").unwrap().collect();
-                        list.iter().map(std::string::ToString::to_string).collect()
-                    // this fixes 'static lifetime issues
-                    } else {
-                        Vec::new()
-                    };
-
-                    let print_mode = if sub_matches.is_present("verbose") {
-                        PrintMode::Verbose
-                    } else {
-                        PrintMode::Quiet
-                    };
-
-                    let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
-
-                    let params = parameter_handler(sub_matches_encrypt)?;
-                    let pack_params = PackMode {
-                        compression_level,
-                        dir_mode,
-                        exclude: excluded,
-                        hidden,
-                        print_mode,
-                    };
-
-                    let algorithm = encrypt_additional_params(sub_matches_encrypt)?;
-
-                    pack::encrypt_directory(
-                        sub_matches_encrypt
-                            .value_of("input")
-                            .context("No input file/invalid text provided")?,
-                        sub_matches_encrypt
-                            .value_of("output")
-                            .context("No output file/invalid text provided")?,
-                        &pack_params,
-                        &params,
-                        algorithm,
-                    )?;
+                    subcommands::pack(sub_matches)?;
                 }
                 Some("decrypt") => {
-                    let print_mode = if sub_matches.is_present("verbose") {
-                        PrintMode::Verbose
-                    } else {
-                        PrintMode::Quiet
-                    };
-
-                    let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
-
-                    let params = parameter_handler(sub_matches_decrypt)?;
-                    let header = if sub_matches.is_present("header") {
-                        HeaderFile::Some(
-                            sub_matches
-                                .value_of("header")
-                                .context("No header/invalid text provided")?
-                                .to_string(),
-                        )
-                    } else {
-                        HeaderFile::None
-                    };
-
-                    pack::decrypt_directory(
-                        sub_matches_decrypt
-                            .value_of("input")
-                            .context("No input file/invalid text provided")?,
-                        sub_matches_decrypt
-                            .value_of("output")
-                            .context("No output file/invalid text provided")?,
-                        &header,
-                        &print_mode,
-                        &params,
-                    )?;
+                    subcommands::unpack(sub_matches)?;
                 }
                 _ => (),
             }
@@ -204,12 +67,8 @@ fn main() -> Result<()> {
                 };
 
                 header::dump(
-                    sub_matches_dump
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches_dump
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
+                    &get_param("input", sub_matches_dump)?,
+                    &get_param("output", sub_matches_dump)?,
                     skip,
                 )?;
             }
@@ -222,12 +81,8 @@ fn main() -> Result<()> {
                 };
 
                 header::restore(
-                    sub_matches_restore
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches_restore
-                        .value_of("output")
-                        .context("No input file/invalid text provided")?,
+                    &get_param("input", sub_matches_restore)?,
+                    &get_param("output", sub_matches_restore)?,
                     skip,
                 )?;
             }
@@ -240,9 +95,7 @@ fn main() -> Result<()> {
                 };
 
                 header::strip(
-                    sub_matches_strip
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
+                    &get_param("input", sub_matches_strip)?,
                     skip,
                 )?;
             }

@@ -1,4 +1,7 @@
-use crate::global::enums::*;
+use crate::global::enums::{
+    Algorithm, BenchMode, CipherMode, DirectoryMode, EraseMode, HashMode, HeaderVersion,
+    HiddenFilesMode, KeyFile, PasswordMode, PrintMode, SkipMode,
+};
 use crate::global::SALT_LEN;
 
 pub struct CryptoParams {

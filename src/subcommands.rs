@@ -36,9 +36,7 @@ pub fn erase(sub_matches: &ArgMatches) -> Result<()> {
     let passes = erase_params(sub_matches)?;
 
     crate::erase::secure_erase(
-        sub_matches
-            .value_of("input")
-            .context("No input file/invalid text provided")?,
+        &get_param("input", sub_matches)?,
         passes,
     )
 }

@@ -3,16 +3,12 @@
 // it also contains enums/structs relating to headers
 // this file is long, but necessary
 
-use anyhow::{Context, Result};
-use clap::ArgMatches;
 use crate::global::enums::*;
 use crate::global::structs::*;
+use anyhow::{Context, Result};
+use clap::ArgMatches;
 
-pub const ALGORITHMS: [Algorithm; 3] = [
-    Algorithm::XChaCha20Poly1305,
-    Algorithm::Aes256Gcm,
-    Algorithm::DeoxysII256,
-];
+use super::ALGORITHMS;
 
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches

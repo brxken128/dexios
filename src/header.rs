@@ -1,10 +1,6 @@
 use crate::{
-    global::enums::{
-        Algorithm, BenchMode, CipherMode, HeaderVersion, OutputFile, SkipMode,
-    },
-    global::structs::{
-        Header, HeaderType
-    },
+    global::enums::{Algorithm, BenchMode, CipherMode, HeaderVersion, OutputFile, SkipMode},
+    global::structs::{Header, HeaderType},
     global::SALT_LEN,
     prompt::{get_answer, overwrite_check},
 };

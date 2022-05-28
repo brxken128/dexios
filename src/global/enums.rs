@@ -1,7 +1,6 @@
+use anyhow::Result;
 use std::fs::File;
 use std::io::Write;
-use anyhow::{Context, Result};
-
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {

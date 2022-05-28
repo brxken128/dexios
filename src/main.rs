@@ -1,8 +1,8 @@
 use anyhow::Result;
+use global::enums::SkipMode;
 use global::parameters::get_param;
 use list::show_values;
 use std::result::Result::Ok;
-use global::enums::SkipMode;
 
 mod cli;
 mod decrypt;

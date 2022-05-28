@@ -19,11 +19,10 @@ mod secret;
 mod subcommands;
 mod streams;
 
-// this is where subcommand/argument matching is mostly handled
-// similarly to get_matches(), this is long, clunky, and a nightmare to work with
+// this is where subcommand function calling is handled
+// it goes hand-in-hand with `subcommands.rs`
 // it works so that's good enough, and any changes are rather simple to make to it
 // it handles the calling of other functions, and some (minimal) argument parsing
-#[allow(clippy::too_many_lines)]
 fn main() -> Result<()> {
     let matches = cli::get_matches();
 

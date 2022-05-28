@@ -2,8 +2,8 @@ use anyhow::{Context, Result};
 use clap::ArgMatches;
 
 use crate::global::parameters::{
-    decrypt_additional_params, encrypt_additional_params, erase_additional_params, get_param,
-    pack_additional_params, parameter_handler, unpack_additional_params,
+    decrypt_additional_params, encrypt_additional_params, erase_params, get_param,
+    pack_params, parameter_handler, unpack_params,
 };
 
 pub fn encrypt(sub_matches: &ArgMatches) -> Result<()> {
@@ -33,7 +33,7 @@ pub fn decrypt(sub_matches: &ArgMatches) -> Result<()> {
 }
 
 pub fn erase(sub_matches: &ArgMatches) -> Result<()> {
-    let passes = erase_additional_params(sub_matches)?;
+    let passes = erase_params(sub_matches)?;
 
     crate::erase::secure_erase(
         sub_matches
@@ -44,7 +44,7 @@ pub fn erase(sub_matches: &ArgMatches) -> Result<()> {
 }
 
 pub fn pack(sub_matches: &ArgMatches) -> Result<()> {
-    let pack_params = pack_additional_params(sub_matches)?;
+    let pack_params = pack_params(sub_matches)?;
     let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
     let params = parameter_handler(sub_matches_encrypt)?;
     let algorithm = encrypt_additional_params(sub_matches_encrypt)?;
@@ -59,7 +59,7 @@ pub fn pack(sub_matches: &ArgMatches) -> Result<()> {
 }
 
 pub fn unpack(sub_matches: &ArgMatches) -> Result<()> {
-    let print_mode = unpack_additional_params(sub_matches);
+    let print_mode = unpack_params(sub_matches);
 
     let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
     let params = parameter_handler(sub_matches_decrypt)?;

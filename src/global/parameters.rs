@@ -129,7 +129,7 @@ pub fn decrypt_additional_params(sub_matches: &ArgMatches) -> Result<HeaderFile>
     Ok(header)
 }
 
-pub fn erase_additional_params(sub_matches: &ArgMatches) -> Result<i32> {
+pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
     let passes = if sub_matches.is_present("passes") {
         let result = sub_matches
             .value_of("passes")
@@ -149,7 +149,7 @@ pub fn erase_additional_params(sub_matches: &ArgMatches) -> Result<i32> {
     Ok(passes)
 }
 
-pub fn pack_additional_params(sub_matches: &ArgMatches) -> Result<PackMode> {
+pub fn pack_params(sub_matches: &ArgMatches) -> Result<PackMode> {
     let dir_mode = if sub_matches.is_present("recursive") {
         DirectoryMode::Recursive
     } else {
@@ -208,7 +208,7 @@ pub fn pack_additional_params(sub_matches: &ArgMatches) -> Result<PackMode> {
     Ok(pack_params)
 }
 
-pub fn unpack_additional_params(sub_matches: &ArgMatches) -> PrintMode {
+pub fn unpack_params(sub_matches: &ArgMatches) -> PrintMode {
     if sub_matches.is_present("verbose") {
         PrintMode::Verbose
     } else {

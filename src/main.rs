@@ -18,6 +18,7 @@ mod list;
 mod pack;
 mod prompt;
 mod secret;
+mod subcommands;
 mod streams;
 
 // this is where subcommand/argument matching is mostly handled
@@ -30,49 +31,10 @@ fn main() -> Result<()> {
 
     match matches.subcommand() {
         Some(("encrypt", sub_matches)) => {
-            let params = parameter_handler(sub_matches)?;
-            let algorithm = encrypt_additional_params(sub_matches)?;
-
-            let result = // stream mode is the default - it'll redirect to memory mode if the file is too small
-                encrypt::stream_mode(
-                    sub_matches
-                        .value_of("input")
-                        .context("No input file/invalid text provided")?,
-                    sub_matches
-                        .value_of("output")
-                        .context("No output file/invalid text provided")?,
-                    &params,
-                    algorithm,
-                );
-
-            return result;
+           subcommands::encrypt(sub_matches)?;
         }
         Some(("decrypt", sub_matches)) => {
-            let params = parameter_handler(sub_matches)?;
-            let header = if sub_matches.is_present("header") {
-                HeaderFile::Some(
-                    sub_matches
-                        .value_of("header")
-                        .context("No header/invalid text provided")?
-                        .to_string(),
-                )
-            } else {
-                HeaderFile::None
-            };
-
-            // stream decrypt is the default as it will redirect to memory mode if the header says so
-            let result = decrypt::stream_mode(
-                sub_matches
-                    .value_of("input")
-                    .context("No input file/invalid text provided")?,
-                sub_matches
-                    .value_of("output")
-                    .context("No output file/invalid text provided")?,
-                &header,
-                &params,
-            );
-
-            return result;
+            subcommands::decrypt(sub_matches)?;
         }
         Some(("erase", sub_matches)) => {
             let passes = if sub_matches.is_present("passes") {

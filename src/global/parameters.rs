@@ -275,3 +275,16 @@ pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Result<Algorithm> 
         Ok(ALGORITHMS[provided_aead - 1]) // -1 to account for indexing starting at 0
     }
 }
+
+pub fn decrypt_additional_params(sub_matches: &ArgMatches) -> Result<HeaderFile> {
+    if sub_matches.is_present("header") {
+        Ok(HeaderFile::Some(
+            sub_matches
+                .value_of("header")
+                .context("No header/invalid text provided")?
+                .to_string(),
+        ))
+    } else {
+        Ok(HeaderFile::None)
+    }
+}

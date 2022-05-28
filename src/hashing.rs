@@ -19,7 +19,7 @@ pub fn hash_stream(input: &str) -> Result<()> {
             .context("Unable to parse stream block size as u64")?
     {
         drop(input_file);
-        return hash_memory(input)
+        return hash_memory(input);
     }
 
     println!("Hashing {} in stream mode (this may take a while)", input);

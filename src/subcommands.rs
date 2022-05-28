@@ -1,7 +1,10 @@
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 
-use crate::global::parameters::{parameter_handler, encrypt_additional_params, decrypt_additional_params, erase_additional_params, pack_additional_params, unpack_additional_params, get_param};
+use crate::global::parameters::{
+    decrypt_additional_params, encrypt_additional_params, erase_additional_params, get_param,
+    pack_additional_params, parameter_handler, unpack_additional_params,
+};
 
 pub fn encrypt(sub_matches: &ArgMatches) -> Result<()> {
     let params = parameter_handler(sub_matches)?;
@@ -31,7 +34,7 @@ pub fn decrypt(sub_matches: &ArgMatches) -> Result<()> {
 
 pub fn erase(sub_matches: &ArgMatches) -> Result<()> {
     let passes = erase_additional_params(sub_matches)?;
-    
+
     crate::erase::secure_erase(
         sub_matches
             .value_of("input")

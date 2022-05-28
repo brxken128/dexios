@@ -137,7 +137,7 @@ pub fn stream_mode(
         if params.bench == BenchMode::WriteToFilesystem {
             std::fs::remove_file(output).context("Unable to remove the malformed file")?;
         }
-        return encryption_result
+        return encryption_result;
     }
 
     let encrypt_duration = encrypt_start_time.elapsed();

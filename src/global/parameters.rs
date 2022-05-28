@@ -186,7 +186,8 @@ impl std::fmt::Display for CipherMode {
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches
         .value_of(name)
-        .with_context(|| { format!("No {} provided", name) })?.to_string();
+        .with_context(|| format!("No {} provided", name))?
+        .to_string();
     Ok(value)
 }
 
@@ -375,7 +376,7 @@ pub fn pack_additional_params(sub_matches: &ArgMatches) -> Result<PackMode> {
     };
 
     Ok(pack_params)
-} 
+}
 
 pub fn unpack_additional_params(sub_matches: &ArgMatches) -> Result<PrintMode> {
     if sub_matches.is_present("verbose") {

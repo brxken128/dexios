@@ -1,5 +1,5 @@
 use anyhow::Result;
-use global::parameters::{SkipMode, get_param};
+use global::parameters::{get_param, SkipMode};
 use list::show_values;
 use std::result::Result::Ok;
 
@@ -16,8 +16,8 @@ mod list;
 mod pack;
 mod prompt;
 mod secret;
-mod subcommands;
 mod streams;
+mod subcommands;
 
 // this is where subcommand function calling is handled
 // it goes hand-in-hand with `subcommands.rs`
@@ -28,7 +28,7 @@ fn main() -> Result<()> {
 
     match matches.subcommand() {
         Some(("encrypt", sub_matches)) => {
-           subcommands::encrypt(sub_matches)?;
+            subcommands::encrypt(sub_matches)?;
         }
         Some(("decrypt", sub_matches)) => {
             subcommands::decrypt(sub_matches)?;
@@ -41,21 +41,17 @@ fn main() -> Result<()> {
             hashing::hash_stream(&input)?;
         }
         Some(("list", sub_matches)) => {
-            show_values(
-                &get_param("input", sub_matches)?,
-            )?;
+            show_values(&get_param("input", sub_matches)?)?;
         }
-        Some(("pack", sub_matches)) => {
-            match sub_matches.subcommand_name() {
-                Some("encrypt") => {
-                    subcommands::pack(sub_matches)?;
-                }
-                Some("decrypt") => {
-                    subcommands::unpack(sub_matches)?;
-                }
-                _ => (),
+        Some(("pack", sub_matches)) => match sub_matches.subcommand_name() {
+            Some("encrypt") => {
+                subcommands::pack(sub_matches)?;
             }
-        }
+            Some("decrypt") => {
+                subcommands::unpack(sub_matches)?;
+            }
+            _ => (),
+        },
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
@@ -93,10 +89,7 @@ fn main() -> Result<()> {
                     SkipMode::ShowPrompts
                 };
 
-                header::strip(
-                    &get_param("input", sub_matches_strip)?,
-                    skip,
-                )?;
+                header::strip(&get_param("input", sub_matches_strip)?, skip)?;
             }
             _ => (),
         },

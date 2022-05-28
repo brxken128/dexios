@@ -1,6 +1,7 @@
 use anyhow::Result;
 use global::enums::SkipMode;
 use global::parameters::get_param;
+use global::parameters::skipmode;
 use list::show_values;
 use std::result::Result::Ok;
 
@@ -56,11 +57,7 @@ fn main() -> Result<()> {
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
-                let skip = if sub_matches_dump.is_present("skip") {
-                    SkipMode::HidePrompts
-                } else {
-                    SkipMode::ShowPrompts
-                };
+                let skip = skipmode(sub_matches_dump);
 
                 header::dump(
                     &get_param("input", sub_matches_dump)?,
@@ -70,11 +67,7 @@ fn main() -> Result<()> {
             }
             Some("restore") => {
                 let sub_matches_restore = sub_matches.subcommand_matches("restore").unwrap();
-                let skip = if sub_matches_restore.is_present("skip") {
-                    SkipMode::HidePrompts
-                } else {
-                    SkipMode::ShowPrompts
-                };
+                let skip = skipmode(sub_matches_restore);
 
                 header::restore(
                     &get_param("input", sub_matches_restore)?,
@@ -84,11 +77,7 @@ fn main() -> Result<()> {
             }
             Some("strip") => {
                 let sub_matches_strip = sub_matches.subcommand_matches("strip").unwrap();
-                let skip = if sub_matches_strip.is_present("skip") {
-                    SkipMode::HidePrompts
-                } else {
-                    SkipMode::ShowPrompts
-                };
+                let skip = skipmode(sub_matches_strip);
 
                 header::strip(&get_param("input", sub_matches_strip)?, skip)?;
             }

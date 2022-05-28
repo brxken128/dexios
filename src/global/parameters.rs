@@ -215,3 +215,11 @@ pub fn unpack_params(sub_matches: &ArgMatches) -> PrintMode {
         PrintMode::Quiet
     }
 }
+
+pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {
+    if sub_matches.is_present("skip") {
+        SkipMode::HidePrompts
+    } else {
+        SkipMode::ShowPrompts
+    }
+}

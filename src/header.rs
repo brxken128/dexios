@@ -189,7 +189,7 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
 // it's used for extracting an encrypted file's header for backups and such
 pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     let mut logger = Logger::new();
-    logger.warn(format!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION"));
+    logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
 
     let mut header = [0u8; 64];
 
@@ -217,7 +217,7 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 // this can be used for restoring a dumped header to a file that had it's header stripped
 pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     let mut logger = Logger::new();
-    logger.warn(format!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION"));
+    logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
     let prompt = format!(
         "Are you sure you'd like to restore the header in {} to {}?",
         input, output
@@ -261,7 +261,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 // it can be useful for storing the header separate from the file, to make an attacker's life that little bit harder
 pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
     let mut logger = Logger::new();
-    logger.warn(format!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION"));
+    logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
 
     let prompt = format!("Are you sure you'd like to wipe the header for {}?", input);
     if !get_answer(&prompt, false, skip == SkipMode::HidePrompts)? {

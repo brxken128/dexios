@@ -22,7 +22,7 @@ pub fn hash_stream(files: &Vec<String>) -> Result<()> {
                 .context("Unable to parse stream block size as u64")?
         {
             drop(input_file);
-            hash_memory(&input, &mut logger)?;
+            hash_memory(input, &mut logger)?;
             continue;
         }
 

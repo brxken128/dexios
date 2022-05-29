@@ -35,9 +35,9 @@ pub fn encrypt_directory(
     let mut logger = Logger::new();
 
     if pack_params.dir_mode == DirectoryMode::Recursive {
-        logger.info(format!("Traversing {} recursively", input));
+        logger.loading(format!("Traversing {} recursively", input));
     } else {
-        logger.info(format!("Traversing {}", input));
+        logger.loading(format!("Traversing {}", input));
     }
 
     let index_start_time = Instant::now();
@@ -50,7 +50,7 @@ pub fn encrypt_directory(
     )?;
     let index_duration = index_start_time.elapsed();
     let file_count = files.len();
-    logger.info(format!(
+    logger.done().success(format!(
         "Indexed {} files [took {:.2}s]",
         file_count,
         index_duration.as_secs_f32()

@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use paris::warn;
+use paris::{warn, Logger};
 use std::io::{self, stdin, Write};
 
 use crate::global::enums::{BenchMode, SkipMode};
@@ -15,7 +15,9 @@ pub fn get_answer(prompt: &str, default: bool, skip: bool) -> Result<bool> {
     let switch = if default { "(Y/n)" } else { "(y/N)" };
 
     let answer_bool = loop {
-        print!("{prompt} {switch}: ");
+        let mut logger = Logger::new();
+        
+        logger.same().warn(format!("{prompt} {switch}: "));
         io::stdout().flush().context("Unable to flush stdout")?;
 
         let mut answer = String::new();

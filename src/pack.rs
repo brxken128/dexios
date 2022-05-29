@@ -146,7 +146,7 @@ pub fn encrypt_directory(
 
     crate::encrypt::stream_mode(&tmp_name, output, params, algorithm)?;
 
-    crate::erase::secure_erase(&tmp_name, 16)?; // cleanup our tmp file
+    crate::erase::secure_erase(&tmp_name, 2)?; // cleanup our tmp file
 
     println!("Your output file is: {}", output);
 
@@ -240,7 +240,7 @@ pub fn decrypt_directory(
         zip_duration.as_secs_f32()
     );
 
-    crate::erase::secure_erase(&tmp_name, 16)?; // cleanup the tmp file
+    crate::erase::secure_erase(&tmp_name, 2)?; // cleanup the tmp file
 
     println!(
         "Unpacking Successful! You will find your files in {}",

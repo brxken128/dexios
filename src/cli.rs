@@ -36,9 +36,9 @@ pub fn get_matches() -> clap::ArgMatches {
                 .value_name("# of passes")
                 .takes_value(true)
                 .require_equals(true)
-                .help("Securely erase the input file once complete (default is 16 passes)")
+                .help("Securely erase the input file once complete (default is 2 passes)")
                 .min_values(0)
-                .default_missing_value("16"),
+                .default_missing_value("2"),
         )
         .arg(
             Arg::new("hash")
@@ -116,9 +116,9 @@ pub fn get_matches() -> clap::ArgMatches {
                 .value_name("# of passes")
                 .takes_value(true)
                 .require_equals(true)
-                .help("Securely erase the input file once complete (default is 16 passes)")
+                .help("Securely erase the input file once complete (default is 2 passes)")
                 .min_values(0)
-                .default_missing_value("16"),
+                .default_missing_value("2"),
         )
         .arg(
             Arg::new("hash")
@@ -174,9 +174,9 @@ pub fn get_matches() -> clap::ArgMatches {
                         .value_name("# of passes")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("Specify the number of passes (default is 16)")
+                        .help("Specify the number of passes (default is 2)")
                         .min_values(0)
-                        .default_missing_value("16"),
+                        .default_missing_value("2"),
                 ),
         )
         .subcommand(

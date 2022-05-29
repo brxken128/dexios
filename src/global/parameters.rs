@@ -139,11 +139,11 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
             value
         } else {
             println!("Unable to read number of passes provided - using the default.");
-            16
+            2
         }
     } else {
         println!("Number of passes not provided - using the default.");
-        16
+        2
     };
 
     Ok(passes)

@@ -60,7 +60,7 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
             value
         } else {
             warn!("Unable to read number of passes provided - using the default.");
-            16
+            2
         };
         EraseMode::EraseFile(passes)
     } else {

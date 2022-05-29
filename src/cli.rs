@@ -73,9 +73,9 @@ pub fn get_matches() -> clap::ArgMatches {
             Arg::new("aead")
                 .short('a')
                 .long("aead")
-                .value_name("aead to use for encryption (\"dexios list aead\" to see all possible values)")
+                .value_name("aead to use for encryption")
                 .takes_value(true)
-                .help("select an AEAD"),
+                .help("select an AEAD (\"dexios list aead\" to see all possible values)"),
         );
 
     let decrypt = Command::new("decrypt")

@@ -6,7 +6,7 @@ use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;
 use aead::stream::{DecryptorLE31, EncryptorLE31};
 use aead::NewAead;
-use aes_gcm::{Aes256Gcm, Nonce};
+use aes_gcm::{Aes256Gcm};
 use anyhow::anyhow;
 use anyhow::Result;
 use chacha20poly1305::XChaCha20Poly1305;
@@ -27,7 +27,6 @@ pub fn init_encryption_stream(
     match header_type.algorithm {
         Algorithm::Aes256Gcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
-            let nonce = Nonce::from_slice(&nonce_bytes);
 
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
@@ -37,7 +36,7 @@ pub fn init_encryption_stream(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let stream = EncryptorLE31::from_aead(cipher, nonce);
+            let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
             Ok((
                 EncryptStreamCiphers::Aes256Gcm(Box::new(stream)),
                 salt,
@@ -101,10 +100,7 @@ pub fn init_decryption_stream(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let nonce = Nonce::from_slice(header.nonce.as_slice());
-
-            let stream = DecryptorLE31::from_aead(cipher, nonce);
-
+            let stream = DecryptorLE31::from_aead(cipher, header.nonce.as_slice().into());
             Ok(DecryptStreamCiphers::Aes256Gcm(Box::new(stream)))
         }
         Algorithm::XChaCha20Poly1305 => {

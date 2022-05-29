@@ -94,6 +94,7 @@ pub fn stream_mode(
             .try_into()
             .context("Unable to parse stream block size as u64")?
     {
+        drop(logger);
         drop(input_file);
         return memory_mode(input, output, params, algorithm);
     }

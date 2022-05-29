@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use paris::warn;
 use std::io::{self, stdin, Write};
 
 use crate::global::enums::{BenchMode, SkipMode};
@@ -32,7 +33,7 @@ pub fn get_answer(prompt: &str, default: bool, skip: bool) -> Result<bool> {
             'y' => true,
             'n' => false,
             _ => {
-                println!("Unrecognised answer - please try again");
+                warn!("Unrecognised answer - please try again");
                 continue;
             }
         };

@@ -11,6 +11,7 @@ use anyhow::Context;
 use anyhow::Result;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use deoxys::DeoxysII256;
+use paris::success;
 use rand::{prelude::StdRng, Rng, SeedableRng};
 use std::fs::File;
 use std::io::Read;
@@ -118,7 +119,7 @@ pub fn encrypt_bytes_memory_mode(
         crate::header::write_to_file(output, &header)?;
         output.write_all(&encrypted_bytes)?;
         let write_duration = write_start_time.elapsed();
-        println!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
+        success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
     }
 
     let mut hasher = blake3::Hasher::new();
@@ -128,7 +129,7 @@ pub fn encrypt_bytes_memory_mode(
         hasher.update(&encrypted_bytes);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
-        println!(
+        success!(
             "Hash of the encrypted file is: {} [took {:.2}s]",
             hash,
             hash_duration.as_secs_f32()
@@ -218,7 +219,7 @@ pub fn encrypt_bytes_stream_mode(
     }
     if hash == HashMode::CalculateHash {
         let hash = hasher.finalize().to_hex().to_string();
-        println!("Hash of the encrypted file is: {}", hash,);
+        success!("Hash of the encrypted file is: {}", hash,);
     }
     Ok(())
 }

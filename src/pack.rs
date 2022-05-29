@@ -180,9 +180,9 @@ pub fn decrypt_directory(
         .context("Temporary archive can't be opened, is it a zip file?")?;
 
     match std::fs::create_dir(output) {
-        Ok(_) => println!("Created output directory: {}", output),
-        Err(_) => println!("Output directory ({}) already exists!", output),
-    }
+        Ok(_) => logger.info(format!("Created output directory: {}", output)),
+        Err(_) => logger.warn(format!("Output directory ({}) already exists!", output)),
+    };
 
     let file_count = archive.len();
 
@@ -222,12 +222,12 @@ pub fn decrypt_directory(
                     params.skip == SkipMode::HidePrompts,
                 )?;
                 if !answer {
-                    println!("Skipping {}", file_name);
+                    logger.warn(format!("Skipping {}", file_name));
                     continue;
                 }
             }
             if print_mode == &PrintMode::Verbose {
-                println!("Extracting {}", file_name);
+                logger.info(format!("Extracting {}", file_name));
             }
             let mut output_file =
                 File::create(full_path).context("Error creating an output file")?;

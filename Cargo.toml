@@ -10,7 +10,7 @@ categories = ["cryptography", "command-line-utilities"]
 rust-version = "1.57"
 repository = "https://github.com/brxken128/dexios"
 homepage = "https://github.com/brxken128/dexios"
-documentation = "https://github.com/brxken128/dexios/wiki"
+documentation = "https://brxken128.github.io/dexios"
 license = "BSD-2-Clause"
 
 # this is for sites other than crates.io, who may still use it

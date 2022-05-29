@@ -1,10 +1,10 @@
-[![Dexios Tests](https://img.shields.io/github/workflow/status/brxken128/dexios/Dexios%20Tests?label=Dexios%20Tests&style=flat-square)](https://github.com/brxken128/dexios/actions/workflows/dexios-tests.yml) [![Build and Upload](https://img.shields.io/github/workflow/status/brxken128/dexios/Build%20and%20Upload?style=flat-square)](https://github.com/brxken128/dexios/actions/workflows/cargo-build.yml) [![Dexios Crate](https://img.shields.io/crates/v/dexios.svg?style=flat-square)](https://lib.rs/crates/dexios) [![Docs](https://img.shields.io/badge/docs-github%20wiki-blue?style=flat-square)](https://github.com/brxken128/dexios/wiki) [![BSD-2-Clause](https://img.shields.io/badge/License-BSD_2--Clause-blue.svg?style=flat-square)](https://opensource.org/licenses/BSD-2-Clause)
+[![Dexios Tests](https://img.shields.io/github/workflow/status/brxken128/dexios/Dexios%20Tests?label=Dexios%20Tests&style=flat-square)](https://github.com/brxken128/dexios/actions/workflows/dexios-tests.yml) [![Build and Upload](https://img.shields.io/github/workflow/status/brxken128/dexios/Build%20and%20Upload?style=flat-square)](https://github.com/brxken128/dexios/actions/workflows/cargo-build.yml) [![Dexios Crate](https://img.shields.io/crates/v/dexios.svg?style=flat-square)](https://lib.rs/crates/dexios) [![BSD-2-Clause](https://img.shields.io/badge/License-BSD_2--Clause-blue.svg?style=flat-square)](https://opensource.org/licenses/BSD-2-Clause)
 
 ## Dexios - What is it?
 
 Dexios is a fast, secure, and open source command-line encryption tool. It's written entirely in Rust and prioritises security, performance and convenience the most. It uses modern cryptographic AEADs (XChaCha20-Poly1305, AES-256-GCM, and Deoxys-II-256), with audited backends to ensure the safety and integrity of your data. It's extremely easy to use Dexios before uploading your files to a cloud service, to ensure that no prying eyes can read them.
 
-For notes on Deoxys-II, please see the [Security Notices](https://github.com/brxken128/dexios/wiki#security-notices) section of the Wiki.
+For notes on Deoxys-II, please see the [Security Notices](https://brxken128.github.io/dexios/Introduction.html#security-notices) section of the Documentation.
 
 You can install Dexios through cargo, with
 
@@ -29,7 +29,7 @@ We made a lot of (necessary) changes to how Dexios works. In hindsight, earlier 
 
 Going forward, starting with version 8, we have zero plans to make any incompatible changes. The header prepended to the start of each encrypted file contains a version identifier, and with that, we can be sure to always keep and maintain support for older versions.
 
-We encourage anyone who used an older version of Dexios to decrypt their files, update, and re-encrypt at your earliest convenience. This is to ensure that your files use the new [header standard](https://github.com/brxken128/dexios/wiki/Headers).
+We encourage anyone who used an older version of Dexios to decrypt their files, update, and re-encrypt at your earliest convenience. This is to ensure that your files use the new [header standard](https://brxken128.github.io/dexios/technical-details/Headers.html).
 
 ## Supported Operating Systems
 
@@ -82,13 +82,13 @@ If you find any vulnerabilities within Dexios, and can provide steps/pointers to
 
 ## More Information
 
-Please view the [Github Wiki](https://github.com/brxken128/dexios/wiki) to find all of the information related to this project.
+Please view the [Documentation](https://brxken128.github.io/dexios/) to find all of the information related to this project.
 
 It receives frequent updates and is the main source of documentation for Dexios.
 
-### Quick Wiki Links:
+### Quick Docs Links:
 
-- [Tested Operating Systems](https://github.com/brxken128/dexios/wiki#tested-operating-systems)
-- [Performance Benchmarks](https://github.com/brxken128/dexios/wiki/Checksums#performance)
-- [Usage Examples](https://github.com/brxken128/dexios/wiki/Usage-Examples)
-- [Technical Details](https://github.com/brxken128/dexios/wiki/Technical-Details)
+- [Tested Operating Systems](https://brxken128.github.io/dexios/#tested-operating-systems)
+- [Performance Benchmarks](https://brxken128.github.io/dexios/#tested-operating-systems)
+- [Usage Examples](https://brxken128.github.io/dexios/Usage-Examples.html)
+- [Technical Details](https://brxken128.github.io/dexios/technical-details/)

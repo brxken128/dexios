@@ -6,7 +6,7 @@ use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;
 use aead::stream::{DecryptorLE31, EncryptorLE31};
 use aead::NewAead;
-use aes_gcm::{Aes256Gcm};
+use aes_gcm::Aes256Gcm;
 use anyhow::anyhow;
 use anyhow::Result;
 use chacha20poly1305::XChaCha20Poly1305;

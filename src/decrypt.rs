@@ -54,7 +54,11 @@ pub fn memory_mode(
         .read_to_end(&mut encrypted_data)
         .with_context(|| format!("Unable to read encrypted data from file: {}", input))?;
     let read_duration = read_start_time.elapsed();
-    logger.success(format!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32()));
+    logger.success(format!(
+        "Read {} [took {:.2}s]",
+        input,
+        read_duration.as_secs_f32()
+    ));
 
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 

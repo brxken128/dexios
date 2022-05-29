@@ -102,7 +102,11 @@ pub fn encrypt_directory(
         .context("Unable to add file to zip")?;
 
         if pack_params.print_mode == PrintMode::Verbose {
-            logger.info(format!("Compressing {} into {}", file.to_str().unwrap(), tmp_name));
+            logger.info(format!(
+                "Compressing {} into {}",
+                file.to_str().unwrap(),
+                tmp_name
+            ));
         }
 
         let zip_writer = zip.by_ref();
@@ -186,7 +190,10 @@ pub fn decrypt_directory(
 
     let file_count = archive.len();
 
-    logger.loading(format!("Decompressing {} items into {}", file_count, output));
+    logger.loading(format!(
+        "Decompressing {} items into {}",
+        file_count, output
+    ));
 
     for i in 0..file_count {
         let mut full_path = PathBuf::from_str(output)

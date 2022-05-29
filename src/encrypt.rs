@@ -38,9 +38,16 @@ pub fn memory_mode(
     let file_contents = get_bytes(input)?;
     let read_duration = read_start_time.elapsed();
 
-    logger.success(format!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32()));
+    logger.success(format!(
+        "Read {} [took {:.2}s]",
+        input,
+        read_duration.as_secs_f32()
+    ));
 
-    logger.loading(format!("Encrypting {} in memory mode with {} (this may take a while)", input, algorithm));
+    logger.loading(format!(
+        "Encrypting {} in memory mode with {} (this may take a while)",
+        input, algorithm
+    ));
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
@@ -62,8 +69,10 @@ pub fn memory_mode(
     )?;
     let encrypt_duration = encrypt_start_time.elapsed();
 
-    logger.done()
-        .success(format!("Encryption successful! [took {:.2}s]", encrypt_duration.as_secs_f32()));
+    logger.done().success(format!(
+        "Encryption successful! [took {:.2}s]",
+        encrypt_duration.as_secs_f32()
+    ));
 
     if params.erase != EraseMode::IgnoreFile(0) {
         crate::erase::secure_erase(input, params.erase.get_passes())?;
@@ -122,8 +131,8 @@ pub fn stream_mode(
 
     logger.loading(format!(
         "Encrypting {} in stream mode with {} (this may take a while)",
-        input, algorithm)
-    );
+        input, algorithm
+    ));
     let encrypt_start_time = Instant::now();
 
     let encryption_result = encrypt_bytes_stream_mode(

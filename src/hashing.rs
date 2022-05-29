@@ -10,8 +10,8 @@ use std::io::Read;
 pub fn hash_stream(files: &Vec<String>) -> Result<()> {
     let mut logger = Logger::new();
     for input in files {
-        let mut input_file =
-        std::fs::File::open(input).with_context(|| format!("Unable to open file: {}", input))?;
+        let mut input_file = std::fs::File::open(input)
+            .with_context(|| format!("Unable to open file: {}", input))?;
 
         let file_size = std::fs::metadata(input)
             .with_context(|| format!("Unable to get file metadata: {}", input))?;

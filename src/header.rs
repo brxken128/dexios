@@ -250,7 +250,10 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         .write_all(&header)
         .with_context(|| format!("Unable to write header to file: {}", output))?;
 
-        logger.success(format!("Header restored to {} from {} successfully.", output, input));
+    logger.success(format!(
+        "Header restored to {} from {} successfully.",
+        output, input
+    ));
     Ok(())
 }
 

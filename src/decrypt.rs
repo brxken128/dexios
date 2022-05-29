@@ -62,9 +62,11 @@ pub fn memory_mode(
 
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
+    logger.info(format!("Using {} for decryption", header.header_type.algorithm));
+
     logger.loading(format!(
-        "Decrypting {} in memory mode with {} (this may take a while)",
-        input, header.header_type.algorithm,
+        "Decrypting {} (this may take a while)",
+        input
     ));
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
@@ -109,6 +111,12 @@ pub fn stream_mode(
 ) -> Result<()> {
     let mut logger = Logger::new();
 
+    if input == output {
+        return Err(anyhow::anyhow!(
+            "Input and output files cannot have the same name."
+        ));
+    }
+
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
@@ -133,12 +141,6 @@ pub fn stream_mode(
         exit(0);
     }
 
-    if input == output {
-        return Err(anyhow::anyhow!(
-            "Input and output files cannot have the same name in stream mode."
-        ));
-    }
-
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
@@ -150,10 +152,13 @@ pub fn stream_mode(
         OutputFile::None
     };
 
+    logger.info(format!("Using {} for decryption", header.header_type.algorithm));
+
     logger.loading(format!(
-        "Decrypting {} in stream mode with {} (this may take a while)",
-        input, header.header_type.algorithm,
+        "Decrypting {} (this may take a while)",
+        input
     ));
+
     let decrypt_start_time = Instant::now();
     let decryption_result = decrypt_bytes_stream_mode(
         &mut input_file,

@@ -44,9 +44,11 @@ pub fn memory_mode(
         read_duration.as_secs_f32()
     ));
 
+    logger.info(format!("Using {} for encryption", algorithm));
+
     logger.loading(format!(
-        "Encrypting {} in memory mode with {} (this may take a while)",
-        input, algorithm
+        "Encrypting {} (this may take a while)",
+        input
     ));
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
@@ -91,6 +93,12 @@ pub fn stream_mode(
 ) -> Result<()> {
     let mut logger = Logger::new();
 
+    if input == output {
+        return Err(anyhow::anyhow!(
+            "Input and output files cannot have the same name."
+        ));
+    }
+
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
     let file_size = input_file
@@ -112,12 +120,6 @@ pub fn stream_mode(
         exit(0);
     }
 
-    if input == output {
-        return Err(anyhow::anyhow!(
-            "Input and output files cannot have the same name in stream mode."
-        ));
-    }
-
     let raw_key = get_secret(&params.keyfile, true, params.password)?;
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
@@ -129,10 +131,13 @@ pub fn stream_mode(
         OutputFile::None
     };
 
+    logger.info(format!("Using {} for encryption", algorithm));
+
     logger.loading(format!(
-        "Encrypting {} in stream mode with {} (this may take a while)",
-        input, algorithm
+        "Encrypting {} (this may take a while)",
+        input
     ));
+
     let encrypt_start_time = Instant::now();
 
     let encryption_result = encrypt_bytes_stream_mode(

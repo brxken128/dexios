@@ -181,13 +181,15 @@ pub fn get_matches() -> clap::ArgMatches {
         )
         .subcommand(
             Command::new("hash")
-                .about("Hash a file")
+                .about("Hash files with BLAKE3")
                 .arg(
                     Arg::new("input")
                         .value_name("input")
                         .takes_value(true)
                         .required(true)
-                        .help("The file to hash"),
+                        .help("The file(s) to hash")
+                        .min_values(1)
+                        .multiple_occurrences(true),
                 ),
         )
         .subcommand(

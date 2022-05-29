@@ -38,8 +38,15 @@ fn main() -> Result<()> {
             subcommands::erase(sub_matches)?;
         }
         Some(("hash", sub_matches)) => {
-            let input = get_param("input", sub_matches)?;
-            hashing::hash_stream(&input)?;
+            let files: Vec<String> = if sub_matches.is_present("input") {
+                let list: Vec<&str> = sub_matches.values_of("input").unwrap().collect();
+                list.iter().map(std::string::ToString::to_string).collect()
+            // this fixes 'static lifetime issues
+            } else {
+                Vec::new()
+            };
+
+            hashing::hash_stream(&files)?;
         }
         Some(("list", sub_matches)) => {
             show_values(&get_param("input", sub_matches)?)?;

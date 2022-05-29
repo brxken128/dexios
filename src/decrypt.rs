@@ -9,6 +9,7 @@ use crate::global::structs::CryptoParams;
 use crate::key::get_secret;
 use crate::prompt::overwrite_check;
 use anyhow::{Context, Ok, Result};
+use paris::Logger;
 use std::fs::File;
 
 use std::io::Read;
@@ -25,6 +26,8 @@ pub fn memory_mode(
     header_file: &HeaderFile,
     params: &CryptoParams,
 ) -> Result<()> {
+    let mut logger = Logger::new();
+
     if !overwrite_check(output, params.skip, params.bench)? {
         exit(0);
     }
@@ -51,14 +54,20 @@ pub fn memory_mode(
         .read_to_end(&mut encrypted_data)
         .with_context(|| format!("Unable to read encrypted data from file: {}", input))?;
     let read_duration = read_start_time.elapsed();
-    println!("Read {} [took {:.2}s]", input, read_duration.as_secs_f32());
+    logger.success(format!(
+        "Read {} [took {:.2}s]",
+        input,
+        read_duration.as_secs_f32()
+    ));
 
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
-    println!(
-        "Decrypting {} in memory mode with {} (this may take a while)",
-        input, header.header_type.algorithm,
-    );
+    logger.info(format!("Using {} for decryption", header.header_type.algorithm));
+
+    logger.loading(format!(
+        "Decrypting {} (this may take a while)",
+        input
+    ));
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
@@ -79,10 +88,10 @@ pub fn memory_mode(
         params.hash_mode,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
-    println!(
+    logger.done().success(format!(
         "Decryption successful! [took {:.2}s]",
         decrypt_duration.as_secs_f32()
-    );
+    ));
 
     if params.erase != EraseMode::IgnoreFile(0) {
         crate::erase::secure_erase(input, params.erase.get_passes())?;
@@ -100,6 +109,14 @@ pub fn stream_mode(
     header_file: &HeaderFile,
     params: &CryptoParams,
 ) -> Result<()> {
+    let mut logger = Logger::new();
+
+    if input == output {
+        return Err(anyhow::anyhow!(
+            "Input and output files cannot have the same name."
+        ));
+    }
+
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
@@ -124,12 +141,6 @@ pub fn stream_mode(
         exit(0);
     }
 
-    if input == output {
-        return Err(anyhow::anyhow!(
-            "Input and output files cannot have the same name in stream mode."
-        ));
-    }
-
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
@@ -141,10 +152,13 @@ pub fn stream_mode(
         OutputFile::None
     };
 
-    println!(
-        "Decrypting {} in stream mode with {} (this may take a while)",
-        input, header.header_type.algorithm,
-    );
+    logger.info(format!("Using {} for decryption", header.header_type.algorithm));
+
+    logger.loading(format!(
+        "Decrypting {} (this may take a while)",
+        input
+    ));
+
     let decrypt_start_time = Instant::now();
     let decryption_result = decrypt_bytes_stream_mode(
         &mut input_file,
@@ -167,17 +181,17 @@ pub fn stream_mode(
 
     match params.bench {
         BenchMode::WriteToFilesystem => {
-            println!(
+            logger.done().success(format!(
                 "Decryption successful! File saved as {} [took {:.2}s]",
                 output,
                 decrypt_duration.as_secs_f32(),
-            );
+            ));
         }
         BenchMode::BenchmarkInMemory => {
-            println!(
+            logger.done().success(format!(
                 "Decryption successful! [took {:.2}s]",
                 decrypt_duration.as_secs_f32(),
-            );
+            ));
         }
     }
 

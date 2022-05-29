@@ -11,6 +11,8 @@ use crate::secret::Secret;
 use anyhow::{Context, Result};
 use argon2::Argon2;
 use argon2::Params;
+use paris::info;
+use paris::warn;
 use rand::prelude::StdRng;
 use rand::RngCore;
 use rand::SeedableRng;
@@ -101,9 +103,9 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
             input_validation.zeroize();
             break Secret::new(input.into_bytes());
         } else if input.is_empty() {
-            println!("Password cannot be empty, please try again.");
+            warn!("Password cannot be empty, please try again.");
         } else {
-            println!("The passwords aren't the same, please try again.");
+            warn!("The passwords aren't the same, please try again.");
         }
     })
 }
@@ -122,12 +124,12 @@ pub fn get_secret(
 ) -> Result<Secret<Vec<u8>>> {
     let key = if keyfile != &KeyFile::None {
         let keyfile_name = keyfile.get_contents()?;
-        println!("Reading key from {}", keyfile_name);
+        info!("Reading key from {}", keyfile_name);
         get_bytes(&keyfile_name)?
     } else if std::env::var("DEXIOS_KEY").is_ok()
         && password_mode == PasswordMode::NormalKeySourcePriority
     {
-        println!("Reading key from DEXIOS_KEY environment variable");
+        info!("Reading key from DEXIOS_KEY environment variable");
         Secret::new(
             std::env::var("DEXIOS_KEY")
                 .context("Unable to read DEXIOS_KEY from environment variable")?

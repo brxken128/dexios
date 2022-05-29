@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use paris::Logger;
 use rand::RngCore;
 use std::{
     fs::File,
@@ -11,6 +12,8 @@ use std::{
 // it takes the file name/relative path, and the number of times to go over the file's contents with random bytes
 #[allow(clippy::module_name_repetitions)]
 pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
+    let mut logger = Logger::new();
+
     let start_time = Instant::now();
     let file = File::open(input).with_context(|| format!("Unable to open file: {}", input))?;
     let data = file
@@ -20,10 +23,10 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
     let mut writer = BufWriter::new(file);
 
-    println!(
+    logger.loading(format!(
         "Erasing {} with {} passes (this may take a while)",
         input, passes
-    );
+    ));
 
     for _ in 0..passes {
         for _ in 0..data.len() / 512 {
@@ -63,11 +66,11 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
 
     let duration = start_time.elapsed();
 
-    println!(
+    logger.done().success(format!(
         "Erased {} successfully [took {:.2}s]",
         input,
         duration.as_secs_f32()
-    );
+    ));
 
     Ok(())
 }

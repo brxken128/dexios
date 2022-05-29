@@ -12,6 +12,7 @@ use anyhow::Result;
 use blake3::Hasher;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use deoxys::DeoxysII256;
+use paris::success;
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
@@ -88,7 +89,7 @@ pub fn decrypt_bytes_memory_mode(
         hasher.update(data);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
-        println!(
+        success!(
             "Hash of the encrypted file is: {} [took {:.2}s]",
             hash,
             hash_duration.as_secs_f32()
@@ -99,7 +100,7 @@ pub fn decrypt_bytes_memory_mode(
         let write_start_time = Instant::now();
         output.write_all(&decrypted_bytes)?;
         let write_duration = write_start_time.elapsed();
-        println!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
+        success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
     }
 
     Ok(())
@@ -167,7 +168,7 @@ pub fn decrypt_bytes_stream_mode(
 
     if hash == HashMode::CalculateHash {
         let hash = hasher.finalize().to_hex().to_string();
-        println!("Hash of the encrypted file is: {}. If this doesn't match with the original, something very bad has happened.", hash);
+        success!("Hash of the encrypted file is: {}. If this doesn't match with the original, something very bad has happened.", hash);
     }
 
     Ok(())

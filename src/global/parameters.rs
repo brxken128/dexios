@@ -10,6 +10,7 @@ use crate::global::enums::{
 use crate::global::structs::{CryptoParams, PackMode};
 use anyhow::{Context, Result};
 use clap::ArgMatches;
+use paris::warn;
 
 use super::ALGORITHMS;
 
@@ -58,8 +59,8 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         let passes = if let Ok(value) = result {
             value
         } else {
-            println!("Unable to read number of passes provided - using the default.");
-            16
+            warn!("Unable to read number of passes provided - using the default.");
+            2
         };
         EraseMode::EraseFile(passes)
     } else {
@@ -138,11 +139,11 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
         if let Ok(value) = result {
             value
         } else {
-            println!("Unable to read number of passes provided - using the default.");
+            warn!("Unable to read number of passes provided - using the default.");
             2
         }
     } else {
-        println!("Number of passes not provided - using the default.");
+        warn!("Number of passes not provided - using the default.");
         2
     };
 
@@ -172,11 +173,11 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<PackMode> {
             if (0..=9).contains(&value) {
                 value
             } else {
-                println!("Compression level is out of specified bounds - using the default (6).");
+                warn!("Compression level is out of specified bounds - using the default (6).");
                 6
             }
         } else {
-            println!("Unable to read compression level provided - using the default (6).");
+            warn!("Unable to read compression level provided - using the default (6).");
             6
         }
     } else {

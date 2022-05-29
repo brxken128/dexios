@@ -128,12 +128,3 @@ impl std::fmt::Display for Algorithm {
         }
     }
 }
-
-impl std::fmt::Display for CipherMode {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
-            CipherMode::MemoryMode => write!(f, "memory mode"),
-            CipherMode::StreamMode => write!(f, "stream mode"),
-        }
-    }
-}

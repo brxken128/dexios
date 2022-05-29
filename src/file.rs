@@ -3,6 +3,7 @@ use crate::global::enums::HiddenFilesMode;
 use crate::global::enums::PrintMode;
 use crate::secret::Secret;
 use anyhow::{Context, Ok, Result};
+use paris::Logger;
 use std::fs::read_dir;
 use std::path::PathBuf;
 use std::{fs::File, io::Read};
@@ -27,6 +28,7 @@ pub fn get_paths_in_dir(
     hidden: &HiddenFilesMode,
     print_mode: &PrintMode,
 ) -> Result<(Vec<PathBuf>, Option<Vec<PathBuf>>)> {
+    let mut logger = Logger::new();
     let mut file_list = Vec::new(); // so we know what files to encrypt
     let mut dir_list = Vec::new(); // so we can recreate the structure inside of the zip file
 
@@ -67,14 +69,14 @@ pub fn get_paths_in_dir(
             dir_list.extend(dirs.unwrap()); // this should never error and it should be there, at least empty - should still add context
         } else if path.is_dir() {
             if print_mode == &PrintMode::Verbose {
-                println!(
+                logger.warn(format!(
                     "Skipping {} as it's a directory and -r was not specified",
                     path.display()
-                );
+                ));
             }
         } else if path.is_symlink() {
             if print_mode == &PrintMode::Verbose {
-                println!("Skipping {} as it's a symlink", path.display());
+                logger.warn(format!("Skipping {} as it's a symlink", path.display()));
             }
         } else {
             file_list.push(path);

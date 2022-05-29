@@ -19,14 +19,17 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 aes-gcm = "0.9.4"
-clap = { version = "3.1.18", features = ["cargo"] }
-anyhow = "1.0.57"
-rand = "0.8.5"
-termion = "1.5.6"
-argon2 = "0.4.0"
-blake3 = "1.3.1"
 chacha20poly1305 = "0.9.0"
 deoxys = "0.0.2"
-aead = { version = "0.4.3", features = ["stream"] }
-zip = { version = "0.6.2", default-features = false, features = ["deflate"] }
 zeroize = "1.3.0"
+argon2 = "0.4.0"
+blake3 = "1.3.1"
+aead = { version = "0.4.3", features = ["stream"] }
+rand = "0.8.5"
+
+clap = { version = "3.1.18", features = ["cargo"] }
+anyhow = "1.0.57"
+paris = { version = "1.5.13", features = ["macros"] }
+termion = "1.5.6"
+
+zip = { version = "0.6.2", default-features = false, features = ["deflate"] }

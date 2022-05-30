@@ -127,6 +127,8 @@ pub fn sign(header: &Header, key: Secret<[u8; 32]>) -> Result<Vec<u8>> {
     let mut mac =
         HmacSha3_512::new_from_slice(key.expose()).context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
 
+    drop(key);
+
     let nonce_len = calc_nonce_len(&header.header_type);
     let padding = vec![0u8; 26 - nonce_len];
     let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
@@ -143,10 +145,12 @@ pub fn sign(header: &Header, key: Secret<[u8; 32]>) -> Result<Vec<u8>> {
     Ok(signature[..16].to_vec())
 }
 
-pub fn verify(header: &Header, signature: [u8; 16]) -> Result<bool> {
+pub fn verify(header: &Header, signature: Vec<u8>, key: Secret<[u8; 32]>) -> Result<bool> {
     type HmacSha3_512 = Hmac<Sha3_512>;
     let mut mac =
         HmacSha3_512::new_from_slice(b"xxx").context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
+
+    drop(key);
 
     let nonce_len = calc_nonce_len(&header.header_type);
     let padding = vec![0u8; 26 - nonce_len];
@@ -225,7 +229,7 @@ fn deserialize(
 
 // this takes an input file, and gets all of the data necessary from the header of the file
 // it ensures that the buffer starts at 64 bytes, so that other functions can just read encrypted data immediately
-pub fn read_from_file(file: &mut File) -> Result<Header> {
+pub fn read_from_file(file: &mut File) -> Result<(Header, Option<Vec<u8>>)> { // sometimes a signature
     let mut version_info = [0u8; 2];
     let mut algorithm_info = [0u8; 2];
     let mut mode_info = [0u8; 2];
@@ -253,11 +257,11 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
             file.read_exact(&mut vec![0u8; 26 - nonce_len])
                 .context("Unable to read final padding from header")?; // read and discard the final padding
 
-            Ok(Header {
+            Ok((Header {
                 header_type: header_info,
                 nonce,
                 salt,
-            })
+            }, None))
         }
         HeaderVersion::V2 => {
             let nonce_len = calc_nonce_len(&header_info);
@@ -279,11 +283,13 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
                 salt,
             };
 
-            if verify(&header, signature)? {
-                Ok(header)
-            } else {
-                Err(anyhow::anyhow!("Header signature doesn't match"))
-            }
+            Ok((header, Some(signature.to_vec())))
+
+            // if verify(&header, signature)? {
+            //     Ok(header)
+            // } else {
+            //     Err(anyhow::anyhow!("Header signature doesn't match"))
+            // }
         }
     }
 }

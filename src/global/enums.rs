@@ -73,6 +73,7 @@ pub enum CipherMode {
     StreamMode,
 }
 
+#[derive(PartialEq)]
 pub enum HeaderVersion {
     V1,
     V2,

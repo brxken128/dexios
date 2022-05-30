@@ -115,22 +115,16 @@ pub fn encrypt_directory(
             zip_writer.write_all(&data)?;
         } else {
             // stream read/write here
-            let mut buffer = [0u8; BLOCK_SIZE];
+            let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
             loop {
                 let read_count = file_reader.read(&mut buffer)?;
-                if read_count == BLOCK_SIZE {
-                    zip_writer
-                        .write_all(&buffer[..read_count])
-                        .with_context(|| {
-                            format!("Unable to write to the output file: {}", output)
-                        })?;
-                } else {
-                    zip_writer
-                        .write_all(&buffer[..read_count])
-                        .with_context(|| {
-                            format!("Unable to write to the output file: {}", output)
-                        })?;
+                zip_writer
+                    .write_all(&buffer[..read_count])
+                    .with_context(|| {
+                        format!("Unable to write to the output file: {}", output)
+                    })?;
+                if read_count != BLOCK_SIZE {
                     break;
                 }
             }

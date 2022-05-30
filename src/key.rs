@@ -25,7 +25,6 @@ use termion::input::TermRead;
 #[cfg(target_family = "windows")]
 use std::io::BufRead;
 
-
 // this generates a salt for password hashing
 pub fn gen_salt() -> [u8; SALT_LEN] {
     let mut salt: [u8; SALT_LEN] = [0; SALT_LEN];
@@ -114,7 +113,6 @@ fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
         .context("Unable to write to stdout")?;
     stdout.flush().context("Unable to flush stdout")?;
 
-    
     if BufRead::read_line(&mut stdin.lock(), &mut password).is_ok() {
         Ok(password.trim_end().to_string())
     } else {
@@ -127,9 +125,11 @@ fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
 fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
     Ok(loop {
         #[cfg(target_family = "unix")]
-        let input = read_password_from_stdin_unix("Password: ").context("Unable to read password")?;
+        let input =
+            read_password_from_stdin_unix("Password: ").context("Unable to read password")?;
         #[cfg(target_family = "windows")]
-        let input = read_password_from_stdin_windows("Password: ").context("Unable to read password")?;
+        let input =
+            read_password_from_stdin_windows("Password: ").context("Unable to read password")?;
         if !validation {
             return Ok(Secret::new(input.into_bytes()));
         }

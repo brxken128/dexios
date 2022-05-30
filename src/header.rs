@@ -8,7 +8,7 @@ use anyhow::{Context, Result};
 use blake3::Hasher;
 use hmac::{Hmac, Mac};
 use paris::Logger;
-use sha2::{Sha512};
+use sha2::Sha512;
 use std::{fs::File, io::Write};
 use std::{fs::OpenOptions, io::Read, process::exit};
 
@@ -120,9 +120,11 @@ pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
     Ok(())
 }
 
-pub fn sign(header: &Header) -> Result<Vec<u8>> { // gate this behind header versions
+pub fn sign(header: &Header) -> Result<Vec<u8>> {
+    // gate this behind header versions
     type HmacSha512 = Hmac<Sha512>;
-    let mut mac = HmacSha512::new_from_slice(b"xxx").context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
+    let mut mac =
+        HmacSha512::new_from_slice(b"xxx").context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
 
     let nonce_len = calc_nonce_len(&header.header_type);
     let padding = vec![0u8; 26 - nonce_len];
@@ -142,7 +144,8 @@ pub fn sign(header: &Header) -> Result<Vec<u8>> { // gate this behind header ver
 
 pub fn verify(header: &Header, signature: [u8; 16]) -> Result<bool> {
     type HmacSha512 = Hmac<Sha512>;
-    let mut mac = HmacSha512::new_from_slice(b"xxx").context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
+    let mut mac =
+        HmacSha512::new_from_slice(b"xxx").context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
 
     let nonce_len = calc_nonce_len(&header.header_type);
     let padding = vec![0u8; 26 - nonce_len];
@@ -259,7 +262,7 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
             let nonce_len = calc_nonce_len(&header_info);
             let mut nonce = vec![0u8; nonce_len];
             let mut signature = [0u8; 16];
-            
+
             file.read_exact(&mut salt)
                 .context("Unable to read salt from header")?;
             file.read_exact(&mut nonce)
@@ -270,11 +273,11 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
                 .context("Unable to read signature from header")?; // read signature
 
             let header = Header {
-                            header_type: header_info,
-                            nonce,
-                            salt,
-                        };
-            
+                header_type: header_info,
+                nonce,
+                salt,
+            };
+
             if verify(&header, signature)? {
                 Ok(header)
             } else {

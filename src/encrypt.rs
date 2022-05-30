@@ -46,10 +46,7 @@ pub fn memory_mode(
 
     logger.info(format!("Using {} for encryption", algorithm));
 
-    logger.loading(format!(
-        "Encrypting {} (this may take a while)",
-        input
-    ));
+    logger.loading(format!("Encrypting {} (this may take a while)", input));
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
@@ -133,10 +130,7 @@ pub fn stream_mode(
 
     logger.info(format!("Using {} for encryption", algorithm));
 
-    logger.loading(format!(
-        "Encrypting {} (this may take a while)",
-        input
-    ));
+    logger.loading(format!("Encrypting {} (this may take a while)", input));
 
     let encrypt_start_time = Instant::now();
 

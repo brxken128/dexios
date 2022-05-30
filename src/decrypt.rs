@@ -62,12 +62,12 @@ pub fn memory_mode(
 
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
-    logger.info(format!("Using {} for decryption", header.header_type.algorithm));
-
-    logger.loading(format!(
-        "Decrypting {} (this may take a while)",
-        input
+    logger.info(format!(
+        "Using {} for decryption",
+        header.header_type.algorithm
     ));
+
+    logger.loading(format!("Decrypting {} (this may take a while)", input));
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
@@ -152,12 +152,12 @@ pub fn stream_mode(
         OutputFile::None
     };
 
-    logger.info(format!("Using {} for decryption", header.header_type.algorithm));
-
-    logger.loading(format!(
-        "Decrypting {} (this may take a while)",
-        input
+    logger.info(format!(
+        "Using {} for decryption",
+        header.header_type.algorithm
     ));
+
+    logger.loading(format!("Decrypting {} (this may take a while)", input));
 
     let decrypt_start_time = Instant::now();
     let decryption_result = decrypt_bytes_stream_mode(

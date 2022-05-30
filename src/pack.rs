@@ -64,10 +64,7 @@ pub fn encrypt_directory(
             .with_context(|| format!("Unable to create the output file: {}", output))?,
     );
 
-    logger.loading(format!(
-        "Creating and compressing files into {}",
-        tmp_name
-    ));
+    logger.loading(format!("Creating and compressing files into {}", tmp_name));
 
     let zip_start_time = Instant::now();
 

@@ -6,7 +6,9 @@ use crate::{
 };
 use anyhow::{Context, Result};
 use blake3::Hasher;
+use hmac::{Hmac, Mac};
 use paris::Logger;
+use sha2::{Sha512};
 use std::{fs::File, io::Write};
 use std::{fs::OpenOptions, io::Read, process::exit};
 
@@ -31,6 +33,10 @@ fn serialize(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
     let version_info = match header_info.header_version {
         HeaderVersion::V1 => {
             let info: [u8; 2] = [0xDE, 0x01];
+            info
+        }
+        HeaderVersion::V2 => {
+            let info: [u8; 2] = [0xDE, 0x02];
             info
         }
     };
@@ -89,9 +95,73 @@ pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
             file.write_all(&padding)
                 .context("Unable to write final padding to header")?; // this has reached the 64 bytes
         }
+        HeaderVersion::V2 => {
+            let padding = vec![0u8; 26 - nonce_len];
+            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+            let signature = sign(header)?;
+
+            file.write_all(&version_info)
+                .context("Unable to write version to header")?;
+            file.write_all(&algorithm_info)
+                .context("Unable to write algorithm to header")?;
+            file.write_all(&mode_info)
+                .context("Unable to write encryption mode to header")?; // 6 bytes total
+            file.write_all(&header.salt)
+                .context("Unable to write salt to header")?; // 22 bytes total
+            file.write_all(&header.nonce)
+                .context("Unable to write nonce to header")?; // (26 - nonce len)
+            file.write_all(&padding)
+                .context("Unable to write final padding to header")?; // this has reached 48 bytes
+            file.write_all(&signature)
+                .context("Unable to write signature to header")?; // signature
+        }
     }
 
     Ok(())
+}
+
+pub fn sign(header: &Header) -> Result<Vec<u8>> { // gate this behind header versions
+    type HmacSha512 = Hmac<Sha512>;
+    let mut mac = HmacSha512::new_from_slice(b"xxx").context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
+
+    let nonce_len = calc_nonce_len(&header.header_type);
+    let padding = vec![0u8; 26 - nonce_len];
+    let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+
+    mac.update(&version_info);
+    mac.update(&algorithm_info);
+    mac.update(&mode_info);
+    mac.update(&header.salt);
+    mac.update(&header.nonce);
+    mac.update(&padding);
+
+    let signature = mac.finalize().into_bytes();
+
+    Ok(signature[..16].to_vec())
+}
+
+pub fn verify(header: &Header, signature: [u8; 16]) -> Result<bool> {
+    type HmacSha512 = Hmac<Sha512>;
+    let mut mac = HmacSha512::new_from_slice(b"xxx").context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
+
+    let nonce_len = calc_nonce_len(&header.header_type);
+    let padding = vec![0u8; 26 - nonce_len];
+    let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+
+    mac.update(&version_info);
+    mac.update(&algorithm_info);
+    mac.update(&mode_info);
+    mac.update(&header.salt);
+    mac.update(&header.nonce);
+    mac.update(&padding);
+
+    let signature_verif = mac.finalize().into_bytes();
+
+    if signature.to_vec() == signature_verif[..16].to_vec() {
+        Ok(true)
+    } else {
+        Ok(false)
+    }
 }
 
 // this hashes a header with the salt, nonce, and info provided
@@ -110,6 +180,9 @@ pub fn hash(hasher: &mut Hasher, header: &Header) {
             hasher.update(&header.nonce);
             hasher.update(&padding);
         }
+        HeaderVersion::V2 => {
+            todo!()
+        }
     }
 }
 
@@ -122,6 +195,7 @@ fn deserialize(
 ) -> Result<HeaderType> {
     let header_version = match version_info {
         [0xDE, 0x01] => HeaderVersion::V1,
+        [0xDE, 0x02] => HeaderVersion::V2,
         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
     };
 
@@ -180,6 +254,9 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
                 nonce,
                 salt,
             })
+        }
+        HeaderVersion::V2 => {
+            todo!()
         }
     }
 }

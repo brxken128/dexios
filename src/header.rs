@@ -243,7 +243,7 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
             file.read_exact(&mut salt)
                 .context("Unable to read salt from header")?;
             file.read_exact(&mut [0; 16])
-                .context("Unable to empty bytes from header")?; // read and subsequently discard the next 16 bytes
+                .context("Unable to read empty bytes from header")?; // read and subsequently discard the next 16 bytes
             file.read_exact(&mut nonce)
                 .context("Unable to read nonce from header")?;
             file.read_exact(&mut vec![0u8; 26 - nonce_len])
@@ -256,7 +256,30 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
             })
         }
         HeaderVersion::V2 => {
-            todo!()
+            let nonce_len = calc_nonce_len(&header_info);
+            let mut nonce = vec![0u8; nonce_len];
+            let mut signature = [0u8; 16];
+            
+            file.read_exact(&mut salt)
+                .context("Unable to read salt from header")?;
+            file.read_exact(&mut nonce)
+                .context("Unable to read nonce from header")?;
+            file.read_exact(&mut vec![0u8; 26 - nonce_len])
+                .context("Unable to read final padding from header")?; // read and discard the padding
+            file.read_exact(&mut signature)
+                .context("Unable to read signature from header")?; // read signature
+
+            let header = Header {
+                            header_type: header_info,
+                            nonce,
+                            salt,
+                        };
+            
+            if verify(&header, signature)? {
+                Ok(header)
+            } else {
+                Err(anyhow::anyhow!("Header invalid or has been tampered with."))
+            }
         }
     }
 }

@@ -65,16 +65,15 @@ pub fn encrypt_directory(
     );
 
     logger.loading(format!(
-        "Creating and compressing files into {} with a compression level of {}",
-        tmp_name, pack_params.compression_level
+        "Creating and compressing files into {}",
+        tmp_name
     ));
 
     let zip_start_time = Instant::now();
 
     let mut zip = zip::ZipWriter::new(file);
     let options = FileOptions::default()
-        .compression_method(zip::CompressionMethod::Deflated)
-        .compression_level(Some(pack_params.compression_level))
+        .compression_method(zip::CompressionMethod::Stored)
         .large_file(true)
         .unix_permissions(0o755);
 

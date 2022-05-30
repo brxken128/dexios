@@ -31,6 +31,5 @@ pub struct PackMode {
     pub dir_mode: DirectoryMode,
     pub hidden: HiddenFilesMode,
     pub exclude: Vec<String>,
-    pub compression_level: i32,
     pub print_mode: PrintMode,
 }

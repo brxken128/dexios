@@ -163,27 +163,6 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<PackMode> {
         HiddenFilesMode::Exclude
     };
 
-    let compression_level = if sub_matches.is_present("level") {
-        let result = sub_matches
-            .value_of("level")
-            .context("No compression level specified")?
-            .parse();
-
-        if let Ok(value) = result {
-            if (0..=9).contains(&value) {
-                value
-            } else {
-                warn!("Compression level is out of specified bounds - using the default (6).");
-                6
-            }
-        } else {
-            warn!("Unable to read compression level provided - using the default (6).");
-            6
-        }
-    } else {
-        6
-    };
-
     let excluded: Vec<String> = if sub_matches.is_present("exclude") {
         let list: Vec<&str> = sub_matches.values_of("exclude").unwrap().collect();
         list.iter().map(std::string::ToString::to_string).collect()
@@ -199,7 +178,6 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<PackMode> {
     };
 
     let pack_params = PackMode {
-        compression_level,
         dir_mode,
         exclude: excluded,
         hidden,

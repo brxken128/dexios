@@ -227,16 +227,6 @@ pub fn get_matches() -> clap::ArgMatches {
                         .multiple_occurrences(true),
                 )
                 .arg(
-                    Arg::new("level")
-                        .long("level")
-                        .value_name("level of compression (0-9)")
-                        .takes_value(true)
-                        .require_equals(true)
-                        .help("Specify the deflate compression level (default is 6)")
-                        .min_values(0)
-                        .default_missing_value("6"),
-                )
-                .arg(
                     Arg::new("hidden")
                         .long("include-hidden")
                         .takes_value(false)

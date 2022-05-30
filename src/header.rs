@@ -72,7 +72,7 @@ fn serialize(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
 // this writes a header to a file
 // it handles padding and serialising the specific information
 // it ensures the buffer is left at 64 bytes, so other functions can write the data without further hassle
-pub fn write_to_file(file: &mut OutputFile, header: &Header, signature: Option<[u8; 16]>) -> Result<()> {
+pub fn write_to_file(file: &mut OutputFile, header: &Header, signature: Option<Vec<u8>>) -> Result<()> {
     let nonce_len = calc_nonce_len(&header.header_type);
 
     match &header.header_type.header_version {
@@ -125,7 +125,7 @@ pub fn sign(header: &Header, key: Secret<[u8; 32]>) -> Result<Vec<u8>> {
     // gate this behind header versions
     type HmacSha3_512 = Hmac<Sha3_512>;
     let mut mac =
-        HmacSha3_512::new_from_slice(b"xxx").context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
+        HmacSha3_512::new_from_slice(key.expose()).context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
 
     let nonce_len = calc_nonce_len(&header.header_type);
     let padding = vec![0u8; 26 - nonce_len];

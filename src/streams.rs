@@ -19,7 +19,7 @@ use std::result::Result::Ok;
 // it's used for encrypt/stream mode and is the central place for managing streams for encryption
 pub fn init_encryption_stream(
     raw_key: Secret<Vec<u8>>,
-    header_type: &HeaderType,
+    header_type: HeaderType,
 ) -> Result<(EncryptStreamCiphers, Header, Vec<u8>)> {
     let salt = gen_salt();
     let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
@@ -35,7 +35,7 @@ pub fn init_encryption_stream(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let header = Header{header_type: *header_type, nonce: nonce_bytes.to_vec(), salt};
+            let header = Header{header_type, nonce: nonce_bytes.to_vec(), salt};
             let signature = sign(&header, key)?;
 
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
@@ -55,7 +55,7 @@ pub fn init_encryption_stream(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let header = Header{header_type: *header_type, nonce: nonce_bytes.to_vec(), salt};
+            let header = Header{header_type, nonce: nonce_bytes.to_vec(), salt};
             let signature = sign(&header, key)?;
 
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
@@ -75,7 +75,7 @@ pub fn init_encryption_stream(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let header = Header{header_type: *header_type, nonce: nonce_bytes.to_vec(), salt};
+            let header = Header{header_type, nonce: nonce_bytes.to_vec(), salt};
             let signature = sign(&header, key)?;
 
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());

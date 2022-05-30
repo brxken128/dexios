@@ -1,6 +1,7 @@
 use crate::global::enums::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
 use crate::global::structs::{Header, HeaderType};
 use crate::global::{BLOCK_SIZE, VERSION};
+use crate::header::sign;
 use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;
 use crate::streams::init_encryption_stream;
@@ -38,20 +39,27 @@ pub fn encrypt_bytes_memory_mode(
         algorithm,
     };
 
-    let (nonce_bytes, encrypted_bytes) = match algorithm {
+    let (header, signature, encrypted_bytes) = match algorithm {
         Algorithm::Aes256Gcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
             let nonce = Nonce::from_slice(nonce_bytes.as_slice());
 
-            let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
+            let header = Header {
+                salt,
+                nonce: nonce_bytes.to_vec(),
+                header_type,
+            };
+        
+            let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
-                    drop(key);
                     cipher
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
+
+            let signature = sign(&header, key)?;
 
             let encrypted_bytes = match cipher.encrypt(nonce, data.expose().as_slice()) {
                 Ok(bytes) => bytes,
@@ -60,20 +68,29 @@ pub fn encrypt_bytes_memory_mode(
 
             drop(data);
 
-            (nonce_bytes.to_vec(), encrypted_bytes)
+            (header, signature, encrypted_bytes)
         }
         Algorithm::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 24]>();
             let nonce = XNonce::from_slice(&nonce_bytes);
-            let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
+
+            let header = Header {
+                salt,
+                nonce: nonce_bytes.to_vec(),
+                header_type,
+            };
+
+            let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
+
 
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => {
-                    drop(key);
                     cipher
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
+
+            let signature = sign(&header, key)?;
 
             let encrypted_bytes = match cipher.encrypt(nonce, data.expose().as_slice()) {
                 Ok(bytes) => bytes,
@@ -82,20 +99,28 @@ pub fn encrypt_bytes_memory_mode(
 
             drop(data);
 
-            (nonce_bytes.to_vec(), encrypted_bytes)
+            (header, signature, encrypted_bytes)
         }
         Algorithm::DeoxysII256 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 15]>();
             let nonce = deoxys::Nonce::from_slice(&nonce_bytes);
-            let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
+
+            let header = Header {
+                salt,
+                nonce: nonce_bytes.to_vec(),
+                header_type,
+            };
+
+            let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => {
-                    drop(key);
                     cipher
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
+
+            let signature = sign(&header, key)?;
 
             let encrypted_bytes = match cipher.encrypt(nonce, data.expose().as_slice()) {
                 Ok(bytes) => bytes,
@@ -104,19 +129,13 @@ pub fn encrypt_bytes_memory_mode(
 
             drop(data);
 
-            (nonce_bytes.to_vec(), encrypted_bytes)
+            (header, signature, encrypted_bytes)
         }
-    };
-
-    let header = Header {
-        salt,
-        nonce: nonce_bytes,
-        header_type,
     };
 
     if bench == BenchMode::WriteToFilesystem {
         let write_start_time = Instant::now();
-        crate::header::write_to_file(output, &header)?;
+        crate::header::write_to_file(output, &header, Some(signature))?;
         output.write_all(&encrypted_bytes)?;
         let write_duration = write_start_time.elapsed();
         success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
@@ -158,16 +177,11 @@ pub fn encrypt_bytes_stream_mode(
         algorithm,
     };
 
-    let (mut streams, salt, nonce_bytes) = init_encryption_stream(raw_key, &header_type)?;
+    let (mut streams, header, signature) = init_encryption_stream(raw_key, header_type)?;
 
-    let header = Header {
-        salt,
-        nonce: nonce_bytes,
-        header_type,
-    };
 
     if bench == BenchMode::WriteToFilesystem {
-        crate::header::write_to_file(output, &header)?;
+        crate::header::write_to_file(output, &header, Some(signature))?;
     }
 
     let mut hasher = blake3::Hasher::new();

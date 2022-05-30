@@ -1,4 +1,3 @@
-use std::io::BufRead;
 use std::io::stdin;
 use std::io::stdout;
 use std::io::Write;
@@ -22,6 +21,10 @@ use zeroize::Zeroize;
 
 #[cfg(target_family = "unix")]
 use termion::input::TermRead;
+
+#[cfg(target_family = "windows")]
+use std::io::BufRead;
+
 
 // this generates a salt for password hashing
 pub fn gen_salt() -> [u8; SALT_LEN] {

@@ -150,7 +150,7 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
     Ok(passes)
 }
 
-pub fn pack_params(sub_matches: &ArgMatches) -> Result<PackMode> {
+pub fn pack_params(sub_matches: &ArgMatches) -> PackMode {
     let dir_mode = if sub_matches.is_present("recursive") {
         DirectoryMode::Recursive
     } else {
@@ -184,7 +184,7 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<PackMode> {
         print_mode,
     };
 
-    Ok(pack_params)
+    pack_params
 }
 
 pub fn unpack_params(sub_matches: &ArgMatches) -> PrintMode {

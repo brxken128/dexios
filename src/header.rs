@@ -150,7 +150,7 @@ pub fn sign(header: &Header, key: Secret<[u8; 32]>) -> Result<Vec<u8>> {
     Ok(signature[..16].to_vec())
 }
 
-pub fn verify(header: &Header, signature: Vec<u8>, key: Secret<[u8; 32]>) -> Result<bool> {
+pub fn verify(header: &Header, signature: &[u8], key: Secret<[u8; 32]>) -> Result<bool> {
     type HmacSha3_512 = Hmac<Sha3_512>;
     let mut mac =
         HmacSha3_512::new_from_slice(key.expose()).context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
@@ -170,7 +170,7 @@ pub fn verify(header: &Header, signature: Vec<u8>, key: Secret<[u8; 32]>) -> Res
 
     let signature_verif = mac.finalize().into_bytes();
 
-    if signature.to_vec() == signature_verif[..16].to_vec() {
+    if signature == &signature_verif[..16] {
         Ok(true)
     } else {
         Ok(false)

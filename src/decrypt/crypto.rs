@@ -44,7 +44,7 @@ pub fn decrypt_bytes_memory_mode(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if verify(&header, signature.clone().unwrap(), key)? {
+                if verify(header, &signature.clone().unwrap(), key)? {
                     success!("Header HMAC signature matches");
                 } else {
                     return Err(anyhow::anyhow!(
@@ -66,7 +66,7 @@ pub fn decrypt_bytes_memory_mode(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if verify(&header, signature.clone().unwrap(), key)? {
+                if verify(header, &signature.clone().unwrap(), key)? {
                     success!("Header HMAC signature matches");
                 } else {
                     return Err(anyhow::anyhow!(
@@ -88,7 +88,7 @@ pub fn decrypt_bytes_memory_mode(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if verify(&header, signature.clone().unwrap(), key)? {
+                if verify(header, &signature.clone().unwrap(), key)? {
                     success!("Header HMAC signature matches");
                 } else {
                     return Err(anyhow::anyhow!(

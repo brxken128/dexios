@@ -1,7 +1,7 @@
 use crate::global::crypto::DecryptStreamCiphers;
 use crate::global::structs::{Header, HeaderType};
-use crate::global::SALT_LEN;
 use crate::global::{crypto::EncryptStreamCiphers, enums::Algorithm};
+use crate::header::sign;
 use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;
 use aead::stream::{DecryptorLE31, EncryptorLE31};
@@ -20,7 +20,7 @@ use std::result::Result::Ok;
 pub fn init_encryption_stream(
     raw_key: Secret<Vec<u8>>,
     header_type: &HeaderType,
-) -> Result<(EncryptStreamCiphers, [u8; SALT_LEN], Vec<u8>)> {
+) -> Result<(EncryptStreamCiphers, Header, Vec<u8>)> {
     let salt = gen_salt();
     let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
 
@@ -30,17 +30,19 @@ pub fn init_encryption_stream(
 
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
-                    drop(key);
                     cipher
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
+            let header = Header{header_type: *header_type, nonce: nonce_bytes.to_vec(), salt};
+            let signature = sign(&header, key)?;
+
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
             Ok((
                 EncryptStreamCiphers::Aes256Gcm(Box::new(stream)),
-                salt,
-                nonce_bytes.to_vec(),
+                header,
+                signature,
             ))
         }
         Algorithm::XChaCha20Poly1305 => {
@@ -48,17 +50,19 @@ pub fn init_encryption_stream(
 
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => {
-                    drop(key);
                     cipher
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
+            let header = Header{header_type: *header_type, nonce: nonce_bytes.to_vec(), salt};
+            let signature = sign(&header, key)?;
+
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
             Ok((
                 EncryptStreamCiphers::XChaCha(Box::new(stream)),
-                salt,
-                nonce_bytes.to_vec(),
+                header,
+                signature,
             ))
         }
         Algorithm::DeoxysII256 => {
@@ -66,17 +70,19 @@ pub fn init_encryption_stream(
 
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => {
-                    drop(key);
                     cipher
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
+            let header = Header{header_type: *header_type, nonce: nonce_bytes.to_vec(), salt};
+            let signature = sign(&header, key)?;
+
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
             Ok((
                 EncryptStreamCiphers::DeoxysII(Box::new(stream)),
-                salt,
-                nonce_bytes.to_vec(),
+                header,
+                signature,
             ))
         }
     }

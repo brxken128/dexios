@@ -2,7 +2,8 @@ use crate::{
     global::enums::{Algorithm, BenchMode, CipherMode, HeaderVersion, OutputFile, SkipMode},
     global::structs::{Header, HeaderType},
     global::SALT_LEN,
-    prompt::{get_answer, overwrite_check}, secret::Secret,
+    prompt::{get_answer, overwrite_check},
+    secret::Secret,
 };
 use anyhow::{Context, Result};
 use blake3::Hasher;
@@ -72,7 +73,11 @@ fn serialize(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
 // this writes a header to a file
 // it handles padding and serialising the specific information
 // it ensures the buffer is left at 64 bytes, so other functions can write the data without further hassle
-pub fn write_to_file(file: &mut OutputFile, header: &Header, signature: Option<Vec<u8>>) -> Result<()> {
+pub fn write_to_file(
+    file: &mut OutputFile,
+    header: &Header,
+    signature: Option<Vec<u8>>,
+) -> Result<()> {
     let nonce_len = calc_nonce_len(&header.header_type);
 
     match &header.header_type.header_version {
@@ -239,7 +244,8 @@ fn deserialize(
 
 // this takes an input file, and gets all of the data necessary from the header of the file
 // it ensures that the buffer starts at 64 bytes, so that other functions can just read encrypted data immediately
-pub fn read_from_file(file: &mut File) -> Result<(Header, Option<Vec<u8>>)> { // sometimes a signature
+pub fn read_from_file(file: &mut File) -> Result<(Header, Option<Vec<u8>>)> {
+    // sometimes a signature
     let mut version_info = [0u8; 2];
     let mut algorithm_info = [0u8; 2];
     let mut mode_info = [0u8; 2];
@@ -267,11 +273,14 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Option<Vec<u8>>)> { //
             file.read_exact(&mut vec![0u8; 26 - nonce_len])
                 .context("Unable to read final padding from header")?; // read and discard the final padding
 
-            Ok((Header {
-                header_type: header_info,
-                nonce,
-                salt,
-            }, None))
+            Ok((
+                Header {
+                    header_type: header_info,
+                    nonce,
+                    salt,
+                },
+                None,
+            ))
         }
         HeaderVersion::V2 => {
             let nonce_len = calc_nonce_len(&header_info);

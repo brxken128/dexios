@@ -49,13 +49,11 @@ pub fn encrypt_bytes_memory_mode(
                 nonce: nonce_bytes.to_vec(),
                 header_type,
             };
-        
+
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    cipher
-                }
+                Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
@@ -82,11 +80,8 @@ pub fn encrypt_bytes_memory_mode(
 
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
-
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    cipher
-                }
+                Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
@@ -114,9 +109,7 @@ pub fn encrypt_bytes_memory_mode(
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    cipher
-                }
+                Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 

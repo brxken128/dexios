@@ -43,6 +43,8 @@ Windows, FreeBSD and Linux all are supported by Dexios!
 
 Windows support was added in v8.3.0 - however, there is a catch. When you enter a password into the terminal, it will not be hidden - we have plans to fix this in the near future (keyfiles and environment variables still work flawlessly!) Pack modes also do not currently work in Windows, but everything else should. Please [open a Github issue](https://github.com/brxken128/dexios/issues) if you encounter anything not outlined here.
 
+On Windows, I highly recommend using Windows Terminal, or another terminal program, as `cmd` can't display the icons used by Dexios for command-line output.
+
 ## Contributing
 
 Contributions are very welcome! You're free to submit a PR and I'll take a look at it, provide feedback and (most likely) merge it, provided the tests pass.

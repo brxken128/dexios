@@ -1,6 +1,7 @@
 use std::io::stdin;
 use std::io::stdout;
 use std::io::Write;
+use std::time::Instant;
 
 use crate::file::get_bytes;
 use crate::global::enums::HeaderVersion;
@@ -12,6 +13,7 @@ use anyhow::{Context, Result};
 use argon2::Argon2;
 use argon2::Params;
 use paris::info;
+use paris::success;
 use paris::warn;
 use rand::prelude::StdRng;
 use rand::RngCore;
@@ -44,7 +46,7 @@ pub fn argon2_hash(
 
     let params = match version {
         HeaderVersion::V1 => {
-            // 8192KiB of memory, 8 iterations, 4 levels of parallelism
+            // 8MiB of memory, 8 iterations, 4 levels of parallelism
             let params = Params::new(8192, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN));
             match params {
                 std::result::Result::Ok(parameters) => parameters,
@@ -52,8 +54,8 @@ pub fn argon2_hash(
             }
         }
         HeaderVersion::V2 => {
-            // 256MiB of memory, 12 iterations, 4 levels of parallelism
-            let params = Params::new(262144, 12, 4, Some(Params::DEFAULT_OUTPUT_LEN));
+            // 256MiB of memory, 8 iterations, 4 levels of parallelism
+            let params = Params::new(262144, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN));
             match params {
                 std::result::Result::Ok(parameters) => parameters,
                 Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
@@ -61,13 +63,16 @@ pub fn argon2_hash(
         }
     };
 
+    let hash_start_time = Instant::now();
     let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
     let result = argon2.hash_password_into(raw_key.expose(), salt, &mut key);
     drop(raw_key);
+    let hash_duration = hash_start_time.elapsed();
+    success!("Successfully hashed your key [took {:.2}s]", hash_duration.as_secs_f32());
 
     if result.is_err() {
         return Err(anyhow::anyhow!(
-            "Error while hashing your password with argon2id"
+            "Error while hashing your key with argon2id"
         ));
     }
 

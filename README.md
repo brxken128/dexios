@@ -36,7 +36,7 @@ We encourage anyone who used an older version of Dexios to decrypt their files, 
 
 Windows, FreeBSD and Linux all are supported by Dexios!
 
-Windows support was added in v8.3.0 - however, there is one feature missing. When you enter a password into the terminal, it will not be hidden. Keyfiles and Environment Variables still work flawlessly, and we have plans to fix this issue in the near future. Pack modes also do not currently work in Windows, but everything else should. Please [open a Github issue](https://github.com/brxken128/dexios/issues) if you encounter anything not outlined here.
+Windows support was added in v8.3.0 - however, there is a catch. When you enter a password into the terminal, it will not be hidden - we have plans to fix this in the near future (keyfiles and environment variables still work flawlessly!) Pack modes also do not currently work in Windows, but everything else should. Please [open a Github issue](https://github.com/brxken128/dexios/issues) if you encounter anything not outlined here.
 
 ## Contributing
 

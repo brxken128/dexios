@@ -113,14 +113,8 @@ fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
 
     
     if BufRead::read_line(&mut stdin.lock(), &mut password).is_ok() {
-        stdout
-            .write_all("\n".as_bytes())
-            .context("Unable to write to stdout")?;
         Ok(password.trim_end().to_string())
     } else {
-        stdout
-            .write_all("\n".as_bytes())
-            .context("Unable to write to stdout")?;
         Err(anyhow::anyhow!("Error reading password from terminal"))
     }
 }

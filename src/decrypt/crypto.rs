@@ -152,12 +152,12 @@ pub fn decrypt_bytes_stream_mode(
         crate::header::hash(&mut hasher, header, signature);
     }
 
-    let mut buffer = [0u8; BLOCK_SIZE + 16]; // 16 bytes is the length of the AEAD tag
+    let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();
 
     loop {
         let read_count = input.read(&mut buffer)?;
         if read_count == (BLOCK_SIZE + 16) {
-            let decrypted_data = match streams.decrypt_next(buffer.as_slice()) {
+            let decrypted_data = match streams.decrypt_next(buffer.as_ref()) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file.")),
             };

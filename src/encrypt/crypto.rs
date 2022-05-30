@@ -182,14 +182,14 @@ pub fn encrypt_bytes_stream_mode(
         crate::header::hash(&mut hasher, &header, Some(signature));
     }
 
-    let mut buffer = [0u8; BLOCK_SIZE];
+    let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
     loop {
         let read_count = input
             .read(&mut buffer)
             .context("Unable to read from the input file")?;
         if read_count == BLOCK_SIZE {
-            let encrypted_data = match streams.encrypt_next(buffer.as_slice()) {
+            let encrypted_data = match streams.encrypt_next(buffer.as_ref()) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };

@@ -75,6 +75,7 @@ pub enum CipherMode {
 
 pub enum HeaderVersion {
     V1,
+    V2,
 }
 
 #[derive(Copy, Clone)]

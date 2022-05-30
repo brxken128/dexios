@@ -46,6 +46,14 @@ pub fn argon2_hash(
                 Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
             }
         }
+        HeaderVersion::V2 => {
+            let mem = 33554432; // 32MiB
+            let params = Params::new(mem, 16, 4, Some(Params::DEFAULT_OUTPUT_LEN));
+            match params {
+                std::result::Result::Ok(parameters) => parameters,
+                Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
+            }
+        }
     };
 
     let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);

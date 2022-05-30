@@ -35,9 +35,9 @@ pub fn encrypt_directory(
     let mut logger = Logger::new();
 
     if pack_params.dir_mode == DirectoryMode::Recursive {
-        logger.loading(format!("Traversing {} recursively", input));
+        logger.info(format!("Traversing {} recursively", input));
     } else {
-        logger.loading(format!("Traversing {}", input));
+        logger.info(format!("Traversing {}", input));
     }
 
     let index_start_time = Instant::now();
@@ -50,7 +50,7 @@ pub fn encrypt_directory(
     )?;
     let index_duration = index_start_time.elapsed();
     let file_count = files.len();
-    logger.done().success(format!(
+    logger.success(format!(
         "Indexed {} files [took {:.2}s]",
         file_count,
         index_duration.as_secs_f32()
@@ -64,7 +64,7 @@ pub fn encrypt_directory(
             .with_context(|| format!("Unable to create the output file: {}", output))?,
     );
 
-    logger.loading(format!("Creating and compressing files into {}", tmp_name));
+    logger.info(format!("Creating and compressing files into {}", tmp_name));
 
     let zip_start_time = Instant::now();
 
@@ -140,7 +140,7 @@ pub fn encrypt_directory(
     drop(zip);
 
     let zip_duration = zip_start_time.elapsed();
-    logger.done().success(format!(
+    logger.success(format!(
         "Compressed {} files into {}! [took {:.2}s]",
         file_count,
         tmp_name,
@@ -186,7 +186,7 @@ pub fn decrypt_directory(
 
     let file_count = archive.len();
 
-    logger.loading(format!(
+    logger.info(format!(
         "Decompressing {} items into {}",
         file_count, output
     ));
@@ -240,7 +240,7 @@ pub fn decrypt_directory(
     }
 
     let zip_duration = zip_start_time.elapsed();
-    logger.done().success(format!(
+    logger.success(format!(
         "Extracted {} items to {} [took {:.2}s]",
         file_count,
         output,

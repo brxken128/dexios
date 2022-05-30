@@ -173,7 +173,7 @@ pub fn verify(header: &Header, signature: Vec<u8>, key: Secret<[u8; 32]>) -> Res
 }
 
 // this hashes a header with the salt, nonce, and info provided
-pub fn hash(hasher: &mut Hasher, header: &Header) {
+pub fn hash(hasher: &mut Hasher, header: &Header, signature: Option<Vec<u8>>) {
     match &header.header_type.header_version {
         HeaderVersion::V1 => {
             let nonce_len = calc_nonce_len(&header.header_type);
@@ -189,7 +189,17 @@ pub fn hash(hasher: &mut Hasher, header: &Header) {
             hasher.update(&padding);
         }
         HeaderVersion::V2 => {
-            todo!()
+            let nonce_len = calc_nonce_len(&header.header_type);
+            let padding = vec![0u8; 26 - nonce_len];
+            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+
+            hasher.update(&version_info);
+            hasher.update(&algorithm_info);
+            hasher.update(&mode_info);
+            hasher.update(&header.salt);
+            hasher.update(&header.nonce);
+            hasher.update(&padding);
+            hasher.update(&signature.unwrap());
         }
     }
 }

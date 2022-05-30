@@ -67,7 +67,7 @@ pub fn memory_mode(
         header.header_type.algorithm
     ));
 
-    logger.loading(format!("Decrypting {} (this may take a while)", input));
+    logger.info(format!("Decrypting {} (this may take a while)", input));
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
@@ -89,7 +89,7 @@ pub fn memory_mode(
         signature,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
-    logger.done().success(format!(
+    logger.success(format!(
         "Decryption successful! [took {:.2}s]",
         decrypt_duration.as_secs_f32()
     ));
@@ -158,7 +158,7 @@ pub fn stream_mode(
         header.header_type.algorithm
     ));
 
-    logger.loading(format!("Decrypting {} (this may take a while)", input));
+    logger.info(format!("Decrypting {} (this may take a while)", input));
 
     let decrypt_start_time = Instant::now();
     let decryption_result = decrypt_bytes_stream_mode(
@@ -183,14 +183,14 @@ pub fn stream_mode(
 
     match params.bench {
         BenchMode::WriteToFilesystem => {
-            logger.done().success(format!(
+            logger.success(format!(
                 "Decryption successful! File saved as {} [took {:.2}s]",
                 output,
                 decrypt_duration.as_secs_f32(),
             ));
         }
         BenchMode::BenchmarkInMemory => {
-            logger.done().success(format!(
+            logger.success(format!(
                 "Decryption successful! [took {:.2}s]",
                 decrypt_duration.as_secs_f32(),
             ));

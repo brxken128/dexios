@@ -46,7 +46,7 @@ pub fn memory_mode(
 
     logger.info(format!("Using {} for encryption", algorithm));
 
-    logger.loading(format!("Encrypting {} (this may take a while)", input));
+    logger.info(format!("Encrypting {} (this may take a while)", input));
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
@@ -68,7 +68,7 @@ pub fn memory_mode(
     )?;
     let encrypt_duration = encrypt_start_time.elapsed();
 
-    logger.done().success(format!(
+    logger.success(format!(
         "Encryption successful! [took {:.2}s]",
         encrypt_duration.as_secs_f32()
     ));
@@ -130,7 +130,7 @@ pub fn stream_mode(
 
     logger.info(format!("Using {} for encryption", algorithm));
 
-    logger.loading(format!("Encrypting {} (this may take a while)", input));
+    logger.info(format!("Encrypting {} (this may take a while)", input));
 
     let encrypt_start_time = Instant::now();
 
@@ -154,14 +154,14 @@ pub fn stream_mode(
     let encrypt_duration = encrypt_start_time.elapsed();
     match params.bench {
         BenchMode::WriteToFilesystem => {
-            logger.done().success(format!(
+            logger.success(format!(
                 "Encryption successful! File saved as {} [took {:.2}s]",
                 output,
                 encrypt_duration.as_secs_f32(),
             ));
         }
         BenchMode::BenchmarkInMemory => {
-            logger.done().success(format!(
+            logger.success(format!(
                 "Encryption successful! [took {:.2}s]",
                 encrypt_duration.as_secs_f32(),
             ));

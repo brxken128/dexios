@@ -12,7 +12,7 @@ use anyhow::anyhow;
 use anyhow::Result;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
-use paris::success;
+use paris::{success, Logger};
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use std::result::Result::Ok;
@@ -97,7 +97,6 @@ pub fn init_decryption_stream(
     header: &Header,
     signature: Option<Vec<u8>>
 ) -> Result<DecryptStreamCiphers> {
-
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
     match header.header_type.algorithm {
@@ -110,7 +109,9 @@ pub fn init_decryption_stream(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if !verify(&header, signature.unwrap(), key)? {
+                if verify(&header, signature.unwrap(), key)? {
+                    success!("Header HMAC matches");
+                } else {
                     // use newlines with this error as it'll be done on the same line due to paris otherwise
                     return Err(anyhow::anyhow!("\nHeader signature doesn't match or your password was incorrect"))
                 }
@@ -128,7 +129,10 @@ pub fn init_decryption_stream(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if !verify(&header, signature.unwrap(), key)? {
+                if verify(&header, signature.unwrap(), key)? {
+                    success!("Header HMAC matches");
+                } else {
+                    // use newlines with this error as it'll be done on the same line due to paris otherwise
                     return Err(anyhow::anyhow!("\nHeader signature doesn't match or your password was incorrect"))
                 }
             }
@@ -145,7 +149,10 @@ pub fn init_decryption_stream(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if !verify(&header, signature.unwrap(), key)? {
+                if verify(&header, signature.unwrap(), key)? {
+                    success!("Header HMAC matches");
+                } else {
+                    // use newlines with this error as it'll be done on the same line due to paris otherwise
                     return Err(anyhow::anyhow!("\nHeader signature doesn't match or your password was incorrect"))
                 }
             }

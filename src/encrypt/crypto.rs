@@ -135,7 +135,7 @@ pub fn encrypt_bytes_memory_mode(
 
     if bench == BenchMode::WriteToFilesystem {
         let write_start_time = Instant::now();
-        crate::header::write_to_file(output, &header, Some(signature))?;
+        crate::header::write_to_file(output, &header, Some(signature.clone()))?;
         output.write_all(&encrypted_bytes)?;
         let write_duration = write_start_time.elapsed();
         success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
@@ -144,7 +144,7 @@ pub fn encrypt_bytes_memory_mode(
     let mut hasher = blake3::Hasher::new();
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::header::hash(&mut hasher, &header);
+        crate::header::hash(&mut hasher, &header, Some(signature));
         hasher.update(&encrypted_bytes);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -179,15 +179,14 @@ pub fn encrypt_bytes_stream_mode(
 
     let (mut streams, header, signature) = init_encryption_stream(raw_key, header_type)?;
 
-
     if bench == BenchMode::WriteToFilesystem {
-        crate::header::write_to_file(output, &header, Some(signature))?;
+        crate::header::write_to_file(output, &header, Some(signature.clone()))?;
     }
 
     let mut hasher = blake3::Hasher::new();
 
     if hash == HashMode::CalculateHash {
-        crate::header::hash(&mut hasher, &header);
+        crate::header::hash(&mut hasher, &header, Some(signature));
     }
 
     let mut buffer = [0u8; BLOCK_SIZE];

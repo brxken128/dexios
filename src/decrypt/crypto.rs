@@ -13,7 +13,7 @@ use anyhow::Result;
 use blake3::Hasher;
 use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use deoxys::DeoxysII256;
-use paris::success;
+use paris::{Logger, success};
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
@@ -46,7 +46,7 @@ pub fn decrypt_bytes_memory_mode(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if verify(&header, signature.unwrap(), key)? {
+                if verify(&header, signature.clone().unwrap(), key)? {
                     success!("Header HMAC signature matches");
                 } else {
                     return Err(anyhow::anyhow!("Header signature doesn't match or your password was incorrect"))
@@ -68,7 +68,7 @@ pub fn decrypt_bytes_memory_mode(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if verify(&header, signature.unwrap(), key)? {
+                if verify(&header, signature.clone().unwrap(), key)? {
                     success!("Header HMAC signature matches");
                 } else {
                     return Err(anyhow::anyhow!("Header signature doesn't match or your password was incorrect"))
@@ -90,7 +90,7 @@ pub fn decrypt_bytes_memory_mode(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if verify(&header, signature.unwrap(), key)? {
+                if verify(&header, signature.clone().unwrap(), key)? {
                     success!("Header HMAC signature matches");
                 } else {
                     return Err(anyhow::anyhow!("Header signature doesn't match or your password was incorrect"))
@@ -108,7 +108,7 @@ pub fn decrypt_bytes_memory_mode(
 
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::header::hash(&mut hasher, header);
+        crate::header::hash(&mut hasher, header, signature);
         hasher.update(data);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -146,10 +146,10 @@ pub fn decrypt_bytes_stream_mode(
 ) -> Result<()> {
     let mut hasher = blake3::Hasher::new();
 
-    let mut streams = init_decryption_stream(raw_key, header, signature)?;
+    let mut streams = init_decryption_stream(raw_key, header, signature.clone())?;
 
     if hash == HashMode::CalculateHash {
-        crate::header::hash(&mut hasher, header);
+        crate::header::hash(&mut hasher, header, signature);
     }
 
     let mut buffer = [0u8; BLOCK_SIZE + 16]; // 16 bytes is the length of the AEAD tag

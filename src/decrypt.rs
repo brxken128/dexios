@@ -4,14 +4,10 @@ use crate::global::enums::BenchMode;
 use crate::global::enums::CipherMode;
 use crate::global::enums::EraseMode;
 use crate::global::enums::HeaderFile;
-use crate::global::enums::HeaderVersion;
 use crate::global::enums::OutputFile;
 use crate::global::structs::CryptoParams;
-use crate::header::verify;
-use crate::key::argon2_hash;
 use crate::key::get_secret;
 use crate::prompt::overwrite_check;
-use crate::secret::Secret;
 use anyhow::{Context, Ok, Result};
 use paris::Logger;
 use std::fs::File;
@@ -66,25 +62,6 @@ pub fn memory_mode(
 
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
-    if header.header_type.header_version == HeaderVersion::V2 {
-        // this next line is sketchy, and is the only way to clone a raw key
-        // deriving clone/copy against the secret wrapper would be even worse
-        // HMAC verification is the only time raw_keys are cloned
-        // argon2 hash zeroizes the raw key after use
-        // verifying/sign functions zeroize the key after use
-        let raw_key = Secret::new(raw_key.expose().clone());
-
-
-        let signature_from_header = signature.unwrap();
-        let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
-
-        if verify(&header, signature_from_header, key)? {
-            logger.success("Header HMAC signature matches");
-        } else {
-            return Err(anyhow::anyhow!("Header signature doesn't match or your password was incorrect"))
-        }
-    }
-
     logger.info(format!(
         "Using {} for decryption",
         header.header_type.algorithm
@@ -109,6 +86,7 @@ pub fn memory_mode(
         raw_key,
         params.bench,
         params.hash_mode,
+        signature,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
     logger.done().success(format!(
@@ -166,24 +144,6 @@ pub fn stream_mode(
 
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
-    if header.header_type.header_version == HeaderVersion::V2 {
-        // this next line is sketchy, and is the only way to clone a raw key
-        // HMAC verification is the only time raw_keys are cloned
-        // argon2 hash zeroizes the raw key after use
-        // verifying/sign functions zeroize the key after use
-        let raw_key = Secret::new(raw_key.expose().clone());
-
-
-        let signature_from_header = signature.unwrap();
-        let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
-
-        if verify(&header, signature_from_header, key)? {
-            logger.success("Header HMAC signature matches");
-        } else {
-            return Err(anyhow::anyhow!("Header signature doesn't match or your password was incorrect"))
-        }
-    }
-
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
             File::create(output)
@@ -208,6 +168,7 @@ pub fn stream_mode(
         &header,
         params.bench,
         params.hash_mode,
+        signature,
     );
 
     if decryption_result.is_err() {

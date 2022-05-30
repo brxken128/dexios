@@ -1,6 +1,7 @@
-use crate::global::enums::{Algorithm, BenchMode, HashMode, OutputFile};
+use crate::global::enums::{Algorithm, BenchMode, HashMode, OutputFile, HeaderVersion};
 use crate::global::structs::Header;
 use crate::global::BLOCK_SIZE;
+use crate::header::verify;
 use crate::key::argon2_hash;
 use crate::secret::Secret;
 use crate::streams::init_decryption_stream;
@@ -30,6 +31,7 @@ pub fn decrypt_bytes_memory_mode(
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,
+    signature: Option<Vec<u8>>,
 ) -> Result<()> {
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
@@ -38,11 +40,18 @@ pub fn decrypt_bytes_memory_mode(
             let nonce = Nonce::from_slice(&header.nonce);
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => {
-                    drop(key);
                     cipher
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
+
+            if header.header_type.header_version == HeaderVersion::V2 {
+                if verify(&header, signature.unwrap(), key)? {
+                    success!("Header HMAC signature matches");
+                } else {
+                    return Err(anyhow::anyhow!("Header signature doesn't match or your password was incorrect"))
+                }
+            }
 
             match cipher.decrypt(nonce, data) {
                 Ok(decrypted_bytes) => decrypted_bytes,
@@ -53,11 +62,18 @@ pub fn decrypt_bytes_memory_mode(
             let nonce = XNonce::from_slice(&header.nonce);
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => {
-                    drop(key);
                     cipher
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
+
+            if header.header_type.header_version == HeaderVersion::V2 {
+                if verify(&header, signature.unwrap(), key)? {
+                    success!("Header HMAC signature matches");
+                } else {
+                    return Err(anyhow::anyhow!("Header signature doesn't match or your password was incorrect"))
+                }
+            }
 
             match cipher.decrypt(nonce, data) {
                 Ok(decrypted_bytes) => decrypted_bytes,
@@ -68,11 +84,18 @@ pub fn decrypt_bytes_memory_mode(
             let nonce = deoxys::Nonce::from_slice(&header.nonce);
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => {
-                    drop(key);
                     cipher
                 }
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
+
+            if header.header_type.header_version == HeaderVersion::V2 {
+                if verify(&header, signature.unwrap(), key)? {
+                    success!("Header HMAC signature matches");
+                } else {
+                    return Err(anyhow::anyhow!("Header signature doesn't match or your password was incorrect"))
+                }
+            }
 
             match cipher.decrypt(nonce, data) {
                 Ok(decrypted_bytes) => decrypted_bytes,
@@ -119,10 +142,11 @@ pub fn decrypt_bytes_stream_mode(
     header: &Header,
     bench: BenchMode,
     hash: HashMode,
+    signature: Option<Vec<u8>>
 ) -> Result<()> {
     let mut hasher = blake3::Hasher::new();
 
-    let mut streams = init_decryption_stream(raw_key, header)?;
+    let mut streams = init_decryption_stream(raw_key, header, signature)?;
 
     if hash == HashMode::CalculateHash {
         crate::header::hash(&mut hasher, header);

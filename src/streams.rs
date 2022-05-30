@@ -110,10 +110,9 @@ pub fn init_decryption_stream(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if verify(&header, signature.unwrap(), key)? {
-                    success!("Header HMAC signature matches");
-                } else {
-                    return Err(anyhow::anyhow!("Header signature doesn't match or your password was incorrect"))
+                if !verify(&header, signature.unwrap(), key)? {
+                    // use newlines with this error as it'll be done on the same line due to paris otherwise
+                    return Err(anyhow::anyhow!("\nHeader signature doesn't match or your password was incorrect"))
                 }
             }
 
@@ -129,10 +128,8 @@ pub fn init_decryption_stream(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if verify(&header, signature.unwrap(), key)? {
-                    success!("Header HMAC signature matches");
-                } else {
-                    return Err(anyhow::anyhow!("Header signature doesn't match or your password was incorrect"))
+                if !verify(&header, signature.unwrap(), key)? {
+                    return Err(anyhow::anyhow!("\nHeader signature doesn't match or your password was incorrect"))
                 }
             }
 
@@ -148,10 +145,8 @@ pub fn init_decryption_stream(
             };
 
             if header.header_type.header_version == HeaderVersion::V2 {
-                if verify(&header, signature.unwrap(), key)? {
-                    success!("Header HMAC signature matches");
-                } else {
-                    return Err(anyhow::anyhow!("Header signature doesn't match or your password was incorrect"))
+                if !verify(&header, signature.unwrap(), key)? {
+                    return Err(anyhow::anyhow!("\nHeader signature doesn't match or your password was incorrect"))
                 }
             }
 

@@ -6,9 +6,10 @@ Dexios is a fast, secure, and open source command-line encryption tool. It's wri
 
 For notes on Deoxys-II, please see the [Security Notices](https://brxken128.github.io/dexios/Introduction.html#security-notices) section of the Documentation.
 
-You can install Dexios through cargo, with
+You can install Dexios through cargo, with:
 
-`RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3" cargo install dexios`
+Linux/FreeBSD: `RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3" cargo install dexios`
+Windows: `setx RUSTFLAGS "-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3" && cargo install dexios`
 
 The `RUSTFLAGS` tell the Rust compiler to optimise the binary for your processor's architecture, and to enable features that will speed up cryptographic functions. It really is a **lot** faster!
 

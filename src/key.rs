@@ -1,3 +1,4 @@
+use std::io::BufRead;
 use std::io::stdin;
 use std::io::stdout;
 use std::io::Write;
@@ -17,8 +18,10 @@ use rand::prelude::StdRng;
 use rand::RngCore;
 use rand::SeedableRng;
 use std::result::Result::Ok;
-use termion::input::TermRead;
 use zeroize::Zeroize;
+
+#[cfg(target_family = "unix")]
+use termion::input::TermRead;
 
 // this generates a salt for password hashing
 pub fn gen_salt() -> [u8; SALT_LEN] {
@@ -71,7 +74,8 @@ pub fn argon2_hash(
 
 // this function interacts with stdin and stdout to hide password input
 // it uses termion's `read_passwd` function for terminal manipulation
-fn read_password_from_stdin(prompt: &str) -> Result<String> {
+#[cfg(target_family = "unix")]
+fn read_password_from_stdin_unix(prompt: &str) -> Result<String> {
     let stdout = stdout();
     let mut stdout = stdout.lock();
     let stdin = stdin();
@@ -95,16 +99,49 @@ fn read_password_from_stdin(prompt: &str) -> Result<String> {
     }
 }
 
+#[cfg(target_family = "windows")]
+fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
+    let mut stdout = stdout();
+    let stdin = stdin();
+
+    let mut password = String::new();
+
+    stdout
+        .write_all(prompt.as_bytes())
+        .context("Unable to write to stdout")?;
+    stdout.flush().context("Unable to flush stdout")?;
+
+    
+    if BufRead::read_line(&mut stdin.lock(), &mut password).is_ok() {
+        stdout
+            .write_all("\n".as_bytes())
+            .context("Unable to write to stdout")?;
+        Ok(password.trim_end().to_string())
+    } else {
+        stdout
+            .write_all("\n".as_bytes())
+            .context("Unable to write to stdout")?;
+        Err(anyhow::anyhow!("Error reading password from terminal"))
+    }
+}
+
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes
 fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
     Ok(loop {
-        let input = read_password_from_stdin("Password: ").context("Unable to read password")?;
+        #[cfg(target_family = "unix")]
+        let input = read_password_from_stdin_unix("Password: ").context("Unable to read password")?;
+        #[cfg(target_family = "windows")]
+        let input = read_password_from_stdin_windows("Password: ").context("Unable to read password")?;
         if !validation {
             return Ok(Secret::new(input.into_bytes()));
         }
 
-        let mut input_validation = read_password_from_stdin("Password (for validation): ")
+        #[cfg(target_family = "unix")]
+        let mut input_validation = read_password_from_stdin_unix("Password (for validation): ")
+            .context("Unable to read password")?;
+        #[cfg(target_family = "windows")]
+        let mut input_validation = read_password_from_stdin_windows("Password (for validation): ")
             .context("Unable to read password")?;
 
         if input == input_validation && !input.is_empty() {

@@ -32,6 +32,8 @@ rand = "0.8.5"
 clap = { version = "3.1.18", features = ["cargo"] }
 anyhow = "1.0.57"
 paris = { version = "1.5.13", features = ["macros"] }
+
+[target.'cfg(unix)'.dependencies]
 termion = "1.5.6"
 
 zip = { version = "0.6.2", default-features = false }

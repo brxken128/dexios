@@ -278,7 +278,7 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
             if verify(&header, signature)? {
                 Ok(header)
             } else {
-                Err(anyhow::anyhow!("Header invalid or has been tampered with"))
+                Err(anyhow::anyhow!("Header signature doesn't match"))
             }
         }
     }

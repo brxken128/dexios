@@ -52,8 +52,8 @@ pub fn argon2_hash(
             }
         }
         HeaderVersion::V2 => {
-            let mem = 32768; // 32KiB - uses about 36MiB of memory
-            let params = Params::new(mem, 12, 4, Some(Params::DEFAULT_OUTPUT_LEN));
+            // 256MiB of memory, 12 iterations, 4 levels of parallelism
+            let params = Params::new(262144, 12, 4, Some(Params::DEFAULT_OUTPUT_LEN));
             match params {
                 std::result::Result::Ok(parameters) => parameters,
                 Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),

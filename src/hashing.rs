@@ -28,7 +28,7 @@ pub fn hash_stream(files: &Vec<String>) -> Result<()> {
 
         let mut hasher = blake3::Hasher::new();
 
-        let mut buffer = [0u8; BLOCK_SIZE];
+        let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
         loop {
             let read_count = input_file

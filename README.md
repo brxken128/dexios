@@ -9,6 +9,7 @@ For notes on Deoxys-II, please see the [Security Notices](https://brxken128.gith
 You can install Dexios through cargo, with:
 
 Linux/FreeBSD: `RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3" cargo install dexios`
+
 Windows: `setx RUSTFLAGS "-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3" && cargo install dexios`
 
 The `RUSTFLAGS` tell the Rust compiler to optimise the binary for your processor's architecture, and to enable features that will speed up cryptographic functions. It really is a **lot** faster!

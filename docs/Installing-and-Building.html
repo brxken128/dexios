@@ -144,14 +144,21 @@
                     <main>
                         <h2 id="installing"><a class="header" href="#installing">Installing</a></h2>
 <p>To install Dexios, there are two main options.</p>
-<p>Firstly, you can install via <code>cargo</code> with <code>cargo install dexios</code>, or you may download the binary from the release page (make sure you mark it as executable, otherwise it won't run!). </p>
+<p>Firstly, you can install via <code>cargo</code> with <code>cargo install dexios</code>, or you may download a binary from the release page (make sure you mark it as executable, otherwise it won't run!).</p>
+<p>We offer binaries for both Windows and FreeBSD, but our tests run on Ubuntu so Windows-specific issues may not be picked up. Please <a href="https://github.com/brxken128/dexios/issues">open a Github issue</a> if you encounter any.</p>
+<h3 id="linuxfreebsd"><a class="header" href="#linuxfreebsd">Linux/FreeBSD</a></h3>
 <p>To use <code>cargo</code> for installing, ensure you have <code>gcc</code> installed on your system.</p>
 <p>For better performance, you may install via <code>cargo</code> with the command <code>RUSTFLAGS=&quot;-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3&quot; cargo install dexios</code>.</p>
+<h3 id="windows"><a class="header" href="#windows">Windows</a></h3>
+<p>Please use Windows Terminal or another Terminal program, as <code>cmd</code> does not have support for the command-line icons used by Dexios.</p>
+<p>You may also use <code>cargo</code> for installing, just run the command:</p>
+<p><code>setx RUSTFLAGS &quot;-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3&quot; &amp;&amp; cargo install dexios</code></p>
 <h2 id="building-notes"><a class="header" href="#building-notes">Building Notes</a></h2>
 <p>As mentioned in the <a href="https://docs.rs/aes-gcm/latest/aes_gcm/index.html#performance-notes">AES-GCM crate docs</a>, please enable certain flags while building. For example:</p>
-<p><code>RUSTFLAGS=&quot;-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3&quot;</code></p>
+<p>For Linux/FreeBSD systems, use <code>RUSTFLAGS=&quot;-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3&quot;</code></p>
+<p>For Windows, use <code>setx RUSTFLAGS &quot;-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3&quot;</code></p>
 <p>Change native to whichever CPU family/model you are going to be running the code on, if it's going to be ran on a different machine.</p>
-<p><code>gcc</code> is required for building.</p>
+<p><code>gcc</code> is required for building on Linux and FreeBSD.</p>
 <h2 id="downloading-and-running-a-pre-compiled-binary"><a class="header" href="#downloading-and-running-a-pre-compiled-binary">Downloading and running a pre-compiled binary</a></h2>
 <p>The <a href="https://github.com/brxken128/dexios/releases">Github Releases</a> page contains pre-compiled binaries, generated with Github Actions. These are ideal if you don't want to go through the hassle of building, and they should run on any system (provided the architecture matches). They are the exact same binaries from Github Actions, so we can ensure they haven't been tampered with. </p>
 <p>We encourage users to check the hash provided in the GA Workflow, and compare with the file you have downloaded.</p>

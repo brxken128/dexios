@@ -6,13 +6,19 @@ Dexios is a fast, secure, and open source command-line encryption tool. It's wri
 
 For notes on Deoxys-II, please see the [Security Notices](https://brxken128.github.io/dexios/Introduction.html#security-notices) section of the Documentation.
 
-You can install Dexios through cargo, with
+You can install Dexios through cargo, with:
+
+Linux/FreeBSD:
 
 `RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3" cargo install dexios`
 
+Windows:
+
+`setx RUSTFLAGS "-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3" && cargo install dexios`
+
 The `RUSTFLAGS` tell the Rust compiler to optimise the binary for your processor's architecture, and to enable features that will speed up cryptographic functions. It really is a **lot** faster!
 
-Or you can download a pre-compiled binary from [the releases page](https://github.com/brxken128/dexios/releases)!
+Or you can download a pre-compiled binary from [the releases page](https://github.com/brxken128/dexios/releases)! These binaries are built with CPU support for `aes`, `sse2`, `sse4.1`, and `ssse3` - if they error while running them, you will probably have to build Dexios yourself. Feel free to [open a Github issue](https://github.com/brxken128/dexios/issues) specifying your CPU and OS, and we can probably set up a Github action to build Dexios without this support (at the cost of performance).
 
 ## Donating
 
@@ -33,9 +39,11 @@ We encourage anyone who used an older version of Dexios to decrypt their files, 
 
 ## Supported Operating Systems
 
-Currently, we only provide support for two operating systems - Linux (all distributions), and FreeBSD. Dexios has been tested by myself as working on many Linux distributions, and on FreeBSD 13, 13.1 and 14.
+Windows, FreeBSD and Linux all are supported by Dexios!
 
-I personally have no plans to support Windows at this moment in time. Most things within Dexios should work on Windows, except `termion` and reading the password input from the terminal. You are welcome to submit a PR if you'd like to add this functionality, or a Github issue requesting it - I'm not fully against the idea at all (it's just not at the top of my priorities right now).
+Windows support was added in v8.3.0 - however, there is a catch. When you enter a password into the terminal, it will not be hidden - we have plans to fix this in the near future (keyfiles and environment variables still work flawlessly!) Please [open a Github issue](https://github.com/brxken128/dexios/issues) if you encounter anything not outlined here.
+
+On Windows, I highly recommend using Windows Terminal, or another terminal program, as `cmd` can't display the icons used by Dexios for command-line output.
 
 ## Contributing
 

@@ -1,6 +1,7 @@
 use std::io::stdin;
 use std::io::stdout;
 use std::io::Write;
+use std::time::Instant;
 
 use crate::file::get_bytes;
 use crate::global::enums::HeaderVersion;
@@ -12,13 +13,19 @@ use anyhow::{Context, Result};
 use argon2::Argon2;
 use argon2::Params;
 use paris::info;
+use paris::success;
 use paris::warn;
 use rand::prelude::StdRng;
 use rand::RngCore;
 use rand::SeedableRng;
 use std::result::Result::Ok;
-use termion::input::TermRead;
 use zeroize::Zeroize;
+
+#[cfg(target_family = "unix")]
+use termion::input::TermRead;
+
+#[cfg(target_family = "windows")]
+use std::io::BufRead;
 
 // this generates a salt for password hashing
 pub fn gen_salt() -> [u8; SALT_LEN] {
@@ -39,8 +46,16 @@ pub fn argon2_hash(
 
     let params = match version {
         HeaderVersion::V1 => {
-            // 8192KiB of memory, 8 iterations, 4 levels of parallelism
+            // 8MiB of memory, 8 iterations, 4 levels of parallelism
             let params = Params::new(8192, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN));
+            match params {
+                std::result::Result::Ok(parameters) => parameters,
+                Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
+            }
+        }
+        HeaderVersion::V2 => {
+            // 256MiB of memory, 8 iterations, 4 levels of parallelism
+            let params = Params::new(262144, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN));
             match params {
                 std::result::Result::Ok(parameters) => parameters,
                 Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
@@ -48,13 +63,16 @@ pub fn argon2_hash(
         }
     };
 
+    let hash_start_time = Instant::now();
     let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
     let result = argon2.hash_password_into(raw_key.expose(), salt, &mut key);
     drop(raw_key);
+    let hash_duration = hash_start_time.elapsed();
+    success!("Successfully hashed your key [took {:.2}s]", hash_duration.as_secs_f32());
 
     if result.is_err() {
         return Err(anyhow::anyhow!(
-            "Error while hashing your password with argon2id"
+            "Error while hashing your key with argon2id"
         ));
     }
 
@@ -63,7 +81,8 @@ pub fn argon2_hash(
 
 // this function interacts with stdin and stdout to hide password input
 // it uses termion's `read_passwd` function for terminal manipulation
-fn read_password_from_stdin(prompt: &str) -> Result<String> {
+#[cfg(target_family = "unix")]
+fn read_password_from_stdin_unix(prompt: &str) -> Result<String> {
     let stdout = stdout();
     let mut stdout = stdout.lock();
     let stdin = stdin();
@@ -87,16 +106,44 @@ fn read_password_from_stdin(prompt: &str) -> Result<String> {
     }
 }
 
+#[cfg(target_family = "windows")]
+fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
+    let mut stdout = stdout();
+    let stdin = stdin();
+
+    let mut password = String::new();
+
+    stdout
+        .write_all(prompt.as_bytes())
+        .context("Unable to write to stdout")?;
+    stdout.flush().context("Unable to flush stdout")?;
+
+    if BufRead::read_line(&mut stdin.lock(), &mut password).is_ok() {
+        Ok(password.trim_end().to_string())
+    } else {
+        Err(anyhow::anyhow!("Error reading password from terminal"))
+    }
+}
+
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes
 fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
     Ok(loop {
-        let input = read_password_from_stdin("Password: ").context("Unable to read password")?;
+        #[cfg(target_family = "unix")]
+        let input =
+            read_password_from_stdin_unix("Password: ").context("Unable to read password")?;
+        #[cfg(target_family = "windows")]
+        let input =
+            read_password_from_stdin_windows("Password: ").context("Unable to read password")?;
         if !validation {
             return Ok(Secret::new(input.into_bytes()));
         }
 
-        let mut input_validation = read_password_from_stdin("Password (for validation): ")
+        #[cfg(target_family = "unix")]
+        let mut input_validation = read_password_from_stdin_unix("Password (for validation): ")
+            .context("Unable to read password")?;
+        #[cfg(target_family = "windows")]
+        let mut input_validation = read_password_from_stdin_windows("Password (for validation): ")
             .context("Unable to read password")?;
 
         if input == input_validation && !input.is_empty() {

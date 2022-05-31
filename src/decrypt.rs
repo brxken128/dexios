@@ -35,7 +35,7 @@ pub fn memory_mode(
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let header = match header_file {
+    let (header, signature) = match header_file {
         HeaderFile::Some(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
@@ -62,12 +62,12 @@ pub fn memory_mode(
 
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
-    logger.info(format!("Using {} for decryption", header.header_type.algorithm));
-
-    logger.loading(format!(
-        "Decrypting {} (this may take a while)",
-        input
+    logger.info(format!(
+        "Using {} for decryption",
+        header.header_type.algorithm
     ));
+
+    logger.info(format!("Decrypting {} (this may take a while)", input));
 
     let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
         OutputFile::Some(
@@ -86,9 +86,10 @@ pub fn memory_mode(
         raw_key,
         params.bench,
         params.hash_mode,
+        signature,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
-    logger.done().success(format!(
+    logger.success(format!(
         "Decryption successful! [took {:.2}s]",
         decrypt_duration.as_secs_f32()
     ));
@@ -120,7 +121,7 @@ pub fn stream_mode(
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let header = match header_file {
+    let (header, signature) = match header_file {
         HeaderFile::Some(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
@@ -152,12 +153,12 @@ pub fn stream_mode(
         OutputFile::None
     };
 
-    logger.info(format!("Using {} for decryption", header.header_type.algorithm));
-
-    logger.loading(format!(
-        "Decrypting {} (this may take a while)",
-        input
+    logger.info(format!(
+        "Using {} for decryption",
+        header.header_type.algorithm
     ));
+
+    logger.info(format!("Decrypting {} (this may take a while)", input));
 
     let decrypt_start_time = Instant::now();
     let decryption_result = decrypt_bytes_stream_mode(
@@ -167,6 +168,7 @@ pub fn stream_mode(
         &header,
         params.bench,
         params.hash_mode,
+        signature,
     );
 
     if decryption_result.is_err() {
@@ -181,14 +183,14 @@ pub fn stream_mode(
 
     match params.bench {
         BenchMode::WriteToFilesystem => {
-            logger.done().success(format!(
+            logger.success(format!(
                 "Decryption successful! File saved as {} [took {:.2}s]",
                 output,
                 decrypt_duration.as_secs_f32(),
             ));
         }
         BenchMode::BenchmarkInMemory => {
-            logger.done().success(format!(
+            logger.success(format!(
                 "Decryption successful! [took {:.2}s]",
                 decrypt_duration.as_secs_f32(),
             ));

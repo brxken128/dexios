@@ -150,7 +150,7 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
     Ok(passes)
 }
 
-pub fn pack_params(sub_matches: &ArgMatches) -> Result<PackMode> {
+pub fn pack_params(sub_matches: &ArgMatches) -> PackMode {
     let dir_mode = if sub_matches.is_present("recursive") {
         DirectoryMode::Recursive
     } else {
@@ -161,27 +161,6 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<PackMode> {
         HiddenFilesMode::Include
     } else {
         HiddenFilesMode::Exclude
-    };
-
-    let compression_level = if sub_matches.is_present("level") {
-        let result = sub_matches
-            .value_of("level")
-            .context("No compression level specified")?
-            .parse();
-
-        if let Ok(value) = result {
-            if (0..=9).contains(&value) {
-                value
-            } else {
-                warn!("Compression level is out of specified bounds - using the default (6).");
-                6
-            }
-        } else {
-            warn!("Unable to read compression level provided - using the default (6).");
-            6
-        }
-    } else {
-        6
     };
 
     let excluded: Vec<String> = if sub_matches.is_present("exclude") {
@@ -199,14 +178,13 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<PackMode> {
     };
 
     let pack_params = PackMode {
-        compression_level,
         dir_mode,
         exclude: excluded,
         hidden,
         print_mode,
     };
 
-    Ok(pack_params)
+    pack_params
 }
 
 pub fn unpack_params(sub_matches: &ArgMatches) -> PrintMode {

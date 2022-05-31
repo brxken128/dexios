@@ -16,7 +16,7 @@ pub fn get_answer(prompt: &str, default: bool, skip: bool) -> Result<bool> {
 
     let answer_bool = loop {
         let mut logger = Logger::new();
-        
+
         logger.same().warn(format!("{prompt} {switch}: "));
         io::stdout().flush().context("Unable to flush stdout")?;
 

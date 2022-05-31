@@ -46,7 +46,7 @@ jobs:
         command: check
         args: --release
 
-  build:
+  build-linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -67,5 +67,24 @@ jobs:
     - name: Upload Binary as artifact
       uses: actions/upload-artifact@v3
       with:
-        name: dexios
+        name: dexios-linux-amd64
         path: target/release/dexios
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+      with:
+          toolchain: stable
+    - name: Build
+      uses: actions-rs/cargo@v1
+      env:
+        RUSTFLAGS: -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3
+      with:
+        command: build
+        args: --release
+    - name: Upload Binary as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: dexios-windows-amd64
+        path: target/release/dexios.exe

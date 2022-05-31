@@ -1,6 +1,7 @@
-use crate::global::enums::{Algorithm, BenchMode, HashMode, OutputFile};
+use crate::global::enums::{Algorithm, BenchMode, HashMode, HeaderVersion, OutputFile};
 use crate::global::structs::Header;
 use crate::global::BLOCK_SIZE;
+use crate::header::verify;
 use crate::key::argon2_hash;
 use crate::secret::Secret;
 use crate::streams::init_decryption_stream;
@@ -30,6 +31,7 @@ pub fn decrypt_bytes_memory_mode(
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,
+    signature: Option<Vec<u8>>,
 ) -> Result<()> {
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
@@ -37,12 +39,19 @@ pub fn decrypt_bytes_memory_mode(
         Algorithm::Aes256Gcm => {
             let nonce = Nonce::from_slice(&header.nonce);
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    drop(key);
-                    cipher
-                }
+                Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
+
+            if header.header_type.header_version == HeaderVersion::V2 {
+                if verify(header, signature.clone(), key)? {
+                    success!("Header HMAC signature matches");
+                } else {
+                    return Err(anyhow::anyhow!(
+                        "Header signature doesn't match or your password was incorrect"
+                    ));
+                }
+            }
 
             match cipher.decrypt(nonce, data) {
                 Ok(decrypted_bytes) => decrypted_bytes,
@@ -52,12 +61,19 @@ pub fn decrypt_bytes_memory_mode(
         Algorithm::XChaCha20Poly1305 => {
             let nonce = XNonce::from_slice(&header.nonce);
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    drop(key);
-                    cipher
-                }
+                Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
+
+            if header.header_type.header_version == HeaderVersion::V2 {
+                if verify(header, signature.clone(), key)? {
+                    success!("Header HMAC signature matches");
+                } else {
+                    return Err(anyhow::anyhow!(
+                        "Header signature doesn't match or your password was incorrect"
+                    ));
+                }
+            }
 
             match cipher.decrypt(nonce, data) {
                 Ok(decrypted_bytes) => decrypted_bytes,
@@ -67,12 +83,19 @@ pub fn decrypt_bytes_memory_mode(
         Algorithm::DeoxysII256 => {
             let nonce = deoxys::Nonce::from_slice(&header.nonce);
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
-                Ok(cipher) => {
-                    drop(key);
-                    cipher
-                }
+                Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
+
+            if header.header_type.header_version == HeaderVersion::V2 {
+                if verify(header, signature.clone(), key)? {
+                    success!("Header HMAC signature matches");
+                } else {
+                    return Err(anyhow::anyhow!(
+                        "Header signature doesn't match or your password was incorrect"
+                    ));
+                }
+            }
 
             match cipher.decrypt(nonce, data) {
                 Ok(decrypted_bytes) => decrypted_bytes,
@@ -85,7 +108,7 @@ pub fn decrypt_bytes_memory_mode(
 
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::header::hash(&mut hasher, header);
+        crate::header::hash(&mut hasher, header, signature);
         hasher.update(data);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -119,21 +142,22 @@ pub fn decrypt_bytes_stream_mode(
     header: &Header,
     bench: BenchMode,
     hash: HashMode,
+    signature: Option<Vec<u8>>,
 ) -> Result<()> {
     let mut hasher = blake3::Hasher::new();
 
-    let mut streams = init_decryption_stream(raw_key, header)?;
+    let mut streams = init_decryption_stream(raw_key, header, signature.clone())?;
 
     if hash == HashMode::CalculateHash {
-        crate::header::hash(&mut hasher, header);
+        crate::header::hash(&mut hasher, header, signature);
     }
 
-    let mut buffer = [0u8; BLOCK_SIZE + 16]; // 16 bytes is the length of the AEAD tag
+    let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();
 
     loop {
         let read_count = input.read(&mut buffer)?;
         if read_count == (BLOCK_SIZE + 16) {
-            let decrypted_data = match streams.decrypt_next(buffer.as_slice()) {
+            let decrypted_data = match streams.decrypt_next(buffer.as_ref()) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file.")),
             };

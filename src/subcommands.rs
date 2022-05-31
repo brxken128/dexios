@@ -39,7 +39,7 @@ pub fn erase(sub_matches: &ArgMatches) -> Result<()> {
 }
 
 pub fn pack(sub_matches: &ArgMatches) -> Result<()> {
-    let pack_params = pack_params(sub_matches)?;
+    let pack_params = pack_params(sub_matches);
     let sub_matches_encrypt = sub_matches.subcommand_matches("encrypt").unwrap();
     let params = parameter_handler(sub_matches_encrypt)?;
     let algorithm = encrypt_additional_params(sub_matches_encrypt)?;

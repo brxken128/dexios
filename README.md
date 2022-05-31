@@ -18,7 +18,7 @@ Windows:
 
 The `RUSTFLAGS` tell the Rust compiler to optimise the binary for your processor's architecture, and to enable features that will speed up cryptographic functions. It really is a **lot** faster!
 
-Or you can download a pre-compiled binary from [the releases page](https://github.com/brxken128/dexios/releases)!
+Or you can download a pre-compiled binary from [the releases page](https://github.com/brxken128/dexios/releases)! These binaries are built with CPU support for `aes`, `sse2`, `sse4.1`, and `ssse3` - if they error while running them, you will probably have to build Dexios yourself. Feel free to [open a Github issue](https://github.com/brxken128/dexios/issues) specifying your CPU and OS, and we can probably set up a Github action to build Dexios without this support (at the cost of performance).
 
 ## Donating
 

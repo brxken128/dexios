@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="long-logo.png" width="320" />
+  <img src="https://github.com/brxken128/dexios/raw/master/long-logo.png" width="320" />
 </p>
 
 

@@ -1,6 +1,6 @@
 use crate::global::enums::{
-    Algorithm, BenchMode, CipherMode, EraseMode, HashMode, HeaderVersion,
-    KeyFile, PasswordMode, SkipMode,
+    Algorithm, BenchMode, CipherMode, EraseMode, HashMode, HeaderVersion, KeyFile, PasswordMode,
+    SkipMode,
 };
 use crate::global::SALT_LEN;
 

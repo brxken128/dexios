@@ -2,10 +2,9 @@
 // it returns information (e.g. CryptoParams) to functions that require it
 
 use crate::global::enums::{
-    Algorithm, BenchMode, EraseMode, HashMode, HeaderFile, KeyFile,
-    PasswordMode, SkipMode,
+    Algorithm, BenchMode, EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
 };
-use crate::global::structs::{CryptoParams};
+use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 use paris::warn;

@@ -89,7 +89,7 @@ pub fn memory_mode(
         signature,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
-    
+
     match params.bench {
         BenchMode::WriteToFilesystem => {
             logger.success(format!(

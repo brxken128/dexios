@@ -68,7 +68,10 @@ pub fn argon2_hash(
     let result = argon2.hash_password_into(raw_key.expose(), salt, &mut key);
     drop(raw_key);
     let hash_duration = hash_start_time.elapsed();
-    success!("Successfully hashed your key [took {:.2}s]", hash_duration.as_secs_f32());
+    success!(
+        "Successfully hashed your key [took {:.2}s]",
+        hash_duration.as_secs_f32()
+    );
 
     if result.is_err() {
         return Err(anyhow::anyhow!(

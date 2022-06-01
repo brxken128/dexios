@@ -42,6 +42,8 @@ pub fn encrypt_bytes_memory_mode(
         algorithm,
     };
 
+    let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
+
     let (header, encrypted_bytes) = match algorithm {
         Algorithm::Aes256Gcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
@@ -52,8 +54,6 @@ pub fn encrypt_bytes_memory_mode(
                 nonce: nonce_bytes.to_vec(),
                 header_type,
             };
-
-            let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
             let aad = create_aad(&header);
 
@@ -85,8 +85,6 @@ pub fn encrypt_bytes_memory_mode(
                 header_type,
             };
 
-            let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
-
             let aad = create_aad(&header);
 
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
@@ -116,8 +114,6 @@ pub fn encrypt_bytes_memory_mode(
                 nonce: nonce_bytes.to_vec(),
                 header_type,
             };
-
-            let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
             let aad = create_aad(&header);
 

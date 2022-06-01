@@ -205,43 +205,6 @@ pub fn get_matches() -> clap::ArgMatches {
                 ),
         )
         .subcommand(
-            Command::new("pack")
-                .short_flag('p')
-                .about("Pack a directory")
-                .subcommand_required(true)
-                .arg(
-                    Arg::new("recursive")
-                        .short('r')
-                        .long("recursive")
-                        .takes_value(false)
-                        .help("Index files/folders recursively (encrypt mode only)"),
-                )
-                .arg(
-                    Arg::new("exclude")
-                        .long("exclude")
-                        .value_name("pattern to exclude")
-                        .takes_value(true)
-                        .require_equals(true)
-                        .help("Exclude a file/folder (e.g. --exclude=\"Documents\") (encrypt mode only)")
-                        .min_values(0)
-                        .multiple_occurrences(true),
-                )
-                .arg(
-                    Arg::new("hidden")
-                        .long("include-hidden")
-                        .takes_value(false)
-                        .help("Include hidden files and folders"),
-                )
-                .arg(
-                    Arg::new("verbose")
-                        .short('v')
-                        .long("verbose")
-                        .takes_value(false)
-                        .help("Provide more output on what's happening"),
-                )
-                .subcommand(encrypt.clone())
-        )
-        .subcommand(
             Command::new("header")
                 .about("Manipulate encrypted headers (for advanced users)")
                 .subcommand_required(true)

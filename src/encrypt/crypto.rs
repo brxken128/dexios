@@ -1,10 +1,11 @@
 use crate::global::enums::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
 use crate::global::structs::{Header, HeaderType};
 use crate::global::{BLOCK_SIZE, VERSION};
+use crate::header::get_aad;
 use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;
 use crate::streams::init_encryption_stream;
-use aead::{Aead, NewAead};
+use aead::{Aead, NewAead, Payload};
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
 use anyhow::Context;
@@ -175,6 +176,8 @@ pub fn encrypt_bytes_stream_mode(
         crate::header::hash(&mut hasher, &header);
     }
 
+    let aad = get_aad(&header)?;
+
     let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
     loop {
@@ -182,7 +185,12 @@ pub fn encrypt_bytes_stream_mode(
             .read(&mut buffer)
             .context("Unable to read from the input file")?;
         if read_count == BLOCK_SIZE {
-            let encrypted_data = match streams.encrypt_next(buffer.as_ref()) {
+            // aad is just empty bytes normally
+            // get_aad returns empty bytes if the header isn't V3+
+            // this means we don't need to do anything special in regards to older versions
+            let payload = Payload { aad: &aad, msg: buffer.as_ref() };
+
+            let encrypted_data = match streams.encrypt_next(payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };
@@ -197,7 +205,9 @@ pub fn encrypt_bytes_stream_mode(
             }
         } else {
             // if we read something less than BLOCK_SIZE, and have hit the end of the file
-            let encrypted_data = match streams.encrypt_last(&buffer[..read_count]) {
+            let payload = Payload { aad: &aad, msg: &buffer[..read_count] };
+
+            let encrypted_data = match streams.encrypt_last(payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };

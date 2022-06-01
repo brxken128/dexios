@@ -121,6 +121,29 @@ pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
     Ok(())
 }
 
+pub fn get_aad(header: &Header) -> Result<Vec<u8>> {
+    match header.header_type.header_version {
+        HeaderVersion::V3 => {
+            let nonce_len = calc_nonce_len(&header.header_type);
+
+            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+
+            let mut header_bytes = version_info.to_vec();
+            header_bytes.extend_from_slice(&mode_info);
+            header_bytes.extend_from_slice(&algorithm_info);
+            header_bytes.extend_from_slice(&header.salt);
+            header_bytes.extend_from_slice(&vec![0; 16]);
+            header_bytes.extend_from_slice(&header.nonce);
+            header_bytes.extend_from_slice(&vec![0u8; 26 - nonce_len]);
+
+            Ok(header_bytes)
+        }
+        _ => (
+            Ok(Vec::new())
+        )
+    }
+}
+
 // this hashes a header with the salt, nonce, and info provided
 pub fn hash(hasher: &mut Hasher, header: &Header) {
     match &header.header_type.header_version {

@@ -43,10 +43,7 @@ pub fn init_encryption_stream(
             };
 
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
-            Ok((
-                EncryptStreamCiphers::Aes256Gcm(Box::new(stream)),
-                header,
-            ))
+            Ok((EncryptStreamCiphers::Aes256Gcm(Box::new(stream)), header))
         }
         Algorithm::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
@@ -63,10 +60,7 @@ pub fn init_encryption_stream(
             };
 
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
-            Ok((
-                EncryptStreamCiphers::XChaCha(Box::new(stream)),
-                header,
-            ))
+            Ok((EncryptStreamCiphers::XChaCha(Box::new(stream)), header))
         }
         Algorithm::DeoxysII256 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 11]>();
@@ -83,10 +77,7 @@ pub fn init_encryption_stream(
             };
 
             let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
-            Ok((
-                EncryptStreamCiphers::DeoxysII(Box::new(stream)),
-                header,
-            ))
+            Ok((EncryptStreamCiphers::DeoxysII(Box::new(stream)), header))
         }
     }
 }

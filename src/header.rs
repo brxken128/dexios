@@ -174,7 +174,7 @@ pub fn verify(header: &Header, signature: Option<Vec<u8>>, key: Secret<[u8; 32]>
 
     let signature_verif = mac.finalize().into_bytes();
 
-    if signature.unwrap() == &signature_verif[..16] {
+    if signature.unwrap() == signature_verif[..16] {
         Ok(true)
     } else {
         Ok(false)

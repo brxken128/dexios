@@ -52,12 +52,15 @@ pub fn encrypt_bytes_memory_mode(
 
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
+            let aad = get_aad(&header)?;
+
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let encrypted_bytes = match cipher.encrypt(nonce, data.expose().as_slice()) {
+            let payload = Payload { aad: &aad, msg: data.expose().as_slice() };
+            let encrypted_bytes = match cipher.encrypt(nonce, payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };
@@ -78,12 +81,15 @@ pub fn encrypt_bytes_memory_mode(
 
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
+            let aad = get_aad(&header)?;
+
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let encrypted_bytes = match cipher.encrypt(nonce, data.expose().as_slice()) {
+            let payload = Payload { aad: &aad, msg: data.expose().as_slice() };
+            let encrypted_bytes = match cipher.encrypt(nonce, payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };
@@ -104,12 +110,15 @@ pub fn encrypt_bytes_memory_mode(
 
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
+            let aad = get_aad(&header)?;
+
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let encrypted_bytes = match cipher.encrypt(nonce, data.expose().as_slice()) {
+            let payload = Payload { aad: &aad, msg: data.expose().as_slice() };
+            let encrypted_bytes = match cipher.encrypt(nonce, payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };

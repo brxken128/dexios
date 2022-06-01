@@ -1,10 +1,11 @@
 use crate::global::enums::{Algorithm, BenchMode, HashMode, OutputFile};
 use crate::global::structs::Header;
 use crate::global::BLOCK_SIZE;
+use crate::header::get_aad;
 use crate::key::argon2_hash;
 use crate::secret::Secret;
 use crate::streams::init_decryption_stream;
-use aead::{Aead, NewAead};
+use aead::{Aead, NewAead, Payload};
 use aes_gcm::{Aes256Gcm, Nonce};
 use anyhow::anyhow;
 use anyhow::Context;
@@ -33,6 +34,9 @@ pub fn decrypt_bytes_memory_mode(
 ) -> Result<()> {
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
+    let aad = get_aad(header)?;
+    let payload = Payload { aad: &aad, msg: data };
+
     let decrypted_bytes = match header.header_type.algorithm {
         Algorithm::Aes256Gcm => {
             let nonce = Nonce::from_slice(&header.nonce);
@@ -41,7 +45,7 @@ pub fn decrypt_bytes_memory_mode(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            match cipher.decrypt(nonce, data) {
+            match cipher.decrypt(nonce, payload) {
                 Ok(decrypted_bytes) => decrypted_bytes,
                 Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
             }
@@ -53,7 +57,7 @@ pub fn decrypt_bytes_memory_mode(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            match cipher.decrypt(nonce, data) {
+            match cipher.decrypt(nonce, payload) {
                 Ok(decrypted_bytes) => decrypted_bytes,
                 Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
             }
@@ -65,7 +69,7 @@ pub fn decrypt_bytes_memory_mode(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            match cipher.decrypt(nonce, data) {
+            match cipher.decrypt(nonce, payload) {
                 Ok(decrypted_bytes) => decrypted_bytes,
                 Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
             }
@@ -119,12 +123,16 @@ pub fn decrypt_bytes_stream_mode(
         crate::header::hash(&mut hasher, header);
     }
 
+    let aad = get_aad(header)?;
+
     let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();
 
     loop {
         let read_count = input.read(&mut buffer)?;
         if read_count == (BLOCK_SIZE + 16) {
-            let decrypted_data = match streams.decrypt_next(buffer.as_ref()) {
+            let payload = Payload { aad: &aad, msg: buffer.as_ref() };
+
+            let decrypted_data = match streams.decrypt_next(payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file.")),
             };
@@ -139,7 +147,10 @@ pub fn decrypt_bytes_stream_mode(
             }
         } else {
             // if we read something less than BLOCK_SIZE+16, and have hit the end of the file
-            let decrypted_data = match streams.decrypt_last(&buffer[..read_count]) {
+            let payload = Payload { aad: &aad, msg: &buffer[..read_count] };
+
+
+            let decrypted_data = match streams.decrypt_last(payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to decrypt the final block of data. Maybe it's the wrong key, or it's not an encrypted file.")),
             };

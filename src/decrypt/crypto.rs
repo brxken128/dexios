@@ -30,11 +30,11 @@ pub fn decrypt_bytes_memory_mode(
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,
-    aad: Vec<u8>
+    aad: &[u8],
 ) -> Result<()> {
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
-    let payload = Payload { aad: &aad, msg: data };
+    let payload = Payload { aad, msg: data };
 
     let decrypted_bytes = match header.header_type.algorithm {
         Algorithm::Aes256Gcm => {
@@ -113,7 +113,7 @@ pub fn decrypt_bytes_stream_mode(
     header: &Header,
     bench: BenchMode,
     hash: HashMode,
-    aad: Vec<u8>,
+    aad: &[u8],
 ) -> Result<()> {
     let mut hasher = blake3::Hasher::new();
 
@@ -128,7 +128,10 @@ pub fn decrypt_bytes_stream_mode(
     loop {
         let read_count = input.read(&mut buffer)?;
         if read_count == (BLOCK_SIZE + 16) {
-            let payload = Payload { aad: &aad, msg: buffer.as_ref() };
+            let payload = Payload {
+                aad,
+                msg: buffer.as_ref(),
+            };
 
             let decrypted_data = match streams.decrypt_next(payload) {
                 Ok(bytes) => bytes,
@@ -145,8 +148,10 @@ pub fn decrypt_bytes_stream_mode(
             }
         } else {
             // if we read something less than BLOCK_SIZE+16, and have hit the end of the file
-            let payload = Payload { aad: &aad, msg: &buffer[..read_count] };
-
+            let payload = Payload {
+                aad,
+                msg: &buffer[..read_count],
+            };
 
             let decrypted_data = match streams.decrypt_last(payload) {
                 Ok(bytes) => bytes,

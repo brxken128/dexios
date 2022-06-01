@@ -222,7 +222,7 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
                 salt,
             };
 
-            let aad = get_aad(&header, None, None)?;
+            let aad = get_aad(&header, None, None);
 
             Ok((header, aad))
         }
@@ -245,7 +245,7 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
                 salt,
             };
 
-            let aad = get_aad(&header, None, None)?;
+            let aad = get_aad(&header, None, None);
 
             Ok((header, aad))
         }
@@ -275,14 +275,14 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
                 salt,
             };
 
-            let aad = get_aad(&header, Some(padding1), Some(padding2))?;
+            let aad = get_aad(&header, Some(padding1), Some(padding2));
 
             Ok((header, aad))
         }
     }
 }
 
-pub fn get_aad(header: &Header, padding1: Option<[u8; 16]>, padding2: Option<Vec<u8>>) -> Result<Vec<u8>> {
+pub fn get_aad(header: &Header, padding1: Option<[u8; 16]>, padding2: Option<Vec<u8>>) -> Vec<u8> {
     match header.header_type.header_version {
         HeaderVersion::V3 => {
             let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
@@ -294,15 +294,13 @@ pub fn get_aad(header: &Header, padding1: Option<[u8; 16]>, padding2: Option<Vec
             header_bytes.extend_from_slice(&padding1.unwrap());
             header_bytes.extend_from_slice(&header.nonce);
             header_bytes.extend_from_slice(&padding2.unwrap());
-            Ok(header_bytes)
+            header_bytes
         }
-        _ => (
-            Ok(Vec::new())
-        )
+        _ => Vec::new(),
     }
 }
 
-pub fn create_aad(header: &Header) -> Result<Vec<u8>> {
+pub fn create_aad(header: &Header) -> Vec<u8> {
     match header.header_type.header_version {
         HeaderVersion::V3 => {
             let nonce_len = calc_nonce_len(&header.header_type);
@@ -315,11 +313,9 @@ pub fn create_aad(header: &Header) -> Result<Vec<u8>> {
             header_bytes.extend_from_slice(&[0; 16]);
             header_bytes.extend_from_slice(&header.nonce);
             header_bytes.extend_from_slice(&vec![0; 26 - nonce_len]);
-            Ok(header_bytes)
+            header_bytes
         }
-        _ => (
-            Ok(Vec::new())
-        )
+        _ => Vec::new(),
     }
 }
 

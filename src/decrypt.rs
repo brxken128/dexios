@@ -36,7 +36,7 @@ pub fn memory_mode(
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
     let (header, aad) = match header_file {
-            HeaderFile::Some(contents) => {
+        HeaderFile::Some(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
             input_file
@@ -86,7 +86,7 @@ pub fn memory_mode(
         raw_key,
         params.bench,
         params.hash_mode,
-        aad,
+        &aad,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
 
@@ -180,7 +180,7 @@ pub fn stream_mode(
         &header,
         params.bench,
         params.hash_mode,
-        aad,
+        &aad,
     );
 
     if decryption_result.is_err() {

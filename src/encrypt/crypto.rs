@@ -23,6 +23,9 @@ use std::time::Instant;
 // it takes the data and a Secret<> key
 // it generates the nonce, hashes the key and encrypts the data
 // it writes the header and then the encrypted data to the output file
+#[allow(clippy::too_many_lines)]
+// !!! delegate the `match algorithm` to a file like `memory.rs`
+// similar to stream initialisation
 pub fn encrypt_bytes_memory_mode(
     data: Secret<Vec<u8>>,
     output: &mut OutputFile,
@@ -52,14 +55,17 @@ pub fn encrypt_bytes_memory_mode(
 
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
-            let aad = create_aad(&header)?;
+            let aad = create_aad(&header);
 
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let payload = Payload { aad: &aad, msg: data.expose().as_slice() };
+            let payload = Payload {
+                aad: &aad,
+                msg: data.expose().as_slice(),
+            };
             let encrypted_bytes = match cipher.encrypt(nonce, payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
@@ -81,14 +87,17 @@ pub fn encrypt_bytes_memory_mode(
 
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
-            let aad = create_aad(&header)?;
+            let aad = create_aad(&header);
 
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let payload = Payload { aad: &aad, msg: data.expose().as_slice() };
+            let payload = Payload {
+                aad: &aad,
+                msg: data.expose().as_slice(),
+            };
             let encrypted_bytes = match cipher.encrypt(nonce, payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
@@ -110,14 +119,17 @@ pub fn encrypt_bytes_memory_mode(
 
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
-            let aad = create_aad(&header)?;
+            let aad = create_aad(&header);
 
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let payload = Payload { aad: &aad, msg: data.expose().as_slice() };
+            let payload = Payload {
+                aad: &aad,
+                msg: data.expose().as_slice(),
+            };
             let encrypted_bytes = match cipher.encrypt(nonce, payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
@@ -185,7 +197,7 @@ pub fn encrypt_bytes_stream_mode(
         crate::header::hash(&mut hasher, &header);
     }
 
-    let aad = create_aad(&header)?;
+    let aad = create_aad(&header);
 
     let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
@@ -197,7 +209,10 @@ pub fn encrypt_bytes_stream_mode(
             // aad is just empty bytes normally
             // create_aad returns empty bytes if the header isn't V3+
             // this means we don't need to do anything special in regards to older versions
-            let payload = Payload { aad: &aad, msg: buffer.as_ref() };
+            let payload = Payload {
+                aad: &aad,
+                msg: buffer.as_ref(),
+            };
 
             let encrypted_data = match streams.encrypt_next(payload) {
                 Ok(bytes) => bytes,
@@ -214,7 +229,10 @@ pub fn encrypt_bytes_stream_mode(
             }
         } else {
             // if we read something less than BLOCK_SIZE, and have hit the end of the file
-            let payload = Payload { aad: &aad, msg: &buffer[..read_count] };
+            let payload = Payload {
+                aad: &aad,
+                msg: &buffer[..read_count],
+            };
 
             let encrypted_data = match streams.encrypt_last(payload) {
                 Ok(bytes) => bytes,

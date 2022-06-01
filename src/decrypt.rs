@@ -89,10 +89,22 @@ pub fn memory_mode(
         signature,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
-    logger.success(format!(
-        "Decryption successful! [took {:.2}s]",
-        decrypt_duration.as_secs_f32()
-    ));
+    
+    match params.bench {
+        BenchMode::WriteToFilesystem => {
+            logger.success(format!(
+                "Decryption successful! File saved as {} [took {:.2}s]",
+                output,
+                decrypt_duration.as_secs_f32(),
+            ));
+        }
+        BenchMode::BenchmarkInMemory => {
+            logger.success(format!(
+                "Decryption successful! [took {:.2}s]",
+                decrypt_duration.as_secs_f32(),
+            ));
+        }
+    }
 
     if params.erase != EraseMode::IgnoreFile(0) {
         crate::erase::secure_erase(input, params.erase.get_passes())?;

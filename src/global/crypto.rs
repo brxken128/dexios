@@ -5,11 +5,31 @@
 
 use aead::{
     stream::{DecryptorLE31, EncryptorLE31},
-    Payload,
+    Payload, Aead,
 };
 use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
+
+pub enum EncryptMemoryCiphers {
+    Aes256Gcm(Box<Aes256Gcm>),
+    XChaCha(Box<XChaCha20Poly1305>),
+    DeoxysII(Box<DeoxysII256>),
+}
+
+impl EncryptMemoryCiphers {
+    pub fn encrypt<'msg, 'aad>(
+        &self,
+        nonce: &[u8],
+        plaintext: impl Into<Payload<'msg, 'aad>>,
+    ) -> aead::Result<Vec<u8>> {
+        match self {
+            EncryptMemoryCiphers::Aes256Gcm(c) => c.encrypt(nonce.as_ref().into(), plaintext),
+            EncryptMemoryCiphers::XChaCha(c) => c.encrypt(nonce.as_ref().into(), plaintext),
+            EncryptMemoryCiphers::DeoxysII(c) => c.encrypt(nonce.as_ref().into(), plaintext),
+        }
+    }
+}
 
 pub enum EncryptStreamCiphers {
     Aes256Gcm(Box<EncryptorLE31<Aes256Gcm>>),

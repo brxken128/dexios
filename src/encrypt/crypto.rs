@@ -1,3 +1,4 @@
+use crate::global::crypto::EncryptMemoryCiphers;
 use crate::global::enums::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
 use crate::global::structs::{Header, HeaderType};
 use crate::global::{BLOCK_SIZE, VERSION};
@@ -5,12 +6,12 @@ use crate::header::create_aad;
 use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;
 use crate::streams::init_encryption_stream;
-use aead::{Aead, NewAead, Payload};
-use aes_gcm::{Aes256Gcm, Nonce};
+use aead::{NewAead, Payload};
+use aes_gcm::{Aes256Gcm};
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
-use chacha20poly1305::{XChaCha20Poly1305, XNonce};
+use chacha20poly1305::{XChaCha20Poly1305};
 use deoxys::DeoxysII256;
 use paris::success;
 use rand::{prelude::StdRng, Rng, SeedableRng};
@@ -44,70 +45,42 @@ pub fn encrypt_bytes_memory_mode(
 
     let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
 
-    let (header, encrypted_bytes) = match algorithm {
+    let (header, ciphers) = match algorithm {
         Algorithm::Aes256Gcm => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
-            let nonce = Nonce::from_slice(nonce_bytes.as_slice());
 
             let header = Header {
                 salt,
                 nonce: nonce_bytes.to_vec(),
                 header_type,
             };
-
-            let aad = create_aad(&header);
 
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let payload = Payload {
-                aad: &aad,
-                msg: data.expose().as_slice(),
-            };
-            let encrypted_bytes = match cipher.encrypt(nonce, payload) {
-                Ok(bytes) => bytes,
-                Err(_) => return Err(anyhow!("Unable to encrypt the data")),
-            };
 
-            drop(data);
-
-            (header, encrypted_bytes)
+            (header, EncryptMemoryCiphers::Aes256Gcm(Box::new(cipher)))
         }
         Algorithm::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 24]>();
-            let nonce = XNonce::from_slice(&nonce_bytes);
 
             let header = Header {
                 salt,
                 nonce: nonce_bytes.to_vec(),
                 header_type,
             };
-
-            let aad = create_aad(&header);
 
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let payload = Payload {
-                aad: &aad,
-                msg: data.expose().as_slice(),
-            };
-            let encrypted_bytes = match cipher.encrypt(nonce, payload) {
-                Ok(bytes) => bytes,
-                Err(_) => return Err(anyhow!("Unable to encrypt the data")),
-            };
-
-            drop(data);
-
-            (header, encrypted_bytes)
+            (header, EncryptMemoryCiphers::XChaCha(Box::new(cipher)))
         }
         Algorithm::DeoxysII256 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 15]>();
-            let nonce = deoxys::Nonce::from_slice(&nonce_bytes);
 
             let header = Header {
                 salt,
@@ -115,27 +88,28 @@ pub fn encrypt_bytes_memory_mode(
                 header_type,
             };
 
-            let aad = create_aad(&header);
-
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            let payload = Payload {
-                aad: &aad,
-                msg: data.expose().as_slice(),
-            };
-            let encrypted_bytes = match cipher.encrypt(nonce, payload) {
-                Ok(bytes) => bytes,
-                Err(_) => return Err(anyhow!("Unable to encrypt the data")),
-            };
-
-            drop(data);
-
-            (header, encrypted_bytes)
+            (header, EncryptMemoryCiphers::DeoxysII(Box::new(cipher)))
         }
     };
+
+    let aad = create_aad(&header);
+
+    let payload = Payload {
+        aad: &aad,
+        msg: data.expose().as_slice(),
+    };
+
+    let encrypted_bytes = match ciphers.encrypt(&header.nonce, payload) {
+        Ok(bytes) => bytes,
+        Err(_) => return Err(anyhow!("Unable to encrypt the data")),
+    };
+
+    drop(data);
 
     if bench == BenchMode::WriteToFilesystem {
         let write_start_time = Instant::now();

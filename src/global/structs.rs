@@ -1,6 +1,6 @@
 use crate::global::enums::{
-    Algorithm, BenchMode, CipherMode, DirectoryMode, EraseMode, HashMode, HeaderVersion,
-    HiddenFilesMode, KeyFile, PasswordMode, PrintMode, SkipMode,
+    Algorithm, BenchMode, CipherMode, EraseMode, HashMode, HeaderVersion,
+    KeyFile, PasswordMode, SkipMode,
 };
 use crate::global::SALT_LEN;
 
@@ -25,11 +25,4 @@ pub struct Header {
     pub header_type: HeaderType,
     pub nonce: Vec<u8>,
     pub salt: [u8; SALT_LEN],
-}
-
-pub struct PackMode {
-    pub dir_mode: DirectoryMode,
-    pub hidden: HiddenFilesMode,
-    pub exclude: Vec<String>,
-    pub print_mode: PrintMode,
 }

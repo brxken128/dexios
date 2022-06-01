@@ -14,7 +14,6 @@ mod hashing;
 mod header;
 mod key;
 mod list;
-mod pack;
 mod prompt;
 mod secret;
 mod streams;
@@ -51,15 +50,6 @@ fn main() -> Result<()> {
         Some(("list", sub_matches)) => {
             show_values(&get_param("input", sub_matches)?)?;
         }
-        Some(("pack", sub_matches)) => match sub_matches.subcommand_name() {
-            Some("encrypt") => {
-                subcommands::pack(sub_matches)?;
-            }
-            Some("decrypt") => {
-                subcommands::unpack(sub_matches)?;
-            }
-            _ => (),
-        },
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();

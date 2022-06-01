@@ -126,8 +126,9 @@ pub fn write_to_file(
     Ok(())
 }
 
+// sign a header struct to prevent tampering
+// this is used when encrypting
 pub fn sign(header: &Header, key: Secret<[u8; 32]>) -> Result<Vec<u8>> {
-    // gate this behind header versions
     type HmacSha3_512 = Hmac<Sha3_512>;
     let mut mac =
         HmacSha3_512::new_from_slice(key.expose()).context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
@@ -150,6 +151,9 @@ pub fn sign(header: &Header, key: Secret<[u8; 32]>) -> Result<Vec<u8>> {
     Ok(signature[..16].to_vec())
 }
 
+// verify a header struct to ensure it matches the signature
+// this is used when decrypting
+// if the signature doesn't match, dexios will not decrypt
 pub fn verify(header: &Header, signature: Option<Vec<u8>>, key: Secret<[u8; 32]>) -> Result<bool> {
     type HmacSha3_512 = Hmac<Sha3_512>;
     let mut mac =

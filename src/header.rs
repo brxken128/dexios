@@ -121,24 +121,6 @@ pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
     Ok(())
 }
 
-pub fn get_aad(header: &Header) -> Result<Vec<u8>> {
-    match header.header_type.header_version {
-        HeaderVersion::V3 => {
-            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
-
-            let mut header_bytes = version_info.to_vec();
-            header_bytes.extend_from_slice(&mode_info);
-            header_bytes.extend_from_slice(&algorithm_info);
-            header_bytes.extend_from_slice(&header.salt);
-            header_bytes.extend_from_slice(&header.nonce);
-            Ok(header_bytes)
-        }
-        _ => (
-            Ok(Vec::new())
-        )
-    }
-}
-
 // this hashes a header with the salt, nonce, and info provided
 pub fn hash(hasher: &mut Hasher, header: &Header) {
     match &header.header_type.header_version {
@@ -206,7 +188,7 @@ fn deserialize(
 
 // this takes an input file, and gets all of the data necessary from the header of the file
 // it ensures that the buffer starts at 64 bytes, so that other functions can just read encrypted data immediately
-pub fn read_from_file(file: &mut File) -> Result<Header> {
+pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
     let mut version_info = [0u8; 2];
     let mut algorithm_info = [0u8; 2];
     let mut mode_info = [0u8; 2];
@@ -221,7 +203,7 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
 
     let header_info = deserialize(version_info, algorithm_info, mode_info)?;
     match header_info.header_version {
-        HeaderVersion::V1 | HeaderVersion::V3 => {
+        HeaderVersion::V1 => {
             let nonce_len = calc_nonce_len(&header_info);
             let mut nonce = vec![0u8; nonce_len];
 
@@ -240,7 +222,9 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
                 salt,
             };
 
-            Ok(header)
+            let aad = get_aad(&header, None, None)?;
+
+            Ok((header, aad))
         }
         HeaderVersion::V2 => {
             let nonce_len = calc_nonce_len(&header_info);
@@ -261,8 +245,81 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
                 salt,
             };
 
-            Ok(header)
+            let aad = get_aad(&header, None, None)?;
+
+            Ok((header, aad))
         }
+        HeaderVersion::V3 => {
+            let nonce_len = calc_nonce_len(&header_info);
+            let mut nonce = vec![0u8; nonce_len];
+            let mut padding1 = [0u8; 16];
+            let mut padding2 = vec![0u8; 26 - nonce_len];
+
+            file.read_exact(&mut salt)
+                .context("Unable to read salt from header")?;
+            file.read_exact(&mut padding1)
+                .context("Unable to read empty bytes from header")?; // read and subsequently discard the next 16 bytes
+            file.read_exact(&mut nonce)
+                .context("Unable to read nonce from header")?;
+            file.read_exact(&mut padding2)
+                .context("Unable to read final padding from header")?; // read and discard the final padding
+
+            // need to read the padding into padding1 and padding2 - done
+            // and then pass it to read_aad
+            // get_aad needs reverting to include extra 0s (or random bytes) - done
+            // this function should return aad, whether it's Vec::new() or actual bytes
+
+            let header = Header {
+                header_type: header_info,
+                nonce,
+                salt,
+            };
+
+            let aad = get_aad(&header, Some(padding1), Some(padding2))?;
+
+            Ok((header, aad))
+        }
+    }
+}
+
+pub fn get_aad(header: &Header, padding1: Option<[u8; 16]>, padding2: Option<Vec<u8>>) -> Result<Vec<u8>> {
+    match header.header_type.header_version {
+        HeaderVersion::V3 => {
+            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+
+            let mut header_bytes = version_info.to_vec();
+            header_bytes.extend_from_slice(&mode_info);
+            header_bytes.extend_from_slice(&algorithm_info);
+            header_bytes.extend_from_slice(&header.salt);
+            header_bytes.extend_from_slice(&padding1.unwrap());
+            header_bytes.extend_from_slice(&header.nonce);
+            header_bytes.extend_from_slice(&padding2.unwrap());
+            Ok(header_bytes)
+        }
+        _ => (
+            Ok(Vec::new())
+        )
+    }
+}
+
+pub fn create_aad(header: &Header) -> Result<Vec<u8>> {
+    match header.header_type.header_version {
+        HeaderVersion::V3 => {
+            let nonce_len = calc_nonce_len(&header.header_type);
+            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+
+            let mut header_bytes = version_info.to_vec();
+            header_bytes.extend_from_slice(&mode_info);
+            header_bytes.extend_from_slice(&algorithm_info);
+            header_bytes.extend_from_slice(&header.salt);
+            header_bytes.extend_from_slice(&[0; 16]);
+            header_bytes.extend_from_slice(&header.nonce);
+            header_bytes.extend_from_slice(&vec![0; 26 - nonce_len]);
+            Ok(header_bytes)
+        }
+        _ => (
+            Ok(Vec::new())
+        )
     }
 }
 

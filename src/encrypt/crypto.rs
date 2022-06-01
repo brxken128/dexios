@@ -1,7 +1,7 @@
 use crate::global::enums::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
 use crate::global::structs::{Header, HeaderType};
 use crate::global::{BLOCK_SIZE, VERSION};
-use crate::header::get_aad;
+use crate::header::create_aad;
 use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;
 use crate::streams::init_encryption_stream;
@@ -52,7 +52,7 @@ pub fn encrypt_bytes_memory_mode(
 
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
-            let aad = get_aad(&header)?;
+            let aad = create_aad(&header)?;
 
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
@@ -81,7 +81,7 @@ pub fn encrypt_bytes_memory_mode(
 
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
-            let aad = get_aad(&header)?;
+            let aad = create_aad(&header)?;
 
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
@@ -110,7 +110,7 @@ pub fn encrypt_bytes_memory_mode(
 
             let key = argon2_hash(raw_key, &salt, &header.header_type.header_version)?;
 
-            let aad = get_aad(&header)?;
+            let aad = create_aad(&header)?;
 
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
@@ -185,7 +185,7 @@ pub fn encrypt_bytes_stream_mode(
         crate::header::hash(&mut hasher, &header);
     }
 
-    let aad = get_aad(&header)?;
+    let aad = create_aad(&header)?;
 
     let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
@@ -195,7 +195,7 @@ pub fn encrypt_bytes_stream_mode(
             .context("Unable to read from the input file")?;
         if read_count == BLOCK_SIZE {
             // aad is just empty bytes normally
-            // get_aad returns empty bytes if the header isn't V3+
+            // create_aad returns empty bytes if the header isn't V3+
             // this means we don't need to do anything special in regards to older versions
             let payload = Payload { aad: &aad, msg: buffer.as_ref() };
 

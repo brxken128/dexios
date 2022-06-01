@@ -1,7 +1,6 @@
 use crate::global::enums::{Algorithm, BenchMode, HashMode, OutputFile};
 use crate::global::structs::Header;
 use crate::global::BLOCK_SIZE;
-use crate::header::get_aad;
 use crate::key::argon2_hash;
 use crate::secret::Secret;
 use crate::streams::init_decryption_stream;
@@ -31,10 +30,10 @@ pub fn decrypt_bytes_memory_mode(
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,
+    aad: Vec<u8>
 ) -> Result<()> {
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
-    let aad = get_aad(header)?;
     let payload = Payload { aad: &aad, msg: data };
 
     let decrypted_bytes = match header.header_type.algorithm {
@@ -114,6 +113,7 @@ pub fn decrypt_bytes_stream_mode(
     header: &Header,
     bench: BenchMode,
     hash: HashMode,
+    aad: Vec<u8>,
 ) -> Result<()> {
     let mut hasher = blake3::Hasher::new();
 
@@ -122,8 +122,6 @@ pub fn decrypt_bytes_stream_mode(
     if hash == HashMode::CalculateHash {
         crate::header::hash(&mut hasher, header);
     }
-
-    let aad = get_aad(header)?;
 
     let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();
 

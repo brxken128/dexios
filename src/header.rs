@@ -78,7 +78,7 @@ pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
     let nonce_len = calc_nonce_len(&header.header_type);
 
     match &header.header_type.header_version {
-        HeaderVersion::V1 => {
+        HeaderVersion::V1 | HeaderVersion::V3 => {
             let padding = vec![0u8; 26 - nonce_len];
             let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
 
@@ -116,25 +116,6 @@ pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
             file.write_all(&[0u8; 16])
                 .context("Unable to write signature to header")?; // signature
         }
-        HeaderVersion::V3 => {
-            let padding = vec![0u8; 26 - nonce_len];
-            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
-
-            file.write_all(&version_info)
-                .context("Unable to write version to header")?;
-            file.write_all(&algorithm_info)
-                .context("Unable to write algorithm to header")?;
-            file.write_all(&mode_info)
-                .context("Unable to write encryption mode to header")?; // 6 bytes total
-            file.write_all(&header.salt)
-                .context("Unable to write salt to header")?; // 22 bytes total
-            file.write_all(&[0; 16])
-                .context("Unable to write empty bytes to header")?; // 38 bytes total (26 remaining)
-            file.write_all(&header.nonce)
-                .context("Unable to write nonce to header")?; // (26 - nonce_len remaining)
-            file.write_all(&padding)
-                .context("Unable to write final padding to header")?; // this has reached the 64 bytes
-        }
     }
 
     Ok(())
@@ -143,7 +124,7 @@ pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
 // this hashes a header with the salt, nonce, and info provided
 pub fn hash(hasher: &mut Hasher, header: &Header) {
     match &header.header_type.header_version {
-        HeaderVersion::V1 => {
+        HeaderVersion::V1 | HeaderVersion::V3 => {
             let nonce_len = calc_nonce_len(&header.header_type);
             let padding = vec![0u8; 26 - nonce_len];
             let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
@@ -165,19 +146,6 @@ pub fn hash(hasher: &mut Hasher, header: &Header) {
             hasher.update(&algorithm_info);
             hasher.update(&mode_info);
             hasher.update(&header.salt);
-            hasher.update(&header.nonce);
-            hasher.update(&padding);
-        }
-        HeaderVersion::V3 => {
-            let nonce_len = calc_nonce_len(&header.header_type);
-            let padding = vec![0u8; 26 - nonce_len];
-            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
-
-            hasher.update(&version_info);
-            hasher.update(&algorithm_info);
-            hasher.update(&mode_info);
-            hasher.update(&header.salt);
-            hasher.update(&[0; 16]);
             hasher.update(&header.nonce);
             hasher.update(&padding);
         }
@@ -235,7 +203,7 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
 
     let header_info = deserialize(version_info, algorithm_info, mode_info)?;
     match header_info.header_version {
-        HeaderVersion::V1 => {
+        HeaderVersion::V1 | HeaderVersion::V3 => {
             let nonce_len = calc_nonce_len(&header_info);
             let mut nonce = vec![0u8; nonce_len];
 
@@ -268,27 +236,6 @@ pub fn read_from_file(file: &mut File) -> Result<Header> {
                 .context("Unable to read final padding from header")?; // read and discard the padding
             file.read_exact(&mut [0u8; 16])
                 .context("Unable to read signature from header")?; // read signature
-
-            let header = Header {
-                header_type: header_info,
-                nonce,
-                salt,
-            };
-
-            Ok(header)
-        }
-        HeaderVersion::V3 => {
-            let nonce_len = calc_nonce_len(&header_info);
-            let mut nonce = vec![0u8; nonce_len];
-
-            file.read_exact(&mut salt)
-                .context("Unable to read salt from header")?;
-            file.read_exact(&mut [0; 16])
-                .context("Unable to read empty bytes from header")?; // read and subsequently discard the next 16 bytes
-            file.read_exact(&mut nonce)
-                .context("Unable to read nonce from header")?;
-            file.read_exact(&mut vec![0u8; 26 - nonce_len])
-                .context("Unable to read final padding from header")?; // read and discard the final padding
 
             let header = Header {
                 header_type: header_info,

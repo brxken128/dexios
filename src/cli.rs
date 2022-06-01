@@ -240,7 +240,6 @@ pub fn get_matches() -> clap::ArgMatches {
                         .help("Provide more output on what's happening"),
                 )
                 .subcommand(encrypt.clone())
-                .subcommand(decrypt.clone()),
         )
         .subcommand(
             Command::new("header")

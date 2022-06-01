@@ -187,14 +187,6 @@ pub fn pack_params(sub_matches: &ArgMatches) -> PackMode {
     pack_params
 }
 
-pub fn unpack_params(sub_matches: &ArgMatches) -> PrintMode {
-    if sub_matches.is_present("verbose") {
-        PrintMode::Verbose
-    } else {
-        PrintMode::Quiet
-    }
-}
-
 pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {
     if sub_matches.is_present("skip") {
         SkipMode::HidePrompts

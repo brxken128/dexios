@@ -55,9 +55,6 @@ fn main() -> Result<()> {
             Some("encrypt") => {
                 subcommands::pack(sub_matches)?;
             }
-            Some("decrypt") => {
-                subcommands::unpack(sub_matches)?;
-            }
             _ => (),
         },
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {

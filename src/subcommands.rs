@@ -3,7 +3,7 @@ use clap::ArgMatches;
 
 use crate::global::parameters::{
     decrypt_additional_params, encrypt_additional_params, erase_params, get_param, pack_params,
-    parameter_handler, unpack_params,
+    parameter_handler,
 };
 
 pub fn encrypt(sub_matches: &ArgMatches) -> Result<()> {
@@ -50,21 +50,5 @@ pub fn pack(sub_matches: &ArgMatches) -> Result<()> {
         &pack_params,
         &params,
         algorithm,
-    )
-}
-
-pub fn unpack(sub_matches: &ArgMatches) -> Result<()> {
-    let print_mode = unpack_params(sub_matches);
-
-    let sub_matches_decrypt = sub_matches.subcommand_matches("decrypt").unwrap();
-    let params = parameter_handler(sub_matches_decrypt)?;
-    let header = decrypt_additional_params(sub_matches_decrypt)?;
-
-    crate::pack::decrypt_directory(
-        &get_param("input", sub_matches_decrypt)?,
-        &get_param("output", sub_matches_decrypt)?,
-        &header,
-        &print_mode,
-        &params,
     )
 }

@@ -4,10 +4,10 @@
 // this file is long, but necessary
 
 use crate::global::enums::{
-    Algorithm, BenchMode, DirectoryMode, EraseMode, HashMode, HeaderFile, HiddenFilesMode, KeyFile,
-    PasswordMode, PrintMode, SkipMode,
+    Algorithm, BenchMode, EraseMode, HashMode, HeaderFile, KeyFile,
+    PasswordMode, SkipMode,
 };
-use crate::global::structs::{CryptoParams, PackMode};
+use crate::global::structs::{CryptoParams};
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 use paris::warn;
@@ -42,13 +42,7 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         HashMode::NoHash
     };
 
-    let skip = if sub_matches.is_present("skip") {
-        //specify to hide promps during operation
-        SkipMode::HidePrompts
-    } else {
-        // default
-        SkipMode::ShowPrompts
-    };
+    let skip = skipmode(sub_matches);
 
     let erase = if sub_matches.is_present("erase") {
         let result = sub_matches
@@ -148,43 +142,6 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
     };
 
     Ok(passes)
-}
-
-pub fn pack_params(sub_matches: &ArgMatches) -> PackMode {
-    let dir_mode = if sub_matches.is_present("recursive") {
-        DirectoryMode::Recursive
-    } else {
-        DirectoryMode::Singular
-    };
-
-    let hidden = if sub_matches.is_present("hidden") {
-        HiddenFilesMode::Include
-    } else {
-        HiddenFilesMode::Exclude
-    };
-
-    let excluded: Vec<String> = if sub_matches.is_present("exclude") {
-        let list: Vec<&str> = sub_matches.values_of("exclude").unwrap().collect();
-        list.iter().map(std::string::ToString::to_string).collect()
-    // this fixes 'static lifetime issues
-    } else {
-        Vec::new()
-    };
-
-    let print_mode = if sub_matches.is_present("verbose") {
-        PrintMode::Verbose
-    } else {
-        PrintMode::Quiet
-    };
-
-    let pack_params = PackMode {
-        dir_mode,
-        exclude: excluded,
-        hidden,
-        print_mode,
-    };
-
-    pack_params
 }
 
 pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {

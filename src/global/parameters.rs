@@ -1,7 +1,5 @@
-// this file contains most of the enum's, structs and associated functions used throughout dexios
-// it includes all of the parameters passed to cryptographic functions
-// it also contains enums/structs relating to headers
-// this file is long, but necessary
+// this file handles getting parameters from clap's ArgMatches
+// it returns information (e.g. CryptoParams) to functions that require it
 
 use crate::global::enums::{
     Algorithm, BenchMode, EraseMode, HashMode, HeaderFile, KeyFile,

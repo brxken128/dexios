@@ -1,6 +1,9 @@
 use anyhow::Result;
 use clap::ArgMatches;
 
+// this is called from main.rs
+// it gets params and sends them to the appropriate functions
+
 use crate::global::parameters::{
     decrypt_additional_params, encrypt_additional_params, erase_params, get_param,
     parameter_handler,

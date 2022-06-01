@@ -1,3 +1,8 @@
+// this file contains enums found all around the codebase
+// they act as toggles for certain features, so they can be
+// enabled if selected by the user
+// some enums are used purely by dexios to handle things (e.g. output files)
+
 use anyhow::Result;
 use std::fs::File;
 use std::io::Write;

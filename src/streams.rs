@@ -17,6 +17,11 @@ use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use std::result::Result::Ok;
 
+// this file initialises encryption streams
+// it also handles V2 header's signing
+// it handles HMAC here so we don't have to re-hash or clone the key
+
+
 // this function hashes the provided key, and then initialises the stream ciphers
 // it's used for encrypt/stream mode and is the central place for managing streams for encryption
 pub fn init_encryption_stream(

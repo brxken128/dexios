@@ -245,7 +245,6 @@ fn deserialize(
 // this takes an input file, and gets all of the data necessary from the header of the file
 // it ensures that the buffer starts at 64 bytes, so that other functions can just read encrypted data immediately
 pub fn read_from_file(file: &mut File) -> Result<(Header, Option<Vec<u8>>)> {
-    // sometimes a signature
     let mut version_info = [0u8; 2];
     let mut algorithm_info = [0u8; 2];
     let mut mode_info = [0u8; 2];

@@ -303,12 +303,6 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Option<Vec<u8>>)> {
             };
 
             Ok((header, Some(signature.to_vec())))
-
-            // if verify(&header, signature)? {
-            //     Ok(header)
-            // } else {
-            //     Err(anyhow::anyhow!("Header signature doesn't match"))
-            // }
         }
     }
 }

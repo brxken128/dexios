@@ -204,7 +204,7 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
     let header_info = deserialize(version_info, algorithm_info, mode_info)?;
     match header_info.header_version {
         HeaderVersion::V1 => {
-            warn!("You are using an older version of the Dexios header standard, please run \"dexios update\" to update your files");
+            warn!("You are using an older version of the Dexios header standard, please re-encrypt your files at your earliest convenience");
             let nonce_len = calc_nonce_len(&header_info);
             let mut nonce = vec![0u8; nonce_len];
 
@@ -228,7 +228,7 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
             Ok((header, aad))
         }
         HeaderVersion::V2 => {
-            warn!("You are using an older version of the Dexios header standard, please run \"dexios update\" to update your files");
+            warn!("You are using an older version of the Dexios header standard, please re-encrypt your files at your earliest convenience");
             let nonce_len = calc_nonce_len(&header_info);
             let mut nonce = vec![0u8; nonce_len];
 

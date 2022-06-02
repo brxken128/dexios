@@ -184,17 +184,14 @@ ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD
 <p>We offer binaries for both Windows and FreeBSD, but our tests run on Ubuntu so Windows-specific issues may not be picked up. Please <a href="https://github.com/brxken128/dexios/issues">open a Github issue</a> if you encounter any.</p>
 <h3 id="linuxfreebsd"><a class="header" href="#linuxfreebsd">Linux/FreeBSD</a></h3>
 <p>To use <code>cargo</code> for installing, ensure you have <code>gcc</code> installed on your system.</p>
-<p>For better performance, you may install via <code>cargo</code> with the command <code>RUSTFLAGS=&quot;-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3&quot; cargo install dexios</code>.</p>
+<p>You may install via <code>cargo</code> with the command <code>cargo install dexios</code></p>
 <h3 id="windows"><a class="header" href="#windows">Windows</a></h3>
 <p>Please use Windows Terminal or another Terminal program, as <code>cmd</code> does not have support for the command-line icons used by Dexios.</p>
 <p>You may also use <code>cargo</code> for installing, just run the command:</p>
-<p><code>setx RUSTFLAGS &quot;-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3&quot; &amp;&amp; cargo install dexios</code></p>
+<p><code>cargo install dexios</code></p>
 <h2 id="building-notes"><a class="header" href="#building-notes">Building Notes</a></h2>
-<p>As mentioned in the <a href="https://docs.rs/aes-gcm/latest/aes_gcm/index.html#performance-notes">AES-GCM crate docs</a>, please enable certain flags while building. For example:</p>
-<p>For Linux/FreeBSD systems, use <code>RUSTFLAGS=&quot;-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3&quot;</code></p>
-<p>For Windows, use <code>setx RUSTFLAGS &quot;-Ctarget-cpu=native -Ctarget-feature=+aes,+sse2,+sse4.1,+ssse3&quot;</code></p>
-<p>Change native to whichever CPU family/model you are going to be running the code on, if it's going to be ran on a different machine.</p>
 <p><code>gcc</code> is required for building on Linux and FreeBSD.</p>
+<p>Manually setting <code>RUSTFLAGS</code> is no longer required, as the AEAD crates we use from the <a href="https://github.com/RustCrypto">RustCrypto Team</a> automatically detect, and take advantage of hardware cryptography primitives.</p>
 <h2 id="downloading-and-running-a-pre-compiled-binary"><a class="header" href="#downloading-and-running-a-pre-compiled-binary">Downloading and running a pre-compiled binary</a></h2>
 <p>The <a href="https://github.com/brxken128/dexios/releases">Github Releases</a> page contains pre-compiled binaries, generated with Github Actions. These are ideal if you don't want to go through the hassle of building, and they should run on any system (provided the architecture matches). They are the exact same binaries from Github Actions, so we can ensure they haven't been tampered with. </p>
 <p>We encourage users to check the hash provided in the GA Workflow, and compare with the file you have downloaded.</p>
@@ -257,18 +254,6 @@ ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD
 <summary>To list all possible AEADs</summary>
 <br>
 <code>dexios list aead</code>
-</details>
-<br>
-<details>
-<summary>To pack and encrypt a folder</summary>
-<br>
-<code>dexios pack encrypt test/ file.encrypted</code>
-</details>
-<br>
-<details>
-<summary>To decrypt and unpack a folder</summary>
-<br>
-<code>dexios pack decrypt file.encrypted test/</code>
 </details>
 <br>
 <details>
@@ -380,20 +365,41 @@ Remove `-maxdepth 1` to make this run recursively
 <li>We then pad the headers with zeroes until we reach a total of 48 bytes</li>
 <li>The last 16 bytes contain a truncated SHA3-512 HMAC signature</li>
 </ul>
-<h3 id="signing-v830-and-above"><a class="header" href="#signing-v830-and-above">Signing (v8.3.0 and above)</a></h3>
-<p>Headers are signed using your hashed encryption key.</p>
-<p>On encryption, the headers are signed when the ciphers/stream ciphers are initialised, this way we only have to hash your key once. The key is never cloned within memory, and it is zeroed out (using <code>zeroize</code> and our <a href="technical-details/Secret-Wrapper.html">secret wrapper</a>) once the header has been signed.</p>
-<p>The signature is generated from the first 48 bytes of the header - this is where all of the important information is enclosed.</p>
-<h3 id="verifying-v830-and-above"><a class="header" href="#verifying-v830-and-above">Verifying (v8.3.0 and above)</a></h3>
-<p>On decryption, the headers are verified when the ciphers/stream ciphers are initialised. Once again, the key is zeroed out once the header has been verified.</p>
-<p>If a single byte of the header changes, decryption will not continue as the signature will not match. This is to prevent a malicious actor from tampering with the header. </p>
-<p><strong>If the signature doesn't match, but you're positive your key is correct, it is best to assume the header was tampered with.</strong></p>
+<p>V3 Headers (v8.4.0+):</p>
+<ul>
+<li>The first two bytes of each header <em>should</em> contain <code>0xDE</code> - this signifies that it is indeed a Dexios file.</li>
+<li>The next two bytes signify the header version - as of v8.4.0, this is <code>0x03</code></li>
+<li>The next two bytes contain the encryption algorithm, such as XChaCha20-Poly1305</li>
+<li>The next two bytes contain the encryption <em>mode</em>, which is either stream or memory</li>
+<li>The next 16 bytes contain the salt used for <code>argon2id</code></li>
+<li>We then have 16 bytes of empty space, this has the potential to store more information in later versions</li>
+<li>We then have the <code>n</code> byte nonce - this is determined by the encryption algorithm and encryption mode</li>
+<li>We finally have enough zeroes to reach 64 bytes - this is extra empty space that may be used in later revisions</li>
+</ul>
+<h3 id="authenticating-the-header-with-aad-v840"><a class="header" href="#authenticating-the-header-with-aad-v840">Authenticating the Header with AAD (v8.4.0+)</a></h3>
+<p>Headers are calculated as a byte array (including the padding), and provided as AAD (additional authenticated data) to <strong>every block</strong> in stream mode, and the whole block in memory mode.</p>
+<p>On decryption, the whole header is read (including the padding), and it is provided as AAD to <strong>every block</strong> in stream mode, and the whole block in memory mode. The data will not decrypt if the header does not match, even if an empty byte is altered. This fully protects your file from tampering, as even a single change will result in the user being made aware.</p>
+<p>We have decided to use AAD as opposed to SHA3-512 HMAC due to few things:</p>
+<ul>
+<li>HMAC cluttered up the codebase quite significantly. This is not good for a tool such as Dexios, as it'd become harder and harder to maintain</li>
+<li>HMAC required two additional dependencies, <code>hmac</code> and <code>sha3</code>. This could potentially increase the attack surface (although unlikely)</li>
+<li>HMAC required additional computational power - this is something a lot of older systems do not have</li>
+</ul>
+<p>On the other hand, AAD requires hardly any further computational power, or cluttering of the codebase - it's already implemented by the AEAD crates that we use.</p>
 <h3 id="stripping"><a class="header" href="#stripping">Stripping</a></h3>
 <p>Headers are stripped by zeroing out the first 64 bytes of the file - this is where the header is stored.</p>
 <h3 id="dumping"><a class="header" href="#dumping">Dumping</a></h3>
 <p>Headers are dumped by reading the first 64 bytes of the input file, and writing them to the output file.</p>
 <h3 id="restoring"><a class="header" href="#restoring">Restoring</a></h3>
 <p>Headers are restored by reading the first 64 bytes of the provided input file, and writing them to the first 64 bytes of the output file.</p>
+<h3 id="signing-v830---yanked-feature"><a class="header" href="#signing-v830---yanked-feature">Signing (v8.3.0 - yanked feature)</a></h3>
+<p>Headers are signed using your hashed encryption key.</p>
+<p>On encryption, the headers are signed when the ciphers/stream ciphers are initialised, this way we only have to hash your key once. The key is never cloned within memory, and it is zeroed out (using <code>zeroize</code> and our <a href="technical-details/Secret-Wrapper.html">secret wrapper</a>) once the header has been signed.</p>
+<p>The signature is generated from the first 48 bytes of the header - this is where all of the important information is enclosed.</p>
+<h3 id="verifying-v830---yanked-feature"><a class="header" href="#verifying-v830---yanked-feature">Verifying (v8.3.0 - yanked feature)</a></h3>
+<p>On decryption, the headers are verified when the ciphers/stream ciphers are initialised. Once again, the key is zeroed out once the header has been verified.</p>
+<p>If a single byte of the header changes, decryption will not continue as the signature will not match. This is to prevent a malicious actor from tampering with the header. </p>
+<p><strong>If the signature doesn't match, but you're positive your key is correct, it is best to assume the header was tampered with.</strong></p>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="secure-erase"><a class="header" href="#secure-erase">Secure Erase</a></h2>
 <p>Due to the nature of SSDs and their controllers (wear levelling and such), it's almost impossible to fully erase a file - we can try our best though. It's not recommended to use the erase function on a large file (1gb+) on flash storage, as it will wear the drive down unneccessarily.</p>
 <p>First we generate enough random bytes to fill the file, seeded by the system. Those random bytes are then written over the file, covering all of the previous data. This is repeated twice (more if specified) to ensure the data is thoroughly gone. This may panic due to a lack of entropy - there's not much we can do in this case.</p>
@@ -402,7 +408,15 @@ Remove `-maxdepth 1` to make this run recursively
 <p>We have implemented our own <code>Secret&lt;&gt;</code> wrapper/type, that implements zeroize-on-drop. This ensures all sensitive information is securely zeroed-out once it is no longer required, and that the sensitive informatiton is only accessed when explicit calls are made. Our implementation was inspired by the <code>secrecy</code> crate's functionality, so I'd like to provide a huge thanks to the original creators.</p>
 <p>Secrets do not implement any copying/cloning, and there are none done manually within the codebase. This is to prevent possible leaks of data.</p>
 <p>Secrets are also redcated from debug logs and such, and they will show &quot;[REDACTED]&quot; whenever they are printed. They do not implement <code>fmt::display</code>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="directory-packing"><a class="header" href="#directory-packing">Directory &quot;Packing&quot;</a></h2>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="this-feature-has-been-deprecated-since-version-840"><a class="header" href="#this-feature-has-been-deprecated-since-version-840"><strong>This feature has been deprecated since Version 8.4.0</strong></a></h1>
+<h2 id="deprecated-notice"><a class="header" href="#deprecated-notice">Deprecated Notice</a></h2>
+<p>We have decided to remove this functionality entirely from Dexios. We did this for a few reasons:</p>
+<ul>
+<li>Pack modes cluttered up the codebase quite heavily</li>
+<li>Pack modes gave Dexios a larger attack-surface, with vulnerabilities such as <a href="https://snyk.io/research/zip-slip-vulnerability">zip slipping</a></li>
+</ul>
+<p>It didn't feel right to leave in packing mode, but remove unpacking, so both have been deprecated. As &quot;packing&quot; zipped the files, you may still access your data. Just run <code>dexios decrypt file.enc file.zip</code> and open it as you would with any other zip file.</p>
+<h2 id="directory-packing"><a class="header" href="#directory-packing">Directory &quot;Packing&quot;</a></h2>
 <p>After using the pack feature to create an archive, it is just a zip file. You may decrypt this as normal and open it for yourself, if you so wish.</p>
 <p>Folders encrypted with this mode have all of their information hidden. There is no way for anyone to deduce how large each file was, or their names/contents, once it has been encrypted.</p>
 <p>This mode does not preserve metadata, file attributes or permissions (yet).</p>

@@ -142,7 +142,15 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h2 id="directory-packing"><a class="header" href="#directory-packing">Directory &quot;Packing&quot;</a></h2>
+                        <h1 id="this-feature-has-been-deprecated-since-version-840"><a class="header" href="#this-feature-has-been-deprecated-since-version-840"><strong>This feature has been deprecated since Version 8.4.0</strong></a></h1>
+<h2 id="deprecated-notice"><a class="header" href="#deprecated-notice">Deprecated Notice</a></h2>
+<p>We have decided to remove this functionality entirely from Dexios. We did this for a few reasons:</p>
+<ul>
+<li>Pack modes cluttered up the codebase quite heavily</li>
+<li>Pack modes gave Dexios a larger attack-surface, with vulnerabilities such as <a href="https://snyk.io/research/zip-slip-vulnerability">zip slipping</a></li>
+</ul>
+<p>It didn't feel right to leave in packing mode, but remove unpacking, so both have been deprecated. As &quot;packing&quot; zipped the files, you may still access your data. Just run <code>dexios decrypt file.enc file.zip</code> and open it as you would with any other zip file.</p>
+<h2 id="directory-packing"><a class="header" href="#directory-packing">Directory &quot;Packing&quot;</a></h2>
 <p>After using the pack feature to create an archive, it is just a zip file. You may decrypt this as normal and open it for yourself, if you so wish.</p>
 <p>Folders encrypted with this mode have all of their information hidden. There is no way for anyone to deduce how large each file was, or their names/contents, once it has been encrypted.</p>
 <p>This mode does not preserve metadata, file attributes or permissions (yet).</p>

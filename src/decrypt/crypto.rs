@@ -56,7 +56,7 @@ pub fn decrypt_bytes_memory_mode(
         Ok(decrypted_bytes) => decrypted_bytes,
         Err(_) => {
             return Err(anyhow!(
-            "Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."
+            "Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with."
         ))
         }
     };
@@ -121,7 +121,7 @@ pub fn decrypt_bytes_stream_mode(
 
             let decrypted_data = match streams.decrypt_next(payload) {
                 Ok(bytes) => bytes,
-                Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file.")),
+                Err(_) => return Err(anyhow!("Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
             };
 
             if bench == BenchMode::WriteToFilesystem {
@@ -141,7 +141,7 @@ pub fn decrypt_bytes_stream_mode(
 
             let decrypted_data = match streams.decrypt_last(payload) {
                 Ok(bytes) => bytes,
-                Err(_) => return Err(anyhow!("Unable to decrypt the final block of data. Maybe it's the wrong key, or it's not an encrypted file.")),
+                Err(_) => return Err(anyhow!("Unable to decrypt the final block of data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
             };
 
             if bench == BenchMode::WriteToFilesystem {

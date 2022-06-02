@@ -82,7 +82,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="Introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="Installing-and-Building.html"><strong aria-hidden="true">2.</strong> Installing and Building</a></li><li class="chapter-item expanded "><a href="Choosing-a-Key.html"><strong aria-hidden="true">3.</strong> Choosing a Key</a></li><li class="chapter-item expanded "><a href="Checksums.html"><strong aria-hidden="true">4.</strong> Checksums</a></li><li class="chapter-item expanded "><a href="Environment-Variables.html"><strong aria-hidden="true">5.</strong> Environment Variables</a></li><li class="chapter-item expanded "><a href="Usage-Examples.html"><strong aria-hidden="true">6.</strong> Usage Examples</a></li><li class="chapter-item expanded "><a href="technical-details/index.html"><strong aria-hidden="true">7.</strong> Technical Details</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="technical-details/Encryption.html"><strong aria-hidden="true">7.1.</strong> Encryption</a></li><li class="chapter-item expanded "><a href="technical-details/Keys.html"><strong aria-hidden="true">7.2.</strong> Keys</a></li><li class="chapter-item expanded "><a href="technical-details/Password-Hashing.html"><strong aria-hidden="true">7.3.</strong> Password Hashing</a></li><li class="chapter-item expanded "><a href="technical-details/Headers.html"><strong aria-hidden="true">7.4.</strong> Headers</a></li><li class="chapter-item expanded "><a href="technical-details/Secure-Erase.html"><strong aria-hidden="true">7.5.</strong> Secure Erase</a></li><li class="chapter-item expanded "><a href="technical-details/Secret-Wrapper.html"><strong aria-hidden="true">7.6.</strong> Secret Wrapper</a></li><li class="chapter-item expanded "><a href="technical-details/Directory-Packing.html"><strong aria-hidden="true">7.7.</strong> Directory Packing</a></li><li class="chapter-item expanded "><a href="technical-details/Performance-Notes.html"><strong aria-hidden="true">7.8.</strong> Performance Notes</a></li></ol></li><li class="chapter-item expanded "><a href="Security-Policy.html"><strong aria-hidden="true">8.</strong> Security Policy</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="Introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="Installing-and-Building.html"><strong aria-hidden="true">2.</strong> Installing and Building</a></li><li class="chapter-item expanded "><a href="Choosing-a-Key.html"><strong aria-hidden="true">3.</strong> Choosing a Key</a></li><li class="chapter-item expanded "><a href="Checksums.html"><strong aria-hidden="true">4.</strong> Checksums</a></li><li class="chapter-item expanded "><a href="Environment-Variables.html"><strong aria-hidden="true">5.</strong> Environment Variables</a></li><li class="chapter-item expanded "><a href="Usage-Examples.html"><strong aria-hidden="true">6.</strong> Usage Examples</a></li><li class="chapter-item expanded "><a href="technical-details/index.html"><strong aria-hidden="true">7.</strong> Technical Details</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="technical-details/Encryption.html"><strong aria-hidden="true">7.1.</strong> Encryption</a></li><li class="chapter-item expanded "><a href="technical-details/Keys.html"><strong aria-hidden="true">7.2.</strong> Keys</a></li><li class="chapter-item expanded "><a href="technical-details/Password-Hashing.html"><strong aria-hidden="true">7.3.</strong> Password Hashing</a></li><li class="chapter-item expanded "><a href="technical-details/Headers.html"><strong aria-hidden="true">7.4.</strong> Headers</a></li><li class="chapter-item expanded "><a href="technical-details/Secure-Erase.html"><strong aria-hidden="true">7.5.</strong> Secure Erase</a></li><li class="chapter-item expanded "><a href="technical-details/Secret-Wrapper.html"><strong aria-hidden="true">7.6.</strong> Secret Wrapper</a></li><li class="chapter-item expanded "><a href="technical-details/Directory-Packing.html"><strong aria-hidden="true">7.7.</strong> Directory Packing</a></li><li class="chapter-item expanded "><a href="technical-details/Auditing.html"><strong aria-hidden="true">7.8.</strong> Auditing</a></li><li class="chapter-item expanded "><a href="technical-details/Performance-Notes.html"><strong aria-hidden="true">7.9.</strong> Performance Notes</a></li></ol></li><li class="chapter-item expanded "><a href="Security-Policy.html"><strong aria-hidden="true">8.</strong> Security Policy</a></li><li class="chapter-item expanded "><a href="Supporting-Dexios.html"><strong aria-hidden="true">9.</strong> Supporting Dexios</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -216,7 +216,7 @@ ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD
 <h2 id="standalone-hashing-mode"><a class="header" href="#standalone-hashing-mode">Standalone Hashing Mode</a></h2>
 <p>You can use this by running <code>dexios hash test.enc</code>. It can also be ran on any file you'd like - encrypted or not.</p>
 <p>You may even hash multiple files at once, with a command such as <code>dexios hash test1.enc test2.enc</code></p>
-<h3 id="performance"><a class="header" href="#performance">Performance</a></h3>
+<h2 id="performance"><a class="header" href="#performance">Performance</a></h2>
 <p>Tests were ran on a system with a Ryzen 7 3700x and 16gb of 3000MHz RAM - running Void Linux. The file used was originally 3.5GiB, and it was stored on a Cruicial MX500 SSD.</p>
 <p>Version 6 removed JSON entirely, and dropped <code>base64</code>, which really shows in the performance metrics.</p>
 <p>This is using AES-256-GCM.</p>
@@ -431,6 +431,23 @@ Remove `-maxdepth 1` to make this run recursively
 <p>First, the zip file is decrypted as a temporary file with a random 8 character alphanumeric extension. This will use memory mode if it's less than 1MB, or if specified - otherwise stream mode will be used.</p>
 <p>We then open the temporary zip file for reading, recreate the directory structure within the output directory, and extract each file to the correct path within the output directory.</p>
 <p>Once all of the files have been successfully extracted, we securely erase the temporary zip file. This again uses 8 passes of the <a href="technical-details/Secure-Erase.html">secure erase</a> feature.</p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="auditing"><a class="header" href="#auditing">Auditing</a></h2>
+<h3 id="official-audit"><a class="header" href="#official-audit">Official Audit</a></h3>
+<p>We currently have no plans to purchase an official audit from a company such as Cure53, as we just do not have the money. They're expensive, and they're only &quot;valid&quot; for a snapshot of your code, so it's probably not worth it for us.</p>
+<p>We do use audited encryption libraries, so we're probably covered on that front. Rust doesn't allow for most issues thanks to it's compiler and lints, and with a bit of thought, we can prevent incorrect usage of these libraries.</p>
+<h3 id="auditing-yourself"><a class="header" href="#auditing-yourself">Auditing Yourself</a></h3>
+<p>If anyone would like to take a dive into the code, and ensure that cryptography-related functions are written correctly, you may find items of interest within these directories:</p>
+<ul>
+<li><code>src/encrypt/crypto.rs</code> - this handles stream and memory encryption</li>
+<li><code>src/decrypt/crypto.rs</code> - this handles stream and memory decryption</li>
+<li><code>src/key.rs</code> - this handles reading the key from certain inputs, and the hashing of said keys</li>
+<li><code>src/streams.rs</code> - this initialises our STREAMs, for both encrypt and decrypt modes</li>
+<li><code>src/header.rs</code> - this contains functions for serialising/deserialising/getting the AAD of headers</li>
+<li><code>src/secret.rs</code> - this contains our <code>Secret&lt;&gt;</code> wrapper that implements zeroize-on-drop, to erase secrets from memory once they're no longer in use</li>
+<li><code>src/global/global.rs</code> - this just matches the enum type, and runs the appropriate AEAD functions</li>
+</ul>
+<p>I'd highly recommend taking a peek into <code>key.rs</code>, <code>streams.rs</code>, and both <code>crypto.rs</code> files.</p>
+<p>If you happen to find anything problematic, please <a href="https://github.com/brxken128/dexios/issues">open a Github issue</a> or email <code>brxken128@tutanota.com</code>. This may be done anonymously.</p>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="performance-notes"><a class="header" href="#performance-notes">Performance Notes</a></h2>
 <p>Please note that performance is heavily dependent on your hardware - mostly disk speed. Dexios has had a <em>lot</em> of performance optimisations applied throughout the versions, but we're getting to the point where the main factor is disk speed.</p>
 <p>To see this for yourself, run one command without the <code>-b</code> switch, and the very same command with the <code>-b</code> switch.</p>
@@ -440,6 +457,13 @@ Remove `-maxdepth 1` to make this run recursively
 <p>Please report any vulnerabilities as a Github issue - we believe all issues should be known, and they are likely to get resolved very quickly this way. Thank you.</p>
 <p>As an alternative, you may contact <code>brxken128@tutanota.com</code></p>
 <p>If you find any vulnerabilities within Dexios, and can provide steps/pointers to reproduce, please report them. You may do this anonymously via the email above. I'm afraid I cannot offer any money in return, but I can add you to the list of contributors (at your request).</p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="supporting-dexios"><a class="header" href="#supporting-dexios">Supporting Dexios</a></h2>
+<p>If you like my work, and would like to support the project, feel free to donate! This is not mandatory, so please don't feel obliged to do so.</p>
+<p>I will continue to work on Dexios either way for the forseeable future.</p>
+<pre><code>XMR: 84zSGS18aHtT3CZjZUnnWpCsz1wmA5f65G6BXisbrvAiH7PxZpP8GorbdjAQYRtfeiANZywwUPjZcHu8eXJeWdafJQFK46G
+BTC: bc1q8x0r7khrfj40qd0zr5xv3t9nl92rz2387pu48u
+ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD
+</code></pre>
 
                     </main>
 

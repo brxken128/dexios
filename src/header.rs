@@ -266,11 +266,6 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
             file.read_exact(&mut padding2)
                 .context("Unable to read final padding from header")?; // read and discard the final padding
 
-            // need to read the padding into padding1 and padding2 - done
-            // and then pass it to read_aad
-            // get_aad needs reverting to include extra 0s (or random bytes) - done
-            // this function should return aad, whether it's Vec::new() or actual bytes
-
             let header = Header {
                 header_type: header_info,
                 nonce,

@@ -26,7 +26,7 @@
      showgrid="false"
      inkscape:zoom="2.1946698"
      inkscape:cx="195.92925"
-     inkscape:cy="101.83764"
+     inkscape:cy="102.29329"
      inkscape:window-width="1920"
      inkscape:window-height="1012"
      inkscape:window-x="1920"
@@ -73,9 +73,9 @@
        inkscape:export-filename="dexios.svg"
        inkscape:export-xdpi="72"
        inkscape:export-ydpi="72"
-       style="fill:#e580ff">
+       style="fill:#5599ff">
       <rect
-         style="fill:#e580ff;stroke-width:0.298891"
+         style="fill:#5599ff;stroke-width:0.298891"
          id="rect447"
          width="46.302082"
          height="2.6458335"
@@ -85,12 +85,12 @@
          xml:space="preserve"
          transform="matrix(0.25278529,0,0,0.26248347,-2.197493,5.1072852)"
          id="text121"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:192px;font-family:Iosevka;-inkscape-font-specification:Iosevka;white-space:pre;shape-inside:url(#rect123);display:inline;fill:#e580ff"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:192px;font-family:Iosevka;-inkscape-font-specification:Iosevka;white-space:pre;shape-inside:url(#rect123);display:inline;fill:#5599ff"><tspan
            x="245.01172"
            y="424.06245"
-           id="tspan134"><tspan
+           id="tspan188"><tspan
              style="font-family:'Iosevka Slab';-inkscape-font-specification:'Iosevka Slab'"
-             id="tspan132">Dx</tspan></tspan></text>
+             id="tspan186">Dx</tspan></tspan></text>
     </g>
   </g>
 </svg>

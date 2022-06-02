@@ -61,6 +61,14 @@ pub fn argon2_hash(
                 Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
             }
         }
+        HeaderVersion::V3 => {
+            // 256MiB of memory, 10 iterations, 4 levels of parallelism
+            let params = Params::new(262_144, 10, 4, Some(Params::DEFAULT_OUTPUT_LEN));
+            match params {
+                std::result::Result::Ok(parameters) => parameters,
+                Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
+            }
+        }
     };
 
     let hash_start_time = Instant::now();

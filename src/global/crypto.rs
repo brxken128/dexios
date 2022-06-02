@@ -5,11 +5,42 @@
 
 use aead::{
     stream::{DecryptorLE31, EncryptorLE31},
-    Payload,
+    Aead, Payload,
 };
 use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
+
+pub enum MemoryCiphers {
+    Aes256Gcm(Box<Aes256Gcm>),
+    XChaCha(Box<XChaCha20Poly1305>),
+    DeoxysII(Box<DeoxysII256>),
+}
+
+impl MemoryCiphers {
+    pub fn encrypt<'msg, 'aad>(
+        &self,
+        nonce: &[u8],
+        plaintext: impl Into<Payload<'msg, 'aad>>,
+    ) -> aead::Result<Vec<u8>> {
+        match self {
+            MemoryCiphers::Aes256Gcm(c) => c.encrypt(nonce.as_ref().into(), plaintext),
+            MemoryCiphers::XChaCha(c) => c.encrypt(nonce.as_ref().into(), plaintext),
+            MemoryCiphers::DeoxysII(c) => c.encrypt(nonce.as_ref().into(), plaintext),
+        }
+    }
+    pub fn decrypt<'msg, 'aad>(
+        &self,
+        nonce: &[u8],
+        ciphertext: impl Into<Payload<'msg, 'aad>>,
+    ) -> aead::Result<Vec<u8>> {
+        match self {
+            MemoryCiphers::Aes256Gcm(c) => c.decrypt(nonce.as_ref().into(), ciphertext),
+            MemoryCiphers::XChaCha(c) => c.decrypt(nonce.as_ref().into(), ciphertext),
+            MemoryCiphers::DeoxysII(c) => c.decrypt(nonce.as_ref().into(), ciphertext),
+        }
+    }
+}
 
 pub enum EncryptStreamCiphers {
     Aes256Gcm(Box<EncryptorLE31<Aes256Gcm>>),

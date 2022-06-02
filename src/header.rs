@@ -3,13 +3,10 @@ use crate::{
     global::structs::{Header, HeaderType},
     global::SALT_LEN,
     prompt::{get_answer, overwrite_check},
-    secret::Secret,
 };
 use anyhow::{Context, Result};
 use blake3::Hasher;
-use hmac::{Hmac, Mac};
-use paris::Logger;
-use sha3::Sha3_512;
+use paris::{warn, Logger};
 use std::{fs::File, io::Write};
 use std::{fs::OpenOptions, io::Read, process::exit};
 
@@ -38,6 +35,10 @@ fn serialize(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
         }
         HeaderVersion::V2 => {
             let info: [u8; 2] = [0xDE, 0x02];
+            info
+        }
+        HeaderVersion::V3 => {
+            let info: [u8; 2] = [0xDE, 0x03];
             info
         }
     };
@@ -73,15 +74,11 @@ fn serialize(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
 // this writes a header to a file
 // it handles padding and serialising the specific information
 // it ensures the buffer is left at 64 bytes, so other functions can write the data without further hassle
-pub fn write_to_file(
-    file: &mut OutputFile,
-    header: &Header,
-    signature: Option<Vec<u8>>,
-) -> Result<()> {
+pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
     let nonce_len = calc_nonce_len(&header.header_type);
 
     match &header.header_type.header_version {
-        HeaderVersion::V1 => {
+        HeaderVersion::V1 | HeaderVersion::V3 => {
             let padding = vec![0u8; 26 - nonce_len];
             let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
 
@@ -103,8 +100,6 @@ pub fn write_to_file(
         HeaderVersion::V2 => {
             let padding = vec![0u8; 26 - nonce_len];
             let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
-            // let signature = sign(header)?;
-            let signature = signature.unwrap();
 
             file.write_all(&version_info)
                 .context("Unable to write version to header")?;
@@ -118,7 +113,7 @@ pub fn write_to_file(
                 .context("Unable to write nonce to header")?; // (26 - nonce len)
             file.write_all(&padding)
                 .context("Unable to write final padding to header")?; // this has reached 48 bytes
-            file.write_all(&signature)
+            file.write_all(&[0u8; 16])
                 .context("Unable to write signature to header")?; // signature
         }
     }
@@ -126,65 +121,10 @@ pub fn write_to_file(
     Ok(())
 }
 
-// sign a header struct to prevent tampering
-// this is used when encrypting
-pub fn sign(header: &Header, key: Secret<[u8; 32]>) -> Result<Vec<u8>> {
-    type HmacSha3_512 = Hmac<Sha3_512>;
-    let mut mac =
-        HmacSha3_512::new_from_slice(key.expose()).context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
-
-    drop(key);
-
-    let nonce_len = calc_nonce_len(&header.header_type);
-    let padding = vec![0u8; 26 - nonce_len];
-    let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
-
-    mac.update(&version_info);
-    mac.update(&algorithm_info);
-    mac.update(&mode_info);
-    mac.update(&header.salt);
-    mac.update(&header.nonce);
-    mac.update(&padding);
-
-    let signature = mac.finalize().into_bytes();
-
-    Ok(signature[..16].to_vec())
-}
-
-// verify a header struct to ensure it matches the signature
-// this is used when decrypting
-// if the signature doesn't match, dexios will not decrypt
-pub fn verify(header: &Header, signature: Option<Vec<u8>>, key: Secret<[u8; 32]>) -> Result<bool> {
-    type HmacSha3_512 = Hmac<Sha3_512>;
-    let mut mac =
-        HmacSha3_512::new_from_slice(key.expose()).context("Unable to initialise HMAC function")?; // add user's argon2 hashed key
-
-    drop(key);
-
-    let nonce_len = calc_nonce_len(&header.header_type);
-    let padding = vec![0u8; 26 - nonce_len];
-    let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
-
-    mac.update(&version_info);
-    mac.update(&algorithm_info);
-    mac.update(&mode_info);
-    mac.update(&header.salt);
-    mac.update(&header.nonce);
-    mac.update(&padding);
-
-    let signature_verif = mac.finalize().into_bytes();
-
-    if signature.unwrap() == signature_verif[..16] {
-        Ok(true)
-    } else {
-        Ok(false)
-    }
-}
-
 // this hashes a header with the salt, nonce, and info provided
-pub fn hash(hasher: &mut Hasher, header: &Header, signature: Option<Vec<u8>>) {
+pub fn hash(hasher: &mut Hasher, header: &Header) {
     match &header.header_type.header_version {
-        HeaderVersion::V1 => {
+        HeaderVersion::V1 | HeaderVersion::V3 => {
             let nonce_len = calc_nonce_len(&header.header_type);
             let padding = vec![0u8; 26 - nonce_len];
             let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
@@ -208,7 +148,6 @@ pub fn hash(hasher: &mut Hasher, header: &Header, signature: Option<Vec<u8>>) {
             hasher.update(&header.salt);
             hasher.update(&header.nonce);
             hasher.update(&padding);
-            hasher.update(&signature.unwrap());
         }
     }
 }
@@ -223,6 +162,7 @@ fn deserialize(
     let header_version = match version_info {
         [0xDE, 0x01] => HeaderVersion::V1,
         [0xDE, 0x02] => HeaderVersion::V2,
+        [0xDE, 0x03] => HeaderVersion::V3,
         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
     };
 
@@ -248,7 +188,7 @@ fn deserialize(
 
 // this takes an input file, and gets all of the data necessary from the header of the file
 // it ensures that the buffer starts at 64 bytes, so that other functions can just read encrypted data immediately
-pub fn read_from_file(file: &mut File) -> Result<(Header, Option<Vec<u8>>)> {
+pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
     let mut version_info = [0u8; 2];
     let mut algorithm_info = [0u8; 2];
     let mut mode_info = [0u8; 2];
@@ -264,6 +204,7 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Option<Vec<u8>>)> {
     let header_info = deserialize(version_info, algorithm_info, mode_info)?;
     match header_info.header_version {
         HeaderVersion::V1 => {
+            warn!("You are using an older version of the Dexios header standard, please re-encrypt your files at your earliest convenience");
             let nonce_len = calc_nonce_len(&header_info);
             let mut nonce = vec![0u8; nonce_len];
 
@@ -276,19 +217,20 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Option<Vec<u8>>)> {
             file.read_exact(&mut vec![0u8; 26 - nonce_len])
                 .context("Unable to read final padding from header")?; // read and discard the final padding
 
-            Ok((
-                Header {
-                    header_type: header_info,
-                    nonce,
-                    salt,
-                },
-                None,
-            ))
+            let header = Header {
+                header_type: header_info,
+                nonce,
+                salt,
+            };
+
+            let aad = get_aad(&header, None, None);
+
+            Ok((header, aad))
         }
         HeaderVersion::V2 => {
+            warn!("You are using an older version of the Dexios header standard, please re-encrypt your files at your earliest convenience");
             let nonce_len = calc_nonce_len(&header_info);
             let mut nonce = vec![0u8; nonce_len];
-            let mut signature = [0u8; 16];
 
             file.read_exact(&mut salt)
                 .context("Unable to read salt from header")?;
@@ -296,7 +238,7 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Option<Vec<u8>>)> {
                 .context("Unable to read nonce from header")?;
             file.read_exact(&mut vec![0u8; 26 - nonce_len])
                 .context("Unable to read final padding from header")?; // read and discard the padding
-            file.read_exact(&mut signature)
+            file.read_exact(&mut [0u8; 16])
                 .context("Unable to read signature from header")?; // read signature
 
             let header = Header {
@@ -305,8 +247,72 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Option<Vec<u8>>)> {
                 salt,
             };
 
-            Ok((header, Some(signature.to_vec())))
+            let aad = get_aad(&header, None, None);
+
+            Ok((header, aad))
         }
+        HeaderVersion::V3 => {
+            let nonce_len = calc_nonce_len(&header_info);
+            let mut nonce = vec![0u8; nonce_len];
+            let mut padding1 = [0u8; 16];
+            let mut padding2 = vec![0u8; 26 - nonce_len];
+
+            file.read_exact(&mut salt)
+                .context("Unable to read salt from header")?;
+            file.read_exact(&mut padding1)
+                .context("Unable to read empty bytes from header")?; // read and subsequently discard the next 16 bytes
+            file.read_exact(&mut nonce)
+                .context("Unable to read nonce from header")?;
+            file.read_exact(&mut padding2)
+                .context("Unable to read final padding from header")?; // read and discard the final padding
+
+            let header = Header {
+                header_type: header_info,
+                nonce,
+                salt,
+            };
+
+            let aad = get_aad(&header, Some(padding1), Some(padding2));
+
+            Ok((header, aad))
+        }
+    }
+}
+
+pub fn get_aad(header: &Header, padding1: Option<[u8; 16]>, padding2: Option<Vec<u8>>) -> Vec<u8> {
+    match header.header_type.header_version {
+        HeaderVersion::V3 => {
+            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+
+            let mut header_bytes = version_info.to_vec();
+            header_bytes.extend_from_slice(&mode_info);
+            header_bytes.extend_from_slice(&algorithm_info);
+            header_bytes.extend_from_slice(&header.salt);
+            header_bytes.extend_from_slice(&padding1.unwrap());
+            header_bytes.extend_from_slice(&header.nonce);
+            header_bytes.extend_from_slice(&padding2.unwrap());
+            header_bytes
+        }
+        _ => Vec::new(),
+    }
+}
+
+pub fn create_aad(header: &Header) -> Vec<u8> {
+    match header.header_type.header_version {
+        HeaderVersion::V3 => {
+            let nonce_len = calc_nonce_len(&header.header_type);
+            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+
+            let mut header_bytes = version_info.to_vec();
+            header_bytes.extend_from_slice(&mode_info);
+            header_bytes.extend_from_slice(&algorithm_info);
+            header_bytes.extend_from_slice(&header.salt);
+            header_bytes.extend_from_slice(&[0; 16]);
+            header_bytes.extend_from_slice(&header.nonce);
+            header_bytes.extend_from_slice(&vec![0; 26 - nonce_len]);
+            header_bytes
+        }
+        _ => Vec::new(),
     }
 }
 

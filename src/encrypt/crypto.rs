@@ -1,4 +1,4 @@
-use crate::global::crypto::EncryptMemoryCiphers;
+use crate::global::crypto::MemoryCiphers;
 use crate::global::enums::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
 use crate::global::structs::{Header, HeaderType};
 use crate::global::{BLOCK_SIZE, VERSION};
@@ -61,7 +61,7 @@ pub fn encrypt_bytes_memory_mode(
             };
 
 
-            (header, EncryptMemoryCiphers::Aes256Gcm(Box::new(cipher)))
+            (header, MemoryCiphers::Aes256Gcm(Box::new(cipher)))
         }
         Algorithm::XChaCha20Poly1305 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 24]>();
@@ -77,7 +77,7 @@ pub fn encrypt_bytes_memory_mode(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            (header, EncryptMemoryCiphers::XChaCha(Box::new(cipher)))
+            (header, MemoryCiphers::XChaCha(Box::new(cipher)))
         }
         Algorithm::DeoxysII256 => {
             let nonce_bytes = StdRng::from_entropy().gen::<[u8; 15]>();
@@ -93,7 +93,7 @@ pub fn encrypt_bytes_memory_mode(
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
 
-            (header, EncryptMemoryCiphers::DeoxysII(Box::new(cipher)))
+            (header, MemoryCiphers::DeoxysII(Box::new(cipher)))
         }
     };
 

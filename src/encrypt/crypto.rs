@@ -7,11 +7,11 @@ use crate::key::{argon2_hash, gen_salt};
 use crate::secret::Secret;
 use crate::streams::init_encryption_stream;
 use aead::{NewAead, Payload};
-use aes_gcm::{Aes256Gcm};
+use aes_gcm::Aes256Gcm;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
-use chacha20poly1305::{XChaCha20Poly1305};
+use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
 use paris::success;
 use rand::{prelude::StdRng, Rng, SeedableRng};
@@ -59,7 +59,6 @@ pub fn encrypt_bytes_memory_mode(
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
-
 
             (header, MemoryCiphers::Aes256Gcm(Box::new(cipher)))
         }

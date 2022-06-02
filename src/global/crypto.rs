@@ -5,7 +5,7 @@
 
 use aead::{
     stream::{DecryptorLE31, EncryptorLE31},
-    Payload, Aead,
+    Aead, Payload,
 };
 use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;

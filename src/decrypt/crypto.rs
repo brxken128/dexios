@@ -6,12 +6,12 @@ use crate::key::argon2_hash;
 use crate::secret::Secret;
 use crate::streams::init_decryption_stream;
 use aead::{NewAead, Payload};
-use aes_gcm::{Aes256Gcm};
+use aes_gcm::Aes256Gcm;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use blake3::Hasher;
-use chacha20poly1305::{XChaCha20Poly1305};
+use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
 use paris::success;
 use std::fs::File;
@@ -38,30 +38,25 @@ pub fn decrypt_bytes_memory_mode(
     let payload = Payload { aad, msg: data };
 
     let ciphers = match header.header_type.algorithm {
-        Algorithm::Aes256Gcm => {
-            match Aes256Gcm::new_from_slice(key.expose()) {
-                Ok(cipher) => MemoryCiphers::Aes256Gcm(Box::new(cipher)),
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            }
-        }
-        Algorithm::XChaCha20Poly1305 => {
-            match XChaCha20Poly1305::new_from_slice(key.expose()) {
-                Ok(cipher) => MemoryCiphers::XChaCha(Box::new(cipher)),
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            }
-
-        }
-        Algorithm::DeoxysII256 => {
-            match DeoxysII256::new_from_slice(key.expose()) {
-                Ok(cipher) => MemoryCiphers::DeoxysII(Box::new(cipher)),
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            }
-        }
+        Algorithm::Aes256Gcm => match Aes256Gcm::new_from_slice(key.expose()) {
+            Ok(cipher) => MemoryCiphers::Aes256Gcm(Box::new(cipher)),
+            Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
+        },
+        Algorithm::XChaCha20Poly1305 => match XChaCha20Poly1305::new_from_slice(key.expose()) {
+            Ok(cipher) => MemoryCiphers::XChaCha(Box::new(cipher)),
+            Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
+        },
+        Algorithm::DeoxysII256 => match DeoxysII256::new_from_slice(key.expose()) {
+            Ok(cipher) => MemoryCiphers::DeoxysII(Box::new(cipher)),
+            Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
+        },
     };
 
     let decrypted_bytes = match ciphers.decrypt(&header.nonce, payload) {
         Ok(decrypted_bytes) => decrypted_bytes,
-        Err(_) => return Err(anyhow!("Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."))
+        Err(_) => return Err(anyhow!(
+            "Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."
+        )),
     };
 
     let mut hasher = Hasher::new();

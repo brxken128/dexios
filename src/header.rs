@@ -6,7 +6,7 @@ use crate::{
 };
 use anyhow::{Context, Result};
 use blake3::Hasher;
-use paris::{Logger, warn};
+use paris::{warn, Logger};
 use std::{fs::File, io::Write};
 use std::{fs::OpenOptions, io::Read, process::exit};
 

@@ -54,9 +54,11 @@ pub fn decrypt_bytes_memory_mode(
 
     let decrypted_bytes = match ciphers.decrypt(&header.nonce, payload) {
         Ok(decrypted_bytes) => decrypted_bytes,
-        Err(_) => return Err(anyhow!(
+        Err(_) => {
+            return Err(anyhow!(
             "Unable to decrypt the data. Maybe it's the wrong key, or it's not an encrypted file."
-        )),
+        ))
+        }
     };
 
     let mut hasher = Hasher::new();

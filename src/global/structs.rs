@@ -26,3 +26,9 @@ pub struct Header {
     pub nonce: Vec<u8>,
     pub salt: [u8; SALT_LEN],
 }
+
+pub struct HeaderPrefix {
+    pub version_info: [u8; 2],
+    pub algorithm_info: [u8; 2],
+    pub mode_info: [u8; 2],
+}

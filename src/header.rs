@@ -1,6 +1,6 @@
 use crate::{
     global::enums::{Algorithm, BenchMode, CipherMode, HeaderVersion, OutputFile, SkipMode},
-    global::structs::{Header, HeaderType},
+    global::structs::{Header, HeaderType, HeaderPrefix},
     global::SALT_LEN,
     prompt::{get_answer, overwrite_check},
 };
@@ -27,7 +27,7 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
 
 // this takes information about the header, and serializes it into raw bytes
 // this is the inverse of the deserialize function
-fn serialize(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
+fn serialize(header_info: &HeaderType) -> HeaderPrefix {
     let version_info = match header_info.header_version {
         HeaderVersion::V1 => {
             let info: [u8; 2] = [0xDE, 0x01];
@@ -68,7 +68,7 @@ fn serialize(header_info: &HeaderType) -> ([u8; 2], [u8; 2], [u8; 2]) {
         }
     };
 
-    (version_info, algorithm_info, mode_info)
+    HeaderPrefix { version_info, algorithm_info, mode_info }
 }
 
 // this writes a header to a file
@@ -80,13 +80,13 @@ pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
     match &header.header_type.header_version {
         HeaderVersion::V1 | HeaderVersion::V3 => {
             let padding = vec![0u8; 26 - nonce_len];
-            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+            let header_prefix = serialize(&header.header_type);
 
-            file.write_all(&version_info)
+            file.write_all(&header_prefix.version_info)
                 .context("Unable to write version to header")?;
-            file.write_all(&algorithm_info)
+            file.write_all(&header_prefix.algorithm_info)
                 .context("Unable to write algorithm to header")?;
-            file.write_all(&mode_info)
+            file.write_all(&header_prefix.mode_info)
                 .context("Unable to write encryption mode to header")?; // 6 bytes total
             file.write_all(&header.salt)
                 .context("Unable to write salt to header")?; // 22 bytes total
@@ -99,13 +99,13 @@ pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
         }
         HeaderVersion::V2 => {
             let padding = vec![0u8; 26 - nonce_len];
-            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+            let header_prefix = serialize(&header.header_type);
 
-            file.write_all(&version_info)
+            file.write_all(&header_prefix.version_info)
                 .context("Unable to write version to header")?;
-            file.write_all(&algorithm_info)
+            file.write_all(&header_prefix.algorithm_info)
                 .context("Unable to write algorithm to header")?;
-            file.write_all(&mode_info)
+            file.write_all(&header_prefix.mode_info)
                 .context("Unable to write encryption mode to header")?; // 6 bytes total
             file.write_all(&header.salt)
                 .context("Unable to write salt to header")?; // 22 bytes total
@@ -127,11 +127,11 @@ pub fn hash(hasher: &mut Hasher, header: &Header) {
         HeaderVersion::V1 | HeaderVersion::V3 => {
             let nonce_len = calc_nonce_len(&header.header_type);
             let padding = vec![0u8; 26 - nonce_len];
-            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+            let header_prefix = serialize(&header.header_type);
 
-            hasher.update(&version_info);
-            hasher.update(&algorithm_info);
-            hasher.update(&mode_info);
+            hasher.update(&header_prefix.version_info);
+            hasher.update(&header_prefix.algorithm_info);
+            hasher.update(&header_prefix.mode_info);
             hasher.update(&header.salt);
             hasher.update(&[0; 16]);
             hasher.update(&header.nonce);
@@ -140,11 +140,11 @@ pub fn hash(hasher: &mut Hasher, header: &Header) {
         HeaderVersion::V2 => {
             let nonce_len = calc_nonce_len(&header.header_type);
             let padding = vec![0u8; 26 - nonce_len];
-            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+            let header_prefix = serialize(&header.header_type);
 
-            hasher.update(&version_info);
-            hasher.update(&algorithm_info);
-            hasher.update(&mode_info);
+            hasher.update(&header_prefix.version_info);
+            hasher.update(&header_prefix.algorithm_info);
+            hasher.update(&header_prefix.mode_info);
             hasher.update(&header.salt);
             hasher.update(&header.nonce);
             hasher.update(&padding);
@@ -155,25 +155,23 @@ pub fn hash(hasher: &mut Hasher, header: &Header) {
 // this is used for converting raw bytes from the header to enums that dexios can understand
 // this involves the header version, encryption algorithm/mode, and possibly more in the future
 fn deserialize(
-    version_info: [u8; 2],
-    algorithm_info: [u8; 2],
-    mode_info: [u8; 2],
+    header_prefix: HeaderPrefix,
 ) -> Result<HeaderType> {
-    let header_version = match version_info {
+    let header_version = match header_prefix.version_info {
         [0xDE, 0x01] => HeaderVersion::V1,
         [0xDE, 0x02] => HeaderVersion::V2,
         [0xDE, 0x03] => HeaderVersion::V3,
         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
     };
 
-    let algorithm = match algorithm_info {
+    let algorithm = match header_prefix.algorithm_info {
         [0x0E, 0x01] => Algorithm::XChaCha20Poly1305,
         [0x0E, 0x02] => Algorithm::Aes256Gcm,
         [0x0E, 0x03] => Algorithm::DeoxysII256,
         _ => return Err(anyhow::anyhow!("Error getting encryption mode from header")),
     };
 
-    let cipher_mode = match mode_info {
+    let cipher_mode = match header_prefix.mode_info {
         [0x0C, 0x01] => CipherMode::StreamMode,
         [0x0C, 0x02] => CipherMode::MemoryMode,
         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
@@ -192,6 +190,7 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
     let mut version_info = [0u8; 2];
     let mut algorithm_info = [0u8; 2];
     let mut mode_info = [0u8; 2];
+
     let mut salt = [0u8; SALT_LEN];
 
     file.read_exact(&mut version_info)
@@ -201,7 +200,10 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
     file.read_exact(&mut mode_info)
         .context("Unable to read encryption mode from header")?;
 
-    let header_info = deserialize(version_info, algorithm_info, mode_info)?;
+    let header_prefix = HeaderPrefix { version_info, algorithm_info, mode_info };
+
+    let header_info = deserialize(header_prefix)?;
+    
     match header_info.header_version {
         HeaderVersion::V1 => {
             warn!("You are using an older version of the Dexios header standard, please re-encrypt your files at your earliest convenience");
@@ -282,11 +284,11 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
 pub fn get_aad(header: &Header, padding1: Option<[u8; 16]>, padding2: Option<Vec<u8>>) -> Vec<u8> {
     match header.header_type.header_version {
         HeaderVersion::V3 => {
-            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+            let header_prefix = serialize(&header.header_type);
 
-            let mut header_bytes = version_info.to_vec();
-            header_bytes.extend_from_slice(&mode_info);
-            header_bytes.extend_from_slice(&algorithm_info);
+            let mut header_bytes = header_prefix.version_info.to_vec();
+            header_bytes.extend_from_slice(&header_prefix.mode_info);
+            header_bytes.extend_from_slice(&header_prefix.algorithm_info);
             header_bytes.extend_from_slice(&header.salt);
             header_bytes.extend_from_slice(&padding1.unwrap());
             header_bytes.extend_from_slice(&header.nonce);
@@ -301,11 +303,11 @@ pub fn create_aad(header: &Header) -> Vec<u8> {
     match header.header_type.header_version {
         HeaderVersion::V3 => {
             let nonce_len = calc_nonce_len(&header.header_type);
-            let (version_info, algorithm_info, mode_info) = serialize(&header.header_type);
+            let header_prefix = serialize(&header.header_type);
 
-            let mut header_bytes = version_info.to_vec();
-            header_bytes.extend_from_slice(&mode_info);
-            header_bytes.extend_from_slice(&algorithm_info);
+            let mut header_bytes = header_prefix.version_info.to_vec();
+            header_bytes.extend_from_slice(&header_prefix.mode_info);
+            header_bytes.extend_from_slice(&header_prefix.algorithm_info);
             header_bytes.extend_from_slice(&header.salt);
             header_bytes.extend_from_slice(&[0; 16]);
             header_bytes.extend_from_slice(&header.nonce);

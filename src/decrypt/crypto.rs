@@ -14,11 +14,11 @@ use blake3::Hasher;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
 use paris::success;
-use zeroize::Zeroize;
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
 use std::time::Instant;
+use zeroize::Zeroize;
 
 // this decrypts the data in memory mode
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce

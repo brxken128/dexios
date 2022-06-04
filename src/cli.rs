@@ -59,7 +59,8 @@ pub fn get_matches() -> clap::ArgMatches {
                 .short('b')
                 .long("benchmark")
                 .takes_value(false)
-                .help("Don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
+                .help("Don't write the output file to the disk (for benchmarking)")
+                .conflicts_with("erase"),
         )
         .arg(
             Arg::new("password")
@@ -80,7 +81,7 @@ pub fn get_matches() -> clap::ArgMatches {
 
     let decrypt = Command::new("decrypt")
         .short_flag('d')
-        .about("Decrypt a previously encrypted file")
+        .about("Decrypt a file")
         .arg(
             Arg::new("input")
                 .value_name("input")
@@ -139,7 +140,8 @@ pub fn get_matches() -> clap::ArgMatches {
                 .short('b')
                 .long("benchmark")
                 .takes_value(false)
-                .help("Don't write the output file to the disk, to prevent wear on flash storage when benchmarking"),
+                .help("Don't write the output file to the disk (for benchmarking)")
+                .conflicts_with("erase"),
         )
         .arg(
             Arg::new("password")
@@ -241,14 +243,14 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .value_name("input")
                                 .takes_value(true)
                                 .required(true)
-                                .help("The header file"),
+                                .help("The dumped header file"),
                         )
                         .arg(
                             Arg::new("output")
                                 .value_name("output")
                                 .takes_value(true)
                                 .required(true)
-                                .help("The encrypted file to restore the header to"),
+                                .help("The encrypted file"),
                         )
                         .arg(
                             Arg::new("skip")

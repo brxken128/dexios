@@ -1,6 +1,6 @@
 use crate::{
     global::enums::{Algorithm, BenchMode, CipherMode, HeaderVersion, OutputFile, SkipMode},
-    global::structs::{Header, HeaderType, HeaderPrefix},
+    global::structs::{Header, HeaderPrefix, HeaderType},
     global::SALT_LEN,
     prompt::{get_answer, overwrite_check},
 };
@@ -68,7 +68,11 @@ fn serialize(header_info: &HeaderType) -> HeaderPrefix {
         }
     };
 
-    HeaderPrefix { version_info, algorithm_info, mode_info }
+    HeaderPrefix {
+        version_info,
+        algorithm_info,
+        mode_info,
+    }
 }
 
 // this writes a header to a file
@@ -154,9 +158,7 @@ pub fn hash(hasher: &mut Hasher, header: &Header) {
 
 // this is used for converting raw bytes from the header to enums that dexios can understand
 // this involves the header version, encryption algorithm/mode, and possibly more in the future
-fn deserialize(
-    header_prefix: HeaderPrefix,
-) -> Result<HeaderType> {
+fn deserialize(header_prefix: HeaderPrefix) -> Result<HeaderType> {
     let header_version = match header_prefix.version_info {
         [0xDE, 0x01] => HeaderVersion::V1,
         [0xDE, 0x02] => HeaderVersion::V2,
@@ -200,10 +202,14 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
     file.read_exact(&mut mode_info)
         .context("Unable to read encryption mode from header")?;
 
-    let header_prefix = HeaderPrefix { version_info, algorithm_info, mode_info };
+    let header_prefix = HeaderPrefix {
+        version_info,
+        algorithm_info,
+        mode_info,
+    };
 
     let header_info = deserialize(header_prefix)?;
-    
+
     match header_info.header_version {
         HeaderVersion::V1 => {
             warn!("You are using an older version of the Dexios header standard, please re-encrypt your files at your earliest convenience");

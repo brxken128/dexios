@@ -19,6 +19,7 @@ use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
 use std::time::Instant;
+use zeroize::Zeroize;
 
 // this encrypts data in memory mode
 // it takes the data and a Secret<> key
@@ -168,11 +169,11 @@ pub fn encrypt_bytes_stream_mode(
 
     let aad = create_aad(&header);
 
-    let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
+    let mut read_buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
     loop {
         let read_count = input
-            .read(&mut buffer)
+            .read(&mut read_buffer)
             .context("Unable to read from the input file")?;
         if read_count == BLOCK_SIZE {
             // aad is just empty bytes normally
@@ -180,7 +181,7 @@ pub fn encrypt_bytes_stream_mode(
             // this means we don't need to do anything special in regards to older versions
             let payload = Payload {
                 aad: &aad,
-                msg: buffer.as_ref(),
+                msg: read_buffer.as_ref(),
             };
 
             let encrypted_data = match streams.encrypt_next(payload) {
@@ -200,7 +201,7 @@ pub fn encrypt_bytes_stream_mode(
             // if we read something less than BLOCK_SIZE, and have hit the end of the file
             let payload = Payload {
                 aad: &aad,
-                msg: &buffer[..read_count],
+                msg: &read_buffer[..read_count],
             };
 
             let encrypted_data = match streams.encrypt_last(payload) {
@@ -219,6 +220,9 @@ pub fn encrypt_bytes_stream_mode(
             break;
         }
     }
+
+    read_buffer.zeroize();
+
     if bench == BenchMode::WriteToFilesystem {
         output.flush().context("Unable to flush the output file")?;
     }

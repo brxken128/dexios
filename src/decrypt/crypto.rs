@@ -18,6 +18,7 @@ use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
 use std::time::Instant;
+use zeroize::Zeroize;
 
 // this decrypts the data in memory mode
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce
@@ -119,7 +120,7 @@ pub fn decrypt_bytes_stream_mode(
                 msg: buffer.as_ref(),
             };
 
-            let decrypted_data = match streams.decrypt_next(payload) {
+            let mut decrypted_data = match streams.decrypt_next(payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
             };
@@ -129,9 +130,12 @@ pub fn decrypt_bytes_stream_mode(
                     .write_all(&decrypted_data)
                     .context("Unable to write to the output file")?;
             }
+
             if hash == HashMode::CalculateHash {
                 hasher.update(&buffer);
             }
+
+            decrypted_data.zeroize();
         } else {
             // if we read something less than BLOCK_SIZE+16, and have hit the end of the file
             let payload = Payload {
@@ -139,7 +143,7 @@ pub fn decrypt_bytes_stream_mode(
                 msg: &buffer[..read_count],
             };
 
-            let decrypted_data = match streams.decrypt_last(payload) {
+            let mut decrypted_data = match streams.decrypt_last(payload) {
                 Ok(bytes) => bytes,
                 Err(_) => return Err(anyhow!("Unable to decrypt the final block of data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
             };
@@ -150,9 +154,13 @@ pub fn decrypt_bytes_stream_mode(
                     .context("Unable to write to the output file")?;
                 output.flush().context("Unable to flush the output file")?;
             }
+
             if hash == HashMode::CalculateHash {
                 hasher.update(&buffer[..read_count]);
             }
+
+            decrypted_data.zeroize();
+
             break;
         }
     }

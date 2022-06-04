@@ -29,22 +29,35 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     ));
 
     for _ in 0..passes {
-        if data.len() < 512 { // if file is smaller than the 512 byte "block"
-            let mut buf = vec![0; data.len().try_into().context("Unable to get file size as usize")?];
+        if data.len() < 512 {
+            // if file is smaller than the 512 byte "block"
+            let mut buf = vec![
+                0;
+                data.len()
+                    .try_into()
+                    .context("Unable to get file size as usize")?
+            ];
             rand::thread_rng().fill_bytes(&mut buf);
             writer
                 .write_all(&buf)
                 .with_context(|| format!("Unable to overwrite with random bytes: {}", input))?;
         } else {
-            for _ in 0..data.len() / 512 { // for every 512 byte "block"
+            for _ in 0..data.len() / 512 {
+                // for every 512 byte "block"
                 let mut buf = vec![0; 512];
                 rand::thread_rng().fill_bytes(&mut buf);
                 writer
                     .write_all(&buf)
                     .with_context(|| format!("Unable to overwrite with random bytes: {}", input))?;
             }
-            if (data.len() % 512) != 0 { // if not perfectly divisible by 512
-                let mut buf = vec![0; (512 % data.len()).try_into().context("Unable to get file size as usize")?];
+            if (data.len() % 512) != 0 {
+                // if not perfectly divisible by 512
+                let mut buf = vec![
+                    0;
+                    (512 % data.len())
+                        .try_into()
+                        .context("Unable to get file size as usize")?
+                ];
                 rand::thread_rng().fill_bytes(&mut buf);
                 writer
                     .write_all(&buf)

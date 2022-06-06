@@ -2,7 +2,7 @@
 // it returns information (e.g. CryptoParams) to functions that require it
 
 use crate::global::states::{
-    Algorithm, BenchMode, EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
+    Algorithm, EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
 };
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
@@ -58,14 +58,6 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         EraseMode::IgnoreFile(0)
     };
 
-    let bench = if sub_matches.is_present("bench") {
-        //specify to not write to filesystem, for benchmarking and saving wear on hardware
-        BenchMode::BenchmarkInMemory
-    } else {
-        // default
-        BenchMode::WriteToFilesystem
-    };
-
     let password = if sub_matches.is_present("password") {
         //Overwrite, so the user provided password is used and ignore environment supplied one?!
         PasswordMode::ForceUserProvidedPassword
@@ -77,7 +69,6 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
     Ok(CryptoParams {
         hash_mode,
         skip,
-        bench,
         password,
         erase,
         keyfile,

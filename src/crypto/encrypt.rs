@@ -1,7 +1,7 @@
 use crate::crypto::key::{argon2_hash, gen_salt};
 use crate::crypto::streams::init_encryption_stream;
 use crate::global::secret::Secret;
-use crate::global::states::{Algorithm, BenchMode, CipherMode, HashMode};
+use crate::global::states::{Algorithm, CipherMode, HashMode};
 use crate::global::header::{Header, HeaderType};
 use crate::global::{BLOCK_SIZE, VERSION};
 use aead::Payload;
@@ -30,7 +30,6 @@ pub fn memory_mode(
     data: Secret<Vec<u8>>,
     output: &mut File,
     raw_key: Secret<Vec<u8>>,
-    bench: BenchMode,
     hash: HashMode,
     algorithm: Algorithm,
 ) -> Result<()> {
@@ -74,13 +73,11 @@ pub fn memory_mode(
 
     drop(data);
 
-    if bench == BenchMode::WriteToFilesystem {
-        let write_start_time = Instant::now();
-        header.write(output)?; // !!!attach context
-        output.write_all(&encrypted_bytes)?;
-        let write_duration = write_start_time.elapsed();
-        success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
-    }
+    let write_start_time = Instant::now();
+    header.write(output)?; // !!!attach context
+    output.write_all(&encrypted_bytes)?;
+    let write_duration = write_start_time.elapsed();
+    success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
 
     let mut hasher = blake3::Hasher::new();
     if hash == HashMode::CalculateHash {
@@ -108,7 +105,6 @@ pub fn stream_mode(
     input: &mut File,
     output: &mut File,
     raw_key: Secret<Vec<u8>>,
-    bench: BenchMode,
     hash: HashMode,
     algorithm: Algorithm,
 ) -> Result<()> {
@@ -120,9 +116,7 @@ pub fn stream_mode(
 
     let (mut streams, header) = init_encryption_stream(raw_key, header_type)?;
 
-    if bench == BenchMode::WriteToFilesystem {
-        header.write(output)?; // !!!attach context
-    }
+    header.write(output)?; // !!!attach context
 
     let mut hasher = blake3::Hasher::new();
 
@@ -152,11 +146,9 @@ pub fn stream_mode(
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };
 
-            if bench == BenchMode::WriteToFilesystem {
-                output
-                    .write_all(&encrypted_data)
-                    .context("Unable to write to the output file")?;
-            }
+            output
+                .write_all(&encrypted_data)
+                .context("Unable to write to the output file")?;
             if hash == HashMode::CalculateHash {
                 hasher.update(&encrypted_data);
             }
@@ -172,11 +164,9 @@ pub fn stream_mode(
                 Err(_) => return Err(anyhow!("Unable to encrypt the data")),
             };
 
-            if bench == BenchMode::WriteToFilesystem {
-                output
-                    .write_all(&encrypted_data)
-                    .context("Unable to write to the output file")?;
-            }
+            output
+                .write_all(&encrypted_data)
+                .context("Unable to write to the output file")?;
             if hash == HashMode::CalculateHash {
                 hasher.update(&encrypted_data);
             }
@@ -186,9 +176,7 @@ pub fn stream_mode(
 
     read_buffer.zeroize();
 
-    if bench == BenchMode::WriteToFilesystem {
-        output.flush().context("Unable to flush the output file")?;
-    }
+    output.flush().context("Unable to flush the output file")?;
     if hash == HashMode::CalculateHash {
         let hash = hasher.finalize().to_hex().to_string();
         success!("Hash of the encrypted file is: {}", hash,);

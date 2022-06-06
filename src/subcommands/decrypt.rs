@@ -1,7 +1,6 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
 use crate::global::header;
-use crate::global::states::BenchMode;
 use crate::global::states::CipherMode;
 use crate::global::states::EraseMode;
 use crate::global::states::HeaderFile;
@@ -26,7 +25,7 @@ pub fn memory_mode(
 ) -> Result<()> {
     let mut logger = Logger::new();
 
-    if !overwrite_check(output, params.skip, params.bench)? {
+    if !overwrite_check(output, params.skip)? {
         exit(0);
     }
 
@@ -73,27 +72,17 @@ pub fn memory_mode(
         &encrypted_data,
         &mut output_file,
         raw_key,
-        params.bench,
         params.hash_mode,
         &aad,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
 
-    match params.bench {
-        BenchMode::WriteToFilesystem => {
-            logger.success(format!(
-                "Decryption successful! File saved as {} [took {:.2}s]",
-                output,
-                decrypt_duration.as_secs_f32(),
-            ));
-        }
-        BenchMode::BenchmarkInMemory => {
-            logger.success(format!(
-                "Decryption successful! [took {:.2}s]",
-                decrypt_duration.as_secs_f32(),
-            ));
-        }
-    }
+    logger.success(format!(
+        "Decryption successful! File saved as {} [took {:.2}s]",
+        output,
+        decrypt_duration.as_secs_f32(),
+    ));
+    
 
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;
@@ -137,7 +126,7 @@ pub fn stream_mode(
         return memory_mode(input, output, header_file, params);
     }
 
-    if !overwrite_check(output, params.skip, params.bench)? {
+    if !overwrite_check(output, params.skip)? {
         exit(0);
     }
 
@@ -158,37 +147,25 @@ pub fn stream_mode(
         &mut output_file,
         raw_key,
         &header,
-        params.bench,
         params.hash_mode,
         &aad,
     );
 
     if decryption_result.is_err() {
         drop(output_file);
-        if params.bench == BenchMode::WriteToFilesystem {
-            std::fs::remove_file(output).context("Unable to remove the malformed file")?;
-        }
+        std::fs::remove_file(output).context("Unable to remove the malformed file")?;
         return decryption_result;
     }
 
     let decrypt_duration = decrypt_start_time.elapsed();
 
-    match params.bench {
-        BenchMode::WriteToFilesystem => {
-            logger.success(format!(
-                "Decryption successful! File saved as {} [took {:.2}s]",
-                output,
-                decrypt_duration.as_secs_f32(),
-            ));
-        }
-        BenchMode::BenchmarkInMemory => {
-            logger.success(format!(
-                "Decryption successful! [took {:.2}s]",
-                decrypt_duration.as_secs_f32(),
-            ));
-        }
-    }
 
+    logger.success(format!(
+        "Decryption successful! File saved as {} [took {:.2}s]",
+        output,
+        decrypt_duration.as_secs_f32(),
+    ));
+      
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;
     }

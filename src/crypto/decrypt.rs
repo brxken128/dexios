@@ -1,7 +1,7 @@
 use crate::crypto::key::argon2_hash;
 use crate::crypto::streams::init_decryption_stream;
 use crate::global::secret::Secret;
-use crate::global::states::{BenchMode, HashMode};
+use crate::global::states::HashMode;
 use crate::global::header::Header;
 use crate::global::BLOCK_SIZE;
 use aead::Payload;
@@ -28,7 +28,6 @@ pub fn memory_mode(
     data: &[u8],
     output: &mut File,
     raw_key: Secret<Vec<u8>>,
-    bench: BenchMode,
     hash: HashMode,
     aad: &[u8],
 ) -> Result<()> {
@@ -62,12 +61,10 @@ pub fn memory_mode(
         );
     }
 
-    if bench == BenchMode::WriteToFilesystem {
-        let write_start_time = Instant::now();
-        output.write_all(&decrypted_bytes)?;
-        let write_duration = write_start_time.elapsed();
-        success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
-    }
+    let write_start_time = Instant::now();
+    output.write_all(&decrypted_bytes)?;
+    let write_duration = write_start_time.elapsed();
+    success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
 
     Ok(())
 }
@@ -83,7 +80,6 @@ pub fn stream_mode(
     output: &mut File,
     raw_key: Secret<Vec<u8>>,
     header: &Header,
-    bench: BenchMode,
     hash: HashMode,
     aad: &[u8],
 ) -> Result<()> {
@@ -110,11 +106,9 @@ pub fn stream_mode(
                 Err(_) => return Err(anyhow!("Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
             };
 
-            if bench == BenchMode::WriteToFilesystem {
-                output
-                    .write_all(&decrypted_data)
-                    .context("Unable to write to the output file")?;
-            }
+            output
+                .write_all(&decrypted_data)
+                .context("Unable to write to the output file")?;
 
             if hash == HashMode::CalculateHash {
                 hasher.update(&buffer);
@@ -133,12 +127,10 @@ pub fn stream_mode(
                 Err(_) => return Err(anyhow!("Unable to decrypt the final block of data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
             };
 
-            if bench == BenchMode::WriteToFilesystem {
-                output
-                    .write_all(&decrypted_data)
-                    .context("Unable to write to the output file")?;
-                output.flush().context("Unable to flush the output file")?;
-            }
+            output
+                .write_all(&decrypted_data)
+                .context("Unable to write to the output file")?;
+            output.flush().context("Unable to flush the output file")?;
 
             if hash == HashMode::CalculateHash {
                 hasher.update(&buffer[..read_count]);

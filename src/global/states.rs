@@ -24,12 +24,6 @@ pub enum SkipMode {
 }
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum BenchMode {
-    WriteToFilesystem,
-    BenchmarkInMemory,
-}
-
-#[derive(PartialEq, Copy, Clone)]
 pub enum PasswordMode {
     ForceUserProvidedPassword,
     NormalKeySourcePriority,

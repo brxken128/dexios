@@ -55,14 +55,6 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("Skip all prompts"),
         )
         .arg(
-            Arg::new("bench")
-                .short('b')
-                .long("benchmark")
-                .takes_value(false)
-                .help("Don't write the output file to the disk (for benchmarking)")
-                .conflicts_with("erase"),
-        )
-        .arg(
             Arg::new("password")
                 .short('p')
                 .long("password")
@@ -134,14 +126,6 @@ pub fn get_matches() -> clap::ArgMatches {
                 .long("skip")
                 .takes_value(false)
                 .help("Skip all prompts"),
-        )
-        .arg(
-            Arg::new("bench")
-                .short('b')
-                .long("benchmark")
-                .takes_value(false)
-                .help("Don't write the output file to the disk (for benchmarking)")
-                .conflicts_with("erase"),
         )
         .arg(
             Arg::new("password")

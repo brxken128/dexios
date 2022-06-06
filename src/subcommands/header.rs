@@ -7,7 +7,7 @@ use std::{
 use anyhow::{Context, Result};
 use paris::Logger;
 
-use crate::global::states::{BenchMode, SkipMode};
+use crate::global::states::SkipMode;
 
 use super::prompt::{get_answer, overwrite_check};
 
@@ -25,7 +25,7 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     file.read_exact(&mut header)
         .with_context(|| format!("Unable to read header from file: {}", input))?;
 
-    if !overwrite_check(output, skip, BenchMode::WriteToFilesystem)? {
+    if !overwrite_check(output, skip)? {
         std::process::exit(0);
     }
 

@@ -3,6 +3,7 @@ use super::prompt::overwrite_check;
 use crate::global::header;
 use crate::global::states::CipherMode;
 use crate::global::states::EraseMode;
+use crate::global::states::HashMode;
 use crate::global::states::HeaderFile;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Ok, Result};
@@ -74,7 +75,6 @@ pub fn memory_mode(
         &encrypted_data,
         &mut output_file,
         raw_key,
-        params.hash_mode,
         &aad,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
@@ -84,6 +84,12 @@ pub fn memory_mode(
         output,
         decrypt_duration.as_secs_f32(),
     ));
+
+    if params.hash_mode == HashMode::CalculateHash {
+        let mut inputs = Vec::<String>::new();
+        inputs.push(input.to_string());
+        super::hashing::hash_stream(&inputs)?;
+    }
 
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;
@@ -150,7 +156,6 @@ pub fn stream_mode(
         &mut output_file,
         raw_key,
         &header,
-        params.hash_mode,
         &aad,
     );
 
@@ -167,6 +172,12 @@ pub fn stream_mode(
         output,
         decrypt_duration.as_secs_f32(),
     ));
+
+    if params.hash_mode == HashMode::CalculateHash {
+        let mut inputs = Vec::<String>::new();
+        inputs.push(input.to_string());
+        super::hashing::hash_stream(&inputs)?;
+    }
 
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;

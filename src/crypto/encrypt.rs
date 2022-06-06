@@ -2,7 +2,7 @@ use crate::crypto::key::{argon2_hash, gen_salt};
 use crate::crypto::streams::init_encryption_stream;
 use crate::global::header::{Header, HeaderType};
 use crate::global::secret::Secret;
-use crate::global::states::{Algorithm, CipherMode, HashMode};
+use crate::global::states::{Algorithm, CipherMode};
 use crate::global::{BLOCK_SIZE, VERSION};
 use aead::Payload;
 use anyhow::anyhow;
@@ -30,7 +30,6 @@ pub fn memory_mode(
     data: Secret<Vec<u8>>,
     output: &mut File,
     raw_key: Secret<Vec<u8>>,
-    hash: HashMode,
     algorithm: Algorithm,
 ) -> Result<()> {
     let salt = gen_salt();
@@ -79,20 +78,6 @@ pub fn memory_mode(
     let write_duration = write_start_time.elapsed();
     success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
 
-    let mut hasher = blake3::Hasher::new();
-    if hash == HashMode::CalculateHash {
-        let hash_start_time = Instant::now();
-        hasher.update(&aad);
-        hasher.update(&encrypted_bytes);
-        let hash = hasher.finalize().to_hex().to_string();
-        let hash_duration = hash_start_time.elapsed();
-        success!(
-            "Hash of the encrypted file is: {} [took {:.2}s]",
-            hash,
-            hash_duration.as_secs_f32()
-        );
-    }
-
     Ok(())
 }
 
@@ -105,7 +90,6 @@ pub fn stream_mode(
     input: &mut File,
     output: &mut File,
     raw_key: Secret<Vec<u8>>,
-    hash: HashMode,
     algorithm: Algorithm,
 ) -> Result<()> {
     let header_type = HeaderType {
@@ -118,13 +102,8 @@ pub fn stream_mode(
 
     header.write(output)?; // !!!attach context
 
-    let mut hasher = blake3::Hasher::new();
 
     let aad = header.serialize()?;
-
-    if hash == HashMode::CalculateHash {
-        hasher.update(&aad);
-    }
 
     let mut read_buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
@@ -149,9 +128,6 @@ pub fn stream_mode(
             output
                 .write_all(&encrypted_data)
                 .context("Unable to write to the output file")?;
-            if hash == HashMode::CalculateHash {
-                hasher.update(&encrypted_data);
-            }
         } else {
             // if we read something less than BLOCK_SIZE, and have hit the end of the file
             let payload = Payload {
@@ -167,9 +143,6 @@ pub fn stream_mode(
             output
                 .write_all(&encrypted_data)
                 .context("Unable to write to the output file")?;
-            if hash == HashMode::CalculateHash {
-                hasher.update(&encrypted_data);
-            }
             break;
         }
     }
@@ -177,9 +150,5 @@ pub fn stream_mode(
     read_buffer.zeroize();
 
     output.flush().context("Unable to flush the output file")?;
-    if hash == HashMode::CalculateHash {
-        let hash = hasher.finalize().to_hex().to_string();
-        success!("Hash of the encrypted file is: {}", hash,);
-    }
     Ok(())
 }

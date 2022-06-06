@@ -3,9 +3,7 @@ use crate::{
     global::SALT_LEN,
 };
 use anyhow::{Context, Result};
-use std::{
-    io::{Seek, Write, Read},
-};
+use std::io::{Read, Seek, Write};
 
 // the "tag" that contains version/mode information
 pub struct HeaderType {
@@ -138,7 +136,14 @@ impl Header {
             }
         };
 
-        Ok((Header { header_type, nonce, salt }, aad))
+        Ok((
+            Header {
+                header_type,
+                nonce,
+                salt,
+            },
+            aad,
+        ))
     }
 
     fn serialize_algorithm(&self) -> [u8; 2] {

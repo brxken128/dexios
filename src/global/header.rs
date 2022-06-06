@@ -14,7 +14,7 @@ pub struct HeaderType {
 }
 
 // the "tag"/HeaderType, but in raw bytes
-pub struct Tag {
+struct Tag {
     pub version: [u8; 2],
     pub algorithm: [u8; 2],
     pub mode: [u8; 2],

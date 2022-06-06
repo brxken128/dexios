@@ -1,7 +1,7 @@
 use crate::crypto::key::argon2_hash;
 use crate::crypto::streams::init_decryption_stream;
 use crate::global::secret::Secret;
-use crate::global::states::{BenchMode, HashMode, OutputFile};
+use crate::global::states::{BenchMode, HashMode};
 use crate::global::header::Header;
 use crate::global::BLOCK_SIZE;
 use aead::Payload;
@@ -11,7 +11,7 @@ use anyhow::Result;
 use blake3::Hasher;
 use paris::success;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::result::Result::Ok;
 use std::time::Instant;
 use zeroize::Zeroize;
@@ -26,7 +26,7 @@ use super::memory::init_memory_cipher;
 pub fn memory_mode(
     header: &Header,
     data: &[u8],
-    output: &mut OutputFile,
+    output: &mut File,
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,
@@ -80,7 +80,7 @@ pub fn memory_mode(
 // on each read, it decrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
 pub fn stream_mode(
     input: &mut File,
-    output: &mut OutputFile,
+    output: &mut File,
     raw_key: Secret<Vec<u8>>,
     header: &Header,
     bench: BenchMode,

@@ -1,16 +1,17 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
+use crate::global::header;
 use crate::global::states::BenchMode;
 use crate::global::states::CipherMode;
 use crate::global::states::EraseMode;
 use crate::global::states::HeaderFile;
-use crate::global::states::OutputFile;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Ok, Result};
 use paris::Logger;
 use std::fs::File;
 
 use std::io::Read;
+use std::io::Seek;
 use std::process::exit;
 use std::time::Instant;
 
@@ -34,14 +35,12 @@ pub fn memory_mode(
 
     let (header, aad) = match header_file {
         HeaderFile::Some(contents) => {
+            input_file.seek(std::io::SeekFrom::Start(64)).context("Unable to seek input file")?;
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
-            input_file
-                .read_exact(&mut [0u8; 64])
-                .with_context(|| format!("Unable to seek input file: {}", input))?;
-            crate::global::header::read_from_file(&mut header_file)?
+            header::Header::deserialize(&mut header_file)?
         }
-        HeaderFile::None => crate::global::header::read_from_file(&mut input_file)?,
+        HeaderFile::None => header::Header::deserialize(&mut input_file)?
     };
 
     let read_start_time = Instant::now();
@@ -66,14 +65,7 @@ pub fn memory_mode(
 
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
-    let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
-        OutputFile::Some(
-            File::create(output)
-                .with_context(|| format!("Unable to open output file: {}", output))?,
-        )
-    } else {
-        OutputFile::None
-    };
+    let mut output_file = File::create(output)?; // !!!attach context here
 
     let decrypt_start_time = Instant::now();
     crate::crypto::decrypt::memory_mode(
@@ -132,14 +124,12 @@ pub fn stream_mode(
 
     let (header, aad) = match header_file {
         HeaderFile::Some(contents) => {
+            input_file.seek(std::io::SeekFrom::Start(64)).context("Unable to seek input file")?;
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
-            input_file
-                .read_exact(&mut [0u8; 64])
-                .with_context(|| format!("Unable to seek input file: {}", input))?;
-            crate::global::header::read_from_file(&mut header_file)?
+            header::Header::deserialize(&mut header_file)?
         }
-        HeaderFile::None => crate::global::header::read_from_file(&mut input_file)?,
+        HeaderFile::None => header::Header::deserialize(&mut input_file)?
     };
 
     if header.header_type.cipher_mode == CipherMode::MemoryMode {
@@ -153,14 +143,7 @@ pub fn stream_mode(
 
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
-    let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
-        OutputFile::Some(
-            File::create(output)
-                .with_context(|| format!("Unable to open output file: {}", output))?,
-        )
-    } else {
-        OutputFile::None
-    };
+    let mut output_file = File::create(output)?; // !!!attach context here
 
     logger.info(format!(
         "Using {} for decryption",

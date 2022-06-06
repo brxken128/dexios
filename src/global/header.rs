@@ -1,10 +1,9 @@
 use crate::{
-    global::states::{Algorithm, CipherMode, HeaderVersion, OutputFile},
+    global::states::{Algorithm, CipherMode, HeaderVersion},
     global::SALT_LEN,
 };
 use anyhow::{Context, Result};
 use blake3::Hasher;
-use paris::warn;
 use std::{fs::File, io::{Seek, Write}};
 use std::io::Read;
 
@@ -22,6 +21,7 @@ pub struct Header {
     pub salt: [u8; SALT_LEN],
 }
 
+// !!!attach context
 impl Header {
     fn get_tag(&self) -> HeaderTag {
         let version = self.serialize_version();
@@ -47,7 +47,7 @@ impl Header {
         }
     }
 
-    pub fn deserialize_version<R>(reader: &mut R) -> Result<HeaderVersion> where R: std::io::Read {
+    fn deserialize_version<R>(reader: &mut R) -> Result<HeaderVersion> where R: std::io::Read {
         let mut bytes = [0u8; 2];
         reader.read_exact(&mut bytes).context("Unable to read version's bytes from header")?;
 
@@ -280,52 +280,6 @@ fn serialize(header_info: &HeaderType) -> HeaderTag {
 // this writes a header to a file
 // it handles padding and serialising the specific information
 // it ensures the buffer is left at 64 bytes, so other functions can write the data without further hassle
-pub fn write_to_file(file: &mut OutputFile, header: &Header) -> Result<()> {
-    let nonce_len = calc_nonce_len(&header.header_type);
-
-    match &header.header_type.header_version {
-        HeaderVersion::V1 | HeaderVersion::V3 => {
-            let padding = vec![0u8; 26 - nonce_len];
-            let header_tag = serialize(&header.header_type);
-
-            file.write_all(&header_tag.version)
-                .context("Unable to write version to header")?;
-            file.write_all(&header_tag.algorithm)
-                .context("Unable to write algorithm to header")?;
-            file.write_all(&header_tag.mode)
-                .context("Unable to write encryption mode to header")?; // 6 bytes total
-            file.write_all(&header.salt)
-                .context("Unable to write salt to header")?; // 22 bytes total
-            file.write_all(&[0; 16])
-                .context("Unable to write empty bytes to header")?; // 38 bytes total (26 remaining)
-            file.write_all(&header.nonce)
-                .context("Unable to write nonce to header")?; // (26 - nonce_len remaining)
-            file.write_all(&padding)
-                .context("Unable to write final padding to header")?; // this has reached the 64 bytes
-        }
-        HeaderVersion::V2 => {
-            let padding = vec![0u8; 26 - nonce_len];
-            let header_tag = serialize(&header.header_type);
-
-            file.write_all(&header_tag.version)
-                .context("Unable to write version to header")?;
-            file.write_all(&header_tag.algorithm)
-                .context("Unable to write algorithm to header")?;
-            file.write_all(&header_tag.mode)
-                .context("Unable to write encryption mode to header")?; // 6 bytes total
-            file.write_all(&header.salt)
-                .context("Unable to write salt to header")?; // 22 bytes total
-            file.write_all(&header.nonce)
-                .context("Unable to write nonce to header")?; // (26 - nonce len)
-            file.write_all(&padding)
-                .context("Unable to write final padding to header")?; // this has reached 48 bytes
-            file.write_all(&[0u8; 16])
-                .context("Unable to write signature to header")?; // signature
-        }
-    }
-
-    Ok(())
-}
 
 // this hashes a header with the salt, nonce, and info provided
 pub fn hash(hasher: &mut Hasher, header: &Header) {
@@ -358,170 +312,170 @@ pub fn hash(hasher: &mut Hasher, header: &Header) {
     }
 }
 
-// this is used for converting raw bytes from the header to enums that dexios can understand
-// this involves the header version, encryption algorithm/mode, and possibly more in the future
-fn deserialize(header_tag: &HeaderTag) -> Result<HeaderType> {
-    let header_version = match header_tag.version {
-        [0xDE, 0x01] => HeaderVersion::V1,
-        [0xDE, 0x02] => HeaderVersion::V2,
-        [0xDE, 0x03] => HeaderVersion::V3,
-        _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
-    };
+// // this is used for converting raw bytes from the header to enums that dexios can understand
+// // this involves the header version, encryption algorithm/mode, and possibly more in the future
+// fn deserialize(header_tag: &HeaderTag) -> Result<HeaderType> {
+//     let header_version = match header_tag.version {
+//         [0xDE, 0x01] => HeaderVersion::V1,
+//         [0xDE, 0x02] => HeaderVersion::V2,
+//         [0xDE, 0x03] => HeaderVersion::V3,
+//         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
+//     };
 
-    let algorithm = match header_tag.algorithm {
-        [0x0E, 0x01] => Algorithm::XChaCha20Poly1305,
-        [0x0E, 0x02] => Algorithm::Aes256Gcm,
-        [0x0E, 0x03] => Algorithm::DeoxysII256,
-        _ => return Err(anyhow::anyhow!("Error getting encryption mode from header")),
-    };
+//     let algorithm = match header_tag.algorithm {
+//         [0x0E, 0x01] => Algorithm::XChaCha20Poly1305,
+//         [0x0E, 0x02] => Algorithm::Aes256Gcm,
+//         [0x0E, 0x03] => Algorithm::DeoxysII256,
+//         _ => return Err(anyhow::anyhow!("Error getting encryption mode from header")),
+//     };
 
-    let cipher_mode = match header_tag.mode {
-        [0x0C, 0x01] => CipherMode::StreamMode,
-        [0x0C, 0x02] => CipherMode::MemoryMode,
-        _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
-    };
+//     let cipher_mode = match header_tag.mode {
+//         [0x0C, 0x01] => CipherMode::StreamMode,
+//         [0x0C, 0x02] => CipherMode::MemoryMode,
+//         _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
+//     };
 
-    Ok(HeaderType {
-        header_version,
-        cipher_mode,
-        algorithm,
-    })
-}
+//     Ok(HeaderType {
+//         header_version,
+//         cipher_mode,
+//         algorithm,
+//     })
+// }
 
-// this takes an input file, and gets all of the data necessary from the header of the file
-// it ensures that the buffer starts at 64 bytes, so that other functions can just read encrypted data immediately
-pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
-    let mut version = [0u8; 2];
-    let mut algorithm = [0u8; 2];
-    let mut mode = [0u8; 2];
+// // this takes an input file, and gets all of the data necessary from the header of the file
+// // it ensures that the buffer starts at 64 bytes, so that other functions can just read encrypted data immediately
+// pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
+//     let mut version = [0u8; 2];
+//     let mut algorithm = [0u8; 2];
+//     let mut mode = [0u8; 2];
 
-    let mut salt = [0u8; SALT_LEN];
+//     let mut salt = [0u8; SALT_LEN];
 
-    file.read_exact(&mut version)
-        .context("Unable to read version from header")?;
-    file.read_exact(&mut algorithm)
-        .context("Unable to read algorithm from header")?;
-    file.read_exact(&mut mode)
-        .context("Unable to read encryption mode from header")?;
+//     file.read_exact(&mut version)
+//         .context("Unable to read version from header")?;
+//     file.read_exact(&mut algorithm)
+//         .context("Unable to read algorithm from header")?;
+//     file.read_exact(&mut mode)
+//         .context("Unable to read encryption mode from header")?;
 
-    let header_tag = HeaderTag {
-        version,
-        algorithm,
-        mode,
-    };
+//     let header_tag = HeaderTag {
+//         version,
+//         algorithm,
+//         mode,
+//     };
 
-    let header_info = deserialize(&header_tag)?;
+//     let header_info = deserialize(&header_tag)?;
 
-    match header_info.header_version {
-        HeaderVersion::V1 => {
-            warn!("You are using an older version of the Dexios header standard, please re-encrypt your files at your earliest convenience");
-            let nonce_len = calc_nonce_len(&header_info);
-            let mut nonce = vec![0u8; nonce_len];
+//     match header_info.header_version {
+//         HeaderVersion::V1 => {
+//             warn!("You are using an older version of the Dexios header standard, please re-encrypt your files at your earliest convenience");
+//             let nonce_len = calc_nonce_len(&header_info);
+//             let mut nonce = vec![0u8; nonce_len];
 
-            file.read_exact(&mut salt)
-                .context("Unable to read salt from header")?;
-            file.read_exact(&mut [0; 16])
-                .context("Unable to read empty bytes from header")?; // read and subsequently discard the next 16 bytes
-            file.read_exact(&mut nonce)
-                .context("Unable to read nonce from header")?;
-            file.read_exact(&mut vec![0u8; 26 - nonce_len])
-                .context("Unable to read final padding from header")?; // read and discard the final padding
+//             file.read_exact(&mut salt)
+//                 .context("Unable to read salt from header")?;
+//             file.read_exact(&mut [0; 16])
+//                 .context("Unable to read empty bytes from header")?; // read and subsequently discard the next 16 bytes
+//             file.read_exact(&mut nonce)
+//                 .context("Unable to read nonce from header")?;
+//             file.read_exact(&mut vec![0u8; 26 - nonce_len])
+//                 .context("Unable to read final padding from header")?; // read and discard the final padding
 
-            let header = Header {
-                header_type: header_info,
-                nonce,
-                salt,
-            };
+//             let header = Header {
+//                 header_type: header_info,
+//                 nonce,
+//                 salt,
+//             };
 
-            let aad = get_aad(&header, None, None);
+//             let aad = get_aad(&header, None, None);
 
-            Ok((header, aad))
-        }
-        HeaderVersion::V2 => {
-            warn!("You are using an older version of the Dexios header standard, please re-encrypt your files at your earliest convenience");
-            let nonce_len = calc_nonce_len(&header_info);
-            let mut nonce = vec![0u8; nonce_len];
+//             Ok((header, aad))
+//         }
+//         HeaderVersion::V2 => {
+//             warn!("You are using an older version of the Dexios header standard, please re-encrypt your files at your earliest convenience");
+//             let nonce_len = calc_nonce_len(&header_info);
+//             let mut nonce = vec![0u8; nonce_len];
 
-            file.read_exact(&mut salt)
-                .context("Unable to read salt from header")?;
-            file.read_exact(&mut nonce)
-                .context("Unable to read nonce from header")?;
-            file.read_exact(&mut vec![0u8; 26 - nonce_len])
-                .context("Unable to read final padding from header")?; // read and discard the padding
-            file.read_exact(&mut [0u8; 16])
-                .context("Unable to read signature from header")?; // read signature
+//             file.read_exact(&mut salt)
+//                 .context("Unable to read salt from header")?;
+//             file.read_exact(&mut nonce)
+//                 .context("Unable to read nonce from header")?;
+//             file.read_exact(&mut vec![0u8; 26 - nonce_len])
+//                 .context("Unable to read final padding from header")?; // read and discard the padding
+//             file.read_exact(&mut [0u8; 16])
+//                 .context("Unable to read signature from header")?; // read signature
 
-            let header = Header {
-                header_type: header_info,
-                nonce,
-                salt,
-            };
+//             let header = Header {
+//                 header_type: header_info,
+//                 nonce,
+//                 salt,
+//             };
 
-            let aad = get_aad(&header, None, None);
+//             let aad = get_aad(&header, None, None);
 
-            Ok((header, aad))
-        }
-        HeaderVersion::V3 => {
-            let nonce_len = calc_nonce_len(&header_info);
-            let mut nonce = vec![0u8; nonce_len];
-            let mut padding1 = [0u8; 16];
-            let mut padding2 = vec![0u8; 26 - nonce_len];
+//             Ok((header, aad))
+//         }
+//         HeaderVersion::V3 => {
+//             let nonce_len = calc_nonce_len(&header_info);
+//             let mut nonce = vec![0u8; nonce_len];
+//             let mut padding1 = [0u8; 16];
+//             let mut padding2 = vec![0u8; 26 - nonce_len];
 
-            file.read_exact(&mut salt)
-                .context("Unable to read salt from header")?;
-            file.read_exact(&mut padding1)
-                .context("Unable to read empty bytes from header")?; // read and subsequently discard the next 16 bytes
-            file.read_exact(&mut nonce)
-                .context("Unable to read nonce from header")?;
-            file.read_exact(&mut padding2)
-                .context("Unable to read final padding from header")?; // read and discard the final padding
+//             file.read_exact(&mut salt)
+//                 .context("Unable to read salt from header")?;
+//             file.read_exact(&mut padding1)
+//                 .context("Unable to read empty bytes from header")?; // read and subsequently discard the next 16 bytes
+//             file.read_exact(&mut nonce)
+//                 .context("Unable to read nonce from header")?;
+//             file.read_exact(&mut padding2)
+//                 .context("Unable to read final padding from header")?; // read and discard the final padding
 
-            let header = Header {
-                header_type: header_info,
-                nonce,
-                salt,
-            };
+//             let header = Header {
+//                 header_type: header_info,
+//                 nonce,
+//                 salt,
+//             };
 
-            let aad = get_aad(&header, Some(padding1), Some(padding2));
+//             let aad = get_aad(&header, Some(padding1), Some(padding2));
 
-            Ok((header, aad))
-        }
-    }
-}
+//             Ok((header, aad))
+//         }
+//     }
+// }
 
-fn get_aad(header: &Header, padding1: Option<[u8; 16]>, padding2: Option<Vec<u8>>) -> Vec<u8> {
-    match header.header_type.header_version {
-        HeaderVersion::V3 => {
-            let header_tag = serialize(&header.header_type);
+// fn get_aad(header: &Header, padding1: Option<[u8; 16]>, padding2: Option<Vec<u8>>) -> Vec<u8> {
+//     match header.header_type.header_version {
+//         HeaderVersion::V3 => {
+//             let header_tag = serialize(&header.header_type);
 
-            let mut header_bytes = header_tag.version.to_vec();
-            header_bytes.extend_from_slice(&header_tag.mode);
-            header_bytes.extend_from_slice(&header_tag.algorithm);
-            header_bytes.extend_from_slice(&header.salt);
-            header_bytes.extend_from_slice(&padding1.unwrap());
-            header_bytes.extend_from_slice(&header.nonce);
-            header_bytes.extend_from_slice(&padding2.unwrap());
-            header_bytes
-        }
-        _ => Vec::new(),
-    }
-}
+//             let mut header_bytes = header_tag.version.to_vec();
+//             header_bytes.extend_from_slice(&header_tag.mode);
+//             header_bytes.extend_from_slice(&header_tag.algorithm);
+//             header_bytes.extend_from_slice(&header.salt);
+//             header_bytes.extend_from_slice(&padding1.unwrap());
+//             header_bytes.extend_from_slice(&header.nonce);
+//             header_bytes.extend_from_slice(&padding2.unwrap());
+//             header_bytes
+//         }
+//         _ => Vec::new(),
+//     }
+// }
 
-pub fn create_aad(header: &Header) -> Vec<u8> {
-    match header.header_type.header_version {
-        HeaderVersion::V3 => {
-            let nonce_len = calc_nonce_len(&header.header_type);
-            let header_tag = serialize(&header.header_type);
+// pub fn create_aad(header: &Header) -> Vec<u8> {
+//     match header.header_type.header_version {
+//         HeaderVersion::V3 => {
+//             let nonce_len = calc_nonce_len(&header.header_type);
+//             let header_tag = serialize(&header.header_type);
 
-            let mut header_bytes = header_tag.version.to_vec();
-            header_bytes.extend_from_slice(&header_tag.mode);
-            header_bytes.extend_from_slice(&header_tag.algorithm);
-            header_bytes.extend_from_slice(&header.salt);
-            header_bytes.extend_from_slice(&[0; 16]);
-            header_bytes.extend_from_slice(&header.nonce);
-            header_bytes.extend_from_slice(&vec![0; 26 - nonce_len]);
-            header_bytes
-        }
-        _ => Vec::new(),
-    }
-}
+//             let mut header_bytes = header_tag.version.to_vec();
+//             header_bytes.extend_from_slice(&header_tag.mode);
+//             header_bytes.extend_from_slice(&header_tag.algorithm);
+//             header_bytes.extend_from_slice(&header.salt);
+//             header_bytes.extend_from_slice(&[0; 16]);
+//             header_bytes.extend_from_slice(&header.nonce);
+//             header_bytes.extend_from_slice(&vec![0; 26 - nonce_len]);
+//             header_bytes
+//         }
+//         _ => Vec::new(),
+//     }
+// }

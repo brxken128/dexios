@@ -1,8 +1,7 @@
 use crate::crypto::key::{argon2_hash, gen_salt};
 use crate::crypto::streams::init_encryption_stream;
-use crate::global::header::create_aad;
 use crate::global::secret::Secret;
-use crate::global::states::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
+use crate::global::states::{Algorithm, BenchMode, CipherMode, HashMode};
 use crate::global::header::{Header, HeaderType};
 use crate::global::{BLOCK_SIZE, VERSION};
 use aead::Payload;
@@ -13,7 +12,7 @@ use paris::success;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::result::Result::Ok;
 use std::time::Instant;
 use zeroize::Zeroize;
@@ -29,7 +28,7 @@ use super::memory::init_memory_cipher;
 // similar to stream initialisation
 pub fn memory_mode(
     data: Secret<Vec<u8>>,
-    output: &mut OutputFile,
+    output: &mut File,
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,
@@ -61,7 +60,7 @@ pub fn memory_mode(
         salt,
     };
 
-    let aad = create_aad(&header);
+    let aad = header.serialize()?;
 
     let payload = Payload {
         aad: &aad,
@@ -77,7 +76,7 @@ pub fn memory_mode(
 
     if bench == BenchMode::WriteToFilesystem {
         let write_start_time = Instant::now();
-        crate::global::header::write_to_file(output, &header)?;
+        header.write(output)?; // !!!attach context
         output.write_all(&encrypted_bytes)?;
         let write_duration = write_start_time.elapsed();
         success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
@@ -107,7 +106,7 @@ pub fn memory_mode(
 // it also handles the prep of each individual stream, via the match statement
 pub fn stream_mode(
     input: &mut File,
-    output: &mut OutputFile,
+    output: &mut File,
     raw_key: Secret<Vec<u8>>,
     bench: BenchMode,
     hash: HashMode,
@@ -122,7 +121,7 @@ pub fn stream_mode(
     let (mut streams, header) = init_encryption_stream(raw_key, header_type)?;
 
     if bench == BenchMode::WriteToFilesystem {
-        crate::global::header::write_to_file(output, &header)?;
+        header.write(output)?; // !!!attach context
     }
 
     let mut hasher = blake3::Hasher::new();
@@ -131,7 +130,7 @@ pub fn stream_mode(
         crate::global::header::hash(&mut hasher, &header);
     }
 
-    let aad = create_aad(&header);
+    let aad = header.serialize()?;
 
     let mut read_buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 

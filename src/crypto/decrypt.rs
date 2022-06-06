@@ -2,7 +2,7 @@ use crate::crypto::key::argon2_hash;
 use crate::crypto::streams::init_decryption_stream;
 use crate::global::secret::Secret;
 use crate::global::states::{BenchMode, HashMode, OutputFile};
-use crate::global::structs::Header;
+use crate::global::header::Header;
 use crate::global::BLOCK_SIZE;
 use aead::Payload;
 use anyhow::anyhow;

@@ -3,7 +3,7 @@ use crate::crypto::streams::init_encryption_stream;
 use crate::global::header::create_aad;
 use crate::global::secret::Secret;
 use crate::global::states::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
-use crate::global::structs::{Header, HeaderType};
+use crate::global::header::{Header, HeaderType};
 use crate::global::{BLOCK_SIZE, VERSION};
 use aead::Payload;
 use anyhow::anyhow;

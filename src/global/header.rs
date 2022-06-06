@@ -286,7 +286,7 @@ pub fn read_from_file(file: &mut File) -> Result<(Header, Vec<u8>)> {
     }
 }
 
-pub fn get_aad(header: &Header, padding1: Option<[u8; 16]>, padding2: Option<Vec<u8>>) -> Vec<u8> {
+fn get_aad(header: &Header, padding1: Option<[u8; 16]>, padding2: Option<Vec<u8>>) -> Vec<u8> {
     match header.header_type.header_version {
         HeaderVersion::V3 => {
             let header_prefix = serialize(&header.header_type);

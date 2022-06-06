@@ -7,14 +7,14 @@ use std::{
     io::{Seek, Write, Read},
 };
 
-// the information needed to easily serialize a header
+// the "tag" that contains version/mode information
 pub struct HeaderType {
     pub header_version: HeaderVersion,
     pub cipher_mode: CipherMode,
     pub algorithm: Algorithm,
 }
 
-// the data used returned after reading/deserialising a header
+// the full header, including version, salt, nonce, mode, encryption algorithm, etc
 pub struct Header {
     pub header_type: HeaderType,
     pub nonce: Vec<u8>,

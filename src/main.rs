@@ -1,22 +1,13 @@
 use anyhow::Result;
 use global::parameters::get_param;
 use global::parameters::skipmode;
-use list::show_values;
+use subcommands::list::show_values;
 use std::result::Result::Ok;
 
 mod cli;
-mod decrypt;
-mod encrypt;
-mod erase;
 mod file;
 mod global;
-mod hashing;
-mod header;
-mod key;
-mod list;
-mod prompt;
-mod secret;
-mod streams;
+mod crypto;
 mod subcommands;
 
 // this is where subcommand function calling is handled
@@ -45,7 +36,7 @@ fn main() -> Result<()> {
                 Vec::new()
             };
 
-            hashing::hash_stream(&files)?;
+            subcommands::hashing::hash_stream(&files)?;
         }
         Some(("list", sub_matches)) => {
             show_values(&get_param("input", sub_matches)?)?;
@@ -55,7 +46,7 @@ fn main() -> Result<()> {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
                 let skip = skipmode(sub_matches_dump);
 
-                header::dump(
+                subcommands::header::dump(
                     &get_param("input", sub_matches_dump)?,
                     &get_param("output", sub_matches_dump)?,
                     skip,
@@ -65,7 +56,7 @@ fn main() -> Result<()> {
                 let sub_matches_restore = sub_matches.subcommand_matches("restore").unwrap();
                 let skip = skipmode(sub_matches_restore);
 
-                header::restore(
+                subcommands::header::restore(
                     &get_param("input", sub_matches_restore)?,
                     &get_param("output", sub_matches_restore)?,
                     skip,
@@ -75,7 +66,7 @@ fn main() -> Result<()> {
                 let sub_matches_strip = sub_matches.subcommand_matches("strip").unwrap();
                 let skip = skipmode(sub_matches_strip);
 
-                header::strip(&get_param("input", sub_matches_strip)?, skip)?;
+                subcommands::header::strip(&get_param("input", sub_matches_strip)?, skip)?;
             }
             _ => (),
         },

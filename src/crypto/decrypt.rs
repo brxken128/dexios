@@ -1,10 +1,10 @@
-use crate::global::crypto::MemoryCiphers;
-use crate::global::enums::{Algorithm, BenchMode, HashMode, OutputFile};
+use crate::crypto::primitives::MemoryCiphers;
+use crate::global::states::{Algorithm, BenchMode, HashMode, OutputFile};
 use crate::global::structs::Header;
 use crate::global::BLOCK_SIZE;
-use crate::key::argon2_hash;
-use crate::secret::Secret;
-use crate::streams::init_decryption_stream;
+use crate::crypto::key::argon2_hash;
+use crate::global::secret::Secret;
+use crate::crypto::streams::init_decryption_stream;
 use aead::{NewAead, Payload};
 use aes_gcm::Aes256Gcm;
 use anyhow::anyhow;
@@ -66,7 +66,7 @@ pub fn decrypt_bytes_memory_mode(
 
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::header::hash(&mut hasher, header);
+        crate::global::header::hash(&mut hasher, header);
         hasher.update(data);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -107,7 +107,7 @@ pub fn decrypt_bytes_stream_mode(
     let mut streams = init_decryption_stream(raw_key, header)?;
 
     if hash == HashMode::CalculateHash {
-        crate::header::hash(&mut hasher, header);
+        crate::global::header::hash(&mut hasher, header);
     }
 
     let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();

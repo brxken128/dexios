@@ -1,22 +1,20 @@
-use crate::encrypt::crypto::encrypt_bytes_memory_mode;
-use crate::encrypt::crypto::encrypt_bytes_stream_mode;
+use crate::crypto::encrypt::encrypt_bytes_memory_mode;
+use crate::crypto::encrypt::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
-use crate::global::enums::Algorithm;
-use crate::global::enums::BenchMode;
-use crate::global::enums::EraseMode;
-use crate::global::enums::OutputFile;
+use crate::global::states::Algorithm;
+use crate::global::states::BenchMode;
+use crate::global::states::EraseMode;
+use crate::global::states::OutputFile;
 use crate::global::structs::CryptoParams;
 use crate::global::BLOCK_SIZE;
-use crate::key::get_secret;
-use crate::prompt::overwrite_check;
+use super::key::get_secret;
+use super::prompt::overwrite_check;
 use anyhow::Context;
 use anyhow::{Ok, Result};
 use paris::Logger;
 use std::fs::File;
 use std::process::exit;
 use std::time::Instant;
-
-mod crypto;
 
 // this function is for encrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
@@ -85,7 +83,7 @@ pub fn memory_mode(
     }
 
     if params.erase != EraseMode::IgnoreFile(0) {
-        crate::erase::secure_erase(input, params.erase.get_passes())?;
+        super::erase::secure_erase(input, params.erase.get_passes())?;
     }
 
     Ok(())
@@ -180,7 +178,7 @@ pub fn stream_mode(
     }
 
     if params.erase != EraseMode::IgnoreFile(0) {
-        crate::erase::secure_erase(input, params.erase.get_passes())?;
+        super::erase::secure_erase(input, params.erase.get_passes())?;
     }
 
     Ok(())

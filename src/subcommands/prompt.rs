@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use paris::{warn, Logger};
 use std::io::{self, stdin, Write};
 
-use crate::global::enums::{BenchMode, SkipMode};
+use crate::global::states::{BenchMode, SkipMode};
 
 // this handles user-interactivity, specifically getting a "yes" or "no" answer from the user
 // it requires the question itself, if the default is true/false

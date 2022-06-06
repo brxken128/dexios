@@ -1,11 +1,11 @@
-use crate::global::crypto::MemoryCiphers;
-use crate::global::enums::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
+use crate::crypto::primitives::MemoryCiphers;
+use crate::global::states::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
 use crate::global::structs::{Header, HeaderType};
 use crate::global::{BLOCK_SIZE, VERSION};
-use crate::header::create_aad;
-use crate::key::{argon2_hash, gen_salt};
-use crate::secret::Secret;
-use crate::streams::init_encryption_stream;
+use crate::global::header::create_aad;
+use crate::crypto::key::{argon2_hash, gen_salt};
+use crate::global::secret::Secret;
+use crate::crypto::streams::init_encryption_stream;
 use aead::{NewAead, Payload};
 use aes_gcm::Aes256Gcm;
 use anyhow::anyhow;
@@ -113,7 +113,7 @@ pub fn encrypt_bytes_memory_mode(
 
     if bench == BenchMode::WriteToFilesystem {
         let write_start_time = Instant::now();
-        crate::header::write_to_file(output, &header)?;
+        crate::global::header::write_to_file(output, &header)?;
         output.write_all(&encrypted_bytes)?;
         let write_duration = write_start_time.elapsed();
         success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
@@ -122,7 +122,7 @@ pub fn encrypt_bytes_memory_mode(
     let mut hasher = blake3::Hasher::new();
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::header::hash(&mut hasher, &header);
+        crate::global::header::hash(&mut hasher, &header);
         hasher.update(&encrypted_bytes);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -158,13 +158,13 @@ pub fn encrypt_bytes_stream_mode(
     let (mut streams, header) = init_encryption_stream(raw_key, header_type)?;
 
     if bench == BenchMode::WriteToFilesystem {
-        crate::header::write_to_file(output, &header)?;
+        crate::global::header::write_to_file(output, &header)?;
     }
 
     let mut hasher = blake3::Hasher::new();
 
     if hash == HashMode::CalculateHash {
-        crate::header::hash(&mut hasher, &header);
+        crate::global::header::hash(&mut hasher, &header);
     }
 
     let aad = create_aad(&header);

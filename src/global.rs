@@ -1,4 +1,4 @@
-use self::enums::{Algorithm, HeaderVersion};
+use self::states::{Algorithm, HeaderVersion};
 
 // this file sets constants that are used throughout the codebase
 // these can be customised easily by anyone to suit their own needs
@@ -12,7 +12,8 @@ pub const ALGORITHMS: [Algorithm; 3] = [
     Algorithm::DeoxysII256,
 ];
 
-pub mod crypto;
-pub mod enums;
+pub mod states;
 pub mod parameters;
 pub mod structs;
+pub mod secret;
+pub mod header;

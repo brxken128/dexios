@@ -1,13 +1,13 @@
-use crate::decrypt::crypto::decrypt_bytes_memory_mode;
-use crate::decrypt::crypto::decrypt_bytes_stream_mode;
-use crate::global::enums::BenchMode;
-use crate::global::enums::CipherMode;
-use crate::global::enums::EraseMode;
-use crate::global::enums::HeaderFile;
-use crate::global::enums::OutputFile;
+use crate::crypto::decrypt::decrypt_bytes_memory_mode;
+use crate::crypto::decrypt::decrypt_bytes_stream_mode;
+use crate::global::states::BenchMode;
+use crate::global::states::CipherMode;
+use crate::global::states::EraseMode;
+use crate::global::states::HeaderFile;
+use crate::global::states::OutputFile;
 use crate::global::structs::CryptoParams;
-use crate::key::get_secret;
-use crate::prompt::overwrite_check;
+use super::key::get_secret;
+use super::prompt::overwrite_check;
 use anyhow::{Context, Ok, Result};
 use paris::Logger;
 use std::fs::File;
@@ -15,7 +15,6 @@ use std::fs::File;
 use std::io::Read;
 use std::process::exit;
 use std::time::Instant;
-mod crypto;
 
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
@@ -42,9 +41,9 @@ pub fn memory_mode(
             input_file
                 .read_exact(&mut [0u8; 64])
                 .with_context(|| format!("Unable to seek input file: {}", input))?;
-            crate::header::read_from_file(&mut header_file)?
+            crate::global::header::read_from_file(&mut header_file)?
         }
-        HeaderFile::None => crate::header::read_from_file(&mut input_file)?,
+        HeaderFile::None => crate::global::header::read_from_file(&mut input_file)?,
     };
 
     let read_start_time = Instant::now();
@@ -107,7 +106,7 @@ pub fn memory_mode(
     }
 
     if params.erase != EraseMode::IgnoreFile(0) {
-        crate::erase::secure_erase(input, params.erase.get_passes())?;
+        super::erase::secure_erase(input, params.erase.get_passes())?;
     }
 
     Ok(())
@@ -140,9 +139,9 @@ pub fn stream_mode(
             input_file
                 .read_exact(&mut [0u8; 64])
                 .with_context(|| format!("Unable to seek input file: {}", input))?;
-            crate::header::read_from_file(&mut header_file)?
+            crate::global::header::read_from_file(&mut header_file)?
         }
-        HeaderFile::None => crate::header::read_from_file(&mut input_file)?,
+        HeaderFile::None => crate::global::header::read_from_file(&mut input_file)?,
     };
 
     if header.header_type.cipher_mode == CipherMode::MemoryMode {
@@ -210,7 +209,7 @@ pub fn stream_mode(
     }
 
     if params.erase != EraseMode::IgnoreFile(0) {
-        crate::erase::secure_erase(input, params.erase.get_passes())?;
+        super::erase::secure_erase(input, params.erase.get_passes())?;
     }
 
     Ok(())

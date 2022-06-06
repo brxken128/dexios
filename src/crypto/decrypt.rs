@@ -50,7 +50,7 @@ pub fn memory_mode(
 
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        hasher.update(&aad);
+        hasher.update(aad);
         hasher.update(data);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -88,7 +88,7 @@ pub fn stream_mode(
     let mut streams = init_decryption_stream(raw_key, header)?;
 
     if hash == HashMode::CalculateHash {
-        hasher.update(&aad);
+        hasher.update(aad);
     }
 
     let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();

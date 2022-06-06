@@ -1,7 +1,5 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
-use crate::crypto::encrypt::encrypt_bytes_memory_mode;
-use crate::crypto::encrypt::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
 use crate::global::states::Algorithm;
 use crate::global::states::BenchMode;
@@ -56,7 +54,7 @@ pub fn memory_mode(
     };
 
     let encrypt_start_time = Instant::now();
-    encrypt_bytes_memory_mode(
+    crate::crypto::encrypt::memory_mode(
         file_contents,
         &mut output_file,
         raw_key,
@@ -143,7 +141,7 @@ pub fn stream_mode(
 
     let encrypt_start_time = Instant::now();
 
-    let encryption_result = encrypt_bytes_stream_mode(
+    let encryption_result = crate::crypto::encrypt::stream_mode(
         &mut input_file,
         &mut output_file,
         raw_key,

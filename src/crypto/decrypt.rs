@@ -23,7 +23,7 @@ use super::memory::init_memory_cipher;
 // most of the information for decryption is stored within the header
 // it hashes the key with the supplised salt, and decrypts all of the data
 // it returns the decrypted bytes
-pub fn decrypt_bytes_memory_mode(
+pub fn memory_mode(
     header: &Header,
     data: &[u8],
     output: &mut OutputFile,
@@ -34,7 +34,7 @@ pub fn decrypt_bytes_memory_mode(
 ) -> Result<()> {
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
-    let ciphers = init_memory_cipher(key, &header.header_type.algorithm)?;
+    let ciphers = init_memory_cipher(key, header.header_type.algorithm)?;
 
     let payload = Payload { aad, msg: data };
 
@@ -78,7 +78,7 @@ pub fn decrypt_bytes_memory_mode(
 // it gets the streams enum from `init_decryption_stream`
 // it creates the encryption cipher and then reads the file in blocks (including the gcm tag)
 // on each read, it decrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
-pub fn decrypt_bytes_stream_mode(
+pub fn stream_mode(
     input: &mut File,
     output: &mut OutputFile,
     raw_key: Secret<Vec<u8>>,

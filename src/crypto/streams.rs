@@ -29,7 +29,7 @@ pub fn init_encryption_stream(
 
     match header_type.algorithm {
         Algorithm::Aes256Gcm => {
-            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 8]>();
+            let nonce = StdRng::from_entropy().gen::<[u8; 8]>();
 
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
@@ -38,15 +38,15 @@ pub fn init_encryption_stream(
 
             let header = Header {
                 header_type,
-                nonce: nonce_bytes.to_vec(),
+                nonce: nonce.to_vec(),
                 salt,
             };
 
-            let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
+            let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
             Ok((EncryptStreamCiphers::Aes256Gcm(Box::new(stream)), header))
         }
         Algorithm::XChaCha20Poly1305 => {
-            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 20]>();
+            let nonce = StdRng::from_entropy().gen::<[u8; 20]>();
 
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
@@ -55,15 +55,15 @@ pub fn init_encryption_stream(
 
             let header = Header {
                 header_type,
-                nonce: nonce_bytes.to_vec(),
+                nonce: nonce.to_vec(),
                 salt,
             };
 
-            let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
+            let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
             Ok((EncryptStreamCiphers::XChaCha(Box::new(stream)), header))
         }
         Algorithm::DeoxysII256 => {
-            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 11]>();
+            let nonce = StdRng::from_entropy().gen::<[u8; 11]>();
 
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
@@ -72,11 +72,11 @@ pub fn init_encryption_stream(
 
             let header = Header {
                 header_type,
-                nonce: nonce_bytes.to_vec(),
+                nonce: nonce.to_vec(),
                 salt,
             };
 
-            let stream = EncryptorLE31::from_aead(cipher, nonce_bytes.as_slice().into());
+            let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
             Ok((EncryptStreamCiphers::DeoxysII(Box::new(stream)), header))
         }
     }

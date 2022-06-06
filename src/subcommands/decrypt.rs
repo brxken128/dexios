@@ -1,7 +1,5 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
-use crate::crypto::decrypt::decrypt_bytes_memory_mode;
-use crate::crypto::decrypt::decrypt_bytes_stream_mode;
 use crate::global::states::BenchMode;
 use crate::global::states::CipherMode;
 use crate::global::states::EraseMode;
@@ -78,7 +76,7 @@ pub fn memory_mode(
     };
 
     let decrypt_start_time = Instant::now();
-    decrypt_bytes_memory_mode(
+    crate::crypto::decrypt::memory_mode(
         &header,
         &encrypted_data,
         &mut output_file,
@@ -172,7 +170,7 @@ pub fn stream_mode(
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
     let decrypt_start_time = Instant::now();
-    let decryption_result = decrypt_bytes_stream_mode(
+    let decryption_result = crate::crypto::decrypt::stream_mode(
         &mut input_file,
         &mut output_file,
         raw_key,

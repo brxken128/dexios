@@ -6,6 +6,7 @@ use anyhow::{Context, Result};
 use std::io::{Read, Seek, Write};
 
 // the "tag" that contains version/mode information
+#[allow(clippy::module_name_repetitions)]
 pub struct HeaderType {
     pub header_version: HeaderVersion,
     pub cipher_mode: CipherMode,
@@ -13,7 +14,7 @@ pub struct HeaderType {
 }
 
 // the "tag"/HeaderType, but in raw bytes
-pub struct HeaderTag {
+pub struct Tag {
     pub version: [u8; 2],
     pub algorithm: [u8; 2],
     pub mode: [u8; 2],
@@ -43,11 +44,11 @@ pub struct Header {
 
 // !!!attach context
 impl Header {
-    fn get_tag(&self) -> HeaderTag {
+    fn get_tag(&self) -> Tag {
         let version = self.serialize_version();
         let algorithm = self.serialize_algorithm();
         let mode = self.serialize_mode();
-        HeaderTag {
+        Tag {
             version,
             algorithm,
             mode,
@@ -203,7 +204,7 @@ impl Header {
         }
     }
 
-    fn serialize_v3(&self, tag: &HeaderTag) -> Vec<u8> {
+    fn serialize_v3(&self, tag: &Tag) -> Vec<u8> {
         let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
         let mut header_bytes = Vec::<u8>::new();
         header_bytes.extend_from_slice(&tag.version);

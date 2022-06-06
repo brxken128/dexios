@@ -1,4 +1,4 @@
-use std::io::{stdin, stdout};
+use std::io::{stdin, stdout, Write};
 
 use anyhow::{Context, Result};
 use paris::{info, warn};
@@ -16,7 +16,6 @@ use crate::{
 // it uses termion's `read_passwd` function for terminal manipulation
 #[cfg(target_family = "unix")]
 fn read_password_from_stdin_unix(prompt: &str) -> Result<String> {
-    use std::io::Write;
     use termion::input::TermRead;
 
     let stdout = stdout();
@@ -44,6 +43,7 @@ fn read_password_from_stdin_unix(prompt: &str) -> Result<String> {
 
 #[cfg(target_family = "windows")]
 fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
+    use std::io::BufRead;
     let mut stdout = stdout();
     let stdin = stdin();
 

@@ -3,13 +3,19 @@
 // they just need to be part of the RustCrypto "family"
 // https://github.com/RustCrypto/AEADs
 
+use std::io::{Read, Write};
+
 use aead::{
     stream::{DecryptorLE31, EncryptorLE31},
     Aead, Payload,
 };
 use aes_gcm::Aes256Gcm;
+use anyhow::Context;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
+use zeroize::Zeroize;
+
+use crate::global::BLOCK_SIZE;
 
 pub enum MemoryCiphers {
     Aes256Gcm(Box<Aes256Gcm>),
@@ -75,6 +81,54 @@ impl EncryptStreamCiphers {
             EncryptStreamCiphers::XChaCha(s) => s.encrypt_last(payload),
             EncryptStreamCiphers::DeoxysII(s) => s.encrypt_last(payload),
         }
+    }
+
+    // convenience function for quickly encrypting and writing
+    pub fn encrypt_file(mut self, reader: &mut impl Read, writer: &mut impl Write, aad: &[u8]) -> anyhow::Result<()> {
+        let mut read_buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
+        loop {
+            let read_count = reader
+                .read(&mut read_buffer)
+                .context("Unable to read from the reader file")?;
+            if read_count == BLOCK_SIZE {
+                // aad is just empty bytes normally
+                // create_aad returns empty bytes if the header isn't V3+
+                // this means we don't need to do anything special in regards to older versions
+                let payload = Payload {
+                    aad: &aad,
+                    msg: read_buffer.as_ref(),
+                };
+    
+                let encrypted_data = match self.encrypt_next(payload) {
+                    Ok(bytes) => bytes,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to encrypt the data")),
+                };
+    
+                writer
+                    .write_all(&encrypted_data)
+                    .context("Unable to write to the output file")?;
+            } else {
+                // if we read something less than BLOCK_SIZE, and have hit the end of the file
+                let payload = Payload {
+                    aad: &aad,
+                    msg: &read_buffer[..read_count],
+                };
+    
+                let encrypted_data = match self.encrypt_last(payload) {
+                    Ok(bytes) => bytes,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to encrypt the data")),
+                };
+    
+                writer
+                    .write_all(&encrypted_data)
+                    .context("Unable to write to the output file")?;
+                break;
+            }
+        }
+
+        read_buffer.zeroize();
+
+        Ok(())
     }
 }
 

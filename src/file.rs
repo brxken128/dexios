@@ -1,4 +1,4 @@
-use crate::secret::Secret;
+use crate::global::secret::Secret;
 use anyhow::{Context, Ok, Result};
 use std::{fs::File, io::Read};
 

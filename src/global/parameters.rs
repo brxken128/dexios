@@ -1,7 +1,7 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::enums::{
+use crate::global::states::{
     Algorithm, BenchMode, EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
 };
 use crate::global::structs::CryptoParams;

@@ -1,4 +1,4 @@
-use crate::global::enums::{
+use crate::global::states::{
     Algorithm, BenchMode, CipherMode, EraseMode, HashMode, HeaderVersion, KeyFile, PasswordMode,
     SkipMode,
 };

@@ -1,18 +1,14 @@
-use crate::global::crypto::MemoryCiphers;
-use crate::global::enums::{Algorithm, BenchMode, HashMode, OutputFile};
+use crate::crypto::key::argon2_hash;
+use crate::crypto::streams::init_decryption_stream;
+use crate::global::secret::Secret;
+use crate::global::states::{BenchMode, HashMode, OutputFile};
 use crate::global::structs::Header;
 use crate::global::BLOCK_SIZE;
-use crate::key::argon2_hash;
-use crate::secret::Secret;
-use crate::streams::init_decryption_stream;
-use aead::{NewAead, Payload};
-use aes_gcm::Aes256Gcm;
+use aead::Payload;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use blake3::Hasher;
-use chacha20poly1305::XChaCha20Poly1305;
-use deoxys::DeoxysII256;
 use paris::success;
 use std::fs::File;
 use std::io::Read;
@@ -20,12 +16,14 @@ use std::result::Result::Ok;
 use std::time::Instant;
 use zeroize::Zeroize;
 
+use super::memory::init_memory_cipher;
+
 // this decrypts the data in memory mode
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce
 // most of the information for decryption is stored within the header
 // it hashes the key with the supplised salt, and decrypts all of the data
 // it returns the decrypted bytes
-pub fn decrypt_bytes_memory_mode(
+pub fn memory_mode(
     header: &Header,
     data: &[u8],
     output: &mut OutputFile,
@@ -36,22 +34,9 @@ pub fn decrypt_bytes_memory_mode(
 ) -> Result<()> {
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
-    let payload = Payload { aad, msg: data };
+    let ciphers = init_memory_cipher(key, header.header_type.algorithm)?;
 
-    let ciphers = match header.header_type.algorithm {
-        Algorithm::Aes256Gcm => match Aes256Gcm::new_from_slice(key.expose()) {
-            Ok(cipher) => MemoryCiphers::Aes256Gcm(Box::new(cipher)),
-            Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-        },
-        Algorithm::XChaCha20Poly1305 => match XChaCha20Poly1305::new_from_slice(key.expose()) {
-            Ok(cipher) => MemoryCiphers::XChaCha(Box::new(cipher)),
-            Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-        },
-        Algorithm::DeoxysII256 => match DeoxysII256::new_from_slice(key.expose()) {
-            Ok(cipher) => MemoryCiphers::DeoxysII(Box::new(cipher)),
-            Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-        },
-    };
+    let payload = Payload { aad, msg: data };
 
     let decrypted_bytes = match ciphers.decrypt(&header.nonce, payload) {
         Ok(decrypted_bytes) => decrypted_bytes,
@@ -66,7 +51,7 @@ pub fn decrypt_bytes_memory_mode(
 
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::header::hash(&mut hasher, header);
+        crate::global::header::hash(&mut hasher, header);
         hasher.update(data);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -93,7 +78,7 @@ pub fn decrypt_bytes_memory_mode(
 // it gets the streams enum from `init_decryption_stream`
 // it creates the encryption cipher and then reads the file in blocks (including the gcm tag)
 // on each read, it decrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
-pub fn decrypt_bytes_stream_mode(
+pub fn stream_mode(
     input: &mut File,
     output: &mut OutputFile,
     raw_key: Secret<Vec<u8>>,
@@ -107,7 +92,7 @@ pub fn decrypt_bytes_stream_mode(
     let mut streams = init_decryption_stream(raw_key, header)?;
 
     if hash == HashMode::CalculateHash {
-        crate::header::hash(&mut hasher, header);
+        crate::global::header::hash(&mut hasher, header);
     }
 
     let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();

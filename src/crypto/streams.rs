@@ -20,7 +20,7 @@ use std::result::Result::Ok;
 // it's used for encrypt/stream mode and is the central place for managing streams for encryption
 pub fn init_encryption_stream(
     key: Secret<[u8; 32]>,
-    algorithm: &Algorithm,
+    algorithm: Algorithm,
 ) -> Result<(EncryptStreamCiphers, Vec<u8>)> {
     let (streams, nonce) = match algorithm {
         Algorithm::Aes256Gcm => {
@@ -66,7 +66,7 @@ pub fn init_encryption_stream(
             )
         }
     };
-    
+
     drop(key);
     Ok((streams, nonce))
 }
@@ -76,7 +76,7 @@ pub fn init_encryption_stream(
 pub fn init_decryption_stream(
     key: Secret<[u8; 32]>,
     nonce: &[u8],
-    algorithm: &Algorithm,
+    algorithm: Algorithm,
 ) -> Result<DecryptStreamCiphers> {
     let streams = match algorithm {
         Algorithm::Aes256Gcm => {

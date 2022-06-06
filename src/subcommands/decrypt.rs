@@ -80,9 +80,7 @@ pub fn memory_mode(
     ));
 
     if params.hash_mode == HashMode::CalculateHash {
-        let mut inputs = Vec::<String>::new();
-        inputs.push(input.to_string());
-        super::hashing::hash_stream(&inputs)?;
+        super::hashing::hash_stream(&vec![input.to_string()])?;
     }
 
     if params.erase != EraseMode::IgnoreFile(0) {
@@ -168,9 +166,7 @@ pub fn stream_mode(
     ));
 
     if params.hash_mode == HashMode::CalculateHash {
-        let mut inputs = Vec::<String>::new();
-        inputs.push(input.to_string());
-        super::hashing::hash_stream(&inputs)?;
+        super::hashing::hash_stream(&vec![input.to_string()])?;
     }
 
     if params.erase != EraseMode::IgnoreFile(0) {

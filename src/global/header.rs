@@ -120,7 +120,7 @@ impl Header {
         let mut nonce = vec![0u8; nonce_len];
 
         match header_type.header_version {
-            HeaderVersion::V1 => {
+            HeaderVersion::V1 | HeaderVersion::V3 => {
                 reader
                     .read_exact(&mut salt)
                     .context("Unable to read salt from header")?;
@@ -146,20 +146,6 @@ impl Header {
                     .context("Unable to read empty bytes from header")?;
                 reader
                     .read_exact(&mut [0u8; 16])
-                    .context("Unable to read final padding from header")?;
-            }
-            HeaderVersion::V3 => {
-                reader
-                    .read_exact(&mut salt)
-                    .context("Unable to read salt from header")?;
-                reader
-                    .read_exact(&mut [0u8; 16])
-                    .context("Unable to read empty bytes from header")?;
-                reader
-                    .read_exact(&mut nonce)
-                    .context("Unable to read nonce from header")?;
-                reader
-                    .read_exact(&mut vec![0u8; 26 - nonce_len])
                     .context("Unable to read final padding from header")?;
             }
         };

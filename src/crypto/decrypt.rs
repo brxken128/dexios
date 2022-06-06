@@ -2,17 +2,14 @@ use crate::crypto::key::argon2_hash;
 use crate::crypto::streams::init_decryption_stream;
 use crate::global::header::Header;
 use crate::global::secret::Secret;
-use crate::global::BLOCK_SIZE;
 use aead::Payload;
 use anyhow::anyhow;
-use anyhow::Context;
 use anyhow::Result;
 use paris::success;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::result::Result::Ok;
 use std::time::Instant;
-use zeroize::Zeroize;
 
 use super::memory::init_memory_cipher;
 
@@ -66,50 +63,9 @@ pub fn stream_mode(
 ) -> Result<()> {
     let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
 
-    let mut streams = init_decryption_stream(key, &header.nonce, header.header_type.algorithm)?;
+    let streams = init_decryption_stream(key, &header.nonce, header.header_type.algorithm)?;
 
-    let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();
-
-    loop {
-        let read_count = input.read(&mut buffer)?;
-        if read_count == (BLOCK_SIZE + 16) {
-            let payload = Payload {
-                aad,
-                msg: buffer.as_ref(),
-            };
-
-            let mut decrypted_data = match streams.decrypt_next(payload) {
-                Ok(bytes) => bytes,
-                Err(_) => return Err(anyhow!("Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
-            };
-
-            output
-                .write_all(&decrypted_data)
-                .context("Unable to write to the output file")?;
-
-            decrypted_data.zeroize();
-        } else {
-            // if we read something less than BLOCK_SIZE+16, and have hit the end of the file
-            let payload = Payload {
-                aad,
-                msg: &buffer[..read_count],
-            };
-
-            let mut decrypted_data = match streams.decrypt_last(payload) {
-                Ok(bytes) => bytes,
-                Err(_) => return Err(anyhow!("Unable to decrypt the final block of data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
-            };
-
-            output
-                .write_all(&decrypted_data)
-                .context("Unable to write to the output file")?;
-            output.flush().context("Unable to flush the output file")?;
-
-            decrypted_data.zeroize();
-
-            break;
-        }
-    }
+    streams.decrypt_file(input, output, &aad)?;
 
     Ok(())
 }

@@ -83,13 +83,13 @@ impl EncryptStreamCiphers {
         }
     }
 
-    // convenience function for quickly encrypting and writing
+    // convenience function for quickly encrypting and writing to provided output
     pub fn encrypt_file(mut self, reader: &mut impl Read, writer: &mut impl Write, aad: &[u8]) -> anyhow::Result<()> {
         let mut read_buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
         loop {
             let read_count = reader
                 .read(&mut read_buffer)
-                .context("Unable to read from the reader file")?;
+                .context("Unable to read from the reader")?;
             if read_count == BLOCK_SIZE {
                 // aad is just empty bytes normally
                 // create_aad returns empty bytes if the header isn't V3+
@@ -106,7 +106,7 @@ impl EncryptStreamCiphers {
     
                 writer
                     .write_all(&encrypted_data)
-                    .context("Unable to write to the output file")?;
+                    .context("Unable to write to the output")?;
             } else {
                 // if we read something less than BLOCK_SIZE, and have hit the end of the file
                 let payload = Payload {
@@ -121,12 +121,12 @@ impl EncryptStreamCiphers {
     
                 writer
                     .write_all(&encrypted_data)
-                    .context("Unable to write to the output file")?;
+                    .context("Unable to write to the output")?;
                 break;
             }
         }
-
         read_buffer.zeroize();
+        writer.flush().context("Unable to flush the output")?;
 
         Ok(())
     }
@@ -153,5 +153,52 @@ impl DecryptStreamCiphers {
             DecryptStreamCiphers::XChaCha(s) => s.decrypt_last(payload),
             DecryptStreamCiphers::DeoxysII(s) => s.decrypt_last(payload),
         }
+    }
+
+    // convenience function for decrypting a file and writing it to the output
+    pub fn decrypt_file(mut self, reader: &mut impl Read, writer: &mut impl Write, aad: &[u8]) -> anyhow::Result<()> {
+        let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();
+        loop {
+            let read_count = reader.read(&mut buffer)?;
+            if read_count == (BLOCK_SIZE + 16) {
+                let payload = Payload {
+                    aad,
+                    msg: buffer.as_ref(),
+                };
+    
+                let mut decrypted_data = match self.decrypt_next(payload) {
+                    Ok(bytes) => bytes,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
+                };
+    
+                writer
+                    .write_all(&decrypted_data)
+                    .context("Unable to write to the output")?;
+    
+                decrypted_data.zeroize();
+            } else {
+                // if we read something less than BLOCK_SIZE+16, and have hit the end of the file
+                let payload = Payload {
+                    aad,
+                    msg: &buffer[..read_count],
+                };
+    
+                let mut decrypted_data = match self.decrypt_last(payload) {
+                    Ok(bytes) => bytes,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to decrypt the final block of data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
+                };
+    
+                writer
+                    .write_all(&decrypted_data)
+                    .context("Unable to write to the output file")?;
+
+                decrypted_data.zeroize();
+                break;
+            }
+        }
+
+        writer.flush().context("Unable to flush the output")?;
+
+        Ok(())
     }
 }

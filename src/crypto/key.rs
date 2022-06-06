@@ -8,6 +8,7 @@ use argon2::Argon2;
 use argon2::Params;
 use paris::success;
 use rand::prelude::StdRng;
+use super::primitives::KeyInfo;
 use rand::RngCore;
 use rand::SeedableRng;
 use std::result::Result::Ok;
@@ -24,9 +25,9 @@ pub fn gen_salt() -> [u8; SALT_LEN] {
 // it also ensures that raw_key is zeroed out
 pub fn argon2_hash(
     raw_key: Secret<Vec<u8>>,
-    salt: &[u8; SALT_LEN],
+    salt: [u8; SALT_LEN],
     version: &HeaderVersion,
-) -> Result<Secret<[u8; 32]>> {
+) -> Result<KeyInfo> {
     let mut key = [0u8; 32];
 
     let params = match version {
@@ -58,7 +59,7 @@ pub fn argon2_hash(
 
     let hash_start_time = Instant::now();
     let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
-    let result = argon2.hash_password_into(raw_key.expose(), salt, &mut key);
+    let result = argon2.hash_password_into(raw_key.expose(), &salt, &mut key);
     drop(raw_key);
     let hash_duration = hash_start_time.elapsed();
     success!(
@@ -72,5 +73,7 @@ pub fn argon2_hash(
         ));
     }
 
-    Ok(Secret::new(key))
+    let key_info = KeyInfo { salt, key: Secret::new(key) };
+
+    Ok(key_info)
 }

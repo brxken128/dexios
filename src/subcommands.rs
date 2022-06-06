@@ -9,14 +9,14 @@ use crate::global::parameters::{
     parameter_handler,
 };
 
-pub mod encrypt;
 pub mod decrypt;
+pub mod encrypt;
 pub mod erase;
 pub mod hashing;
-pub mod list;
-pub mod key;
-pub mod prompt;
 pub mod header;
+pub mod key;
+pub mod list;
+pub mod prompt;
 
 pub fn encrypt(sub_matches: &ArgMatches) -> Result<()> {
     let params = parameter_handler(sub_matches)?;

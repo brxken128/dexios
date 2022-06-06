@@ -1,3 +1,5 @@
+use super::key::get_secret;
+use super::prompt::overwrite_check;
 use crate::crypto::decrypt::decrypt_bytes_memory_mode;
 use crate::crypto::decrypt::decrypt_bytes_stream_mode;
 use crate::global::states::BenchMode;
@@ -6,8 +8,6 @@ use crate::global::states::EraseMode;
 use crate::global::states::HeaderFile;
 use crate::global::states::OutputFile;
 use crate::global::structs::CryptoParams;
-use super::key::get_secret;
-use super::prompt::overwrite_check;
 use anyhow::{Context, Ok, Result};
 use paris::Logger;
 use std::fs::File;

@@ -1,10 +1,10 @@
+use crate::crypto::key::argon2_hash;
 use crate::crypto::primitives::MemoryCiphers;
+use crate::crypto::streams::init_decryption_stream;
+use crate::global::secret::Secret;
 use crate::global::states::{Algorithm, BenchMode, HashMode, OutputFile};
 use crate::global::structs::Header;
 use crate::global::BLOCK_SIZE;
-use crate::crypto::key::argon2_hash;
-use crate::global::secret::Secret;
-use crate::crypto::streams::init_decryption_stream;
 use aead::{NewAead, Payload};
 use aes_gcm::Aes256Gcm;
 use anyhow::anyhow;

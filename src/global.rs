@@ -12,8 +12,8 @@ pub const ALGORITHMS: [Algorithm; 3] = [
     Algorithm::DeoxysII256,
 ];
 
-pub mod states;
-pub mod parameters;
-pub mod structs;
-pub mod secret;
 pub mod header;
+pub mod parameters;
+pub mod secret;
+pub mod states;
+pub mod structs;

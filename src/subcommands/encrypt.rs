@@ -1,3 +1,5 @@
+use super::key::get_secret;
+use super::prompt::overwrite_check;
 use crate::crypto::encrypt::encrypt_bytes_memory_mode;
 use crate::crypto::encrypt::encrypt_bytes_stream_mode;
 use crate::file::get_bytes;
@@ -7,8 +9,6 @@ use crate::global::states::EraseMode;
 use crate::global::states::OutputFile;
 use crate::global::structs::CryptoParams;
 use crate::global::BLOCK_SIZE;
-use super::key::get_secret;
-use super::prompt::overwrite_check;
 use anyhow::Context;
 use anyhow::{Ok, Result};
 use paris::Logger;

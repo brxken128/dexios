@@ -1,10 +1,16 @@
-use std::io::{stdout, stdin};
+use std::io::{stdin, stdout};
 
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use paris::{info, warn};
 use zeroize::Zeroize;
 
-use crate::{global::{states::{KeyFile, PasswordMode}, secret::Secret}, file::get_bytes};
+use crate::{
+    file::get_bytes,
+    global::{
+        secret::Secret,
+        states::{KeyFile, PasswordMode},
+    },
+};
 
 // this function interacts with stdin and stdout to hide password input
 // it uses termion's `read_passwd` function for terminal manipulation

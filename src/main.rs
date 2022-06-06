@@ -1,13 +1,13 @@
 use anyhow::Result;
 use global::parameters::get_param;
 use global::parameters::skipmode;
-use subcommands::list::show_values;
 use std::result::Result::Ok;
+use subcommands::list::show_values;
 
 mod cli;
+mod crypto;
 mod file;
 mod global;
-mod crypto;
 mod subcommands;
 
 // this is where subcommand function calling is handled

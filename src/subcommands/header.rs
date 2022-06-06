@@ -1,11 +1,15 @@
-use std::{fs::{File, OpenOptions}, process::exit, io::{Read, Write}};
+use std::{
+    fs::{File, OpenOptions},
+    io::{Read, Write},
+    process::exit,
+};
 
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use paris::Logger;
 
 use crate::global::states::{BenchMode, SkipMode};
 
-use super::prompt::{overwrite_check, get_answer};
+use super::prompt::{get_answer, overwrite_check};
 
 // this function dumps the first 64 bytes of
 // the input file into the output file

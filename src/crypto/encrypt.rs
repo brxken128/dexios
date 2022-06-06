@@ -1,11 +1,11 @@
+use crate::crypto::key::{argon2_hash, gen_salt};
 use crate::crypto::primitives::MemoryCiphers;
+use crate::crypto::streams::init_encryption_stream;
+use crate::global::header::create_aad;
+use crate::global::secret::Secret;
 use crate::global::states::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
 use crate::global::structs::{Header, HeaderType};
 use crate::global::{BLOCK_SIZE, VERSION};
-use crate::global::header::create_aad;
-use crate::crypto::key::{argon2_hash, gen_salt};
-use crate::global::secret::Secret;
-use crate::crypto::streams::init_encryption_stream;
 use aead::{NewAead, Payload};
 use aes_gcm::Aes256Gcm;
 use anyhow::anyhow;

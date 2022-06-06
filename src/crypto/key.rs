@@ -1,9 +1,9 @@
 use std::time::Instant;
 
+use crate::global::secret::Secret;
 use crate::global::states::HeaderVersion;
 use crate::global::SALT_LEN;
-use crate::global::secret::Secret;
-use anyhow::{Result};
+use anyhow::Result;
 use argon2::Argon2;
 use argon2::Params;
 use paris::success;
@@ -11,7 +11,6 @@ use rand::prelude::StdRng;
 use rand::RngCore;
 use rand::SeedableRng;
 use std::result::Result::Ok;
-
 
 // this generates a salt for password hashing
 pub fn gen_salt() -> [u8; SALT_LEN] {

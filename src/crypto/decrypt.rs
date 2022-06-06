@@ -28,9 +28,9 @@ pub fn memory_mode(
     raw_key: Secret<Vec<u8>>,
     aad: &[u8],
 ) -> Result<()> {
-    let key_info = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
+    let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
 
-    let ciphers = init_memory_cipher(key_info.key, header.header_type.algorithm)?;
+    let ciphers = init_memory_cipher(key, header.header_type.algorithm)?;
 
     let payload = Payload { aad, msg: data };
 
@@ -65,9 +65,9 @@ pub fn stream_mode(
     aad: &[u8],
 ) -> Result<()> {
 
-    let key_info = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
+    let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
 
-    let mut streams = init_decryption_stream(key_info, &header.nonce, &header.header_type.algorithm)?;
+    let mut streams = init_decryption_stream(key, &header.nonce, &header.header_type.algorithm)?;
 
     let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();
 

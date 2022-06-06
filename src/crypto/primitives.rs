@@ -11,13 +11,6 @@ use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
 
-use crate::global::secret::Secret;
-
-pub struct KeyInfo {
-    pub salt: [u8; 16],
-    pub key: Secret<[u8; 32]>,
-}
-
 pub enum MemoryCiphers {
     Aes256Gcm(Box<Aes256Gcm>),
     XChaCha(Box<XChaCha20Poly1305>),

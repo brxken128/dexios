@@ -1,5 +1,5 @@
-use super::primitives::KeyInfo;
 use crate::crypto::primitives::{DecryptStreamCiphers, EncryptStreamCiphers};
+use crate::global::secret::Secret;
 use crate::global::states::Algorithm;
 use aead::stream::{DecryptorLE31, EncryptorLE31};
 use aead::NewAead;
@@ -19,14 +19,14 @@ use std::result::Result::Ok;
 // this function hashes the provided key, and then initialises the stream ciphers
 // it's used for encrypt/stream mode and is the central place for managing streams for encryption
 pub fn init_encryption_stream(
-    key_info: KeyInfo,
+    key: Secret<[u8; 32]>,
     algorithm: &Algorithm,
 ) -> Result<(EncryptStreamCiphers, Vec<u8>)> {
     match algorithm {
         Algorithm::Aes256Gcm => {
             let nonce = StdRng::from_entropy().gen::<[u8; 8]>();
 
-            let cipher = match Aes256Gcm::new_from_slice(key_info.key.expose()) {
+            let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
@@ -37,7 +37,7 @@ pub fn init_encryption_stream(
         Algorithm::XChaCha20Poly1305 => {
             let nonce = StdRng::from_entropy().gen::<[u8; 20]>();
 
-            let cipher = match XChaCha20Poly1305::new_from_slice(key_info.key.expose()) {
+            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
@@ -48,7 +48,7 @@ pub fn init_encryption_stream(
         Algorithm::DeoxysII256 => {
             let nonce = StdRng::from_entropy().gen::<[u8; 11]>();
 
-            let cipher = match DeoxysII256::new_from_slice(key_info.key.expose()) {
+            let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
@@ -62,13 +62,13 @@ pub fn init_encryption_stream(
 // this function hashes the provided key, and then initialises the stream ciphers
 // it's used for decrypt/stream mode and is the central place for managing streams for decryption
 pub fn init_decryption_stream(
-    key_info: KeyInfo,
+    key: Secret<[u8; 32]>,
     nonce: &[u8],
     algorithm: &Algorithm,
 ) -> Result<DecryptStreamCiphers> {
     match algorithm {
         Algorithm::Aes256Gcm => {
-            let cipher = match Aes256Gcm::new_from_slice(key_info.key.expose()) {
+            let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
@@ -77,7 +77,7 @@ pub fn init_decryption_stream(
             Ok(DecryptStreamCiphers::Aes256Gcm(Box::new(stream)))
         }
         Algorithm::XChaCha20Poly1305 => {
-            let cipher = match XChaCha20Poly1305::new_from_slice(key_info.key.expose()) {
+            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };
@@ -86,7 +86,7 @@ pub fn init_decryption_stream(
             Ok(DecryptStreamCiphers::XChaCha(Box::new(stream)))
         }
         Algorithm::DeoxysII256 => {
-            let cipher = match DeoxysII256::new_from_slice(key_info.key.expose()) {
+            let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
                 Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
             };

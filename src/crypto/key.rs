@@ -8,7 +8,6 @@ use argon2::Argon2;
 use argon2::Params;
 use paris::success;
 use rand::prelude::StdRng;
-use super::primitives::KeyInfo;
 use rand::RngCore;
 use rand::SeedableRng;
 use std::result::Result::Ok;
@@ -27,7 +26,7 @@ pub fn argon2_hash(
     raw_key: Secret<Vec<u8>>,
     salt: [u8; SALT_LEN],
     version: &HeaderVersion,
-) -> Result<KeyInfo> {
+) -> Result<Secret<[u8; 32]>> {
     let mut key = [0u8; 32];
 
     let params = match version {
@@ -73,7 +72,5 @@ pub fn argon2_hash(
         ));
     }
 
-    let key_info = KeyInfo { salt, key: Secret::new(key) };
-
-    Ok(key_info)
+    Ok(Secret::new(key))
 }

@@ -5,7 +5,7 @@ use crate::{
 use anyhow::{Context, Result};
 use blake3::Hasher;
 use paris::warn;
-use std::{fs::File, io::Seek};
+use std::{fs::File, io::{Seek, Write}};
 use std::io::Read;
 
 // the information needed to easily serialize a header
@@ -192,6 +192,14 @@ impl Header {
         };
 
         Ok(bytes)
+    }
+
+    // convenience function for writing the header to a file/buffer
+    pub fn write(&self, writer: &mut impl Write) -> Result<()> {
+        let header_bytes = self.serialize()?;
+        writer.write(&header_bytes).context("Unable to write header")?;
+
+        Ok(())
     }
 }
 

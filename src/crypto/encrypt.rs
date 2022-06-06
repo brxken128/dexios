@@ -99,9 +99,9 @@ pub fn stream_mode(
     };
 
     let salt = gen_salt();
-    let key_info = argon2_hash(raw_key, salt, &header_type.header_version)?;
+    let key = argon2_hash(raw_key, salt, &header_type.header_version)?;
 
-    let (mut streams, nonce) = init_encryption_stream(key_info, &header_type.algorithm)?;
+    let (mut streams, nonce) = init_encryption_stream(key, &header_type.algorithm)?;
 
     let header = Header { header_type, nonce, salt };
 

@@ -1,25 +1,22 @@
 use crate::crypto::key::{argon2_hash, gen_salt};
-use crate::crypto::primitives::MemoryCiphers;
 use crate::crypto::streams::init_encryption_stream;
 use crate::global::header::create_aad;
 use crate::global::secret::Secret;
 use crate::global::states::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
-use crate::global::structs::{Header, HeaderType};
+use crate::global::structs::HeaderType;
 use crate::global::{BLOCK_SIZE, VERSION};
-use aead::{NewAead, Payload};
-use aes_gcm::Aes256Gcm;
+use aead::Payload;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
-use chacha20poly1305::XChaCha20Poly1305;
-use deoxys::DeoxysII256;
 use paris::success;
-use rand::{prelude::StdRng, Rng, SeedableRng};
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
 use std::time::Instant;
 use zeroize::Zeroize;
+
+use super::memory::init_encryption_cipher;
 
 // this encrypts data in memory mode
 // it takes the data and a Secret<> key
@@ -46,56 +43,7 @@ pub fn encrypt_bytes_memory_mode(
 
     let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
 
-    let (header, ciphers) = match algorithm {
-        Algorithm::Aes256Gcm => {
-            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
-
-            let header = Header {
-                salt,
-                nonce: nonce_bytes.to_vec(),
-                header_type,
-            };
-
-            let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
-                Ok(cipher) => cipher,
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            };
-
-            (header, MemoryCiphers::Aes256Gcm(Box::new(cipher)))
-        }
-        Algorithm::XChaCha20Poly1305 => {
-            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 24]>();
-
-            let header = Header {
-                salt,
-                nonce: nonce_bytes.to_vec(),
-                header_type,
-            };
-
-            let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
-                Ok(cipher) => cipher,
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            };
-
-            (header, MemoryCiphers::XChaCha(Box::new(cipher)))
-        }
-        Algorithm::DeoxysII256 => {
-            let nonce_bytes = StdRng::from_entropy().gen::<[u8; 15]>();
-
-            let header = Header {
-                salt,
-                nonce: nonce_bytes.to_vec(),
-                header_type,
-            };
-
-            let cipher = match DeoxysII256::new_from_slice(key.expose()) {
-                Ok(cipher) => cipher,
-                Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-            };
-
-            (header, MemoryCiphers::DeoxysII(Box::new(cipher)))
-        }
-    };
+    let (header, ciphers) = init_encryption_cipher(header_type, key, salt)?;
 
     let aad = create_aad(&header);
 

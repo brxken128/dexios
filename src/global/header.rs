@@ -12,6 +12,29 @@ pub struct HeaderType {
     pub algorithm: Algorithm,
 }
 
+// the "tag"/HeaderType, but in raw bytes
+pub struct HeaderTag {
+    pub version: [u8; 2],
+    pub algorithm: [u8; 2],
+    pub mode: [u8; 2],
+}
+
+// this calculates how long the nonce will be, based on the provided input
+fn calc_nonce_len(header_info: &HeaderType) -> usize {
+    let mut nonce_len = match header_info.algorithm {
+        Algorithm::XChaCha20Poly1305 => 24,
+        Algorithm::Aes256Gcm => 12,
+        Algorithm::DeoxysII256 => 15,
+    };
+
+    if header_info.cipher_mode == CipherMode::StreamMode {
+        nonce_len -= 4; // the last 4 bytes are dynamic in stream mode
+    }
+
+    nonce_len
+}
+
+
 // the full header, including version, salt, nonce, mode, encryption algorithm, etc
 pub struct Header {
     pub header_type: HeaderType,
@@ -99,16 +122,16 @@ impl Header {
 
         match header_type.header_version {
             HeaderVersion::V1 => {
-                reader.read_exact(&mut salt)?; // !!! add context
-                reader.read_exact(&mut [0; 16])?;
-                reader.read_exact(&mut nonce)?;
-                reader.read_exact(&mut vec![0u8; 26 - nonce_len])?;
+                reader.read_exact(&mut salt).context("Unable to read salt from header")?;
+                reader.read_exact(&mut [0; 16]).context("Unable to read empty bytes from header")?;
+                reader.read_exact(&mut nonce).context("Unable to read nonce from header")?;
+                reader.read_exact(&mut vec![0u8; 26 - nonce_len]).context("Unable to read final padding from header")?;
             }
             HeaderVersion::V2 => {
-                reader.read_exact(&mut salt)?; // !!! add context
-                reader.read_exact(&mut nonce)?;
-                reader.read_exact(&mut vec![0u8; 26 - nonce_len])?;
-                reader.read_exact(&mut [0u8; 16])?;
+                reader.read_exact(&mut salt).context("Unable to read salt from header")?;
+                reader.read_exact(&mut nonce).context("Unable to read nonce from header")?;
+                reader.read_exact(&mut vec![0u8; 26 - nonce_len]).context("Unable to read empty bytes from header")?;
+                reader.read_exact(&mut [0u8; 16]).context("Unable to read final padding from header")?;
             }
             HeaderVersion::V3 => {
                 reader
@@ -116,7 +139,7 @@ impl Header {
                     .context("Unable to read salt from header")?;
                 reader
                     .read_exact(&mut [0u8; 16])
-                    .context("Unable to read empty bytes from header")?; // read and subsequently discard the next 16 bytes
+                    .context("Unable to read empty bytes from header")?;
                 reader
                     .read_exact(&mut nonce)
                     .context("Unable to read nonce from header")?;
@@ -130,8 +153,8 @@ impl Header {
             HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
             HeaderVersion::V3 => {
                 let mut buffer = [0u8; 64];
-                reader.seek(std::io::SeekFrom::Current(-64))?; // go back to start of input
-                reader.read_exact(&mut buffer)?;
+                reader.seek(std::io::SeekFrom::Current(-64)).context("Unable to seek buffer")?; // go back to start of input
+                reader.read_exact(&mut buffer).context("Unable to read header")?;
                 buffer.to_vec()
             }
         };
@@ -217,25 +240,4 @@ impl Header {
 
         Ok(())
     }
-}
-
-pub struct HeaderTag {
-    pub version: [u8; 2],
-    pub algorithm: [u8; 2],
-    pub mode: [u8; 2],
-}
-
-// this calculates how long the nonce will be, based on the provided input
-fn calc_nonce_len(header_info: &HeaderType) -> usize {
-    let mut nonce_len = match header_info.algorithm {
-        Algorithm::XChaCha20Poly1305 => 24,
-        Algorithm::Aes256Gcm => 12,
-        Algorithm::DeoxysII256 => 15,
-    };
-
-    if header_info.cipher_mode == CipherMode::StreamMode {
-        nonce_len -= 4; // the last 4 bytes are dynamic in stream mode
-    }
-
-    nonce_len
 }

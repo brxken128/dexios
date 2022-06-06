@@ -1,8 +1,8 @@
 use super::key::{argon2_hash, gen_salt};
 use crate::crypto::primitives::{DecryptStreamCiphers, EncryptStreamCiphers};
+use crate::global::header::{Header, HeaderType};
 use crate::global::secret::Secret;
 use crate::global::states::Algorithm;
-use crate::global::structs::{Header, HeaderType};
 use aead::stream::{DecryptorLE31, EncryptorLE31};
 use aead::NewAead;
 use aes_gcm::Aes256Gcm;

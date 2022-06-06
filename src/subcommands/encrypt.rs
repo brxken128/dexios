@@ -2,9 +2,7 @@ use super::key::get_secret;
 use super::prompt::overwrite_check;
 use crate::file::get_bytes;
 use crate::global::states::Algorithm;
-use crate::global::states::BenchMode;
 use crate::global::states::EraseMode;
-use crate::global::states::OutputFile;
 use crate::global::structs::CryptoParams;
 use crate::global::BLOCK_SIZE;
 use anyhow::Context;
@@ -24,7 +22,7 @@ pub fn memory_mode(
 ) -> Result<()> {
     let mut logger = Logger::new();
 
-    if !overwrite_check(output, params.skip, params.bench)? {
+    if !overwrite_check(output, params.skip)? {
         exit(0);
     }
 
@@ -44,41 +42,23 @@ pub fn memory_mode(
 
     logger.info(format!("Encrypting {} (this may take a while)", input));
 
-    let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
-        OutputFile::Some(
-            File::create(output)
-                .with_context(|| format!("Unable to open output file: {}", output))?,
-        )
-    } else {
-        OutputFile::None
-    };
+    let mut output_file = File::create(output)?; // !!!attach context here
 
     let encrypt_start_time = Instant::now();
     crate::crypto::encrypt::memory_mode(
         file_contents,
         &mut output_file,
         raw_key,
-        params.bench,
         params.hash_mode,
         algorithm,
     )?;
     let encrypt_duration = encrypt_start_time.elapsed();
 
-    match params.bench {
-        BenchMode::WriteToFilesystem => {
-            logger.success(format!(
-                "Encryption successful! File saved as {} [took {:.2}s]",
-                output,
-                encrypt_duration.as_secs_f32(),
-            ));
-        }
-        BenchMode::BenchmarkInMemory => {
-            logger.success(format!(
-                "Encryption successful! [took {:.2}s]",
-                encrypt_duration.as_secs_f32(),
-            ));
-        }
-    }
+    logger.success(format!(
+        "Encryption successful! File saved as {} [took {:.2}s]",
+        output,
+        encrypt_duration.as_secs_f32(),
+    ));
 
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;
@@ -120,20 +100,13 @@ pub fn stream_mode(
         return memory_mode(input, output, params, algorithm);
     }
 
-    if !overwrite_check(output, params.skip, params.bench)? {
+    if !overwrite_check(output, params.skip)? {
         exit(0);
     }
 
     let raw_key = get_secret(&params.keyfile, true, params.password)?;
 
-    let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
-        OutputFile::Some(
-            File::create(output)
-                .with_context(|| format!("Unable to open output file: {}", output))?,
-        )
-    } else {
-        OutputFile::None
-    };
+    let mut output_file = File::create(output)?; // !!!attach context
 
     logger.info(format!("Using {} for encryption", algorithm));
 
@@ -145,35 +118,23 @@ pub fn stream_mode(
         &mut input_file,
         &mut output_file,
         raw_key,
-        params.bench,
         params.hash_mode,
         algorithm,
     );
 
     if encryption_result.is_err() {
         drop(output_file);
-        if params.bench == BenchMode::WriteToFilesystem {
-            std::fs::remove_file(output).context("Unable to remove the malformed file")?;
-        }
+        std::fs::remove_file(output).context("Unable to remove the malformed file")?;
         return encryption_result;
     }
 
     let encrypt_duration = encrypt_start_time.elapsed();
-    match params.bench {
-        BenchMode::WriteToFilesystem => {
-            logger.success(format!(
-                "Encryption successful! File saved as {} [took {:.2}s]",
-                output,
-                encrypt_duration.as_secs_f32(),
-            ));
-        }
-        BenchMode::BenchmarkInMemory => {
-            logger.success(format!(
-                "Encryption successful! [took {:.2}s]",
-                encrypt_duration.as_secs_f32(),
-            ));
-        }
-    }
+
+    logger.success(format!(
+        "Encryption successful! File saved as {} [took {:.2}s]",
+        output,
+        encrypt_duration.as_secs_f32(),
+    ));
 
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;

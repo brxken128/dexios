@@ -1,8 +1,8 @@
 use crate::crypto::key::argon2_hash;
 use crate::crypto::streams::init_decryption_stream;
+use crate::global::header::Header;
 use crate::global::secret::Secret;
-use crate::global::states::{BenchMode, HashMode, OutputFile};
-use crate::global::structs::Header;
+use crate::global::states::HashMode;
 use crate::global::BLOCK_SIZE;
 use aead::Payload;
 use anyhow::anyhow;
@@ -11,7 +11,7 @@ use anyhow::Result;
 use blake3::Hasher;
 use paris::success;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::result::Result::Ok;
 use std::time::Instant;
 use zeroize::Zeroize;
@@ -26,9 +26,8 @@ use super::memory::init_memory_cipher;
 pub fn memory_mode(
     header: &Header,
     data: &[u8],
-    output: &mut OutputFile,
+    output: &mut File,
     raw_key: Secret<Vec<u8>>,
-    bench: BenchMode,
     hash: HashMode,
     aad: &[u8],
 ) -> Result<()> {
@@ -51,7 +50,7 @@ pub fn memory_mode(
 
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::global::header::hash(&mut hasher, header);
+        hasher.update(aad);
         hasher.update(data);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -62,12 +61,10 @@ pub fn memory_mode(
         );
     }
 
-    if bench == BenchMode::WriteToFilesystem {
-        let write_start_time = Instant::now();
-        output.write_all(&decrypted_bytes)?;
-        let write_duration = write_start_time.elapsed();
-        success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
-    }
+    let write_start_time = Instant::now();
+    output.write_all(&decrypted_bytes)?;
+    let write_duration = write_start_time.elapsed();
+    success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
 
     Ok(())
 }
@@ -80,10 +77,9 @@ pub fn memory_mode(
 // on each read, it decrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
 pub fn stream_mode(
     input: &mut File,
-    output: &mut OutputFile,
+    output: &mut File,
     raw_key: Secret<Vec<u8>>,
     header: &Header,
-    bench: BenchMode,
     hash: HashMode,
     aad: &[u8],
 ) -> Result<()> {
@@ -92,7 +88,7 @@ pub fn stream_mode(
     let mut streams = init_decryption_stream(raw_key, header)?;
 
     if hash == HashMode::CalculateHash {
-        crate::global::header::hash(&mut hasher, header);
+        hasher.update(aad);
     }
 
     let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();
@@ -110,11 +106,9 @@ pub fn stream_mode(
                 Err(_) => return Err(anyhow!("Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
             };
 
-            if bench == BenchMode::WriteToFilesystem {
-                output
-                    .write_all(&decrypted_data)
-                    .context("Unable to write to the output file")?;
-            }
+            output
+                .write_all(&decrypted_data)
+                .context("Unable to write to the output file")?;
 
             if hash == HashMode::CalculateHash {
                 hasher.update(&buffer);
@@ -133,12 +127,10 @@ pub fn stream_mode(
                 Err(_) => return Err(anyhow!("Unable to decrypt the final block of data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
             };
 
-            if bench == BenchMode::WriteToFilesystem {
-                output
-                    .write_all(&decrypted_data)
-                    .context("Unable to write to the output file")?;
-                output.flush().context("Unable to flush the output file")?;
-            }
+            output
+                .write_all(&decrypted_data)
+                .context("Unable to write to the output file")?;
+            output.flush().context("Unable to flush the output file")?;
 
             if hash == HashMode::CalculateHash {
                 hasher.update(&buffer[..read_count]);

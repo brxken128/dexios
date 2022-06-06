@@ -1,11 +1,9 @@
 // this file contains enums found all around the codebase
 // they act as toggles for certain features, so they can be
 // enabled if selected by the user
-// some enums are used purely by dexios to handle things (e.g. output files)
+// some enums are used purely by dexios to handle things (e.g. detached header files)
 
 use anyhow::Result;
-use std::fs::File;
-use std::io::Write;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum EraseMode {
@@ -26,20 +24,9 @@ pub enum SkipMode {
 }
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum BenchMode {
-    WriteToFilesystem,
-    BenchmarkInMemory,
-}
-
-#[derive(PartialEq, Copy, Clone)]
 pub enum PasswordMode {
     ForceUserProvidedPassword,
     NormalKeySourcePriority,
-}
-
-pub enum OutputFile {
-    Some(File),
-    None,
 }
 
 #[derive(PartialEq)]
@@ -90,21 +77,6 @@ impl KeyFile {
             KeyFile::None => Err(anyhow::anyhow!(
                 "Tried using a keyfile when one wasn't provided"
             )), // should never happen
-        }
-    }
-}
-
-impl OutputFile {
-    pub fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()> {
-        match self {
-            OutputFile::Some(file) => file.write_all(buf),
-            OutputFile::None => Ok(()),
-        }
-    }
-    pub fn flush(&mut self) -> std::io::Result<()> {
-        match self {
-            OutputFile::Some(file) => file.flush(),
-            OutputFile::None => Ok(()),
         }
     }
 }

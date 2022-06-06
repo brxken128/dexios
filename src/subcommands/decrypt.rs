@@ -1,16 +1,16 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
-use crate::global::states::BenchMode;
+use crate::global::header;
 use crate::global::states::CipherMode;
 use crate::global::states::EraseMode;
 use crate::global::states::HeaderFile;
-use crate::global::states::OutputFile;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Ok, Result};
 use paris::Logger;
 use std::fs::File;
 
 use std::io::Read;
+use std::io::Seek;
 use std::process::exit;
 use std::time::Instant;
 
@@ -25,7 +25,7 @@ pub fn memory_mode(
 ) -> Result<()> {
     let mut logger = Logger::new();
 
-    if !overwrite_check(output, params.skip, params.bench)? {
+    if !overwrite_check(output, params.skip)? {
         exit(0);
     }
 
@@ -34,14 +34,14 @@ pub fn memory_mode(
 
     let (header, aad) = match header_file {
         HeaderFile::Some(contents) => {
+            input_file
+                .seek(std::io::SeekFrom::Start(64))
+                .context("Unable to seek input file")?;
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
-            input_file
-                .read_exact(&mut [0u8; 64])
-                .with_context(|| format!("Unable to seek input file: {}", input))?;
-            crate::global::header::read_from_file(&mut header_file)?
+            header::Header::deserialize(&mut header_file)?
         }
-        HeaderFile::None => crate::global::header::read_from_file(&mut input_file)?,
+        HeaderFile::None => header::Header::deserialize(&mut input_file)?,
     };
 
     let read_start_time = Instant::now();
@@ -66,14 +66,7 @@ pub fn memory_mode(
 
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
-    let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
-        OutputFile::Some(
-            File::create(output)
-                .with_context(|| format!("Unable to open output file: {}", output))?,
-        )
-    } else {
-        OutputFile::None
-    };
+    let mut output_file = File::create(output)?; // !!!attach context here
 
     let decrypt_start_time = Instant::now();
     crate::crypto::decrypt::memory_mode(
@@ -81,27 +74,16 @@ pub fn memory_mode(
         &encrypted_data,
         &mut output_file,
         raw_key,
-        params.bench,
         params.hash_mode,
         &aad,
     )?;
     let decrypt_duration = decrypt_start_time.elapsed();
 
-    match params.bench {
-        BenchMode::WriteToFilesystem => {
-            logger.success(format!(
-                "Decryption successful! File saved as {} [took {:.2}s]",
-                output,
-                decrypt_duration.as_secs_f32(),
-            ));
-        }
-        BenchMode::BenchmarkInMemory => {
-            logger.success(format!(
-                "Decryption successful! [took {:.2}s]",
-                decrypt_duration.as_secs_f32(),
-            ));
-        }
-    }
+    logger.success(format!(
+        "Decryption successful! File saved as {} [took {:.2}s]",
+        output,
+        decrypt_duration.as_secs_f32(),
+    ));
 
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;
@@ -132,14 +114,14 @@ pub fn stream_mode(
 
     let (header, aad) = match header_file {
         HeaderFile::Some(contents) => {
+            input_file
+                .seek(std::io::SeekFrom::Start(64))
+                .context("Unable to seek input file")?;
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
-            input_file
-                .read_exact(&mut [0u8; 64])
-                .with_context(|| format!("Unable to seek input file: {}", input))?;
-            crate::global::header::read_from_file(&mut header_file)?
+            header::Header::deserialize(&mut header_file)?
         }
-        HeaderFile::None => crate::global::header::read_from_file(&mut input_file)?,
+        HeaderFile::None => header::Header::deserialize(&mut input_file)?,
     };
 
     if header.header_type.cipher_mode == CipherMode::MemoryMode {
@@ -147,20 +129,13 @@ pub fn stream_mode(
         return memory_mode(input, output, header_file, params);
     }
 
-    if !overwrite_check(output, params.skip, params.bench)? {
+    if !overwrite_check(output, params.skip)? {
         exit(0);
     }
 
     let raw_key = get_secret(&params.keyfile, false, params.password)?;
 
-    let mut output_file = if params.bench == BenchMode::WriteToFilesystem {
-        OutputFile::Some(
-            File::create(output)
-                .with_context(|| format!("Unable to open output file: {}", output))?,
-        )
-    } else {
-        OutputFile::None
-    };
+    let mut output_file = File::create(output)?; // !!!attach context here
 
     logger.info(format!(
         "Using {} for decryption",
@@ -175,36 +150,23 @@ pub fn stream_mode(
         &mut output_file,
         raw_key,
         &header,
-        params.bench,
         params.hash_mode,
         &aad,
     );
 
     if decryption_result.is_err() {
         drop(output_file);
-        if params.bench == BenchMode::WriteToFilesystem {
-            std::fs::remove_file(output).context("Unable to remove the malformed file")?;
-        }
+        std::fs::remove_file(output).context("Unable to remove the malformed file")?;
         return decryption_result;
     }
 
     let decrypt_duration = decrypt_start_time.elapsed();
 
-    match params.bench {
-        BenchMode::WriteToFilesystem => {
-            logger.success(format!(
-                "Decryption successful! File saved as {} [took {:.2}s]",
-                output,
-                decrypt_duration.as_secs_f32(),
-            ));
-        }
-        BenchMode::BenchmarkInMemory => {
-            logger.success(format!(
-                "Decryption successful! [took {:.2}s]",
-                decrypt_duration.as_secs_f32(),
-            ));
-        }
-    }
+    logger.success(format!(
+        "Decryption successful! File saved as {} [took {:.2}s]",
+        output,
+        decrypt_duration.as_secs_f32(),
+    ));
 
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;

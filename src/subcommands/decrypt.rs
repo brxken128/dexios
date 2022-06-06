@@ -70,13 +70,7 @@ pub fn memory_mode(
     let mut output_file = File::create(output)?; // !!!attach context here
 
     let decrypt_start_time = Instant::now();
-    crate::crypto::decrypt::memory_mode(
-        &header,
-        &encrypted_data,
-        &mut output_file,
-        raw_key,
-        &aad,
-    )?;
+    crate::crypto::decrypt::memory_mode(&header, &encrypted_data, &mut output_file, raw_key, &aad)?;
     let decrypt_duration = decrypt_start_time.elapsed();
 
     logger.success(format!(

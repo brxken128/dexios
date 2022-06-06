@@ -46,12 +46,7 @@ pub fn memory_mode(
     let mut output_file = File::create(output)?; // !!!attach context here
 
     let encrypt_start_time = Instant::now();
-    crate::crypto::encrypt::memory_mode(
-        file_contents,
-        &mut output_file,
-        raw_key,
-        algorithm,
-    )?;
+    crate::crypto::encrypt::memory_mode(file_contents, &mut output_file, raw_key, algorithm)?;
     let encrypt_duration = encrypt_start_time.elapsed();
 
     logger.success(format!(
@@ -120,12 +115,8 @@ pub fn stream_mode(
 
     let encrypt_start_time = Instant::now();
 
-    let encryption_result = crate::crypto::encrypt::stream_mode(
-        &mut input_file,
-        &mut output_file,
-        raw_key,
-        algorithm,
-    );
+    let encryption_result =
+        crate::crypto::encrypt::stream_mode(&mut input_file, &mut output_file, raw_key, algorithm);
 
     if encryption_result.is_err() {
         drop(output_file);

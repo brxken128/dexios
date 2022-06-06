@@ -103,10 +103,13 @@ pub fn stream_mode(
 
     let (mut streams, nonce) = init_encryption_stream(key, &header_type.algorithm)?;
 
-    let header = Header { header_type, nonce, salt };
+    let header = Header {
+        header_type,
+        nonce,
+        salt,
+    };
 
-    header.write(output)?; // !!!attach context
-
+    header.write(output)?;
 
     let aad = header.serialize()?;
 

@@ -64,7 +64,6 @@ pub fn stream_mode(
     header: &Header,
     aad: &[u8],
 ) -> Result<()> {
-
     let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
 
     let mut streams = init_decryption_stream(key, &header.nonce, &header.header_type.algorithm)?;

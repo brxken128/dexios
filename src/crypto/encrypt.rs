@@ -82,7 +82,7 @@ pub fn memory_mode(
     let mut hasher = blake3::Hasher::new();
     if hash == HashMode::CalculateHash {
         let hash_start_time = Instant::now();
-        crate::global::header::hash(&mut hasher, &header);
+        hasher.update(&aad);
         hasher.update(&encrypted_bytes);
         let hash = hasher.finalize().to_hex().to_string();
         let hash_duration = hash_start_time.elapsed();
@@ -120,11 +120,11 @@ pub fn stream_mode(
 
     let mut hasher = blake3::Hasher::new();
 
-    if hash == HashMode::CalculateHash {
-        crate::global::header::hash(&mut hasher, &header);
-    }
-
     let aad = header.serialize()?;
+
+    if hash == HashMode::CalculateHash {
+        hasher.update(&aad);
+    }
 
     let mut read_buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 

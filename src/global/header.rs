@@ -3,11 +3,8 @@ use crate::{
     global::SALT_LEN,
 };
 use anyhow::{Context, Result};
-use blake3::Hasher;
-use std::io::Read;
 use std::{
-    fs::File,
-    io::{Seek, Write},
+    io::{Seek, Write, Read},
 };
 
 // the information needed to easily serialize a header
@@ -52,25 +49,6 @@ impl Header {
                 info
             }
         }
-    }
-
-    fn deserialize_version<R>(reader: &mut R) -> Result<HeaderVersion>
-    where
-        R: std::io::Read,
-    {
-        let mut bytes = [0u8; 2];
-        reader
-            .read_exact(&mut bytes)
-            .context("Unable to read version's bytes from header")?;
-
-        let version = match bytes {
-            [0xDE, 0x01] => HeaderVersion::V1,
-            [0xDE, 0x02] => HeaderVersion::V2,
-            [0xDE, 0x03] => HeaderVersion::V3,
-            _ => return Err(anyhow::anyhow!("Error getting version from header")),
-        };
-
-        Ok(version)
     }
 
     // returns a header and the associated AAD
@@ -151,8 +129,7 @@ impl Header {
         };
 
         let aad = match header_type.header_version {
-            HeaderVersion::V1 => Vec::<u8>::new(),
-            HeaderVersion::V2 => Vec::<u8>::new(),
+            HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
             HeaderVersion::V3 => {
                 let mut buffer = [0u8; 64];
                 reader.seek(std::io::SeekFrom::Current(-64))?; // go back to start of input
@@ -161,13 +138,7 @@ impl Header {
             }
         };
 
-        let header = Header {
-            header_type,
-            nonce,
-            salt,
-        };
-
-        Ok((header, aad))
+        Ok((Header { header_type, nonce, salt }, aad))
     }
 
     fn serialize_algorithm(&self) -> [u8; 2] {
@@ -199,7 +170,7 @@ impl Header {
         }
     }
 
-    fn serialize_v3(&self, tag: HeaderTag) -> Vec<u8> {
+    fn serialize_v3(&self, tag: &HeaderTag) -> Vec<u8> {
         let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
         let mut header_bytes = Vec::<u8>::new();
         header_bytes.extend_from_slice(&tag.version);
@@ -226,7 +197,7 @@ impl Header {
                     "Serializing V2 headers has been deprecated"
                 ))
             }
-            HeaderVersion::V3 => self.serialize_v3(tag),
+            HeaderVersion::V3 => self.serialize_v3(&tag),
         };
 
         Ok(bytes)
@@ -264,90 +235,90 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
     nonce_len
 }
 
-// this takes information about the header, and serializes it into raw bytes
-// this is the inverse of the deserialize function
-fn serialize(header_info: &HeaderType) -> HeaderTag {
-    let version = match header_info.header_version {
-        HeaderVersion::V1 => {
-            let info: [u8; 2] = [0xDE, 0x01];
-            info
-        }
-        HeaderVersion::V2 => {
-            let info: [u8; 2] = [0xDE, 0x02];
-            info
-        }
-        HeaderVersion::V3 => {
-            let info: [u8; 2] = [0xDE, 0x03];
-            info
-        }
-    };
-    let algorithm = match header_info.algorithm {
-        Algorithm::XChaCha20Poly1305 => {
-            let info: [u8; 2] = [0x0E, 0x01];
-            info
-        }
-        Algorithm::Aes256Gcm => {
-            let info: [u8; 2] = [0x0E, 0x02];
-            info
-        }
-        Algorithm::DeoxysII256 => {
-            let info: [u8; 2] = [0x0E, 0x03];
-            info
-        }
-    };
+// // this takes information about the header, and serializes it into raw bytes
+// // this is the inverse of the deserialize function
+// fn serialize(header_info: &HeaderType) -> HeaderTag {
+//     let version = match header_info.header_version {
+//         HeaderVersion::V1 => {
+//             let info: [u8; 2] = [0xDE, 0x01];
+//             info
+//         }
+//         HeaderVersion::V2 => {
+//             let info: [u8; 2] = [0xDE, 0x02];
+//             info
+//         }
+//         HeaderVersion::V3 => {
+//             let info: [u8; 2] = [0xDE, 0x03];
+//             info
+//         }
+//     };
+//     let algorithm = match header_info.algorithm {
+//         Algorithm::XChaCha20Poly1305 => {
+//             let info: [u8; 2] = [0x0E, 0x01];
+//             info
+//         }
+//         Algorithm::Aes256Gcm => {
+//             let info: [u8; 2] = [0x0E, 0x02];
+//             info
+//         }
+//         Algorithm::DeoxysII256 => {
+//             let info: [u8; 2] = [0x0E, 0x03];
+//             info
+//         }
+//     };
 
-    let mode = match header_info.cipher_mode {
-        CipherMode::StreamMode => {
-            let info: [u8; 2] = [0x0C, 0x01];
-            info
-        }
-        CipherMode::MemoryMode => {
-            let info: [u8; 2] = [0x0C, 0x02];
-            info
-        }
-    };
+//     let mode = match header_info.cipher_mode {
+//         CipherMode::StreamMode => {
+//             let info: [u8; 2] = [0x0C, 0x01];
+//             info
+//         }
+//         CipherMode::MemoryMode => {
+//             let info: [u8; 2] = [0x0C, 0x02];
+//             info
+//         }
+//     };
 
-    HeaderTag {
-        version,
-        algorithm,
-        mode,
-    }
-}
+//     HeaderTag {
+//         version,
+//         algorithm,
+//         mode,
+//     }
+// }
 
 // this writes a header to a file
 // it handles padding and serialising the specific information
 // it ensures the buffer is left at 64 bytes, so other functions can write the data without further hassle
 
 // this hashes a header with the salt, nonce, and info provided
-pub fn hash(hasher: &mut Hasher, header: &Header) {
-    match &header.header_type.header_version {
-        HeaderVersion::V1 | HeaderVersion::V3 => {
-            let nonce_len = calc_nonce_len(&header.header_type);
-            let padding = vec![0u8; 26 - nonce_len];
-            let header_tag = serialize(&header.header_type);
+// pub fn hash(hasher: &mut Hasher, header: &Header) {
+//     match &header.header_type.header_version {
+//         HeaderVersion::V1 | HeaderVersion::V3 => {
+//             let nonce_len = calc_nonce_len(&header.header_type);
+//             let padding = vec![0u8; 26 - nonce_len];
+//             let header_tag = serialize(&header.header_type);
 
-            hasher.update(&header_tag.version);
-            hasher.update(&header_tag.algorithm);
-            hasher.update(&header_tag.mode);
-            hasher.update(&header.salt);
-            hasher.update(&[0; 16]);
-            hasher.update(&header.nonce);
-            hasher.update(&padding);
-        }
-        HeaderVersion::V2 => {
-            let nonce_len = calc_nonce_len(&header.header_type);
-            let padding = vec![0u8; 26 - nonce_len];
-            let header_tag = serialize(&header.header_type);
+//             hasher.update(&header_tag.version);
+//             hasher.update(&header_tag.algorithm);
+//             hasher.update(&header_tag.mode);
+//             hasher.update(&header.salt);
+//             hasher.update(&[0; 16]);
+//             hasher.update(&header.nonce);
+//             hasher.update(&padding);
+//         }
+//         HeaderVersion::V2 => {
+//             let nonce_len = calc_nonce_len(&header.header_type);
+//             let padding = vec![0u8; 26 - nonce_len];
+//             let header_tag = serialize(&header.header_type);
 
-            hasher.update(&header_tag.version);
-            hasher.update(&header_tag.algorithm);
-            hasher.update(&header_tag.mode);
-            hasher.update(&header.salt);
-            hasher.update(&header.nonce);
-            hasher.update(&padding);
-        }
-    }
-}
+//             hasher.update(&header_tag.version);
+//             hasher.update(&header_tag.algorithm);
+//             hasher.update(&header_tag.mode);
+//             hasher.update(&header.salt);
+//             hasher.update(&header.nonce);
+//             hasher.update(&padding);
+//         }
+//     }
+// }
 
 // // this is used for converting raw bytes from the header to enums that dexios can understand
 // // this involves the header version, encryption algorithm/mode, and possibly more in the future

@@ -3,20 +3,22 @@ use crate::crypto::streams::init_encryption_stream;
 use crate::global::header::create_aad;
 use crate::global::secret::Secret;
 use crate::global::states::{Algorithm, BenchMode, CipherMode, HashMode, OutputFile};
-use crate::global::structs::HeaderType;
+use crate::global::structs::{HeaderType, Header};
 use crate::global::{BLOCK_SIZE, VERSION};
 use aead::Payload;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use paris::success;
+use rand::{SeedableRng, Rng};
+use rand::prelude::StdRng;
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
 use std::time::Instant;
 use zeroize::Zeroize;
 
-use super::memory::init_encryption_cipher;
+use super::memory::init_memory_cipher;
 
 // this encrypts data in memory mode
 // it takes the data and a Secret<> key
@@ -43,7 +45,22 @@ pub fn encrypt_bytes_memory_mode(
 
     let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
 
-    let (header, ciphers) = init_encryption_cipher(header_type, key, salt)?;
+    // let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
+
+    let nonce_bytes = match header_type.algorithm {
+        Algorithm::Aes256Gcm => StdRng::from_entropy().gen::<[u8; 12]>().to_vec(),
+        Algorithm::XChaCha20Poly1305 => StdRng::from_entropy().gen::<[u8; 24]>().to_vec(),
+        Algorithm::DeoxysII256 => StdRng::from_entropy().gen::<[u8; 15]>().to_vec(),
+    };
+
+    let ciphers = init_memory_cipher(key, &algorithm)?;
+
+
+    let header = Header {
+        salt: salt,
+        nonce: nonce_bytes.to_vec(),
+        header_type,
+    };
 
     let aad = create_aad(&header);
 

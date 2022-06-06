@@ -1,24 +1,22 @@
 use crate::crypto::key::argon2_hash;
-use crate::crypto::primitives::MemoryCiphers;
 use crate::crypto::streams::init_decryption_stream;
 use crate::global::secret::Secret;
-use crate::global::states::{Algorithm, BenchMode, HashMode, OutputFile};
+use crate::global::states::{BenchMode, HashMode, OutputFile};
 use crate::global::structs::Header;
 use crate::global::BLOCK_SIZE;
-use aead::{NewAead, Payload};
-use aes_gcm::Aes256Gcm;
+use aead::Payload;
 use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 use blake3::Hasher;
-use chacha20poly1305::XChaCha20Poly1305;
-use deoxys::DeoxysII256;
 use paris::success;
 use std::fs::File;
 use std::io::Read;
 use std::result::Result::Ok;
 use std::time::Instant;
 use zeroize::Zeroize;
+
+use super::memory::init_memory_cipher;
 
 // this decrypts the data in memory mode
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce
@@ -36,22 +34,9 @@ pub fn decrypt_bytes_memory_mode(
 ) -> Result<()> {
     let key = argon2_hash(raw_key, &header.salt, &header.header_type.header_version)?;
 
-    let payload = Payload { aad, msg: data };
+    let ciphers = init_memory_cipher(key, &header.header_type.algorithm)?;
 
-    let ciphers = match header.header_type.algorithm {
-        Algorithm::Aes256Gcm => match Aes256Gcm::new_from_slice(key.expose()) {
-            Ok(cipher) => MemoryCiphers::Aes256Gcm(Box::new(cipher)),
-            Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-        },
-        Algorithm::XChaCha20Poly1305 => match XChaCha20Poly1305::new_from_slice(key.expose()) {
-            Ok(cipher) => MemoryCiphers::XChaCha(Box::new(cipher)),
-            Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-        },
-        Algorithm::DeoxysII256 => match DeoxysII256::new_from_slice(key.expose()) {
-            Ok(cipher) => MemoryCiphers::DeoxysII(Box::new(cipher)),
-            Err(_) => return Err(anyhow!("Unable to create cipher with argon2id hashed key.")),
-        },
-    };
+    let payload = Payload { aad, msg: data };
 
     let decrypted_bytes = match ciphers.decrypt(&header.nonce, payload) {
         Ok(decrypted_bytes) => decrypted_bytes,

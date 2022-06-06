@@ -40,7 +40,7 @@ pub fn memory_mode(
         algorithm,
     };
 
-    let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
+    let key_info = argon2_hash(raw_key, salt, &header_type.header_version)?;
 
     // let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
 
@@ -50,7 +50,7 @@ pub fn memory_mode(
         Algorithm::DeoxysII256 => StdRng::from_entropy().gen::<[u8; 15]>().to_vec(),
     };
 
-    let ciphers = init_memory_cipher(key, algorithm)?;
+    let ciphers = init_memory_cipher(key_info.key, algorithm)?;
 
     let header = Header {
         header_type,
@@ -98,7 +98,12 @@ pub fn stream_mode(
         algorithm,
     };
 
-    let (mut streams, header) = init_encryption_stream(raw_key, header_type)?;
+    let salt = gen_salt();
+    let key_info = argon2_hash(raw_key, salt, &header_type.header_version)?;
+
+    let (mut streams, nonce) = init_encryption_stream(key_info, &header_type.algorithm)?;
+
+    let header = Header { header_type, nonce, salt };
 
     header.write(output)?; // !!!attach context
 

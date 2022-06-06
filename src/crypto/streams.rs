@@ -22,7 +22,7 @@ pub fn init_encryption_stream(
     key: Secret<[u8; 32]>,
     algorithm: &Algorithm,
 ) -> Result<(EncryptStreamCiphers, Vec<u8>)> {
-    match algorithm {
+    let (streams, nonce) = match algorithm {
         Algorithm::Aes256Gcm => {
             let nonce = StdRng::from_entropy().gen::<[u8; 8]>();
 
@@ -32,10 +32,10 @@ pub fn init_encryption_stream(
             };
 
             let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
-            Ok((
+            (
                 EncryptStreamCiphers::Aes256Gcm(Box::new(stream)),
                 nonce.to_vec(),
-            ))
+            )
         }
         Algorithm::XChaCha20Poly1305 => {
             let nonce = StdRng::from_entropy().gen::<[u8; 20]>();
@@ -46,10 +46,10 @@ pub fn init_encryption_stream(
             };
 
             let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
-            Ok((
+            (
                 EncryptStreamCiphers::XChaCha(Box::new(stream)),
                 nonce.to_vec(),
-            ))
+            )
         }
         Algorithm::DeoxysII256 => {
             let nonce = StdRng::from_entropy().gen::<[u8; 11]>();
@@ -60,12 +60,15 @@ pub fn init_encryption_stream(
             };
 
             let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
-            Ok((
+            (
                 EncryptStreamCiphers::DeoxysII(Box::new(stream)),
                 nonce.to_vec(),
-            ))
+            )
         }
-    }
+    };
+    
+    drop(key);
+    Ok((streams, nonce))
 }
 
 // this function hashes the provided key, and then initialises the stream ciphers
@@ -75,7 +78,7 @@ pub fn init_decryption_stream(
     nonce: &[u8],
     algorithm: &Algorithm,
 ) -> Result<DecryptStreamCiphers> {
-    match algorithm {
+    let streams = match algorithm {
         Algorithm::Aes256Gcm => {
             let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                 Ok(cipher) => cipher,
@@ -83,7 +86,7 @@ pub fn init_decryption_stream(
             };
 
             let stream = DecryptorLE31::from_aead(cipher, nonce.into());
-            Ok(DecryptStreamCiphers::Aes256Gcm(Box::new(stream)))
+            DecryptStreamCiphers::Aes256Gcm(Box::new(stream))
         }
         Algorithm::XChaCha20Poly1305 => {
             let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
@@ -92,7 +95,7 @@ pub fn init_decryption_stream(
             };
 
             let stream = DecryptorLE31::from_aead(cipher, nonce.into());
-            Ok(DecryptStreamCiphers::XChaCha(Box::new(stream)))
+            DecryptStreamCiphers::XChaCha(Box::new(stream))
         }
         Algorithm::DeoxysII256 => {
             let cipher = match DeoxysII256::new_from_slice(key.expose()) {
@@ -101,7 +104,10 @@ pub fn init_decryption_stream(
             };
 
             let stream = DecryptorLE31::from_aead(cipher, nonce.into());
-            Ok(DecryptStreamCiphers::DeoxysII(Box::new(stream)))
+            DecryptStreamCiphers::DeoxysII(Box::new(stream))
         }
-    }
+    };
+
+    drop(key);
+    Ok(streams)
 }

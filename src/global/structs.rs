@@ -1,7 +1,4 @@
-use crate::global::states::{
-    HashMode, KeyFile, PasswordMode,
-    SkipMode,
-};
+use crate::global::states::{HashMode, KeyFile, PasswordMode, SkipMode};
 
 use super::states::EraseMode;
 

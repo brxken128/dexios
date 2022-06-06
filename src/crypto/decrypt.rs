@@ -1,8 +1,8 @@
 use crate::crypto::key::argon2_hash;
 use crate::crypto::streams::init_decryption_stream;
+use crate::global::header::Header;
 use crate::global::secret::Secret;
 use crate::global::states::HashMode;
-use crate::global::header::Header;
 use crate::global::BLOCK_SIZE;
 use aead::Payload;
 use anyhow::anyhow;

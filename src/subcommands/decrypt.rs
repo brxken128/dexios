@@ -34,12 +34,14 @@ pub fn memory_mode(
 
     let (header, aad) = match header_file {
         HeaderFile::Some(contents) => {
-            input_file.seek(std::io::SeekFrom::Start(64)).context("Unable to seek input file")?;
+            input_file
+                .seek(std::io::SeekFrom::Start(64))
+                .context("Unable to seek input file")?;
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
             header::Header::deserialize(&mut header_file)?
         }
-        HeaderFile::None => header::Header::deserialize(&mut input_file)?
+        HeaderFile::None => header::Header::deserialize(&mut input_file)?,
     };
 
     let read_start_time = Instant::now();
@@ -82,7 +84,6 @@ pub fn memory_mode(
         output,
         decrypt_duration.as_secs_f32(),
     ));
-    
 
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;
@@ -113,12 +114,14 @@ pub fn stream_mode(
 
     let (header, aad) = match header_file {
         HeaderFile::Some(contents) => {
-            input_file.seek(std::io::SeekFrom::Start(64)).context("Unable to seek input file")?;
+            input_file
+                .seek(std::io::SeekFrom::Start(64))
+                .context("Unable to seek input file")?;
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
             header::Header::deserialize(&mut header_file)?
         }
-        HeaderFile::None => header::Header::deserialize(&mut input_file)?
+        HeaderFile::None => header::Header::deserialize(&mut input_file)?,
     };
 
     if header.header_type.cipher_mode == CipherMode::MemoryMode {
@@ -159,13 +162,12 @@ pub fn stream_mode(
 
     let decrypt_duration = decrypt_start_time.elapsed();
 
-
     logger.success(format!(
         "Decryption successful! File saved as {} [took {:.2}s]",
         output,
         decrypt_duration.as_secs_f32(),
     ));
-      
+
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;
     }

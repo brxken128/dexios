@@ -4,8 +4,11 @@ use crate::{
 };
 use anyhow::{Context, Result};
 use blake3::Hasher;
-use std::{fs::File, io::{Seek, Write}};
 use std::io::Read;
+use std::{
+    fs::File,
+    io::{Seek, Write},
+};
 
 // the information needed to easily serialize a header
 pub struct HeaderType {
@@ -27,7 +30,11 @@ impl Header {
         let version = self.serialize_version();
         let algorithm = self.serialize_algorithm();
         let mode = self.serialize_mode();
-        HeaderTag { version, algorithm, mode }
+        HeaderTag {
+            version,
+            algorithm,
+            mode,
+        }
     }
 
     fn serialize_version(&self) -> [u8; 2] {
@@ -47,9 +54,14 @@ impl Header {
         }
     }
 
-    fn deserialize_version<R>(reader: &mut R) -> Result<HeaderVersion> where R: std::io::Read {
+    fn deserialize_version<R>(reader: &mut R) -> Result<HeaderVersion>
+    where
+        R: std::io::Read,
+    {
         let mut bytes = [0u8; 2];
-        reader.read_exact(&mut bytes).context("Unable to read version's bytes from header")?;
+        reader
+            .read_exact(&mut bytes)
+            .context("Unable to read version's bytes from header")?;
 
         let version = match bytes {
             [0xDE, 0x01] => HeaderVersion::V1,
@@ -66,7 +78,9 @@ impl Header {
     // AAD for < v3 headers will be empty, as that's the default
     pub fn deserialize(reader: &mut (impl Read + Seek)) -> Result<(Self, Vec<u8>)> {
         let mut version_bytes = [0u8; 2];
-        reader.read_exact(&mut version_bytes).context("Unable to read version's bytes from header")?;
+        reader
+            .read_exact(&mut version_bytes)
+            .context("Unable to read version's bytes from header")?;
 
         let version = match version_bytes {
             [0xDE, 0x01] => HeaderVersion::V1,
@@ -76,7 +90,9 @@ impl Header {
         };
 
         let mut algorithm_bytes = [0u8; 2];
-        reader.read_exact(&mut algorithm_bytes).context("Unable to read algorithm's bytes from header")?;
+        reader
+            .read_exact(&mut algorithm_bytes)
+            .context("Unable to read algorithm's bytes from header")?;
 
         let algorithm = match algorithm_bytes {
             [0x0E, 0x01] => Algorithm::XChaCha20Poly1305,
@@ -86,7 +102,9 @@ impl Header {
         };
 
         let mut mode_bytes = [0u8; 2];
-        reader.read_exact(&mut mode_bytes).context("Unable to read encryption mode's bytes from header")?;
+        reader
+            .read_exact(&mut mode_bytes)
+            .context("Unable to read encryption mode's bytes from header")?;
 
         let mode = match mode_bytes {
             [0x0C, 0x01] => CipherMode::StreamMode,
@@ -94,7 +112,11 @@ impl Header {
             _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
         };
 
-        let header_type = HeaderType { header_version: version, algorithm, cipher_mode: mode };
+        let header_type = HeaderType {
+            header_version: version,
+            algorithm,
+            cipher_mode: mode,
+        };
         let nonce_len = calc_nonce_len(&header_type);
         let mut salt = [0u8; 16];
         let mut nonce = vec![0u8; nonce_len];
@@ -111,17 +133,21 @@ impl Header {
                 reader.read_exact(&mut nonce)?;
                 reader.read_exact(&mut vec![0u8; 26 - nonce_len])?;
                 reader.read_exact(&mut [0u8; 16])?;
-            },
+            }
             HeaderVersion::V3 => {
-                reader.read_exact(&mut salt)
+                reader
+                    .read_exact(&mut salt)
                     .context("Unable to read salt from header")?;
-                reader.read_exact(&mut [0u8; 16])
+                reader
+                    .read_exact(&mut [0u8; 16])
                     .context("Unable to read empty bytes from header")?; // read and subsequently discard the next 16 bytes
-                reader.read_exact(&mut nonce)
+                reader
+                    .read_exact(&mut nonce)
                     .context("Unable to read nonce from header")?;
-                reader.read_exact(&mut vec![0u8; 26 - nonce_len])
+                reader
+                    .read_exact(&mut vec![0u8; 26 - nonce_len])
                     .context("Unable to read final padding from header")?;
-            },
+            }
         };
 
         let aad = match header_type.header_version {
@@ -135,10 +161,14 @@ impl Header {
             }
         };
 
-        let header = Header { header_type, nonce, salt };
+        let header = Header {
+            header_type,
+            nonce,
+            salt,
+        };
 
-        Ok((header, aad)) 
-}
+        Ok((header, aad))
+    }
 
     fn serialize_algorithm(&self) -> [u8; 2] {
         match self.header_type.algorithm {
@@ -186,8 +216,16 @@ impl Header {
     pub fn serialize(&self) -> Result<Vec<u8>> {
         let tag = self.get_tag();
         let bytes = match self.header_type.header_version {
-            HeaderVersion::V1 => return Err(anyhow::anyhow!("Serializing V1 headers has been deprecated")),
-            HeaderVersion::V2 => return Err(anyhow::anyhow!("Serializing V2 headers has been deprecated")),
+            HeaderVersion::V1 => {
+                return Err(anyhow::anyhow!(
+                    "Serializing V1 headers has been deprecated"
+                ))
+            }
+            HeaderVersion::V2 => {
+                return Err(anyhow::anyhow!(
+                    "Serializing V2 headers has been deprecated"
+                ))
+            }
             HeaderVersion::V3 => self.serialize_v3(tag),
         };
 
@@ -197,7 +235,9 @@ impl Header {
     // convenience function for writing the header to a file/buffer
     pub fn write(&self, writer: &mut impl Write) -> Result<()> {
         let header_bytes = self.serialize()?;
-        writer.write(&header_bytes).context("Unable to write header")?;
+        writer
+            .write(&header_bytes)
+            .context("Unable to write header")?;
 
         Ok(())
     }
@@ -208,9 +248,6 @@ pub struct HeaderTag {
     pub algorithm: [u8; 2],
     pub mode: [u8; 2],
 }
-
-
-
 
 // this calculates how long the nonce will be, based on the provided input
 fn calc_nonce_len(header_info: &HeaderType) -> usize {

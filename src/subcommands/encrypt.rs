@@ -60,7 +60,6 @@ pub fn memory_mode(
         encrypt_duration.as_secs_f32(),
     ));
 
-
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;
     }
@@ -136,7 +135,6 @@ pub fn stream_mode(
         output,
         encrypt_duration.as_secs_f32(),
     ));
-      
 
     if params.erase != EraseMode::IgnoreFile(0) {
         super::erase::secure_erase(input, params.erase.get_passes())?;

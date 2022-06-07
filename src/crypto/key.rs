@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use super::primitives::SALT_LEN;
 
 use crate::global::header::HeaderVersion;
@@ -7,7 +5,6 @@ use crate::global::protected::Protected;
 use anyhow::Result;
 use argon2::Argon2;
 use argon2::Params;
-use paris::success;
 use rand::prelude::StdRng;
 use rand::RngCore;
 use rand::SeedableRng;

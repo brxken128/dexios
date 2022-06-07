@@ -1,5 +1,5 @@
 use crate::crypto::key::argon2_hash;
-use crate::crypto::primitives::MemoryCiphers;
+use crate::crypto::primitives::memory::MemoryCiphers;
 use crate::global::header::Header;
 use crate::global::secret::Secret;
 use aead::Payload;
@@ -11,7 +11,7 @@ use std::io::Write;
 use std::result::Result::Ok;
 use std::time::Instant;
 
-use super::primitives::DecryptStreamCiphers;
+use super::primitives::stream::DecryptStreamCiphers;
 
 // this decrypts the data in memory mode
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce

@@ -1,5 +1,5 @@
 use crate::crypto::key::{argon2_hash, gen_salt};
-use crate::crypto::primitives::MemoryCiphers;
+use crate::crypto::primitives::memory::MemoryCiphers;
 use crate::global::header::{Header, HeaderType};
 use crate::global::secret::Secret;
 use crate::global::states::{Algorithm, CipherMode};
@@ -16,7 +16,7 @@ use std::io::Write;
 use std::result::Result::Ok;
 use std::time::Instant;
 
-use super::primitives::EncryptStreamCiphers;
+use super::primitives::stream::EncryptStreamCiphers;
 
 // this encrypts data in memory mode
 // it takes the data and a Secret<> key

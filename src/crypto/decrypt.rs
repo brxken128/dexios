@@ -55,19 +55,14 @@ pub fn memory_mode(
 // it gets the streams enum from `init_decryption_stream`
 // it creates the encryption cipher and then reads the file in blocks (including the gcm tag)
 // on each read, it decrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
-pub fn stream_mode(
-    input: &mut File,
-    output: &mut File,
-    raw_key: Protected<Vec<u8>>,
-    header: &Header,
-    aad: &[u8],
-) -> Result<()> {
-    let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
+// pub fn stream_mode(
+//     input: &mut File,
+//     output: &mut File,
+//     raw_key: Protected<Vec<u8>>,
+//     header: &Header,
+//     aad: &[u8],
+// ) -> Result<()> {
 
-    let streams =
-        DecryptStreamCiphers::initialize(key, &header.nonce, header.header_type.algorithm)?;
 
-    streams.decrypt_file(input, output, aad)?;
-
-    Ok(())
-}
+//     Ok(())
+// }

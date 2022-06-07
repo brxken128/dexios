@@ -1,5 +1,6 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
+use crate::crypto::key::argon2_hash;
 use crate::global::header;
 use crate::global::states::CipherMode;
 use crate::global::states::EraseMode;
@@ -14,6 +15,8 @@ use std::io::Read;
 use std::io::Seek;
 use std::process::exit;
 use std::time::Instant;
+
+use crate::crypto::primitives::stream::DecryptStreamCiphers;
 
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
@@ -143,19 +146,13 @@ pub fn stream_mode(
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
     let decrypt_start_time = Instant::now();
-    let decryption_result = crate::crypto::decrypt::stream_mode(
-        &mut input_file,
-        &mut output_file,
-        raw_key,
-        &header,
-        &aad,
-    );
 
-    if decryption_result.is_err() {
-        drop(output_file);
-        std::fs::remove_file(output).context("Unable to remove the malformed file")?;
-        return decryption_result;
-    }
+    let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
+
+    let streams =
+        DecryptStreamCiphers::initialize(key, &header.nonce, header.header_type.algorithm)?;
+
+    streams.decrypt_file(&mut input_file, &mut output_file, &aad)?;
 
     let decrypt_duration = decrypt_start_time.elapsed();
 

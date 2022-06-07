@@ -7,14 +7,20 @@ use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
 use crate::global::states::HeaderFile;
 use crate::global::structs::CryptoParams;
-use anyhow::{Context, Ok, Result};
+use anyhow::{Context, Result};
 use paris::Logger;
+
+use crate::crypto::primitives::cipher::Ciphers;
+use aead::Payload;
+use anyhow::anyhow;
+use paris::success;
 use std::fs::File;
+use std::io::Write;
+use std::time::Instant;
 
 use std::io::Read;
 use std::io::Seek;
 use std::process::exit;
-use std::time::Instant;
 
 use crate::crypto::primitives::stream::DecryptStreamCiphers;
 
@@ -73,7 +79,25 @@ pub fn memory_mode(
     let mut output_file = File::create(output)?; // !!!attach context here
 
     let decrypt_start_time = Instant::now();
-    crate::crypto::decrypt::memory_mode(&header, &encrypted_data, &mut output_file, raw_key, &aad)?;
+    let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
+
+    let ciphers = Ciphers::initialize(key, header.header_type.algorithm)?;
+
+    let payload = Payload { aad: &aad, msg: &encrypted_data };
+
+    let decrypted_bytes = match ciphers.decrypt(&header.nonce, payload) {
+        Ok(decrypted_bytes) => decrypted_bytes,
+        Err(_) => {
+            return Err(anyhow!(
+            "Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with."
+        ))
+        }
+    };
+
+    let write_start_time = Instant::now();
+    output_file.write_all(&decrypted_bytes)?;
+    let write_duration = write_start_time.elapsed();
+    success!("Wrote to file [took {:.2}s]", write_duration.as_secs_f32());
     let decrypt_duration = decrypt_start_time.elapsed();
 
     logger.success(format!(

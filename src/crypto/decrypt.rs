@@ -1,7 +1,7 @@
 use crate::crypto::key::argon2_hash;
 use crate::crypto::primitives::cipher::Ciphers;
 use crate::global::header::Header;
-use crate::global::protected::Secret;
+use crate::global::protected::Protected;
 use aead::Payload;
 use anyhow::anyhow;
 use anyhow::Result;
@@ -14,7 +14,7 @@ use std::time::Instant;
 use super::primitives::stream::DecryptStreamCiphers;
 
 // this decrypts the data in memory mode
-// it takes the data, a Secret<> key, the salt and the 12 byte nonce
+// it takes the data, a Protected<> key, the salt and the 12 byte nonce
 // most of the information for decryption is stored within the header
 // it hashes the key with the supplised salt, and decrypts all of the data
 // it returns the decrypted bytes
@@ -23,7 +23,7 @@ pub fn memory_mode(
     header: &Header,
     data: &[u8],
     output: &mut File,
-    raw_key: Secret<Vec<u8>>,
+    raw_key: Protected<Vec<u8>>,
     aad: &[u8],
 ) -> Result<()> {
     let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
@@ -50,7 +50,7 @@ pub fn memory_mode(
 }
 
 // this decrypts data in stream mode
-// it takes an input file handle, an output file handle, a Secret<> raw key, and enums with specific modes
+// it takes an input file handle, an output file handle, a Protected<> raw key, and enums with specific modes
 // most of the information for decryption is stored within the header
 // it gets the streams enum from `init_decryption_stream`
 // it creates the encryption cipher and then reads the file in blocks (including the gcm tag)
@@ -58,7 +58,7 @@ pub fn memory_mode(
 pub fn stream_mode(
     input: &mut File,
     output: &mut File,
-    raw_key: Secret<Vec<u8>>,
+    raw_key: Protected<Vec<u8>>,
     header: &Header,
     aad: &[u8],
 ) -> Result<()> {

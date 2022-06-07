@@ -7,7 +7,7 @@ use zeroize::Zeroize;
 use crate::{
     file::get_bytes,
     global::{
-        protected::Secret,
+        protected::Protected,
         states::{KeyFile, PasswordMode},
     },
 };
@@ -63,7 +63,7 @@ fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
 
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes
-fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
+fn get_password(validation: bool) -> Result<Protected<Vec<u8>>> {
     Ok(loop {
         #[cfg(target_family = "unix")]
         let input =
@@ -72,7 +72,7 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
         let input =
             read_password_from_stdin_windows("Password: ").context("Unable to read password")?;
         if !validation {
-            return Ok(Secret::new(input.into_bytes()));
+            return Ok(Protected::new(input.into_bytes()));
         }
 
         #[cfg(target_family = "unix")]
@@ -84,7 +84,7 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
 
         if input == input_validation && !input.is_empty() {
             input_validation.zeroize();
-            break Secret::new(input.into_bytes());
+            break Protected::new(input.into_bytes());
         } else if input.is_empty() {
             warn!("Password cannot be empty, please try again.");
         } else {
@@ -104,7 +104,7 @@ pub fn get_secret(
     keyfile: &KeyFile,
     validation: bool,
     password_mode: PasswordMode,
-) -> Result<Secret<Vec<u8>>> {
+) -> Result<Protected<Vec<u8>>> {
     let key = if keyfile != &KeyFile::None {
         let keyfile_name = keyfile.get_contents()?;
         info!("Reading key from {}", keyfile_name);
@@ -113,7 +113,7 @@ pub fn get_secret(
         && password_mode == PasswordMode::NormalKeySourcePriority
     {
         info!("Reading key from DEXIOS_KEY environment variable");
-        Secret::new(
+        Protected::new(
             std::env::var("DEXIOS_KEY")
                 .context("Unable to read DEXIOS_KEY from environment variable")?
                 .into_bytes(),

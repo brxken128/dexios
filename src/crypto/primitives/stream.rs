@@ -11,7 +11,7 @@ use deoxys::DeoxysII256;
 use rand::{prelude::StdRng, Rng, SeedableRng};
 use zeroize::Zeroize;
 
-use crate::global::{protected::Secret, states::Algorithm, BLOCK_SIZE};
+use crate::global::{protected::Protected, states::Algorithm, BLOCK_SIZE};
 
 pub enum EncryptStreamCiphers {
     Aes256Gcm(Box<EncryptorLE31<Aes256Gcm>>),
@@ -27,7 +27,7 @@ pub enum DecryptStreamCiphers {
 
 impl EncryptStreamCiphers {
     pub fn initialize(
-        key: Secret<[u8; 32]>,
+        key: Protected<[u8; 32]>,
         algorithm: Algorithm,
     ) -> anyhow::Result<(Self, Vec<u8>)> {
         let (streams, nonce) = match algorithm {
@@ -168,7 +168,7 @@ impl EncryptStreamCiphers {
 
 impl DecryptStreamCiphers {
     pub fn initialize(
-        key: Secret<[u8; 32]>,
+        key: Protected<[u8; 32]>,
         nonce: &[u8],
         algorithm: Algorithm,
     ) -> anyhow::Result<Self> {

@@ -1,6 +1,6 @@
 use crate::crypto::key::{argon2_hash, gen_salt};
 use crate::global::header::{Header, HeaderType};
-use crate::global::protected::Secret;
+use crate::global::protected::Protected;
 use crate::global::states::{Algorithm, CipherMode};
 use crate::global::VERSION;
 use anyhow::Context;
@@ -12,14 +12,14 @@ use std::result::Result::Ok;
 use super::primitives::stream::EncryptStreamCiphers;
 
 // this encrypts data in stream mode
-// it takes an input file handle, an output file handle, a Secret<> key, and enums for specific modes
+// it takes an input file handle, an output file handle, a Protected<> key, and enums for specific modes
 // it gets the nonce, salt and streams enum from `init_encryption_stream` and then reads the file in blocks
 // on each read, it encrypts, writes (if enabled), hashes (if enabled) and repeats until EOF
 // it also handles the prep of each individual stream, via the match statement
 pub fn stream_mode(
     input: &mut File,
     output: &mut File,
-    raw_key: Secret<Vec<u8>>,
+    raw_key: Protected<Vec<u8>>,
     algorithm: Algorithm,
 ) -> Result<()> {
     let header_type = HeaderType {

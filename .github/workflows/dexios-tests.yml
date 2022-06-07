@@ -28,38 +28,6 @@ jobs:
         name: dexios
         path: target/release/dexios
         retention-days: 1
-  memory-mode:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Retrieve Dexios
-      uses: actions/download-artifact@v3
-      with:
-        name: dexios
-        path: target/release/dexios
-    - name: Make Binary Executable
-      run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
-    - name: Generate test file
-      run: dd if=/dev/urandom of=8KB.bin bs=1K count=8
-    - name: Generate keyfile
-      run: dd if=/dev/urandom of=keyfile bs=1 count=4096
-    - name: Encrypt in memory mode (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 1 8KB.bin 8KB.enc 
-    - name: Decrypt in memory mode (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 8KB.enc 8KB.bin
-    - name: Generate test file
-      run: dd if=/dev/urandom of=8KB.bin bs=1K count=8
-    - name: Encrypt in memory mode (AES-256-GCM)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 2 8KB.bin 8KB.enc 
-    - name: Decrypt in memory mode (AES-256-GCM)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 8KB.enc 8KB.bin
-    - name: Generate test file
-      run: dd if=/dev/urandom of=8KB.bin bs=1K count=8
-    - name: Encrypt in memory mode (Deoxys-II-256)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 3 8KB.bin 8KB.enc 
-    - name: Decrypt in memory mode (Deoxys-II-256)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 8KB.enc 8KB.bin
   stream-mode:
     needs: build
     runs-on: ubuntu-latest

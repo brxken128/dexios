@@ -3,5 +3,5 @@
 // they just need to be part of the RustCrypto "family"
 // https://github.com/RustCrypto/AEADs
 
-pub mod memory;
+pub mod cipher;
 pub mod stream;

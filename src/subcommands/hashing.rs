@@ -13,21 +13,7 @@ pub fn hash_stream(files: &Vec<String>) -> Result<()> {
         let mut input_file = std::fs::File::open(input)
             .with_context(|| format!("Unable to open file: {}", input))?;
 
-        let file_size = std::fs::metadata(input)
-            .with_context(|| format!("Unable to get file metadata: {}", input))?;
-
-        if file_size.len()
-            <= BLOCK_SIZE
-                .try_into()
-                .context("Unable to parse stream block size as u64")?
-        {
-            drop(input_file);
-            hash_memory(input, &mut logger)?;
-            continue;
-        }
-
         let mut hasher = blake3::Hasher::new();
-
         let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
         loop {
@@ -41,28 +27,8 @@ pub fn hash_stream(files: &Vec<String>) -> Result<()> {
         }
 
         let hash = hasher.finalize().to_hex().to_string();
-
         logger.success(format!("{}: {}", input, hash));
     }
-
-    Ok(())
-}
-
-// this hashes the input file
-// it reads the file all at once, hashes it and displays the hash
-// it's used by hash-standalone mode when the input file isn't large enough for streaming mode
-pub fn hash_memory(input: &str, logger: &mut Logger) -> Result<()> {
-    let mut input_file =
-        std::fs::File::open(input).with_context(|| format!("Unable to open file: {}", input))?;
-    let mut data = Vec::new();
-
-    input_file
-        .read_to_end(&mut data)
-        .with_context(|| format!("Unable to read data from file: {}", input))?;
-
-    let hash = blake3::hash(&data).to_hex().to_string();
-
-    logger.success(format!("{}: {}", input, hash));
 
     Ok(())
 }

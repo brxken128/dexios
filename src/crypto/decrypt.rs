@@ -1,5 +1,5 @@
 use crate::crypto::key::argon2_hash;
-use crate::crypto::primitives::memory::MemoryCiphers;
+use crate::crypto::primitives::cipher::Ciphers;
 use crate::global::header::Header;
 use crate::global::secret::Secret;
 use aead::Payload;
@@ -18,6 +18,7 @@ use super::primitives::stream::DecryptStreamCiphers;
 // most of the information for decryption is stored within the header
 // it hashes the key with the supplised salt, and decrypts all of the data
 // it returns the decrypted bytes
+// this is only here for backwards-compatibility
 pub fn memory_mode(
     header: &Header,
     data: &[u8],
@@ -27,7 +28,7 @@ pub fn memory_mode(
 ) -> Result<()> {
     let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
 
-    let ciphers = MemoryCiphers::initialize(key, header.header_type.algorithm)?;
+    let ciphers = Ciphers::initialize(key, header.header_type.algorithm)?;
 
     let payload = Payload { aad, msg: data };
 

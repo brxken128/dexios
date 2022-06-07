@@ -8,36 +8,36 @@
 use std::fmt::Debug;
 use zeroize::Zeroize;
 
-pub struct Secret<T>
+pub struct Protected<T>
 where
     T: Zeroize,
 {
-    hidden: T,
+    data: T,
 }
 
-impl<T> Secret<T>
+impl<T> Protected<T>
 where
     T: Zeroize,
 {
-    pub fn new(secret: T) -> Self {
-        Secret { hidden: secret }
+    pub fn new(value: T) -> Self {
+        Protected { data: value }
     }
 
     pub fn expose(&self) -> &T {
-        &self.hidden
+        &self.data
     }
 }
 
-impl<T> Drop for Secret<T>
+impl<T> Drop for Protected<T>
 where
     T: Zeroize,
 {
     fn drop(&mut self) {
-        self.hidden.zeroize();
+        self.data.zeroize();
     }
 }
 
-impl<T> Debug for Secret<T>
+impl<T> Debug for Protected<T>
 where
     T: Zeroize,
 {

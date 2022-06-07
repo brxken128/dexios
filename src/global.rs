@@ -14,6 +14,6 @@ pub const ALGORITHMS: [Algorithm; 3] = [
 
 pub mod header;
 pub mod parameters;
-pub mod secret;
+pub mod protected;
 pub mod states;
 pub mod structs;

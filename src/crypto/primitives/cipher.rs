@@ -3,7 +3,7 @@ use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
 
-use crate::global::{secret::Secret, states::Algorithm};
+use crate::global::{protected::Protected, states::Algorithm};
 
 pub enum Ciphers {
     Aes256Gcm(Box<Aes256Gcm>),
@@ -12,7 +12,7 @@ pub enum Ciphers {
 }
 
 impl Ciphers {
-    pub fn initialize(key: Secret<[u8; 32]>, algorithm: Algorithm) -> anyhow::Result<Self> {
+    pub fn initialize(key: Protected<[u8; 32]>, algorithm: Algorithm) -> anyhow::Result<Self> {
         let cipher = match algorithm {
             Algorithm::Aes256Gcm => {
                 let cipher = match Aes256Gcm::new_from_slice(key.expose()) {

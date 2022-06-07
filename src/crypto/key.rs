@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use crate::global::secret::Secret;
+use crate::global::protected::Protected;
 use crate::global::states::HeaderVersion;
 use crate::global::SALT_LEN;
 use anyhow::Result;
@@ -23,10 +23,10 @@ pub fn gen_salt() -> [u8; SALT_LEN] {
 // it returns the key hashed with a specified salt
 // it also ensures that raw_key is zeroed out
 pub fn argon2_hash(
-    raw_key: Secret<Vec<u8>>,
+    raw_key: Protected<Vec<u8>>,
     salt: [u8; SALT_LEN],
     version: &HeaderVersion,
-) -> Result<Secret<[u8; 32]>> {
+) -> Result<Protected<[u8; 32]>> {
     let mut key = [0u8; 32];
 
     let params = match version {
@@ -72,5 +72,5 @@ pub fn argon2_hash(
         ));
     }
 
-    Ok(Secret::new(key))
+    Ok(Protected::new(key))
 }

@@ -5,8 +5,6 @@
 
 use anyhow::Result;
 
-use crate::crypto::primitives::Algorithm;
-
 #[derive(PartialEq, Clone, Copy)]
 pub enum EraseMode {
     EraseFile(i32),
@@ -52,22 +50,12 @@ impl EraseMode {
 }
 
 impl KeyFile {
-    pub fn get_contents(&self) -> Result<String> {
+    pub fn get_inner(&self) -> Result<String> {
         match self {
             KeyFile::Some(data) => Ok(data.to_string()),
             KeyFile::None => Err(anyhow::anyhow!(
                 "Tried using a keyfile when one wasn't provided"
             )), // should never happen
-        }
-    }
-}
-
-impl std::fmt::Display for Algorithm {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
-            Algorithm::Aes256Gcm => write!(f, "AES-256-GCM"),
-            Algorithm::XChaCha20Poly1305 => write!(f, "XChaCha20-Poly1305"),
-            Algorithm::DeoxysII256 => write!(f, "Deoxys-II-256"),
         }
     }
 }

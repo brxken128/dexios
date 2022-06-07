@@ -106,7 +106,7 @@ pub fn get_secret(
     password_mode: PasswordMode,
 ) -> Result<Protected<Vec<u8>>> {
     let key = if keyfile != &KeyFile::None {
-        let keyfile_name = keyfile.get_contents()?;
+        let keyfile_name = keyfile.get_inner()?;
         info!("Reading key from {}", keyfile_name);
         get_bytes(&keyfile_name)?
     } else if std::env::var("DEXIOS_KEY").is_ok()

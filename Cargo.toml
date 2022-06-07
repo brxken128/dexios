@@ -1,7 +1,9 @@
 [package]
 name = "dexios-core"
+description = "The core library behind Dexios. It contains the cryptographic functions and it manages encrypted file headers."
 version = "0.0.0"
 edition = "2021"
+license = "BSD-2-Clause"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

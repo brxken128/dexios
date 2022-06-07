@@ -57,15 +57,9 @@ pub fn argon2_hash(
         }
     };
 
-    let hash_start_time = Instant::now();
     let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
     let result = argon2.hash_password_into(raw_key.expose(), &salt, &mut key);
     drop(raw_key);
-    let hash_duration = hash_start_time.elapsed();
-    success!(
-        "Successfully hashed your key [took {:.2}s]",
-        hash_duration.as_secs_f32()
-    );
 
     if result.is_err() {
         return Err(anyhow::anyhow!(

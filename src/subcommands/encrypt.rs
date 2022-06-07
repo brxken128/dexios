@@ -45,10 +45,7 @@ pub fn stream_mode(
     let mut output_file = File::create(output)?; // !!!attach context
 
     logger.info(format!("Using {} for encryption", algorithm));
-
     logger.info(format!("Encrypting {} (this may take a while)", input));
-
-    let encrypt_start_time = Instant::now();
 
     let header_type = HeaderType {
         header_version: HEADER_VERSION,
@@ -57,8 +54,15 @@ pub fn stream_mode(
     };
 
     let salt = gen_salt();
+    let hash_start_time = Instant::now();
     let key = argon2_hash(raw_key, salt, &header_type.header_version)?;
+    let hash_duration = hash_start_time.elapsed();
+    logger.success(format!(
+        "Successfully hashed your key [took {:.2}s]",
+        hash_duration.as_secs_f32()
+    ));
 
+    let encrypt_start_time = Instant::now();
     let (streams, nonce) = EncryptStreamCiphers::initialize(key, header_type.algorithm)?;
 
     let header = Header {

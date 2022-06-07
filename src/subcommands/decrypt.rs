@@ -77,9 +77,16 @@ pub fn memory_mode(
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
     let mut output_file = File::create(output)?; // !!!attach context here
+    
+    let hash_start_time = Instant::now();
+    let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
+    let hash_duration = hash_start_time.elapsed();
+    success!(
+        "Successfully hashed your key [took {:.2}s]",
+        hash_duration.as_secs_f32()
+    );
 
     let decrypt_start_time = Instant::now();
-    let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
 
     let ciphers = Ciphers::initialize(key, header.header_type.algorithm)?;
 
@@ -172,9 +179,15 @@ pub fn stream_mode(
 
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
-    let decrypt_start_time = Instant::now();
-
+    let hash_start_time = Instant::now();
     let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
+    let hash_duration = hash_start_time.elapsed();
+    success!(
+        "Successfully hashed your key [took {:.2}s]",
+        hash_duration.as_secs_f32()
+    );
+
+    let decrypt_start_time = Instant::now();
 
     let streams =
         DecryptStreamCiphers::initialize(key, &header.nonce, header.header_type.algorithm)?;

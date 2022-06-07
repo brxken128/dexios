@@ -7,16 +7,16 @@ use std::io::{Read, Write};
 
 use aead::{
     stream::{DecryptorLE31, EncryptorLE31},
-    Aead, Payload, NewAead,
+    Aead, NewAead, Payload,
 };
 use aes_gcm::Aes256Gcm;
 use anyhow::Context;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
-use rand::{prelude::StdRng, SeedableRng, Rng};
+use rand::{prelude::StdRng, Rng, SeedableRng};
 use zeroize::Zeroize;
 
-use crate::global::{BLOCK_SIZE, secret::Secret, states::Algorithm};
+use crate::global::{secret::Secret, states::Algorithm, BLOCK_SIZE};
 
 pub enum MemoryCiphers {
     Aes256Gcm(Box<Aes256Gcm>),
@@ -30,29 +30,41 @@ impl MemoryCiphers {
             Algorithm::Aes256Gcm => {
                 let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                    Err(_) => {
+                        return Err(anyhow::anyhow!(
+                            "Unable to create cipher with argon2id hashed key."
+                        ))
+                    }
                 };
-    
+
                 MemoryCiphers::Aes256Gcm(Box::new(cipher))
             }
             Algorithm::XChaCha20Poly1305 => {
                 let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                    Err(_) => {
+                        return Err(anyhow::anyhow!(
+                            "Unable to create cipher with argon2id hashed key."
+                        ))
+                    }
                 };
-    
+
                 MemoryCiphers::XChaCha(Box::new(cipher))
             }
             Algorithm::DeoxysII256 => {
                 let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                    Err(_) => {
+                        return Err(anyhow::anyhow!(
+                            "Unable to create cipher with argon2id hashed key."
+                        ))
+                    }
                 };
-    
+
                 MemoryCiphers::DeoxysII(Box::new(cipher))
             }
         };
-    
+
         drop(key);
         Ok(cipher)
     }
@@ -95,16 +107,23 @@ pub enum DecryptStreamCiphers {
 }
 
 impl EncryptStreamCiphers {
-    pub fn initialize(key: Secret<[u8; 32]>, algorithm: Algorithm) -> anyhow::Result<(Self, Vec<u8>)> {
+    pub fn initialize(
+        key: Secret<[u8; 32]>,
+        algorithm: Algorithm,
+    ) -> anyhow::Result<(Self, Vec<u8>)> {
         let (streams, nonce) = match algorithm {
             Algorithm::Aes256Gcm => {
                 let nonce = StdRng::from_entropy().gen::<[u8; 8]>();
-    
+
                 let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                    Err(_) => {
+                        return Err(anyhow::anyhow!(
+                            "Unable to create cipher with argon2id hashed key."
+                        ))
+                    }
                 };
-    
+
                 let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
                 (
                     EncryptStreamCiphers::Aes256Gcm(Box::new(stream)),
@@ -113,12 +132,16 @@ impl EncryptStreamCiphers {
             }
             Algorithm::XChaCha20Poly1305 => {
                 let nonce = StdRng::from_entropy().gen::<[u8; 20]>();
-    
+
                 let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                    Err(_) => {
+                        return Err(anyhow::anyhow!(
+                            "Unable to create cipher with argon2id hashed key."
+                        ))
+                    }
                 };
-    
+
                 let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
                 (
                     EncryptStreamCiphers::XChaCha(Box::new(stream)),
@@ -127,12 +150,16 @@ impl EncryptStreamCiphers {
             }
             Algorithm::DeoxysII256 => {
                 let nonce = StdRng::from_entropy().gen::<[u8; 11]>();
-    
+
                 let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                    Err(_) => {
+                        return Err(anyhow::anyhow!(
+                            "Unable to create cipher with argon2id hashed key."
+                        ))
+                    }
                 };
-    
+
                 let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
                 (
                     EncryptStreamCiphers::DeoxysII(Box::new(stream)),
@@ -140,9 +167,9 @@ impl EncryptStreamCiphers {
                 )
             }
         };
-    
+
         drop(key);
-        Ok((streams, nonce.to_vec()))
+        Ok((streams, nonce))
     }
     pub fn encrypt_next<'msg, 'aad>(
         &mut self,
@@ -167,7 +194,12 @@ impl EncryptStreamCiphers {
     }
 
     // convenience function for quickly encrypting and writing to provided output
-    pub fn encrypt_file(mut self, reader: &mut impl Read, writer: &mut impl Write, aad: &[u8]) -> anyhow::Result<()> {
+    pub fn encrypt_file(
+        mut self,
+        reader: &mut impl Read,
+        writer: &mut impl Write,
+        aad: &[u8],
+    ) -> anyhow::Result<()> {
         let mut read_buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
         loop {
             let read_count = reader
@@ -178,30 +210,30 @@ impl EncryptStreamCiphers {
                 // create_aad returns empty bytes if the header isn't V3+
                 // this means we don't need to do anything special in regards to older versions
                 let payload = Payload {
-                    aad: &aad,
+                    aad: aad,
                     msg: read_buffer.as_ref(),
                 };
-    
+
                 let encrypted_data = match self.encrypt_next(payload) {
                     Ok(bytes) => bytes,
                     Err(_) => return Err(anyhow::anyhow!("Unable to encrypt the data")),
                 };
-    
+
                 writer
                     .write_all(&encrypted_data)
                     .context("Unable to write to the output")?;
             } else {
                 // if we read something less than BLOCK_SIZE, and have hit the end of the file
                 let payload = Payload {
-                    aad: &aad,
+                    aad: aad,
                     msg: &read_buffer[..read_count],
                 };
-    
+
                 let encrypted_data = match self.encrypt_last(payload) {
                     Ok(bytes) => bytes,
                     Err(_) => return Err(anyhow::anyhow!("Unable to encrypt the data")),
                 };
-    
+
                 writer
                     .write_all(&encrypted_data)
                     .context("Unable to write to the output")?;
@@ -216,37 +248,53 @@ impl EncryptStreamCiphers {
 }
 
 impl DecryptStreamCiphers {
-    pub fn initialize(key: Secret<[u8; 32]>, nonce: &[u8], algorithm: Algorithm) -> anyhow::Result<Self> {
+    pub fn initialize(
+        key: Secret<[u8; 32]>,
+        nonce: &[u8],
+        algorithm: Algorithm,
+    ) -> anyhow::Result<Self> {
         let streams = match algorithm {
             Algorithm::Aes256Gcm => {
                 let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                    Err(_) => {
+                        return Err(anyhow::anyhow!(
+                            "Unable to create cipher with argon2id hashed key."
+                        ))
+                    }
                 };
-    
+
                 let stream = DecryptorLE31::from_aead(cipher, nonce.into());
                 DecryptStreamCiphers::Aes256Gcm(Box::new(stream))
             }
             Algorithm::XChaCha20Poly1305 => {
                 let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                    Err(_) => {
+                        return Err(anyhow::anyhow!(
+                            "Unable to create cipher with argon2id hashed key."
+                        ))
+                    }
                 };
-    
+
                 let stream = DecryptorLE31::from_aead(cipher, nonce.into());
                 DecryptStreamCiphers::XChaCha(Box::new(stream))
             }
             Algorithm::DeoxysII256 => {
                 let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                    Err(_) => {
+                        return Err(anyhow::anyhow!(
+                            "Unable to create cipher with argon2id hashed key."
+                        ))
+                    }
                 };
-    
+
                 let stream = DecryptorLE31::from_aead(cipher, nonce.into());
                 DecryptStreamCiphers::DeoxysII(Box::new(stream))
             }
         };
-    
+
         drop(key);
         Ok(streams)
     }
@@ -273,7 +321,12 @@ impl DecryptStreamCiphers {
     }
 
     // convenience function for decrypting a file and writing it to the output
-    pub fn decrypt_file(mut self, reader: &mut impl Read, writer: &mut impl Write, aad: &[u8]) -> anyhow::Result<()> {
+    pub fn decrypt_file(
+        mut self,
+        reader: &mut impl Read,
+        writer: &mut impl Write,
+        aad: &[u8],
+    ) -> anyhow::Result<()> {
         let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();
         loop {
             let read_count = reader.read(&mut buffer)?;
@@ -282,16 +335,16 @@ impl DecryptStreamCiphers {
                     aad,
                     msg: buffer.as_ref(),
                 };
-    
+
                 let mut decrypted_data = match self.decrypt_next(payload) {
                     Ok(bytes) => bytes,
                     Err(_) => return Err(anyhow::anyhow!("Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
                 };
-    
+
                 writer
                     .write_all(&decrypted_data)
                     .context("Unable to write to the output")?;
-    
+
                 decrypted_data.zeroize();
             } else {
                 // if we read something less than BLOCK_SIZE+16, and have hit the end of the file
@@ -299,12 +352,12 @@ impl DecryptStreamCiphers {
                     aad,
                     msg: &buffer[..read_count],
                 };
-    
+
                 let mut decrypted_data = match self.decrypt_last(payload) {
                     Ok(bytes) => bytes,
                     Err(_) => return Err(anyhow::anyhow!("Unable to decrypt the final block of data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
                 };
-    
+
                 writer
                     .write_all(&decrypted_data)
                     .context("Unable to write to the output file")?;

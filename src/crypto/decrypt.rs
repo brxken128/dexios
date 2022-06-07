@@ -63,9 +63,10 @@ pub fn stream_mode(
 ) -> Result<()> {
     let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
 
-    let streams = DecryptStreamCiphers::initialize(key, &header.nonce, header.header_type.algorithm)?;
+    let streams =
+        DecryptStreamCiphers::initialize(key, &header.nonce, header.header_type.algorithm)?;
 
-    streams.decrypt_file(input, output, &aad)?;
+    streams.decrypt_file(input, output, aad)?;
 
     Ok(())
 }

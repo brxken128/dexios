@@ -7,7 +7,7 @@ use zeroize::Zeroize;
 use crate::{
     file::get_bytes,
     global::{
-        secret::Secret,
+        protected::Secret,
         states::{KeyFile, PasswordMode},
     },
 };

@@ -1,6 +1,6 @@
 use crate::crypto::key::{argon2_hash, gen_salt};
 use crate::global::header::{Header, HeaderType};
-use crate::global::secret::Secret;
+use crate::global::protected::Secret;
 use crate::global::states::{Algorithm, CipherMode};
 use crate::global::VERSION;
 use anyhow::Context;

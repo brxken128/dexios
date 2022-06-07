@@ -1,7 +1,7 @@
 use crate::crypto::key::argon2_hash;
 use crate::crypto::primitives::cipher::Ciphers;
 use crate::global::header::Header;
-use crate::global::secret::Secret;
+use crate::global::protected::Secret;
 use aead::Payload;
 use anyhow::anyhow;
 use anyhow::Result;

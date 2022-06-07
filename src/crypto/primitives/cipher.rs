@@ -3,7 +3,7 @@ use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
 
-use crate::global::{secret::Secret, states::Algorithm};
+use crate::global::{protected::Secret, states::Algorithm};
 
 pub enum Ciphers {
     Aes256Gcm(Box<Aes256Gcm>),

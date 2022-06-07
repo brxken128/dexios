@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use crate::global::secret::Secret;
+use crate::global::protected::Secret;
 use crate::global::states::HeaderVersion;
 use crate::global::SALT_LEN;
 use anyhow::Result;

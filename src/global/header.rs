@@ -1,4 +1,4 @@
-use crate::crypto::primitives::{SALT_LEN, CipherMode, Algorithm};
+use crate::crypto::primitives::{Algorithm, CipherMode, SALT_LEN};
 use anyhow::{Context, Result};
 use std::io::{Read, Seek, Write};
 

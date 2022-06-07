@@ -42,7 +42,6 @@ pub enum HeaderFile {
     None,
 }
 
-
 impl EraseMode {
     pub fn get_passes(self) -> i32 {
         match self {

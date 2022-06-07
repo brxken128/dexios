@@ -11,8 +11,8 @@ use deoxys::DeoxysII256;
 use rand::{prelude::StdRng, Rng, SeedableRng};
 use zeroize::Zeroize;
 
-use crate::global::{protected::Protected};
 use super::{Algorithm, BLOCK_SIZE};
+use crate::global::protected::Protected;
 
 pub enum EncryptStreamCiphers {
     Aes256Gcm(Box<EncryptorLE31<Aes256Gcm>>),

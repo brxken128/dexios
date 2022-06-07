@@ -1,8 +1,8 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
 use crate::crypto::key::argon2_hash;
-use crate::global::header;
 use crate::crypto::primitives::CipherMode;
+use crate::global::header;
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
 use crate::global::states::HeaderFile;

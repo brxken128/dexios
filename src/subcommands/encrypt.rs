@@ -1,9 +1,13 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
+use crate::crypto::key::{argon2_hash, gen_salt};
+use crate::global::header::{Header, HeaderType};
 use crate::global::states::Algorithm;
+use crate::global::states::CipherMode;
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
 use crate::global::structs::CryptoParams;
+use crate::global::VERSION;
 use anyhow::Context;
 use anyhow::{Ok, Result};
 use paris::Logger;
@@ -11,13 +15,8 @@ use std::fs::File;
 use std::io::Write;
 use std::process::exit;
 use std::time::Instant;
-use crate::crypto::key::{argon2_hash, gen_salt};
-use crate::global::header::{Header, HeaderType};
-use crate::global::states::{CipherMode};
-use crate::global::VERSION;
 
 use crate::crypto::primitives::stream::EncryptStreamCiphers;
-
 
 // this function is for encrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
@@ -75,7 +74,9 @@ pub fn stream_mode(
 
     streams.encrypt_file(&mut input_file, &mut output_file, &aad)?;
 
-    output_file.flush().context("Unable to flush the output file")?;
+    output_file
+        .flush()
+        .context("Unable to flush the output file")?;
 
     let encrypt_duration = encrypt_start_time.elapsed();
 

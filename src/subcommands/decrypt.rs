@@ -83,7 +83,10 @@ pub fn memory_mode(
 
     let ciphers = Ciphers::initialize(key, header.header_type.algorithm)?;
 
-    let payload = Payload { aad: &aad, msg: &encrypted_data };
+    let payload = Payload {
+        aad: &aad,
+        msg: &encrypted_data,
+    };
 
     let decrypted_bytes = match ciphers.decrypt(&header.nonce, payload) {
         Ok(decrypted_bytes) => decrypted_bytes,

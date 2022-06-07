@@ -1,13 +1,12 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
 use crate::crypto::key::{argon2_hash, gen_salt};
-use crate::global::header::{Header, HeaderType};
-use crate::global::states::Algorithm;
-use crate::global::states::CipherMode;
+use crate::crypto::primitives::Algorithm;
+use crate::global::header::{Header, HeaderType, HEADER_VERSION};
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
 use crate::global::structs::CryptoParams;
-use crate::global::VERSION;
+use crate::crypto::primitives::CipherMode;
 use anyhow::Context;
 use anyhow::{Ok, Result};
 use paris::Logger;
@@ -52,7 +51,7 @@ pub fn stream_mode(
     let encrypt_start_time = Instant::now();
 
     let header_type = HeaderType {
-        header_version: VERSION,
+        header_version: HEADER_VERSION,
         cipher_mode: CipherMode::StreamMode,
         algorithm,
     };

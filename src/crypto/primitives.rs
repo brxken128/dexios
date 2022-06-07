@@ -25,6 +25,38 @@ pub enum MemoryCiphers {
 }
 
 impl MemoryCiphers {
+    pub fn initialize(key: Secret<[u8; 32]>, algorithm: Algorithm) -> anyhow::Result<Self> {
+        let cipher = match algorithm {
+            Algorithm::Aes256Gcm => {
+                let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
+                    Ok(cipher) => cipher,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                };
+    
+                MemoryCiphers::Aes256Gcm(Box::new(cipher))
+            }
+            Algorithm::XChaCha20Poly1305 => {
+                let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
+                    Ok(cipher) => cipher,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                };
+    
+                MemoryCiphers::XChaCha(Box::new(cipher))
+            }
+            Algorithm::DeoxysII256 => {
+                let cipher = match DeoxysII256::new_from_slice(key.expose()) {
+                    Ok(cipher) => cipher,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                };
+    
+                MemoryCiphers::DeoxysII(Box::new(cipher))
+            }
+        };
+    
+        drop(key);
+        Ok(cipher)
+    }
+
     pub fn encrypt<'msg, 'aad>(
         &self,
         nonce: &[u8],
@@ -36,6 +68,7 @@ impl MemoryCiphers {
             MemoryCiphers::DeoxysII(c) => c.encrypt(nonce.as_ref().into(), plaintext),
         }
     }
+
     pub fn decrypt<'msg, 'aad>(
         &self,
         nonce: &[u8],

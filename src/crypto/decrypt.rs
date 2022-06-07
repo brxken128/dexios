@@ -1,4 +1,5 @@
 use crate::crypto::key::argon2_hash;
+use crate::crypto::primitives::MemoryCiphers;
 use crate::global::header::Header;
 use crate::global::secret::Secret;
 use aead::Payload;
@@ -10,7 +11,6 @@ use std::io::Write;
 use std::result::Result::Ok;
 use std::time::Instant;
 
-use super::memory::init_memory_cipher;
 use super::primitives::DecryptStreamCiphers;
 
 // this decrypts the data in memory mode
@@ -27,7 +27,7 @@ pub fn memory_mode(
 ) -> Result<()> {
     let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
 
-    let ciphers = init_memory_cipher(key, header.header_type.algorithm)?;
+    let ciphers = MemoryCiphers::initialize(key, header.header_type.algorithm)?;
 
     let payload = Payload { aad, msg: data };
 

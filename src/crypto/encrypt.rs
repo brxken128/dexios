@@ -1,4 +1,5 @@
 use crate::crypto::key::{argon2_hash, gen_salt};
+use crate::crypto::primitives::MemoryCiphers;
 use crate::global::header::{Header, HeaderType};
 use crate::global::secret::Secret;
 use crate::global::states::{Algorithm, CipherMode};
@@ -15,7 +16,6 @@ use std::io::Write;
 use std::result::Result::Ok;
 use std::time::Instant;
 
-use super::memory::init_memory_cipher;
 use super::primitives::EncryptStreamCiphers;
 
 // this encrypts data in memory mode
@@ -49,7 +49,7 @@ pub fn memory_mode(
         Algorithm::DeoxysII256 => StdRng::from_entropy().gen::<[u8; 15]>().to_vec(),
     };
 
-    let ciphers = init_memory_cipher(key, algorithm)?;
+    let ciphers = MemoryCiphers::initialize(key, algorithm)?;
 
     let header = Header {
         header_type,

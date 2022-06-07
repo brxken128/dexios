@@ -6,6 +6,7 @@ use anyhow::{Context, Result};
 use std::io::{Read, Seek, Write};
 
 // the "tag" that contains version/mode information
+#[allow(clippy::module_name_repetitions)]
 pub struct HeaderType {
     pub header_version: HeaderVersion,
     pub cipher_mode: CipherMode,
@@ -13,7 +14,7 @@ pub struct HeaderType {
 }
 
 // the "tag"/HeaderType, but in raw bytes
-pub struct HeaderTag {
+struct Tag {
     pub version: [u8; 2],
     pub algorithm: [u8; 2],
     pub mode: [u8; 2],
@@ -43,11 +44,11 @@ pub struct Header {
 
 // !!!attach context
 impl Header {
-    fn get_tag(&self) -> HeaderTag {
+    fn get_tag(&self) -> Tag {
         let version = self.serialize_version();
         let algorithm = self.serialize_algorithm();
         let mode = self.serialize_mode();
-        HeaderTag {
+        Tag {
             version,
             algorithm,
             mode,
@@ -120,7 +121,7 @@ impl Header {
         let mut nonce = vec![0u8; nonce_len];
 
         match header_type.header_version {
-            HeaderVersion::V1 => {
+            HeaderVersion::V1 | HeaderVersion::V3 => {
                 reader
                     .read_exact(&mut salt)
                     .context("Unable to read salt from header")?;
@@ -146,20 +147,6 @@ impl Header {
                     .context("Unable to read empty bytes from header")?;
                 reader
                     .read_exact(&mut [0u8; 16])
-                    .context("Unable to read final padding from header")?;
-            }
-            HeaderVersion::V3 => {
-                reader
-                    .read_exact(&mut salt)
-                    .context("Unable to read salt from header")?;
-                reader
-                    .read_exact(&mut [0u8; 16])
-                    .context("Unable to read empty bytes from header")?;
-                reader
-                    .read_exact(&mut nonce)
-                    .context("Unable to read nonce from header")?;
-                reader
-                    .read_exact(&mut vec![0u8; 26 - nonce_len])
                     .context("Unable to read final padding from header")?;
             }
         };
@@ -217,7 +204,7 @@ impl Header {
         }
     }
 
-    fn serialize_v3(&self, tag: &HeaderTag) -> Vec<u8> {
+    fn serialize_v3(&self, tag: &Tag) -> Vec<u8> {
         let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
         let mut header_bytes = Vec::<u8>::new();
         header_bytes.extend_from_slice(&tag.version);

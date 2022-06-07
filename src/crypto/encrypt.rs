@@ -1,9 +1,9 @@
 use crate::crypto::key::{argon2_hash, gen_salt};
-use crate::crypto::streams::init_encryption_stream;
+use crate::crypto::primitives::MemoryCiphers;
 use crate::global::header::{Header, HeaderType};
 use crate::global::secret::Secret;
 use crate::global::states::{Algorithm, CipherMode};
-use crate::global::{BLOCK_SIZE, VERSION};
+use crate::global::VERSION;
 use aead::Payload;
 use anyhow::anyhow;
 use anyhow::Context;
@@ -12,12 +12,11 @@ use paris::success;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::result::Result::Ok;
 use std::time::Instant;
-use zeroize::Zeroize;
 
-use super::memory::init_memory_cipher;
+use super::primitives::EncryptStreamCiphers;
 
 // this encrypts data in memory mode
 // it takes the data and a Secret<> key
@@ -40,7 +39,7 @@ pub fn memory_mode(
         algorithm,
     };
 
-    let key = argon2_hash(raw_key, &salt, &header_type.header_version)?;
+    let key = argon2_hash(raw_key, salt, &header_type.header_version)?;
 
     // let nonce_bytes = StdRng::from_entropy().gen::<[u8; 12]>();
 
@@ -50,7 +49,7 @@ pub fn memory_mode(
         Algorithm::DeoxysII256 => StdRng::from_entropy().gen::<[u8; 15]>().to_vec(),
     };
 
-    let ciphers = init_memory_cipher(key, algorithm)?;
+    let ciphers = MemoryCiphers::initialize(key, algorithm)?;
 
     let header = Header {
         header_type,
@@ -98,56 +97,22 @@ pub fn stream_mode(
         algorithm,
     };
 
-    let (mut streams, header) = init_encryption_stream(raw_key, header_type)?;
+    let salt = gen_salt();
+    let key = argon2_hash(raw_key, salt, &header_type.header_version)?;
 
-    header.write(output)?; // !!!attach context
+    let (streams, nonce) = EncryptStreamCiphers::initialize(key, header_type.algorithm)?;
 
+    let header = Header {
+        header_type,
+        nonce,
+        salt,
+    };
+
+    header.write(output)?;
 
     let aad = header.serialize()?;
 
-    let mut read_buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
-
-    loop {
-        let read_count = input
-            .read(&mut read_buffer)
-            .context("Unable to read from the input file")?;
-        if read_count == BLOCK_SIZE {
-            // aad is just empty bytes normally
-            // create_aad returns empty bytes if the header isn't V3+
-            // this means we don't need to do anything special in regards to older versions
-            let payload = Payload {
-                aad: &aad,
-                msg: read_buffer.as_ref(),
-            };
-
-            let encrypted_data = match streams.encrypt_next(payload) {
-                Ok(bytes) => bytes,
-                Err(_) => return Err(anyhow!("Unable to encrypt the data")),
-            };
-
-            output
-                .write_all(&encrypted_data)
-                .context("Unable to write to the output file")?;
-        } else {
-            // if we read something less than BLOCK_SIZE, and have hit the end of the file
-            let payload = Payload {
-                aad: &aad,
-                msg: &read_buffer[..read_count],
-            };
-
-            let encrypted_data = match streams.encrypt_last(payload) {
-                Ok(bytes) => bytes,
-                Err(_) => return Err(anyhow!("Unable to encrypt the data")),
-            };
-
-            output
-                .write_all(&encrypted_data)
-                .context("Unable to write to the output file")?;
-            break;
-        }
-    }
-
-    read_buffer.zeroize();
+    streams.encrypt_file(input, output, &aad)?;
 
     output.flush().context("Unable to flush the output file")?;
     Ok(())

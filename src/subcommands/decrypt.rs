@@ -70,13 +70,7 @@ pub fn memory_mode(
     let mut output_file = File::create(output)?; // !!!attach context here
 
     let decrypt_start_time = Instant::now();
-    crate::crypto::decrypt::memory_mode(
-        &header,
-        &encrypted_data,
-        &mut output_file,
-        raw_key,
-        &aad,
-    )?;
+    crate::crypto::decrypt::memory_mode(&header, &encrypted_data, &mut output_file, raw_key, &aad)?;
     let decrypt_duration = decrypt_start_time.elapsed();
 
     logger.success(format!(
@@ -86,9 +80,7 @@ pub fn memory_mode(
     ));
 
     if params.hash_mode == HashMode::CalculateHash {
-        let mut inputs = Vec::<String>::new();
-        inputs.push(input.to_string());
-        super::hashing::hash_stream(&inputs)?;
+        super::hashing::hash_stream(&vec![input.to_string()])?;
     }
 
     if params.erase != EraseMode::IgnoreFile(0) {
@@ -174,9 +166,7 @@ pub fn stream_mode(
     ));
 
     if params.hash_mode == HashMode::CalculateHash {
-        let mut inputs = Vec::<String>::new();
-        inputs.push(input.to_string());
-        super::hashing::hash_stream(&inputs)?;
+        super::hashing::hash_stream(&vec![input.to_string()])?;
     }
 
     if params.erase != EraseMode::IgnoreFile(0) {

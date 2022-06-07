@@ -5,6 +5,7 @@ use std::io::{Read, Seek, Write};
 // this defines the default/latest header version
 pub const HEADER_VERSION: HeaderVersion = HeaderVersion::V3;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(PartialEq)]
 pub enum HeaderVersion {
     V1,

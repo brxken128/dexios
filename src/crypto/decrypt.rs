@@ -18,6 +18,7 @@ use super::primitives::stream::DecryptStreamCiphers;
 // most of the information for decryption is stored within the header
 // it hashes the key with the supplised salt, and decrypts all of the data
 // it returns the decrypted bytes
+// this is only here for backwards-compatibility
 pub fn memory_mode(
     header: &Header,
     data: &[u8],

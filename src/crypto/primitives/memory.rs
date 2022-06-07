@@ -55,7 +55,8 @@ impl MemoryCiphers {
         drop(key);
         Ok(cipher)
     }
-
+    
+    #[allow(dead_code)] // only temporary, until dexios-core is created
     pub fn encrypt<'msg, 'aad>(
         &self,
         nonce: &[u8],

@@ -1,6 +1,4 @@
-use aead::{
-    Aead, NewAead, Payload,
-};
+use aead::{Aead, NewAead, Payload};
 use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;

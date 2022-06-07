@@ -129,7 +129,7 @@ impl EncryptStreamCiphers {
                 // create_aad returns empty bytes if the header isn't V3+
                 // this means we don't need to do anything special in regards to older versions
                 let payload = Payload {
-                    aad: aad,
+                    aad,
                     msg: read_buffer.as_ref(),
                 };
 
@@ -144,7 +144,7 @@ impl EncryptStreamCiphers {
             } else {
                 // if we read something less than BLOCK_SIZE, and have hit the end of the file
                 let payload = Payload {
-                    aad: aad,
+                    aad,
                     msg: &read_buffer[..read_count],
                 };
 

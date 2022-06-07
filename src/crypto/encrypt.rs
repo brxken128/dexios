@@ -100,7 +100,7 @@ pub fn stream_mode(
     let salt = gen_salt();
     let key = argon2_hash(raw_key, salt, &header_type.header_version)?;
 
-    let (streams, nonce) = EncryptStreamCiphers::initialise(key, header_type.algorithm)?;
+    let (streams, nonce) = EncryptStreamCiphers::initialize(key, header_type.algorithm)?;
 
     let header = Header {
         header_type,

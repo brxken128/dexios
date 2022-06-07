@@ -62,7 +62,7 @@ pub enum DecryptStreamCiphers {
 }
 
 impl EncryptStreamCiphers {
-    pub fn initialise(key: Secret<[u8; 32]>, algorithm: Algorithm) -> anyhow::Result<(Self, Vec<u8>)> {
+    pub fn initialize(key: Secret<[u8; 32]>, algorithm: Algorithm) -> anyhow::Result<(Self, Vec<u8>)> {
         let (streams, nonce) = match algorithm {
             Algorithm::Aes256Gcm => {
                 let nonce = StdRng::from_entropy().gen::<[u8; 8]>();

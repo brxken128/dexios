@@ -1,5 +1,4 @@
 use crate::crypto::key::{argon2_hash, gen_salt};
-use crate::crypto::streams::init_encryption_stream;
 use crate::global::header::{Header, HeaderType};
 use crate::global::secret::Secret;
 use crate::global::states::{Algorithm, CipherMode};
@@ -17,6 +16,7 @@ use std::result::Result::Ok;
 use std::time::Instant;
 
 use super::memory::init_memory_cipher;
+use super::primitives::EncryptStreamCiphers;
 
 // this encrypts data in memory mode
 // it takes the data and a Secret<> key
@@ -100,7 +100,7 @@ pub fn stream_mode(
     let salt = gen_salt();
     let key = argon2_hash(raw_key, salt, &header_type.header_version)?;
 
-    let (streams, nonce) = init_encryption_stream(key, header_type.algorithm)?;
+    let (streams, nonce) = EncryptStreamCiphers::initialise(key, header_type.algorithm)?;
 
     let header = Header {
         header_type,

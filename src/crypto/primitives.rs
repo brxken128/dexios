@@ -7,15 +7,16 @@ use std::io::{Read, Write};
 
 use aead::{
     stream::{DecryptorLE31, EncryptorLE31},
-    Aead, Payload,
+    Aead, Payload, NewAead,
 };
 use aes_gcm::Aes256Gcm;
 use anyhow::Context;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
+use rand::{prelude::StdRng, SeedableRng, Rng};
 use zeroize::Zeroize;
 
-use crate::global::BLOCK_SIZE;
+use crate::global::{BLOCK_SIZE, secret::Secret, states::Algorithm};
 
 pub enum MemoryCiphers {
     Aes256Gcm(Box<Aes256Gcm>),
@@ -61,6 +62,55 @@ pub enum DecryptStreamCiphers {
 }
 
 impl EncryptStreamCiphers {
+    pub fn initialise(key: Secret<[u8; 32]>, algorithm: Algorithm) -> anyhow::Result<(Self, Vec<u8>)> {
+        let (streams, nonce) = match algorithm {
+            Algorithm::Aes256Gcm => {
+                let nonce = StdRng::from_entropy().gen::<[u8; 8]>();
+    
+                let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
+                    Ok(cipher) => cipher,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                };
+    
+                let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
+                (
+                    EncryptStreamCiphers::Aes256Gcm(Box::new(stream)),
+                    nonce.to_vec(),
+                )
+            }
+            Algorithm::XChaCha20Poly1305 => {
+                let nonce = StdRng::from_entropy().gen::<[u8; 20]>();
+    
+                let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
+                    Ok(cipher) => cipher,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                };
+    
+                let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
+                (
+                    EncryptStreamCiphers::XChaCha(Box::new(stream)),
+                    nonce.to_vec(),
+                )
+            }
+            Algorithm::DeoxysII256 => {
+                let nonce = StdRng::from_entropy().gen::<[u8; 11]>();
+    
+                let cipher = match DeoxysII256::new_from_slice(key.expose()) {
+                    Ok(cipher) => cipher,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                };
+    
+                let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
+                (
+                    EncryptStreamCiphers::DeoxysII(Box::new(stream)),
+                    nonce.to_vec(),
+                )
+            }
+        };
+    
+        drop(key);
+        Ok((streams, nonce.to_vec()))
+    }
     pub fn encrypt_next<'msg, 'aad>(
         &mut self,
         payload: impl Into<Payload<'msg, 'aad>>,
@@ -133,6 +183,40 @@ impl EncryptStreamCiphers {
 }
 
 impl DecryptStreamCiphers {
+    pub fn initialize(key: Secret<[u8; 32]>, nonce: &[u8], algorithm: Algorithm) -> anyhow::Result<Self> {
+        let streams = match algorithm {
+            Algorithm::Aes256Gcm => {
+                let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
+                    Ok(cipher) => cipher,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                };
+    
+                let stream = DecryptorLE31::from_aead(cipher, nonce.into());
+                DecryptStreamCiphers::Aes256Gcm(Box::new(stream))
+            }
+            Algorithm::XChaCha20Poly1305 => {
+                let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
+                    Ok(cipher) => cipher,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                };
+    
+                let stream = DecryptorLE31::from_aead(cipher, nonce.into());
+                DecryptStreamCiphers::XChaCha(Box::new(stream))
+            }
+            Algorithm::DeoxysII256 => {
+                let cipher = match DeoxysII256::new_from_slice(key.expose()) {
+                    Ok(cipher) => cipher,
+                    Err(_) => return Err(anyhow::anyhow!("Unable to create cipher with argon2id hashed key.")),
+                };
+    
+                let stream = DecryptorLE31::from_aead(cipher, nonce.into());
+                DecryptStreamCiphers::DeoxysII(Box::new(stream))
+            }
+        };
+    
+        drop(key);
+        Ok(streams)
+    }
     pub fn decrypt_next<'msg, 'aad>(
         &mut self,
         payload: impl Into<Payload<'msg, 'aad>>,

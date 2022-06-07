@@ -1,5 +1,4 @@
 use crate::crypto::key::argon2_hash;
-use crate::crypto::streams::init_decryption_stream;
 use crate::global::header::Header;
 use crate::global::secret::Secret;
 use aead::Payload;
@@ -12,6 +11,7 @@ use std::result::Result::Ok;
 use std::time::Instant;
 
 use super::memory::init_memory_cipher;
+use super::primitives::DecryptStreamCiphers;
 
 // this decrypts the data in memory mode
 // it takes the data, a Secret<> key, the salt and the 12 byte nonce
@@ -63,7 +63,7 @@ pub fn stream_mode(
 ) -> Result<()> {
     let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
 
-    let streams = init_decryption_stream(key, &header.nonce, header.header_type.algorithm)?;
+    let streams = DecryptStreamCiphers::initialize(key, &header.nonce, header.header_type.algorithm)?;
 
     streams.decrypt_file(input, output, &aad)?;
 

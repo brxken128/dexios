@@ -5,6 +5,8 @@
 
 use anyhow::Result;
 
+use crate::crypto::primitives::Algorithm;
+
 #[derive(PartialEq, Clone, Copy)]
 pub enum EraseMode {
     EraseFile(i32),
@@ -38,27 +40,6 @@ pub enum KeyFile {
 pub enum HeaderFile {
     Some(String),
     None,
-}
-
-#[derive(PartialEq, Eq)]
-pub enum CipherMode {
-    // could do with a better name
-    MemoryMode,
-    StreamMode,
-}
-
-#[derive(PartialEq)]
-pub enum HeaderVersion {
-    V1,
-    V2,
-    V3,
-}
-
-#[derive(Copy, Clone)]
-pub enum Algorithm {
-    Aes256Gcm,
-    XChaCha20Poly1305,
-    DeoxysII256,
 }
 
 impl EraseMode {

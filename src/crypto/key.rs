@@ -1,8 +1,9 @@
 use std::time::Instant;
 
+use super::primitives::SALT_LEN;
+
+use crate::global::header::HeaderVersion;
 use crate::global::protected::Protected;
-use crate::global::states::HeaderVersion;
-use crate::global::SALT_LEN;
 use anyhow::Result;
 use argon2::Argon2;
 use argon2::Params;

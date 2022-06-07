@@ -1,6 +1,9 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
-use crate::global::states::Algorithm;
+use crate::crypto::key::{argon2_hash, gen_salt};
+use crate::crypto::primitives::Algorithm;
+use crate::crypto::primitives::CipherMode;
+use crate::global::header::{Header, HeaderType, HEADER_VERSION};
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
 use crate::global::structs::CryptoParams;
@@ -8,8 +11,11 @@ use anyhow::Context;
 use anyhow::{Ok, Result};
 use paris::Logger;
 use std::fs::File;
+use std::io::Write;
 use std::process::exit;
 use std::time::Instant;
+
+use crate::crypto::primitives::stream::EncryptStreamCiphers;
 
 // this function is for encrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
@@ -44,14 +50,32 @@ pub fn stream_mode(
 
     let encrypt_start_time = Instant::now();
 
-    let encryption_result =
-        crate::crypto::encrypt::stream_mode(&mut input_file, &mut output_file, raw_key, algorithm);
+    let header_type = HeaderType {
+        header_version: HEADER_VERSION,
+        cipher_mode: CipherMode::StreamMode,
+        algorithm,
+    };
 
-    if encryption_result.is_err() {
-        drop(output_file);
-        std::fs::remove_file(output).context("Unable to remove the malformed file")?;
-        return encryption_result;
-    }
+    let salt = gen_salt();
+    let key = argon2_hash(raw_key, salt, &header_type.header_version)?;
+
+    let (streams, nonce) = EncryptStreamCiphers::initialize(key, header_type.algorithm)?;
+
+    let header = Header {
+        header_type,
+        nonce,
+        salt,
+    };
+
+    header.write(&mut output_file)?;
+
+    let aad = header.serialize()?;
+
+    streams.encrypt_file(&mut input_file, &mut output_file, &aad)?;
+
+    output_file
+        .flush()
+        .context("Unable to flush the output file")?;
 
     let encrypt_duration = encrypt_start_time.elapsed();
 

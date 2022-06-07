@@ -1,4 +1,4 @@
-use crate::global::BLOCK_SIZE;
+use crate::crypto::primitives::BLOCK_SIZE;
 use anyhow::Context;
 use anyhow::{Ok, Result};
 use paris::Logger;

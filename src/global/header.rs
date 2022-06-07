@@ -1,9 +1,17 @@
-use crate::{
-    global::states::{Algorithm, CipherMode, HeaderVersion},
-    global::SALT_LEN,
-};
+use crate::crypto::primitives::{Algorithm, CipherMode, SALT_LEN};
 use anyhow::{Context, Result};
 use std::io::{Read, Seek, Write};
+
+// this defines the default/latest header version
+pub const HEADER_VERSION: HeaderVersion = HeaderVersion::V3;
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(PartialEq)]
+pub enum HeaderVersion {
+    V1,
+    V2,
+    V3,
+}
 
 // the "tag" that contains version/mode information
 #[allow(clippy::module_name_repetitions)]

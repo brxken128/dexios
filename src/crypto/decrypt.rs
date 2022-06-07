@@ -1,5 +1,5 @@
 use crate::crypto::key::argon2_hash;
-use crate::crypto::primitives::memory::MemoryCiphers;
+use crate::crypto::primitives::ciphers::Ciphers;
 use crate::global::header::Header;
 use crate::global::secret::Secret;
 use aead::Payload;
@@ -28,7 +28,7 @@ pub fn memory_mode(
 ) -> Result<()> {
     let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
 
-    let ciphers = MemoryCiphers::initialize(key, header.header_type.algorithm)?;
+    let ciphers = Ciphers::initialize(key, header.header_type.algorithm)?;
 
     let payload = Payload { aad, msg: data };
 

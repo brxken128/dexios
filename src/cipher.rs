@@ -10,7 +10,7 @@ use deoxys::DeoxysII256;
 use crate::primitives::Algorithm;
 use crate::protected::Protected;
 
-/// This enum defines all possible cipher types, for each AEAD that is supported by `dexios-core`
+/// This `enum` defines all possible cipher types, for each AEAD that is supported by `dexios-core`
 pub enum Ciphers {
     Aes256Gcm(Box<Aes256Gcm>),
     XChaCha(Box<XChaCha20Poly1305>),

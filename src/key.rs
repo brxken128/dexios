@@ -8,9 +8,9 @@ use argon2::Params;
 use rand::prelude::StdRng;
 use rand::RngCore;
 use rand::SeedableRng;
-use std::result::Result::Ok;
 
 // this generates a salt for password hashing
+#[must_use]
 pub fn gen_salt() -> [u8; SALT_LEN] {
     let mut salt: [u8; SALT_LEN] = [0; SALT_LEN];
     StdRng::from_entropy().fill_bytes(&mut salt);

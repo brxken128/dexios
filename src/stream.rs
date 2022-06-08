@@ -25,7 +25,7 @@ use crate::protected::Protected;
 pub enum EncryptionStreams {
     Aes256Gcm(Box<EncryptorLE31<Aes256Gcm>>),
     XChaCha(Box<EncryptorLE31<XChaCha20Poly1305>>),
-    DeoxysII(Box<EncryptorLE31<DeoxysII256>>),
+    DeoxysII256(Box<EncryptorLE31<DeoxysII256>>),
 }
 
 /// This `enum` contains streams for that are used solely for decryption
@@ -33,7 +33,7 @@ pub enum EncryptionStreams {
 pub enum DecryptionStreams {
     Aes256Gcm(Box<DecryptorLE31<Aes256Gcm>>),
     XChaCha(Box<DecryptorLE31<XChaCha20Poly1305>>),
-    DeoxysII(Box<DecryptorLE31<DeoxysII256>>),
+    DeoxysII256(Box<DecryptorLE31<DeoxysII256>>),
 }
 
 impl EncryptionStreams {
@@ -96,7 +96,7 @@ impl EncryptionStreams {
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
                 (
-                    EncryptionStreams::DeoxysII(Box::new(stream)),
+                    EncryptionStreams::DeoxysII256(Box::new(stream)),
                     nonce.to_vec(),
                 )
             }
@@ -115,7 +115,7 @@ impl EncryptionStreams {
         match self {
             EncryptionStreams::Aes256Gcm(s) => s.encrypt_next(payload),
             EncryptionStreams::XChaCha(s) => s.encrypt_next(payload),
-            EncryptionStreams::DeoxysII(s) => s.encrypt_next(payload),
+            EncryptionStreams::DeoxysII256(s) => s.encrypt_next(payload),
         }
     }
 
@@ -128,7 +128,7 @@ impl EncryptionStreams {
         match self {
             EncryptionStreams::Aes256Gcm(s) => s.encrypt_last(payload),
             EncryptionStreams::XChaCha(s) => s.encrypt_last(payload),
-            EncryptionStreams::DeoxysII(s) => s.encrypt_last(payload),
+            EncryptionStreams::DeoxysII256(s) => s.encrypt_last(payload),
         }
     }
 
@@ -238,7 +238,7 @@ impl DecryptionStreams {
                 };
 
                 let stream = DecryptorLE31::from_aead(cipher, nonce.into());
-                DecryptionStreams::DeoxysII(Box::new(stream))
+                DecryptionStreams::DeoxysII256(Box::new(stream))
             }
         };
 
@@ -256,7 +256,7 @@ impl DecryptionStreams {
         match self {
             DecryptionStreams::Aes256Gcm(s) => s.decrypt_next(payload),
             DecryptionStreams::XChaCha(s) => s.decrypt_next(payload),
-            DecryptionStreams::DeoxysII(s) => s.decrypt_next(payload),
+            DecryptionStreams::DeoxysII256(s) => s.decrypt_next(payload),
         }
     }
 
@@ -270,7 +270,7 @@ impl DecryptionStreams {
         match self {
             DecryptionStreams::Aes256Gcm(s) => s.decrypt_last(payload),
             DecryptionStreams::XChaCha(s) => s.decrypt_last(payload),
-            DecryptionStreams::DeoxysII(s) => s.decrypt_last(payload),
+            DecryptionStreams::DeoxysII256(s) => s.decrypt_last(payload),
         }
     }
 

@@ -11,7 +11,7 @@
 
 use super::primitives::{Algorithm, CipherMode, SALT_LEN};
 use anyhow::{Context, Result};
-use std::io::{Read, Seek, Write};
+use std::io::{Read, Seek, Write, Cursor};
 
 /// This defines the latest header version, so program's using this can easily stay up to date.
 /// It's also here to just help users keep track
@@ -114,8 +114,15 @@ impl Header {
     /// The AAD for older versions is empty as no AAD is the default for AEADs, and the header validation was not in place prior to V3.
     /// NOTE: This leaves the cursor at 64 bytes into the buffer, as that is the size of the header
     pub fn deserialize(reader: &mut (impl Read + Seek)) -> Result<(Self, Vec<u8>)> {
-        let mut version_bytes = [0u8; 2];
+        let mut full_header_bytes = [0u8; 64];
         reader
+            .read_exact(&mut full_header_bytes)
+            .context("Unable to read full 64 bytes of the header")?;
+        
+        let mut cursor = Cursor::new(full_header_bytes);
+
+        let mut version_bytes = [0u8; 2];
+        cursor
             .read_exact(&mut version_bytes)
             .context("Unable to read version's bytes from header")?;
 
@@ -127,7 +134,7 @@ impl Header {
         };
 
         let mut algorithm_bytes = [0u8; 2];
-        reader
+        cursor
             .read_exact(&mut algorithm_bytes)
             .context("Unable to read algorithm's bytes from header")?;
 
@@ -139,7 +146,7 @@ impl Header {
         };
 
         let mut mode_bytes = [0u8; 2];
-        reader
+        cursor
             .read_exact(&mut mode_bytes)
             .context("Unable to read encryption mode's bytes from header")?;
 
@@ -160,30 +167,30 @@ impl Header {
 
         match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V3 => {
-                reader
+                cursor
                     .read_exact(&mut salt)
                     .context("Unable to read salt from header")?;
-                reader
+                cursor
                     .read_exact(&mut [0; 16])
                     .context("Unable to read empty bytes from header")?;
-                reader
+                cursor
                     .read_exact(&mut nonce)
                     .context("Unable to read nonce from header")?;
-                reader
+                cursor
                     .read_exact(&mut vec![0u8; 26 - nonce_len])
                     .context("Unable to read final padding from header")?;
             }
             HeaderVersion::V2 => {
-                reader
+                cursor
                     .read_exact(&mut salt)
                     .context("Unable to read salt from header")?;
-                reader
+                cursor
                     .read_exact(&mut nonce)
                     .context("Unable to read nonce from header")?;
-                reader
+                cursor
                     .read_exact(&mut vec![0u8; 26 - nonce_len])
                     .context("Unable to read empty bytes from header")?;
-                reader
+                cursor
                     .read_exact(&mut [0u8; 16])
                     .context("Unable to read final padding from header")?;
             }
@@ -192,14 +199,7 @@ impl Header {
         let aad = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
             HeaderVersion::V3 => {
-                let mut buffer = [0u8; 64];
-                reader
-                    .seek(std::io::SeekFrom::Current(-64))
-                    .context("Unable to seek buffer")?; // go back to start of input
-                reader
-                    .read_exact(&mut buffer)
-                    .context("Unable to read header")?;
-                buffer.to_vec()
+                full_header_bytes.to_vec()
             }
         };
 

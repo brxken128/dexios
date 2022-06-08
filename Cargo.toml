@@ -23,10 +23,10 @@ maintenance = { status = "actively-developed" }
 # deoxys = "0.0.2"
 # zeroize = "1.3.0"
 # argon2 = "0.4.0"
-# blake3 = "1.3.1"
+blake3 = "1.3.1"
 # aead = { version = "0.4.3", features = ["stream"] }
 rand = "0.8.5"
-dexios-core = "0.0.1"
+dexios-core = "0.0.3"
 
 clap = { version = "3.1.18", features = ["cargo"] }
 anyhow = "1.0.57"

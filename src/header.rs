@@ -6,16 +6,19 @@
 //! * nonce
 //! * encryption algorithm
 //! * whether the file was encrypted in "memory" or stream mode
-
-
+//! 
+//! It allows for serialization, deserialization, and has a convenience function for quickly writing the header to a file.
 
 use super::primitives::{Algorithm, CipherMode, SALT_LEN};
 use anyhow::{Context, Result};
 use std::io::{Read, Seek, Write};
 
-// this defines the default/latest header version
+/// This defines the latest header version, so program's using this can easily stay up to date.
+/// It's also here to just help users keep track
 pub const HEADER_VERSION: HeaderVersion = HeaderVersion::V3;
 
+
+/// This just stores all possible versions of the header
 #[allow(clippy::module_name_repetitions)]
 #[derive(PartialEq)]
 pub enum HeaderVersion {

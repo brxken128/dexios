@@ -32,7 +32,7 @@ pub enum HeaderVersion {
 /// This needs to be manually created for encrypting data
 #[allow(clippy::module_name_repetitions)]
 pub struct HeaderType {
-    pub header_version: HeaderVersion,
+    pub version: HeaderVersion,
     pub cipher_mode: CipherMode,
     pub algorithm: Algorithm,
 }
@@ -75,7 +75,6 @@ pub struct Header {
     pub salt: [u8; SALT_LEN],
 }
 
-// !!!attach context
 impl Header {
     /// This is a private function (used by other header functions) for returning the `HeaderType`'s raw bytes
     /// It's used for serialization, and has it's own dedicated function as it will be used often
@@ -93,7 +92,7 @@ impl Header {
     /// This is a private function used for serialization
     /// It converts a `HeaderVersion` into the associated raw bytes
     fn serialize_version(&self) -> [u8; 2] {
-        match self.header_type.header_version {
+        match self.header_type.version {
             HeaderVersion::V1 => {
                 let info: [u8; 2] = [0xDE, 0x01];
                 info
@@ -151,7 +150,7 @@ impl Header {
         };
 
         let header_type = HeaderType {
-            header_version: version,
+            version: version,
             algorithm,
             cipher_mode: mode,
         };
@@ -159,7 +158,7 @@ impl Header {
         let mut salt = [0u8; 16];
         let mut nonce = vec![0u8; nonce_len];
 
-        match header_type.header_version {
+        match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V3 => {
                 reader
                     .read_exact(&mut salt)
@@ -190,7 +189,7 @@ impl Header {
             }
         };
 
-        let aad = match header_type.header_version {
+        let aad = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
             HeaderVersion::V3 => {
                 let mut buffer = [0u8; 64];
@@ -268,7 +267,7 @@ impl Header {
     /// NOTE: This should **NOT** be used for validating AAD, only creating it. Use the AAD returned from `deserialize()` for validation.
     pub fn serialize(&self) -> Result<Vec<u8>> {
         let tag = self.get_tag();
-        let bytes = match self.header_type.header_version {
+        let bytes = match self.header_type.version {
             HeaderVersion::V1 => {
                 return Err(anyhow::anyhow!(
                     "Serializing V1 headers has been deprecated"

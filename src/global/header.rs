@@ -83,6 +83,7 @@ impl Header {
     // returns a header and the associated AAD
     // the AAD for v3+ headers will be the full 64 bytes
     // AAD for < v3 headers will be empty, as that's the default
+    // this leaves the cursor at 64 bytes into the file
     pub fn deserialize(reader: &mut (impl Read + Seek)) -> Result<(Self, Vec<u8>)> {
         let mut version_bytes = [0u8; 2];
         reader
@@ -226,6 +227,7 @@ impl Header {
     }
 
     // returns the raw header bytes
+    // this should only be used to *generate* AAD, not to validate it
     pub fn serialize(&self) -> Result<Vec<u8>> {
         let tag = self.get_tag();
         let bytes = match self.header_type.header_version {

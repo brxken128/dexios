@@ -112,6 +112,7 @@ pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
     let buffer = vec![0u8; 64];
 
     let mut input_file = OpenOptions::new()
+        .read(true)
         .write(true)
         .open(input)
         .with_context(|| format!("Unable to open input file: {}", input))?;

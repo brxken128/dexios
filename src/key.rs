@@ -1,3 +1,6 @@
+//! This module handles key-related functionality within `dexios-core`
+//! It contains methods for `argon2id` hashing, and securely generating a salt
+
 use super::primitives::SALT_LEN;
 
 use super::header::HeaderVersion;
@@ -9,7 +12,8 @@ use rand::prelude::StdRng;
 use rand::RngCore;
 use rand::SeedableRng;
 
-// this generates a salt for password hashing
+/// This generates a salt, of the specified `SALT_LEN`
+/// This salt can be directly passed to `argon2id_hash()`
 #[must_use]
 pub fn gen_salt() -> [u8; SALT_LEN] {
     let mut salt: [u8; SALT_LEN] = [0; SALT_LEN];
@@ -17,12 +21,14 @@ pub fn gen_salt() -> [u8; SALT_LEN] {
     salt
 }
 
-// this handles argon2 hashing with the provided key
-// it returns the key hashed with a specified salt
-// it also ensures that raw_key is zeroed out
+/// This handles `argon2id` hashing of a raw key
+/// It requires a user to generate the salt
+/// `HeaderVersion` is required as the parameters are linked to specific header versions
+/// It returns a `Protected<[u8; 32]>` - `Protected<>` wrappers are used for all sensitive information within `dexios-core`
+/// This function ensures that `raw_key` is securely erased from memory once hashed
 pub fn argon2id_hash(
     raw_key: Protected<Vec<u8>>,
-    salt: [u8; SALT_LEN],
+    salt: &[u8; SALT_LEN],
     version: &HeaderVersion,
 ) -> Result<Protected<[u8; 32]>> {
     let mut key = [0u8; 32];
@@ -55,7 +61,7 @@ pub fn argon2id_hash(
     };
 
     let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
-    let result = argon2.hash_password_into(raw_key.expose(), &salt, &mut key);
+    let result = argon2.hash_password_into(raw_key.expose(), salt, &mut key);
     drop(raw_key);
 
     if result.is_err() {

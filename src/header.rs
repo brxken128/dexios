@@ -33,7 +33,7 @@ pub enum HeaderVersion {
 #[allow(clippy::module_name_repetitions)]
 pub struct HeaderType {
     pub version: HeaderVersion,
-    pub cipher_mode: CipherMode,
+    pub mode: CipherMode,
     pub algorithm: Algorithm,
 }
 
@@ -57,7 +57,7 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
         Algorithm::DeoxysII256 => 15,
     };
 
-    if header_info.cipher_mode == CipherMode::StreamMode {
+    if header_info.mode == CipherMode::StreamMode {
         nonce_len -= 4; // the last 4 bytes are dynamic in stream mode
     }
 
@@ -152,7 +152,7 @@ impl Header {
         let header_type = HeaderType {
             version: version,
             algorithm,
-            cipher_mode: mode,
+            mode: mode,
         };
         let nonce_len = calc_nonce_len(&header_type);
         let mut salt = [0u8; 16];
@@ -235,7 +235,7 @@ impl Header {
     /// This is a private function used for serialization
     /// It converts a `CipherMode` into the associated raw bytes
     fn serialize_mode(&self) -> [u8; 2] {
-        match self.header_type.cipher_mode {
+        match self.header_type.mode {
             CipherMode::StreamMode => {
                 let info: [u8; 2] = [0x0C, 0x01];
                 info

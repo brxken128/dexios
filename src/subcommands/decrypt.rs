@@ -1,18 +1,18 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
-use crate::crypto::key::argon2_hash;
-use crate::crypto::primitives::CipherMode;
-use crate::global::header;
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
 use crate::global::states::HeaderFile;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
+use dexios_core::header;
+use dexios_core::key::argon2_hash;
+use dexios_core::primitives::CipherMode;
 use paris::Logger;
 
-use crate::crypto::primitives::cipher::Ciphers;
-use aead::Payload;
 use anyhow::anyhow;
+use dexios_core::cipher::Ciphers;
+use dexios_core::Payload;
 use paris::success;
 use std::fs::File;
 use std::io::Write;
@@ -22,7 +22,7 @@ use std::io::Read;
 use std::io::Seek;
 use std::process::exit;
 
-use crate::crypto::primitives::stream::DecryptStreamCiphers;
+use dexios_core::stream::DecryptStreamCiphers;
 
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate

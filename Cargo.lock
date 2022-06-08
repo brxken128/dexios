@@ -85,9 +85,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "base64ct"
-version = "1.0.1"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a32fd6af2b5827bce66c29053ba0e7c42b9dcab01835835058558c10851a46b"
+checksum = "dea908e7347a8c64e378c17e30ef880ad73e3b4498346b055c2c00ea342f3179"
 
 [[package]]
 name = "bitflags"
@@ -248,17 +248,28 @@ dependencies = [
 name = "dexios"
 version = "8.4.1"
 dependencies = [
+ "anyhow",
+ "blake3",
+ "clap",
+ "dexios-core",
+ "paris",
+ "rand",
+ "termion",
+]
+
+[[package]]
+name = "dexios-core"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4e95a49bcdbd7c51b8e0b0f96da49ec8226c034353511dc49de9f53ab3ebdbb"
+dependencies = [
  "aead",
  "aes-gcm",
  "anyhow",
  "argon2",
- "blake3",
  "chacha20poly1305",
- "clap",
  "deoxys",
- "paris",
  "rand",
- "termion",
  "zeroize",
 ]
 

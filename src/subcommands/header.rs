@@ -9,7 +9,9 @@ use std::io::Cursor;
 use anyhow::{Context, Result};
 use paris::Logger;
 
-use crate::global::{header::Header, states::SkipMode};
+use dexios_core::header::Header;
+
+use crate::global::states::SkipMode;
 
 use super::prompt::{get_answer, overwrite_check};
 

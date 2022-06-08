@@ -5,7 +5,6 @@ use std::result::Result::Ok;
 use subcommands::list::show_values;
 
 mod cli;
-mod crypto;
 mod file;
 mod global;
 mod subcommands;

@@ -18,14 +18,9 @@ license = "BSD-2-Clause"
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-aes-gcm = "0.9.4"
-chacha20poly1305 = "0.9.0"
-deoxys = "0.0.2"
-zeroize = "1.3.0"
-argon2 = "0.4.0"
 blake3 = "1.3.1"
-aead = { version = "0.4.3", features = ["stream"] }
 rand = "0.8.5"
+dexios-core = "0.0.3"
 
 clap = { version = "3.1.18", features = ["cargo"] }
 anyhow = "1.0.57"

@@ -40,3 +40,4 @@ pub mod protected;
 pub mod cipher;
 pub mod stream;
 pub use aead::Payload as Payload;
+pub use zeroize::Zeroize as Zeroize;

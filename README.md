@@ -94,6 +94,6 @@ It receives frequent updates and is the main source of documentation for Dexios.
 ### Quick Docs Links:
 
 - [Tested Operating Systems](https://brxken128.github.io/dexios/#tested-operating-systems)
-- [Performance Benchmarks](https://brxken128.github.io/dexios/#tested-operating-systems)
+- [Performance Benchmarks](https://brxken128.github.io/dexios/Checksums.html#performance)
 - [Usage Examples](https://brxken128.github.io/dexios/Usage-Examples.html)
 - [Technical Details](https://brxken128.github.io/dexios/technical-details/)

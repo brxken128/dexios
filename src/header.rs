@@ -39,7 +39,7 @@ pub struct HeaderType {
 
 /// This is the `HeaderType` struct, but in the format of raw bytes
 /// This does not need to be used outside of this core library
-struct Tag {
+struct HeaderTag {
     pub version: [u8; 2],
     pub algorithm: [u8; 2],
     pub mode: [u8; 2],
@@ -79,11 +79,11 @@ pub struct Header {
 impl Header {
     /// This is a private function (used by other header functions) for returning the `HeaderType`'s raw bytes
     /// It's used for serialization, and has it's own dedicated function as it will be used often
-    fn get_tag(&self) -> Tag {
+    fn get_tag(&self) -> HeaderTag {
         let version = self.serialize_version();
         let algorithm = self.serialize_algorithm();
         let mode = self.serialize_mode();
-        Tag {
+        HeaderTag {
             version,
             algorithm,
             mode,
@@ -250,7 +250,7 @@ impl Header {
 
     /// This is a private function (called by `serialize()`)
     /// It serializes V3 headers
-    fn serialize_v3(&self, tag: &Tag) -> Vec<u8> {
+    fn serialize_v3(&self, tag: &HeaderTag) -> Vec<u8> {
         let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
         let mut header_bytes = Vec::<u8>::new();
         header_bytes.extend_from_slice(&tag.version);

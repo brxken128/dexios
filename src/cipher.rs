@@ -19,7 +19,9 @@ pub enum Ciphers {
 
 impl Ciphers {
     /// This can be used to quickly initialise a `Cipher`
+    /// 
     /// The returned `Cipher` can be used for both encryption and decryption
+    /// 
     /// You just need to provide the `argon2id` hashed key, and the algorithm to use
     pub fn initialize(key: Protected<[u8; 32]>, algorithm: Algorithm) -> anyhow::Result<Self> {
         let cipher = match algorithm {
@@ -66,6 +68,7 @@ impl Ciphers {
     }
 
     /// This can be used to encrypt data with a given `Ciphers` object
+    /// 
     /// It requires the nonce, and either some plaintext, or an `aead::Payload` (that contains the plaintext and the AAD)
     pub fn encrypt<'msg, 'aad>(
         &self,
@@ -80,7 +83,9 @@ impl Ciphers {
     }
 
     /// This can be used to decrypt data with a given `Ciphers` object
+    /// 
     /// It requires the nonce used for encryption, and either some plaintext, or an `aead::Payload` (that contains the plaintext and the AAD)
+    /// 
     /// NOTE: The data will not decrypt successfully if an AAD was provided for encryption, but is not present/has been modified while decrypting
     pub fn decrypt<'msg, 'aad>(
         &self,

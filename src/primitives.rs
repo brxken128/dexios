@@ -1,6 +1,7 @@
 //! This module contains all cryptographic primitives used by `dexios-core`
 
 /// This is the streaming block size
+/// 
 /// NOTE: Stream mode can be used to encrypt files less than this size, provided the implementation is correct
 pub const BLOCK_SIZE: usize = 1_048_576; // 1024*1024 bytes
 
@@ -16,6 +17,7 @@ pub enum Algorithm {
 }
 
 /// This is an array containing all AEADs supported by `dexios-core`.
+/// 
 /// It can be used by and end-user application to show a list of AEADs that they may use
 pub static ALGORITHMS: [Algorithm; 3] = [
     Algorithm::XChaCha20Poly1305,
@@ -36,7 +38,6 @@ impl std::fmt::Display for Algorithm {
 /// This defines the possible modes used for encrypting/decrypting
 #[derive(PartialEq, Eq)]
 pub enum CipherMode {
-    // could do with a better name
     MemoryMode,
     StreamMode,
 }

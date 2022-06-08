@@ -21,6 +21,7 @@ use crate::primitives::{Algorithm, BLOCK_SIZE};
 use crate::protected::Protected;
 
 /// This `enum` contains streams for that are used solely for encryption
+/// 
 /// It has definitions for all AEADs supported by `dexios-core`
 pub enum EncryptionStreams {
     Aes256Gcm(Box<EncryptorLE31<Aes256Gcm>>),
@@ -29,6 +30,7 @@ pub enum EncryptionStreams {
 }
 
 /// This `enum` contains streams for that are used solely for decryption
+/// 
 /// It has definitions for all AEADs supported by `dexios-core`
 pub enum DecryptionStreams {
     Aes256Gcm(Box<DecryptorLE31<Aes256Gcm>>),
@@ -38,8 +40,11 @@ pub enum DecryptionStreams {
 
 impl EncryptionStreams {
     /// This method can be used to quickly create an `EncryptionStreams` object
+    /// 
     /// It requies a 32-byte hashed key, which will be dropped once the stream has been initialized
+    /// 
     /// It will create the stream with the specified algorithm, and it will also generate the appropriate nonce
+    /// 
     /// Both the nonce and the `EncryptionStreams` object are returned
     pub fn initialize(
         key: Protected<[u8; 32]>,
@@ -107,6 +112,7 @@ impl EncryptionStreams {
     }
 
     /// This is used for encrypting the *next* block of data in streaming mode
+    /// 
     /// It requires either some plaintext, or an `aead::Payload` (that contains the plaintext and the AAD)
     pub fn encrypt_next<'msg, 'aad>(
         &mut self,
@@ -120,6 +126,7 @@ impl EncryptionStreams {
     }
 
     /// This is used for encrypting the *last* block of data in streaming mode. It consumes the stream object to prevent further usage.
+    /// 
     /// It requires either some plaintext, or an `aead::Payload` (that contains the plaintext and the AAD)
     pub fn encrypt_last<'msg, 'aad>(
         self,
@@ -133,9 +140,13 @@ impl EncryptionStreams {
     }
 
     /// This is a convenience function for reading from a reader, encrypting, and writing to the writer.
+    /// 
     /// Every single block is provided with the AAD
+    /// 
     /// Valid AAD must be provided if you are using `HeaderVersion::V3` and above. It must be empty if the `HeaderVersion` is lower.
+    /// 
     /// You are free to use a custom AAD, just ensure that it is present for decryption, or else you will receive an error.
+    /// 
     /// This does not handle writing the header.
     pub fn encrypt_file(
         mut self,
@@ -192,9 +203,13 @@ impl EncryptionStreams {
 
 impl DecryptionStreams {
     /// This method can be used to quickly create an `DecryptionStreams` object
+    /// 
     /// It requies a 32-byte hashed key, which will be dropped once the stream has been initialized
+    /// 
     /// It requires the same nonce that was returned upon initializing `EncryptionStreams`
+    /// 
     /// It will create the stream with the specified algorithm
+    /// 
     /// The `DecryptionStreams` object will be returned
     pub fn initialize(
         key: Protected<[u8; 32]>,
@@ -248,7 +263,9 @@ impl DecryptionStreams {
     }
 
     /// This is used for decrypting the *next* block of data in streaming mode
+    /// 
     /// It requires either some plaintext, or an `aead::Payload` (that contains the plaintext and the AAD)
+    /// 
     /// Whatever you provided as AAD while encrypting must be present during decryption, or else you will receive an error.
     pub fn decrypt_next<'msg, 'aad>(
         &mut self,
@@ -262,7 +279,9 @@ impl DecryptionStreams {
     }
 
     /// This is used for decrypting the *last* block of data in streaming mode. It consumes the stream object to prevent further usage.
+    /// 
     /// It requires either some plaintext, or an `aead::Payload` (that contains the plaintext and the AAD)
+    /// 
     /// Whatever you provided as AAD while encrypting must be present during decryption, or else you will receive an error.
     pub fn decrypt_last<'msg, 'aad>(
         self,
@@ -276,8 +295,11 @@ impl DecryptionStreams {
     }
 
     /// This is a convenience function for reading from a reader, decrypting, and writing to the writer.
+    /// 
     /// Every single block is provided with the AAD
+    /// 
     /// Valid AAD must be provided if you are using `HeaderVersion::V3` and above. It must be empty if the `HeaderVersion` is lower. Whatever you provided as AAD while encrypting must be present during decryption, or else you will receive an error.
+    /// 
     /// This does not handle writing the header.
     pub fn decrypt_file(
         mut self,

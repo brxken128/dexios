@@ -1,3 +1,14 @@
+//! The Dexios header is an encrypted file/data header that stores specific information needed for decryption.
+//! 
+//! This includes: 
+//! * header version 
+//! * salt
+//! * nonce
+//! * encryption algorithm
+//! * whether the file was encrypted in "memory" or stream mode
+
+
+
 use super::primitives::{Algorithm, CipherMode, SALT_LEN};
 use anyhow::{Context, Result};
 use std::io::{Read, Seek, Write};
@@ -13,7 +24,9 @@ pub enum HeaderVersion {
     V3,
 }
 
-// the "tag" that contains version/mode information
+/// This is the Header's type - it contains the specific details that are needed to decrypt the data
+/// It contains the header's version, the "mode" that was used to encrypt the data, and the algorithm used.
+/// This needs to be manually created for encrypting data
 #[allow(clippy::module_name_repetitions)]
 pub struct HeaderType {
     pub header_version: HeaderVersion,
@@ -21,7 +34,8 @@ pub struct HeaderType {
     pub algorithm: Algorithm,
 }
 
-// the "tag"/HeaderType, but in raw bytes
+/// This is the `HeaderType` struct, but in the format of raw bytes
+/// This does not need to be used outside of this core library
 struct Tag {
     pub version: [u8; 2],
     pub algorithm: [u8; 2],
@@ -29,6 +43,10 @@ struct Tag {
 }
 
 // this calculates how long the nonce will be, based on the provided input
+/// This function calculates the length of the nonce, depending on the data provided
+/// Stream mode nonces are 4 bytes less than their "memory" mode counterparts, due to `aead::StreamLE31`
+/// `StreamLE31` contains a 31-bit little endian counter, and a 1-bit "last block" flag, stored as the last 4 bytes of the nonce
+/// This is done to prevent nonce-reuse
 fn calc_nonce_len(header_info: &HeaderType) -> usize {
     let mut nonce_len = match header_info.algorithm {
         Algorithm::XChaCha20Poly1305 => 24,
@@ -44,6 +62,10 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
 }
 
 // the full header, including version, salt, nonce, mode, encryption algorithm, etc
+
+/// This is the main `Header` struct, and it contains all of the information about the encrypted data
+/// It contains the HeaderType, the nonce, and the salt
+/// This needs to be manually created for encrypting data
 pub struct Header {
     pub header_type: HeaderType,
     pub nonce: Vec<u8>,
@@ -52,6 +74,8 @@ pub struct Header {
 
 // !!!attach context
 impl Header {
+    /// This is a private function (used by other header functions) for returning the `HeaderType`'s raw bytes
+    /// It's used for serialization, and has it's own dedicated function as it will be used often
     fn get_tag(&self) -> Tag {
         let version = self.serialize_version();
         let algorithm = self.serialize_algorithm();
@@ -63,6 +87,8 @@ impl Header {
         }
     }
 
+    /// This is a private function used for serialization
+    /// It converts a `HeaderVersion` into the associated raw bytes
     fn serialize_version(&self) -> [u8; 2] {
         match self.header_type.header_version {
             HeaderVersion::V1 => {
@@ -80,10 +106,11 @@ impl Header {
         }
     }
 
-    // returns a header and the associated AAD
-    // the AAD for v3+ headers will be the full 64 bytes
-    // AAD for < v3 headers will be empty, as that's the default
-    // this leaves the cursor at 64 bytes into the file
+    /// This is used for deserializing raw bytes into a `Header` struct
+    /// This also returns the AAD, read from the header. AAD is only generated in `HeaderVersion::V3` and above - it will be blank in older versions.
+    /// The AAD needs to be passed to decryption functions in order to validate the header, and decrypt the data.
+    /// The AAD for older versions is empty as no AAD is the default for AEADs, and the header validation was not in place prior to V3.
+    /// NOTE: This leaves the cursor at 64 bytes into the buffer, as that is the size of the header
     pub fn deserialize(reader: &mut (impl Read + Seek)) -> Result<(Self, Vec<u8>)> {
         let mut version_bytes = [0u8; 2];
         reader
@@ -184,6 +211,8 @@ impl Header {
         ))
     }
 
+    /// This is a private function used for serialization
+    /// It converts an `Algorithm` into the associated raw bytes
     fn serialize_algorithm(&self) -> [u8; 2] {
         match self.header_type.algorithm {
             Algorithm::XChaCha20Poly1305 => {
@@ -200,6 +229,9 @@ impl Header {
             }
         }
     }
+
+    /// This is a private function used for serialization
+    /// It converts a `CipherMode` into the associated raw bytes
     fn serialize_mode(&self) -> [u8; 2] {
         match self.header_type.cipher_mode {
             CipherMode::StreamMode => {
@@ -213,6 +245,8 @@ impl Header {
         }
     }
 
+    /// This is a private function (called by `serialize()`)
+    /// It serializes V3 headers
     fn serialize_v3(&self, tag: &Tag) -> Vec<u8> {
         let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
         let mut header_bytes = Vec::<u8>::new();
@@ -226,8 +260,9 @@ impl Header {
         header_bytes
     }
 
-    // returns the raw header bytes
-    // this should only be used to *generate* AAD, not to validate it
+    /// This serializes a `Header` struct, and returns the raw bytes
+    /// The returned bytes may be used as AAD, or written to a file
+    /// NOTE: This should **NOT** be used for validating AAD, only creating it. Use the AAD returned from `deserialize()` for validation.
     pub fn serialize(&self) -> Result<Vec<u8>> {
         let tag = self.get_tag();
         let bytes = match self.header_type.header_version {
@@ -247,7 +282,7 @@ impl Header {
         Ok(bytes)
     }
 
-    // convenience function for writing the header to a file/buffer
+    /// This is a convenience function for writing a header to a writer
     pub fn write(&self, writer: &mut impl Write) -> Result<()> {
         let header_bytes = self.serialize()?;
         writer

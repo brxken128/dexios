@@ -1,6 +1,6 @@
 use anyhow::{Ok, Result};
 
-use crate::global::ALGORITHMS;
+use dexios_core::primitives::ALGORITHMS;
 
 // this just lists values contained within arrays
 

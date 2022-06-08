@@ -1,4 +1,4 @@
-use crate::crypto::primitives::BLOCK_SIZE;
+use dexios_core::primitives::BLOCK_SIZE;
 use anyhow::Context;
 use anyhow::{Ok, Result};
 use paris::Logger;

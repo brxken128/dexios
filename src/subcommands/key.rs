@@ -2,12 +2,12 @@ use std::io::{stdin, stdout, Write};
 
 use anyhow::{Context, Result};
 use paris::{info, warn};
-use zeroize::Zeroize;
+use dexios_core::Zeroize;
+use dexios_core::protected::Protected;
 
 use crate::{
     file::get_bytes,
     global::{
-        protected::Protected,
         states::{KeyFile, PasswordMode},
     },
 };

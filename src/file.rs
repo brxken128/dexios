@@ -1,4 +1,4 @@
-use crate::global::protected::Protected;
+use dexios_core::protected::Protected;
 use anyhow::{Context, Ok, Result};
 use std::{fs::File, io::Read};
 

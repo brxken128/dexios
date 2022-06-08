@@ -1,9 +1,9 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
-use crate::crypto::key::{argon2_hash, gen_salt};
-use crate::crypto::primitives::Algorithm;
-use crate::crypto::primitives::CipherMode;
-use crate::global::header::{Header, HeaderType, HEADER_VERSION};
+use dexios_core::key::{argon2_hash, gen_salt};
+use dexios_core::primitives::Algorithm;
+use dexios_core::primitives::CipherMode;
+use dexios_core::header::{Header, HeaderType, HEADER_VERSION};
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
 use crate::global::structs::CryptoParams;
@@ -15,7 +15,7 @@ use std::io::Write;
 use std::process::exit;
 use std::time::Instant;
 
-use crate::crypto::primitives::stream::EncryptStreamCiphers;
+use dexios_core::stream::EncryptStreamCiphers;
 
 // this function is for encrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough

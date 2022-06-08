@@ -1,18 +1,18 @@
 use super::key::get_secret;
 use super::prompt::overwrite_check;
-use dexios_core::key::argon2_hash;
-use dexios_core::primitives::CipherMode;
-use dexios_core::header;
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
 use crate::global::states::HeaderFile;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
+use dexios_core::header;
+use dexios_core::key::argon2_hash;
+use dexios_core::primitives::CipherMode;
 use paris::Logger;
 
+use anyhow::anyhow;
 use dexios_core::cipher::Ciphers;
 use dexios_core::Payload;
-use anyhow::anyhow;
 use paris::success;
 use std::fs::File;
 use std::io::Write;

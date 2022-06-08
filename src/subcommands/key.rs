@@ -1,15 +1,13 @@
 use std::io::{stdin, stdout, Write};
 
 use anyhow::{Context, Result};
-use paris::{info, warn};
-use dexios_core::Zeroize;
 use dexios_core::protected::Protected;
+use dexios_core::Zeroize;
+use paris::{info, warn};
 
 use crate::{
     file::get_bytes,
-    global::{
-        states::{KeyFile, PasswordMode},
-    },
+    global::states::{KeyFile, PasswordMode},
 };
 
 // this function interacts with stdin and stdout to hide password input

@@ -1,11 +1,11 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use dexios_core::primitives::Algorithm;
 use crate::global::states::{EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode};
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
 use clap::ArgMatches;
+use dexios_core::primitives::Algorithm;
 use paris::warn;
 
 use dexios_core::primitives::ALGORITHMS;

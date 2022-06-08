@@ -1,5 +1,5 @@
-use dexios_core::protected::Protected;
 use anyhow::{Context, Ok, Result};
+use dexios_core::protected::Protected;
 use std::{fs::File, io::Read};
 
 // this takes the name/relative path of a file, and returns the bytes in a "protected" wrapper

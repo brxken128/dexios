@@ -1,6 +1,6 @@
 [package]
 name = "dexios-core"
-description = "The core library behind Dexios. It contains the cryptographic functions and it manages encrypted file headers."
+description = "A library for encrypting/decrypting files, and for managing encrypted file headers that adhere to the Dexios format."
 version = "0.0.0"
 readme = "README.md"
 authors = ["brxken128 <brxken128@tutanota.com>"]

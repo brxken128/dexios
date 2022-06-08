@@ -1,7 +1,7 @@
 //! This module contains all of the LE31 STREAM objects and functionality
-//! 
+//!
 //! This is where streaming mode encryption, decryption and initialization is handled.
-//! 
+//!
 //! There are also some convenience functions for quickly encrypting and decrypting files.
 
 use std::io::{Read, Write};

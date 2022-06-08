@@ -1,22 +1,21 @@
 //! The Dexios header is an encrypted file/data header that stores specific information needed for decryption.
-//! 
-//! This includes: 
-//! * header version 
+//!
+//! This includes:
+//! * header version
 //! * salt
 //! * nonce
 //! * encryption algorithm
 //! * whether the file was encrypted in "memory" or stream mode
-//! 
+//!
 //! It allows for serialization, deserialization, and has a convenience function for quickly writing the header to a file.
 
 use super::primitives::{Algorithm, CipherMode, SALT_LEN};
 use anyhow::{Context, Result};
-use std::io::{Read, Seek, Write, Cursor};
+use std::io::{Cursor, Read, Seek, Write};
 
 /// This defines the latest header version, so program's using this can easily stay up to date.
 /// It's also here to just help users keep track
 pub const HEADER_VERSION: HeaderVersion = HeaderVersion::V3;
-
 
 /// This just stores all possible versions of the header
 #[allow(clippy::module_name_repetitions)]
@@ -118,7 +117,7 @@ impl Header {
         reader
             .read_exact(&mut full_header_bytes)
             .context("Unable to read full 64 bytes of the header")?;
-        
+
         let mut cursor = Cursor::new(full_header_bytes);
 
         let mut version_bytes = [0u8; 2];
@@ -198,9 +197,7 @@ impl Header {
 
         let aad = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
-            HeaderVersion::V3 => {
-                full_header_bytes.to_vec()
-            }
+            HeaderVersion::V3 => full_header_bytes.to_vec(),
         };
 
         Ok((

@@ -1,15 +1,15 @@
 //! This is a basic wrapper for secret/hidden values
-//! 
+//!
 //! It implements zeroize-on-drop, meaning the data is securely erased from memory once it goes out of scope.
 //! You may call `drop()` prematurely if you wish to erase it sooner.
-//! 
+//!
 //! `Protected` values are also hidden from `fmt::Debug`, and will display `[REDACTED]` instead.
-//! 
+//!
 //! The only way to access the data within a `Protected` value is to call `.expose()` - this is to prevent accidental leakage.
 //! This also makes any `Protected` value easier to audit, as you are able to quickly view wherever the data is accessed.
-//! 
+//!
 //! `Protected` values are not able to be copied or cloned within memory, to prevent accidental leakage.
-//! 
+//!
 //! I'd like to give a huge thank you to the authors of the [secrecy crate](https://crates.io/crates/secrecy),
 //! as that crate's functionality inspired this implementation.
 

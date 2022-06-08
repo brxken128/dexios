@@ -33,11 +33,11 @@
 //!
 //! Dexios-Core exclusively uses AEADs provided by the [RustCrypto Team](https://github.com/RustCrypto), so I'd like to give them a huge thank you for their hard work (this wouldn't have been possible without them!)
 
+pub mod cipher;
 pub mod header;
 pub mod key;
 pub mod primitives;
 pub mod protected;
-pub mod cipher;
 pub mod stream;
-pub use aead::Payload as Payload;
-pub use zeroize::Zeroize as Zeroize;
+pub use aead::Payload;
+pub use zeroize::Zeroize;

@@ -1,5 +1,5 @@
 //! This module is used for standard, typical encryption and decryption.
-//! 
+//!
 //! The data is fully loaded into memory before encryption/decryption, and it is processed within the same "block"
 
 use aead::{Aead, NewAead, Payload};

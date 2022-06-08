@@ -24,7 +24,7 @@ pub fn gen_salt() -> [u8; SALT_LEN] {
 /// This handles `argon2id` hashing of a raw key
 /// It requires a user to generate the salt
 /// `HeaderVersion` is required as the parameters are linked to specific header versions
-/// It returns a `Protected<[u8; 32]>` - `Protected<>` wrappers are used for all sensitive information within `dexios-core`
+/// It returns a `Protected<[u8; 32]>` - `Protected` wrappers are used for all sensitive information within `dexios-core`
 /// This function ensures that `raw_key` is securely erased from memory once hashed
 pub fn argon2id_hash(
     raw_key: Protected<Vec<u8>>,

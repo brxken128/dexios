@@ -22,7 +22,7 @@ use crate::protected::Protected;
 
 /// This `enum` contains streams for that are used solely for encryption
 /// It has definitions for all AEADs supported by `dexios-core`
-pub enum EncryptStreamCiphers {
+pub enum EncryptionStreams {
     Aes256Gcm(Box<EncryptorLE31<Aes256Gcm>>),
     XChaCha(Box<EncryptorLE31<XChaCha20Poly1305>>),
     DeoxysII(Box<EncryptorLE31<DeoxysII256>>),
@@ -30,13 +30,13 @@ pub enum EncryptStreamCiphers {
 
 /// This `enum` contains streams for that are used solely for decryption
 /// It has definitions for all AEADs supported by `dexios-core`
-pub enum DecryptStreamCiphers {
+pub enum DecryptionStreams {
     Aes256Gcm(Box<DecryptorLE31<Aes256Gcm>>),
     XChaCha(Box<DecryptorLE31<XChaCha20Poly1305>>),
     DeoxysII(Box<DecryptorLE31<DeoxysII256>>),
 }
 
-impl EncryptStreamCiphers {
+impl EncryptionStreams {
     /// This method can be used to quickly create an `EncryptionStreams` object
     /// It requies a 32-byte hashed key, which will be dropped once the stream has been initialized
     /// It will create the stream with the specified algorithm, and it will also generate the appropriate nonce
@@ -60,7 +60,7 @@ impl EncryptStreamCiphers {
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
                 (
-                    EncryptStreamCiphers::Aes256Gcm(Box::new(stream)),
+                    EncryptionStreams::Aes256Gcm(Box::new(stream)),
                     nonce.to_vec(),
                 )
             }
@@ -78,7 +78,7 @@ impl EncryptStreamCiphers {
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
                 (
-                    EncryptStreamCiphers::XChaCha(Box::new(stream)),
+                    EncryptionStreams::XChaCha(Box::new(stream)),
                     nonce.to_vec(),
                 )
             }
@@ -96,7 +96,7 @@ impl EncryptStreamCiphers {
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
                 (
-                    EncryptStreamCiphers::DeoxysII(Box::new(stream)),
+                    EncryptionStreams::DeoxysII(Box::new(stream)),
                     nonce.to_vec(),
                 )
             }
@@ -113,9 +113,9 @@ impl EncryptStreamCiphers {
         payload: impl Into<Payload<'msg, 'aad>>,
     ) -> aead::Result<Vec<u8>> {
         match self {
-            EncryptStreamCiphers::Aes256Gcm(s) => s.encrypt_next(payload),
-            EncryptStreamCiphers::XChaCha(s) => s.encrypt_next(payload),
-            EncryptStreamCiphers::DeoxysII(s) => s.encrypt_next(payload),
+            EncryptionStreams::Aes256Gcm(s) => s.encrypt_next(payload),
+            EncryptionStreams::XChaCha(s) => s.encrypt_next(payload),
+            EncryptionStreams::DeoxysII(s) => s.encrypt_next(payload),
         }
     }
 
@@ -126,9 +126,9 @@ impl EncryptStreamCiphers {
         payload: impl Into<Payload<'msg, 'aad>>,
     ) -> aead::Result<Vec<u8>> {
         match self {
-            EncryptStreamCiphers::Aes256Gcm(s) => s.encrypt_last(payload),
-            EncryptStreamCiphers::XChaCha(s) => s.encrypt_last(payload),
-            EncryptStreamCiphers::DeoxysII(s) => s.encrypt_last(payload),
+            EncryptionStreams::Aes256Gcm(s) => s.encrypt_last(payload),
+            EncryptionStreams::XChaCha(s) => s.encrypt_last(payload),
+            EncryptionStreams::DeoxysII(s) => s.encrypt_last(payload),
         }
     }
 
@@ -189,7 +189,7 @@ impl EncryptStreamCiphers {
     }
 }
 
-impl DecryptStreamCiphers {
+impl DecryptionStreams {
     /// This method can be used to quickly create an `DecryptionStreams` object
     /// It requies a 32-byte hashed key, which will be dropped once the stream has been initialized
     /// It requires the same nonce that was returned upon initializing `EncryptionStreams`
@@ -212,7 +212,7 @@ impl DecryptStreamCiphers {
                 };
 
                 let stream = DecryptorLE31::from_aead(cipher, nonce.into());
-                DecryptStreamCiphers::Aes256Gcm(Box::new(stream))
+                DecryptionStreams::Aes256Gcm(Box::new(stream))
             }
             Algorithm::XChaCha20Poly1305 => {
                 let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
@@ -225,7 +225,7 @@ impl DecryptStreamCiphers {
                 };
 
                 let stream = DecryptorLE31::from_aead(cipher, nonce.into());
-                DecryptStreamCiphers::XChaCha(Box::new(stream))
+                DecryptionStreams::XChaCha(Box::new(stream))
             }
             Algorithm::DeoxysII256 => {
                 let cipher = match DeoxysII256::new_from_slice(key.expose()) {
@@ -238,7 +238,7 @@ impl DecryptStreamCiphers {
                 };
 
                 let stream = DecryptorLE31::from_aead(cipher, nonce.into());
-                DecryptStreamCiphers::DeoxysII(Box::new(stream))
+                DecryptionStreams::DeoxysII(Box::new(stream))
             }
         };
 
@@ -254,9 +254,9 @@ impl DecryptStreamCiphers {
         payload: impl Into<Payload<'msg, 'aad>>,
     ) -> aead::Result<Vec<u8>> {
         match self {
-            DecryptStreamCiphers::Aes256Gcm(s) => s.decrypt_next(payload),
-            DecryptStreamCiphers::XChaCha(s) => s.decrypt_next(payload),
-            DecryptStreamCiphers::DeoxysII(s) => s.decrypt_next(payload),
+            DecryptionStreams::Aes256Gcm(s) => s.decrypt_next(payload),
+            DecryptionStreams::XChaCha(s) => s.decrypt_next(payload),
+            DecryptionStreams::DeoxysII(s) => s.decrypt_next(payload),
         }
     }
 
@@ -268,9 +268,9 @@ impl DecryptStreamCiphers {
         payload: impl Into<Payload<'msg, 'aad>>,
     ) -> aead::Result<Vec<u8>> {
         match self {
-            DecryptStreamCiphers::Aes256Gcm(s) => s.decrypt_last(payload),
-            DecryptStreamCiphers::XChaCha(s) => s.decrypt_last(payload),
-            DecryptStreamCiphers::DeoxysII(s) => s.decrypt_last(payload),
+            DecryptionStreams::Aes256Gcm(s) => s.decrypt_last(payload),
+            DecryptionStreams::XChaCha(s) => s.decrypt_last(payload),
+            DecryptionStreams::DeoxysII(s) => s.decrypt_last(payload),
         }
     }
 

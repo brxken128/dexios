@@ -39,3 +39,4 @@ pub mod primitives;
 pub mod protected;
 pub mod cipher;
 pub mod stream;
+pub use aead::Payload as Payload;

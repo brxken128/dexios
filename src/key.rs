@@ -20,7 +20,7 @@ pub fn gen_salt() -> [u8; SALT_LEN] {
 // this handles argon2 hashing with the provided key
 // it returns the key hashed with a specified salt
 // it also ensures that raw_key is zeroed out
-pub fn argon2_hash(
+pub fn argon2id_hash(
     raw_key: Protected<Vec<u8>>,
     salt: [u8; SALT_LEN],
     version: &HeaderVersion,

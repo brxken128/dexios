@@ -134,7 +134,8 @@ impl EncryptionStreams {
 
     /// This is a convenience function for reading from a reader, encrypting, and writing to the writer.
     /// Every single block is provided with the AAD
-    /// Valid AAD must be provided if you are using HeaderVersion::V3 and above. It must be empty if the HeaderVersion is lower.
+    /// Valid AAD must be provided if you are using `HeaderVersion::V3` and above. It must be empty if the `HeaderVersion` is lower.
+    /// You are free to use a custom AAD, just ensure that it is present for decryption, or else you will receive an error.
     /// This does not handle writing the header.
     pub fn encrypt_file(
         mut self,
@@ -276,7 +277,7 @@ impl DecryptionStreams {
 
     /// This is a convenience function for reading from a reader, decrypting, and writing to the writer.
     /// Every single block is provided with the AAD
-    /// Valid AAD must be provided if you are using HeaderVersion::V3 and above. It must be empty if the HeaderVersion is lower. Whatever you provided as AAD while encrypting must be present during decryption, or else you will receive an error.
+    /// Valid AAD must be provided if you are using `HeaderVersion::V3` and above. It must be empty if the `HeaderVersion` is lower. Whatever you provided as AAD while encrypting must be present during decryption, or else you will receive an error.
     /// This does not handle writing the header.
     pub fn decrypt_file(
         mut self,

@@ -67,7 +67,7 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
 // the full header, including version, salt, nonce, mode, encryption algorithm, etc
 
 /// This is the main `Header` struct, and it contains all of the information about the encrypted data
-/// It contains the HeaderType, the nonce, and the salt
+/// It contains the `HeaderType`, the nonce, and the salt
 /// This needs to be manually created for encrypting data
 pub struct Header {
     pub header_type: HeaderType,
@@ -150,9 +150,9 @@ impl Header {
         };
 
         let header_type = HeaderType {
-            version: version,
+            version,
+            mode,
             algorithm,
-            mode: mode,
         };
         let nonce_len = calc_nonce_len(&header_type);
         let mut salt = [0u8; 16];

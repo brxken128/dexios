@@ -21,13 +21,13 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
 
     let mut header = [0u8; 64];
-    let mut reader = Cursor::new(header.to_vec());
 
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
         input_file.read_exact(&mut header)
         .with_context(|| format!("Unable to read header from file: {}", input))?;
 
+    let mut reader = Cursor::new(header.to_vec());
     if Header::deserialize(&mut reader).is_err() {
         logger.error("File does not contain a valid Dexios header - exiting");
         drop(input_file);
@@ -63,7 +63,6 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     }
 
     let mut header = vec![0u8; 64];
-    let mut reader = Cursor::new(header.clone());
 
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open header file: {}", input))?;
@@ -71,6 +70,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         .read_exact(&mut header)
         .with_context(|| format!("Unable to read header from file: {}", input))?;
 
+    let mut reader = Cursor::new(header.to_vec());
     if Header::deserialize(&mut reader).is_err() {
         logger.error("File does not contain a valid Dexios header - exiting");
         drop(input_file);

@@ -1,13 +1,15 @@
 use std::{
     fs::{File, OpenOptions},
-    io::{Read, Write},
+    io::{Read, Seek, Write},
     process::exit,
 };
+
+use std::io::Cursor;
 
 use anyhow::{Context, Result};
 use paris::Logger;
 
-use crate::global::states::SkipMode;
+use crate::global::{header::Header, states::SkipMode};
 
 use super::prompt::{get_answer, overwrite_check};
 
@@ -20,10 +22,18 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
     let mut header = [0u8; 64];
 
-    let mut file =
+    let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
-    file.read_exact(&mut header)
+    input_file
+        .read_exact(&mut header)
         .with_context(|| format!("Unable to read header from file: {}", input))?;
+
+    let mut header_reader = Cursor::new(header);
+    if Header::deserialize(&mut header_reader).is_err() {
+        logger.error("File does not contain a valid Dexios header - exiting");
+        drop(input_file);
+        exit(1);
+    }
 
     if !overwrite_check(output, skip)? {
         std::process::exit(0);
@@ -54,18 +64,18 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     }
 
     let mut header = vec![0u8; 64];
+
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open header file: {}", input))?;
     input_file
         .read_exact(&mut header)
         .with_context(|| format!("Unable to read header from file: {}", input))?;
 
-    if header[..1] != [0xDE] {
-        let prompt =
-            "This doesn't seem to be a Dexios header file, are you sure you'd like to continue?";
-        if !get_answer(prompt, false, skip == SkipMode::HidePrompts)? {
-            exit(0);
-        }
+    let mut header_reader = Cursor::new(header.clone());
+    if Header::deserialize(&mut header_reader).is_err() {
+        logger.error("File does not contain a valid Dexios header - exiting");
+        drop(input_file);
+        exit(1);
     }
 
     let mut output_file = OpenOptions::new()
@@ -102,12 +112,24 @@ pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
 
     let buffer = vec![0u8; 64];
 
-    let mut file = OpenOptions::new()
+    let mut input_file = OpenOptions::new()
+        .read(true)
         .write(true)
         .open(input)
         .with_context(|| format!("Unable to open input file: {}", input))?;
 
-    file.write_all(&buffer)
+    if Header::deserialize(&mut input_file).is_err() {
+        logger.error("File does not contain a valid Dexios header - exiting");
+        drop(input_file);
+        exit(1);
+    } else {
+        input_file
+            .seek(std::io::SeekFrom::Current(-64))
+            .context("Unable to seek back to the start of the file")?;
+    }
+
+    input_file
+        .write_all(&buffer)
         .with_context(|| format!("Unable to wipe header for file: {}", input))?;
 
     logger.success(format!("Header stripped from {} successfully.", input));

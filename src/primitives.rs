@@ -37,6 +37,3 @@ pub enum CipherMode {
     MemoryMode,
     StreamMode,
 }
-
-pub mod cipher;
-pub mod stream;

@@ -3,7 +3,7 @@ use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
 
-use super::Algorithm;
+use crate::primitives::Algorithm;
 use crate::protected::Protected;
 
 pub enum Ciphers {

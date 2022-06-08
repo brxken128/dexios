@@ -37,3 +37,5 @@ pub mod header;
 pub mod key;
 pub mod primitives;
 pub mod protected;
+pub mod cipher;
+pub mod stream;

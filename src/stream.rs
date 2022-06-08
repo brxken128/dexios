@@ -11,7 +11,7 @@ use deoxys::DeoxysII256;
 use rand::{prelude::StdRng, Rng, SeedableRng};
 use zeroize::Zeroize;
 
-use super::{Algorithm, BLOCK_SIZE};
+use crate::primitives::{Algorithm, BLOCK_SIZE};
 use crate::protected::Protected;
 
 pub enum EncryptStreamCiphers {

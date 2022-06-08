@@ -77,7 +77,7 @@ pub fn memory_mode(
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
     let mut output_file = File::create(output)?; // !!!attach context here
-    
+
     let hash_start_time = Instant::now();
     let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
     let hash_duration = hash_start_time.elapsed();

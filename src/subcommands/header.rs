@@ -1,6 +1,6 @@
 use std::{
     fs::{File, OpenOptions},
-    io::{Read, Write, Seek},
+    io::{Read, Seek, Write},
     process::exit,
 };
 
@@ -9,7 +9,7 @@ use std::io::Cursor;
 use anyhow::{Context, Result};
 use paris::Logger;
 
-use crate::global::{states::SkipMode, header::Header};
+use crate::global::{header::Header, states::SkipMode};
 
 use super::prompt::{get_answer, overwrite_check};
 
@@ -24,11 +24,12 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
-        input_file.read_exact(&mut header)
+    input_file
+        .read_exact(&mut header)
         .with_context(|| format!("Unable to read header from file: {}", input))?;
 
-    let mut reader = Cursor::new(header.to_vec());
-    if Header::deserialize(&mut reader).is_err() {
+    let mut header_reader = Cursor::new(header);
+    if Header::deserialize(&mut header_reader).is_err() {
         logger.error("File does not contain a valid Dexios header - exiting");
         drop(input_file);
         exit(1);
@@ -70,8 +71,8 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         .read_exact(&mut header)
         .with_context(|| format!("Unable to read header from file: {}", input))?;
 
-    let mut reader = Cursor::new(header.to_vec());
-    if Header::deserialize(&mut reader).is_err() {
+    let mut header_reader = Cursor::new(header.clone());
+    if Header::deserialize(&mut header_reader).is_err() {
         logger.error("File does not contain a valid Dexios header - exiting");
         drop(input_file);
         exit(1);
@@ -121,11 +122,14 @@ pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
         logger.error("File does not contain a valid Dexios header - exiting");
         drop(input_file);
         exit(1);
+    } else {
+        input_file
+            .seek(std::io::SeekFrom::Current(-64))
+            .context("Unable to seek back to the start of the file")?;
     }
 
-    input_file.seek(std::io::SeekFrom::Current(-64)).context("Unable to seek back to the start of the file")?;
-
-    input_file.write_all(&buffer)
+    input_file
+        .write_all(&buffer)
         .with_context(|| format!("Unable to wipe header for file: {}", input))?;
 
     logger.success(format!("Header stripped from {} successfully.", input));

@@ -25,7 +25,6 @@ impl std::fmt::Display for Algorithm {
     }
 }
 
-
 #[derive(PartialEq, Eq)]
 pub enum CipherMode {
     // could do with a better name

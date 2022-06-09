@@ -1,7 +1,7 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::states::{EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode};
+use crate::global::states::{EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode, DeleteSourceDir};
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
 use anyhow::{Context, Result};
@@ -205,11 +205,18 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
         Vec::new()
     };
 
+    let delete_source = if sub_matches.is_present("delete") {
+        DeleteSourceDir::Delete
+    } else {
+        DeleteSourceDir::Retain
+    };
+
     let pack_params = PackParams {
         dir_mode,
         hidden,
         exclude,
         print_mode,
+        delete_source,
     };
 
     Ok((crypto_params, pack_params))

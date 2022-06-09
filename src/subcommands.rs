@@ -55,18 +55,12 @@ pub fn erase(sub_matches: &ArgMatches) -> Result<()> {
 pub fn pack(sub_matches: &ArgMatches) -> Result<()> {
     let (crypto_params, pack_params) = pack_params(sub_matches)?;
     let aead = encrypt_additional_params(sub_matches)?;
-    let delete_source = if sub_matches.is_present("delete") {
-        DeleteSourceDir::Delete
-    } else {
-        DeleteSourceDir::Retain
-    };
 
     pack::pack(
         &get_param("input", sub_matches)?,
         &get_param("output", sub_matches)?,
         &pack_params,
         &crypto_params,
-        &delete_source,
         aead,
     )
 }

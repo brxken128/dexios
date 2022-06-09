@@ -207,8 +207,8 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
 
     let pack_params = PackParams {
         dir_mode,
-        exclude,
         hidden,
+        exclude,
         print_mode,
     };
 

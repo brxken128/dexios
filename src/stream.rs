@@ -50,6 +50,19 @@ impl EncryptionStreams {
     /// It will create the stream with the specified algorithm, and it will also generate the appropriate nonce
     /// 
     /// The `EncryptionStreams` object is returned
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// // obviously the key should contain data, not be an empty vec
+    /// let raw_key = Protected::new(vec![0u8; 128]);
+    /// let salt = gen_salt();
+    /// let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
+    ///
+    /// let nonce = gen_nonce(Algorithm::XChaCha20Poly1305, Mode::StreamMode);
+    /// let encrypt_stream = EncryptionStreams::initialize(key, &nonce, Algorithm::XChaCha20Poly1305).unwrap();
+    /// ```
+    /// 
     pub fn initialize(
         key: Protected<[u8; 32]>,
         nonce: &[u8],
@@ -150,6 +163,20 @@ impl EncryptionStreams {
     /// You are free to use a custom AAD, just ensure that it is present for decryption, or else you will receive an error.
     /// 
     /// This does not handle writing the header.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// let mut input_file = File::open("input").unwrap();
+    /// let mut output_file = File::create("output.encrypted").unwrap();
+    /// 
+    /// // aad should be generated from the header (only for encryption)
+    /// let aad = header.serialize().unwrap();
+    /// 
+    /// let encrypt_stream = EncryptionStreams::initialize(key, &nonce, Algorithm::XChaCha20Poly1305).unwrap();
+    /// encrypt_stream.encrypt_file(&mut input_file, &mut output_file, &aad);
+    /// ```
+    /// 
     pub fn encrypt_file(
         mut self,
         reader: &mut impl Read,
@@ -213,6 +240,21 @@ impl DecryptionStreams {
     /// It will create the stream with the specified algorithm
     /// 
     /// The `DecryptionStreams` object will be returned
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// // obviously the key should contain data, not be an empty vec
+    /// let raw_key = Protected::new(vec![0u8; 128]);
+    /// let salt = gen_salt();
+    /// let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
+    ///
+    /// // this nonce should be read from somewhere, not generated
+    /// let nonce = gen_nonce(Algorithm::XChaCha20Poly1305, Mode::StreamMode);
+    /// 
+    /// let decrypt_stream = DecryptionStreams::initialize(key, &nonce, Algorithm::XChaCha20Poly1305).unwrap();
+    /// ```
+    /// 
     pub fn initialize(
         key: Protected<[u8; 32]>,
         nonce: &[u8],
@@ -303,6 +345,20 @@ impl DecryptionStreams {
     /// Valid AAD must be provided if you are using `HeaderVersion::V3` and above. It must be empty if the `HeaderVersion` is lower. Whatever you provided as AAD while encrypting must be present during decryption, or else you will receive an error.
     /// 
     /// This does not handle writing the header.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// let mut input_file = File::open("input.encrypted").unwrap();
+    /// let mut output_file = File::create("output").unwrap();
+    /// 
+    /// // aad should be retrieved from the `Header` (with `Header::deserialize()`)
+    /// let aad = Vec::new();
+    /// 
+    /// let decrypt_stream = DecryptionStreams::initialize(key, &nonce, Algorithm::XChaCha20Poly1305).unwrap();
+    /// decrypt_stream.decrypt_file(&mut input_file, &mut output_file, &aad);
+    /// ```
+    /// 
     pub fn decrypt_file(
         mut self,
         reader: &mut impl Read,

@@ -18,6 +18,12 @@ pub enum HiddenFilesMode {
 }
 
 #[derive(PartialEq)]
+pub enum DeleteSourceDir {
+    Delete,
+    Retain,
+}
+
+#[derive(PartialEq)]
 pub enum PrintMode {
     Verbose,
     Quiet,

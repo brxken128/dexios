@@ -271,7 +271,7 @@ dependencies = [
 
 [[package]]
 name = "dexios"
-version = "8.5.0"
+version = "8.6.0"
 dependencies = [
  "anyhow",
  "blake3",
@@ -285,9 +285,9 @@ dependencies = [
 
 [[package]]
 name = "dexios-core"
-version = "0.0.7"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68a983118574e25458cf77a5f1e570d520c420d7067bca2b5caa0c066722a85f"
+checksum = "95de7662f28464ab53af07eddde28403c557ca94d44784768166b1b7c94fdbae"
 dependencies = [
  "aead",
  "aes-gcm",

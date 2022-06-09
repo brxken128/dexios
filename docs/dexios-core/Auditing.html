@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../Introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../Installing-and-Building.html"><strong aria-hidden="true">2.</strong> Installing and Building</a></li><li class="chapter-item expanded "><a href="../Choosing-a-Key.html"><strong aria-hidden="true">3.</strong> Choosing a Key</a></li><li class="chapter-item expanded "><a href="../Checksums.html"><strong aria-hidden="true">4.</strong> Checksums</a></li><li class="chapter-item expanded "><a href="../Environment-Variables.html"><strong aria-hidden="true">5.</strong> Environment Variables</a></li><li class="chapter-item expanded "><a href="../Usage-Examples.html"><strong aria-hidden="true">6.</strong> Usage Examples</a></li><li class="chapter-item expanded "><a href="../technical-details/index.html"><strong aria-hidden="true">7.</strong> Technical Details</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../technical-details/Encryption.html"><strong aria-hidden="true">7.1.</strong> Encryption</a></li><li class="chapter-item expanded "><a href="../technical-details/Keys.html"><strong aria-hidden="true">7.2.</strong> Keys</a></li><li class="chapter-item expanded "><a href="../technical-details/Password-Hashing.html"><strong aria-hidden="true">7.3.</strong> Password Hashing</a></li><li class="chapter-item expanded "><a href="../technical-details/Headers.html"><strong aria-hidden="true">7.4.</strong> Headers</a></li><li class="chapter-item expanded "><a href="../technical-details/Secure-Erase.html"><strong aria-hidden="true">7.5.</strong> Secure Erase</a></li><li class="chapter-item expanded "><a href="../technical-details/Secret-Wrapper.html"><strong aria-hidden="true">7.6.</strong> Secret Wrapper</a></li><li class="chapter-item expanded "><a href="../technical-details/Directory-Packing.html"><strong aria-hidden="true">7.7.</strong> Directory Packing</a></li><li class="chapter-item expanded "><a href="../technical-details/Auditing.html" class="active"><strong aria-hidden="true">7.8.</strong> Auditing</a></li><li class="chapter-item expanded "><a href="../technical-details/Performance-Notes.html"><strong aria-hidden="true">7.9.</strong> Performance Notes</a></li></ol></li><li class="chapter-item expanded "><a href="../Security-Policy.html"><strong aria-hidden="true">8.</strong> Security Policy</a></li><li class="chapter-item expanded "><a href="../Supporting-Dexios.html"><strong aria-hidden="true">9.</strong> Supporting Dexios</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../Introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../Installing-and-Building.html"><strong aria-hidden="true">2.</strong> Installing and Building</a></li><li class="chapter-item expanded "><a href="../Choosing-a-Key.html"><strong aria-hidden="true">3.</strong> Choosing a Key</a></li><li class="chapter-item expanded "><a href="../Checksums.html"><strong aria-hidden="true">4.</strong> Checksums</a></li><li class="chapter-item expanded "><a href="../Environment-Variables.html"><strong aria-hidden="true">5.</strong> Environment Variables</a></li><li class="chapter-item expanded "><a href="../Usage-Examples.html"><strong aria-hidden="true">6.</strong> Usage Examples</a></li><li class="chapter-item expanded "><a href="../technical-details/index.html"><strong aria-hidden="true">7.</strong> Technical Details</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../technical-details/Keys.html"><strong aria-hidden="true">7.1.</strong> Keys</a></li><li class="chapter-item expanded "><a href="../technical-details/Secure-Erase.html"><strong aria-hidden="true">7.2.</strong> Secure Erase</a></li><li class="chapter-item expanded "><a href="../technical-details/Directory-Packing.html"><strong aria-hidden="true">7.3.</strong> Directory Packing</a></li><li class="chapter-item expanded "><a href="../technical-details/Performance-Notes.html"><strong aria-hidden="true">7.4.</strong> Performance Notes</a></li></ol></li><li class="chapter-item expanded "><a href="../dexios-core/index.html"><strong aria-hidden="true">8.</strong> Dexios-Core</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../dexios-core/Headers.html"><strong aria-hidden="true">8.1.</strong> Headers</a></li><li class="chapter-item expanded "><a href="../dexios-core/Password-Hashing.html"><strong aria-hidden="true">8.2.</strong> Password Hashing</a></li><li class="chapter-item expanded "><a href="../dexios-core/Encryption.html"><strong aria-hidden="true">8.3.</strong> Encryption</a></li><li class="chapter-item expanded "><a href="../dexios-core/Protected-Wrapper.html"><strong aria-hidden="true">8.4.</strong> Protected Wrapper</a></li><li class="chapter-item expanded "><a href="../dexios-core/API.html"><strong aria-hidden="true">8.5.</strong> API Documentation</a></li><li class="chapter-item expanded "><a href="../dexios-core/Auditing.html" class="active"><strong aria-hidden="true">8.6.</strong> Auditing</a></li></ol></li><li class="chapter-item expanded "><a href="../Security-Policy.html"><strong aria-hidden="true">9.</strong> Security Policy</a></li><li class="chapter-item expanded "><a href="../Supporting-Dexios.html"><strong aria-hidden="true">10.</strong> Supporting Dexios</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -144,31 +144,30 @@
                     <main>
                         <h2 id="auditing"><a class="header" href="#auditing">Auditing</a></h2>
 <h3 id="official-audit"><a class="header" href="#official-audit">Official Audit</a></h3>
-<p>We currently have no plans to purchase an official audit from a company such as Cure53, as we just do not have the money. They're expensive, and they're only &quot;valid&quot; for a snapshot of your code, so it's probably not worth it for us.</p>
+<p>We currently have no plans to purchase an official audit from a company, as we just do not have the money. They're expensive, and they're only &quot;valid&quot; for a snapshot of your code, so it's probably not worth it for us.</p>
 <p>We do use audited encryption libraries, so we're probably covered on that front. Rust doesn't allow for most issues thanks to it's compiler and lints, and with a bit of thought, we can prevent incorrect usage of these libraries.</p>
 <h3 id="auditing-yourself"><a class="header" href="#auditing-yourself">Auditing Yourself</a></h3>
 <p>If anyone would like to take a dive into the code, and ensure that cryptography-related functions are written correctly, you may find items of interest within these directories:</p>
 <ul>
-<li><code>src/encrypt/crypto.rs</code> - this handles stream and memory encryption</li>
-<li><code>src/decrypt/crypto.rs</code> - this handles stream and memory decryption</li>
-<li><code>src/key.rs</code> - this handles reading the key from certain inputs, and the hashing of said keys</li>
-<li><code>src/streams.rs</code> - this initialises our STREAMs, for both encrypt and decrypt modes</li>
+<li><code>src/stream.rs</code> - this handles STREAM initialisation, encryption and decryption</li>
+<li><code>src/cipher.rs</code> - this handles &quot;memory&quot; initialisation, encryption and decryption</li>
+<li><code>src/key.rs</code> - this handles salt generation and <code>argon2id</code> hashing</li>
+<li><code>src/primitives.rs</code> - these are the constants used, and it contains a function for generating the nonce</li>
 <li><code>src/header.rs</code> - this contains functions for serialising/deserialising/getting the AAD of headers</li>
-<li><code>src/secret.rs</code> - this contains our <code>Secret&lt;&gt;</code> wrapper that implements zeroize-on-drop, to erase secrets from memory once they're no longer in use</li>
-<li><code>src/global/global.rs</code> - this just matches the enum type, and runs the appropriate AEAD functions</li>
+<li><code>src/protected.rs</code> - this contains our <code>Protected&lt;&gt;</code> wrapper that implements zeroize-on-drop, to erase secrets from memory once they're no longer in use</li>
 </ul>
-<p>I'd highly recommend taking a peek into <code>key.rs</code>, <code>streams.rs</code>, and both <code>crypto.rs</code> files.</p>
+<p>I'd highly recommend taking a peek into <code>key.rs</code>, <code>stream.rs</code>, and <code>cipher.rs</code> - these are the main cryptographic files.</p>
 <p>If you happen to find anything problematic, please <a href="https://github.com/brxken128/dexios/issues">open a Github issue</a> or email <code>brxken128@tutanota.com</code>. This may be done anonymously.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../technical-details/Directory-Packing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../dexios-core/API.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../technical-details/Performance-Notes.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../Security-Policy.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -178,11 +177,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../technical-details/Directory-Packing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../dexios-core/API.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../technical-details/Performance-Notes.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../Security-Policy.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

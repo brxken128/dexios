@@ -5,6 +5,24 @@
 
 use anyhow::Result;
 
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum DirectoryMode {
+    Singular,
+    Recursive,
+}
+
+#[derive(PartialEq)]
+pub enum HiddenFilesMode {
+    Include,
+    Exclude,
+}
+
+#[derive(PartialEq)]
+pub enum PrintMode {
+    Verbose,
+    Quiet,
+}
+
 #[derive(PartialEq, Clone, Copy)]
 pub enum EraseMode {
     EraseFile(i32),

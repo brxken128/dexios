@@ -7,6 +7,8 @@ use std::{
     time::Instant,
 };
 
+use super::prompt::get_answer;
+
 // this function securely erases a file
 // read the docs for some caveats with file-erasure on flash storage
 // it takes the file name/relative path, and the number of times to go over the file's contents with random bytes
@@ -19,6 +21,19 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     let data = file
         .metadata()
         .with_context(|| format!("Unable to get input file metadata: {}", input))?;
+
+    if data.is_dir() {
+        drop(file);
+        if !get_answer("This is a directory, would you like to erase all files within it?", false, false)? {
+            std::process::exit(0);
+        }
+        let (files, _) = crate::file::get_paths_in_dir(input, crate::global::states::DirectoryMode::Recursive, &Vec::<String>::new(), &crate::global::states::HiddenFilesMode::Include, &crate::global::states::PrintMode::Quiet)?;
+        for file in files {
+            secure_erase(file.to_str().context("Unable to get &str from PathBuf")?, passes)?;
+        }
+        std::fs::remove_dir_all(input).context("Unable to delete directory")?;
+        // delete dir
+    }
 
     let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
     let mut writer = BufWriter::new(file);

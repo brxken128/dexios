@@ -186,8 +186,8 @@ impl Header {
 
         let header_type = HeaderType {
             version,
-            mode,
             algorithm,
+            mode,
         };
         let nonce_len = calc_nonce_len(&header_type);
         let mut salt = [0u8; 16];

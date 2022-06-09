@@ -38,7 +38,7 @@ pub fn unpack(
 
     match std::fs::create_dir(output) {
         Ok(_) => logger.info(format!("Created output directory: {}", output)),
-        Err(_) => logger.warn(format!("Output directory ({}) already exists!", output)),
+        Err(_) => logger.info(format!("Output directory ({}) already exists", output)),
     };
 
     let file_count = archive.len();

@@ -1,7 +1,9 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::states::{EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode, DeleteSourceDir};
+use crate::global::states::{
+    DeleteSourceDir, EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
+};
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
 use anyhow::{Context, Result};

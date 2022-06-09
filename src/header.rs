@@ -35,8 +35,8 @@ pub enum HeaderVersion {
 #[allow(clippy::module_name_repetitions)]
 pub struct HeaderType {
     pub version: HeaderVersion,
-    pub mode: Mode,
     pub algorithm: Algorithm,
+    pub mode: Mode,
 }
 
 /// This is the `HeaderType` struct, but in the format of raw bytes

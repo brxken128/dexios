@@ -18,8 +18,8 @@ pub enum HiddenFilesMode {
 }
 
 #[derive(PartialEq)]
-pub enum DeleteSourceDir {
-    Delete,
+pub enum EraseSourceDir {
+    Erase,
     Retain,
 }
 

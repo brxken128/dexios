@@ -2,7 +2,7 @@
 // it returns information (e.g. CryptoParams) to functions that require it
 
 use crate::global::states::{
-    DeleteSourceDir, EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
+    EraseSourceDir, EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
 };
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
@@ -207,10 +207,10 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
         Vec::new()
     };
 
-    let delete_source = if sub_matches.is_present("delete") {
-        DeleteSourceDir::Delete
+    let erase_source = if sub_matches.is_present("erase") {
+        EraseSourceDir::Erase
     } else {
-        DeleteSourceDir::Retain
+        EraseSourceDir::Retain
     };
 
     let pack_params = PackParams {
@@ -218,7 +218,7 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
         hidden,
         exclude,
         print_mode,
-        delete_source,
+        erase_source,
     };
 
     Ok((crypto_params, pack_params))

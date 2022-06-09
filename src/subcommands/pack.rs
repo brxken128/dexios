@@ -12,7 +12,7 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::states::{DeleteSourceDir, DirectoryMode, PrintMode},
+    global::states::{EraseSourceDir, DirectoryMode, PrintMode},
     global::structs::{CryptoParams, PackParams},
 };
 
@@ -141,8 +141,8 @@ pub fn pack(
 
     super::erase::secure_erase(&tmp_name, 2)?; // cleanup our tmp file
 
-    if pack_params.delete_source == DeleteSourceDir::Delete {
-        std::fs::remove_dir_all(input).context("Unable to delete source directory")?;
+    if pack_params.erase_source == EraseSourceDir::Erase {
+        super::erase::secure_erase(input, 2)?;
     }
 
     logger.success(format!("Your output file is: {}", output));

@@ -207,11 +207,10 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("The output file"),
             )
             .arg(
-                Arg::new("delete")
-                    .short('d')
-                    .long("delete")
+                Arg::new("erase")
+                    .long("erase")
                     .takes_value(false)
-                    .help("Delete the source directory once packed"),
+                    .help("Securely erase every file from the source directory, before deleting the directory")
             )
             .arg(
                 Arg::new("verbose")

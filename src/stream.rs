@@ -3,6 +3,28 @@
 //! This is where streaming mode encryption, decryption and initialization is handled.
 //!
 //! There are also some convenience functions for quickly encrypting and decrypting files.
+//! 
+//! # Examples
+//!
+//! ```
+//! // obviously the key should contain data, not be an empty vec
+//! let raw_key = Protected::new(vec![0u8; 128]);
+//! let salt = gen_salt();
+//! let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
+//!
+//! // this nonce should be read from somewhere, not generated
+//! let nonce = gen_nonce(Algorithm::XChaCha20Poly1305, Mode::StreamMode);
+//!
+//! let decrypt_stream = DecryptionStreams::initialize(key, &nonce, Algorithm::XChaCha20Poly1305).unwrap();
+//!
+//! let mut input_file = File::open("input.encrypted").unwrap();
+//! let mut output_file = File::create("output").unwrap();
+//!
+//! // aad should be retrieved from the `Header` (with `Header::deserialize()`)
+//! let aad = Vec::new();
+//!
+//! decrypt_stream.decrypt_file(&mut input_file, &mut output_file, &aad);
+//! ```
 
 use std::io::{Read, Write};
 
@@ -66,7 +88,7 @@ impl EncryptionStreams {
     pub fn initialize(
         key: Protected<[u8; 32]>,
         nonce: &[u8],
-        algorithm: Algorithm,
+        algorithm: &Algorithm,
     ) -> anyhow::Result<Self> {
         let streams = match algorithm {
             Algorithm::Aes256Gcm => {
@@ -258,7 +280,7 @@ impl DecryptionStreams {
     pub fn initialize(
         key: Protected<[u8; 32]>,
         nonce: &[u8],
-        algorithm: Algorithm,
+        algorithm: &Algorithm,
     ) -> anyhow::Result<Self> {
         let streams = match algorithm {
             Algorithm::Aes256Gcm => {

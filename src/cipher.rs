@@ -1,6 +1,15 @@
 //! This module is used for standard, typical encryption and decryption.
 //!
 //! The data is fully loaded into memory before encryption/decryption, and it is processed within the same "block"
+//! 
+//! # Examples
+//! ```
+//! obviously the key should contain data, not be an empty vec
+//! let raw_key = Protected::new(vec![0u8; 128]);
+//! let salt = gen_salt();
+//! let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
+//! let cipher = Ciphers::initialize(key, Algorithm::XChaCha20Poly1305).unwrap();
+//! ```
 
 use aead::{Aead, NewAead, Payload};
 use aes_gcm::Aes256Gcm;
@@ -23,7 +32,17 @@ impl Ciphers {
     /// The returned `Cipher` can be used for both encryption and decryption
     ///
     /// You just need to provide the `argon2id` hashed key, and the algorithm to use
-    pub fn initialize(key: Protected<[u8; 32]>, algorithm: Algorithm) -> anyhow::Result<Self> {
+    /// 
+    /// # Examples
+    /// ```
+    /// obviously the key should contain data, not be an empty vec
+    /// let raw_key = Protected::new(vec![0u8; 128]);
+    /// let salt = gen_salt();
+    /// let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
+    /// let cipher = Ciphers::initialize(key, Algorithm::XChaCha20Poly1305).unwrap();
+    /// ```
+    /// 
+    pub fn initialize(key: Protected<[u8; 32]>, algorithm: &Algorithm) -> anyhow::Result<Self> {
         let cipher = match algorithm {
             Algorithm::Aes256Gcm => {
                 let cipher = match Aes256Gcm::new_from_slice(key.expose()) {

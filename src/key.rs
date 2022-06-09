@@ -1,6 +1,15 @@
 //! This module handles key-related functionality within `dexios-core`
 //!
 //! It contains methods for `argon2id` hashing, and securely generating a salt
+//! 
+//! # Examples
+//!
+//! ```
+//! let salt = gen_salt();
+//! let secret_data = "secure key".as_bytes().to_vec();
+//! let raw_key = Protected::new(secret_data);
+//! let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
+//! ```
 
 use super::primitives::SALT_LEN;
 

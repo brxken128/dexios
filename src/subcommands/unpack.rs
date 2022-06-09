@@ -55,8 +55,13 @@ pub fn unpack(
             None => continue,
         };
 
+        // zip slip prevention
         if file.name().contains("..") {
-            // skip directories that may try to zip slip
+            continue;
+        }
+
+        #[cfg(windows)] // zip slip prevention
+        if file.name().contains(".\\") {
             continue;
         }
 

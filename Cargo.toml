@@ -8,6 +8,7 @@ homepage = "https://brxken128.github.io/dexios/dexios-core/"
 repository = "https://github.com/brxken128/dexios-core"
 documentation = "https://docs.rs/dexios-core/latest/dexios_core/"
 categories = ["cryptography", "encoding", "data-structures"]
+rust-version = "1.57"
 keywords = ["encryption", "secure"]
 edition = "2021"
 license = "BSD-2-Clause"

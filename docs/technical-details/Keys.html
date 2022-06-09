@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../Introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../Installing-and-Building.html"><strong aria-hidden="true">2.</strong> Installing and Building</a></li><li class="chapter-item expanded "><a href="../Choosing-a-Key.html"><strong aria-hidden="true">3.</strong> Choosing a Key</a></li><li class="chapter-item expanded "><a href="../Checksums.html"><strong aria-hidden="true">4.</strong> Checksums</a></li><li class="chapter-item expanded "><a href="../Environment-Variables.html"><strong aria-hidden="true">5.</strong> Environment Variables</a></li><li class="chapter-item expanded "><a href="../Usage-Examples.html"><strong aria-hidden="true">6.</strong> Usage Examples</a></li><li class="chapter-item expanded "><a href="../technical-details/index.html"><strong aria-hidden="true">7.</strong> Technical Details</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../technical-details/Encryption.html"><strong aria-hidden="true">7.1.</strong> Encryption</a></li><li class="chapter-item expanded "><a href="../technical-details/Keys.html" class="active"><strong aria-hidden="true">7.2.</strong> Keys</a></li><li class="chapter-item expanded "><a href="../technical-details/Password-Hashing.html"><strong aria-hidden="true">7.3.</strong> Password Hashing</a></li><li class="chapter-item expanded "><a href="../technical-details/Headers.html"><strong aria-hidden="true">7.4.</strong> Headers</a></li><li class="chapter-item expanded "><a href="../technical-details/Secure-Erase.html"><strong aria-hidden="true">7.5.</strong> Secure Erase</a></li><li class="chapter-item expanded "><a href="../technical-details/Secret-Wrapper.html"><strong aria-hidden="true">7.6.</strong> Secret Wrapper</a></li><li class="chapter-item expanded "><a href="../technical-details/Directory-Packing.html"><strong aria-hidden="true">7.7.</strong> Directory Packing</a></li><li class="chapter-item expanded "><a href="../technical-details/Auditing.html"><strong aria-hidden="true">7.8.</strong> Auditing</a></li><li class="chapter-item expanded "><a href="../technical-details/Performance-Notes.html"><strong aria-hidden="true">7.9.</strong> Performance Notes</a></li></ol></li><li class="chapter-item expanded "><a href="../Security-Policy.html"><strong aria-hidden="true">8.</strong> Security Policy</a></li><li class="chapter-item expanded "><a href="../Supporting-Dexios.html"><strong aria-hidden="true">9.</strong> Supporting Dexios</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../Introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../Installing-and-Building.html"><strong aria-hidden="true">2.</strong> Installing and Building</a></li><li class="chapter-item expanded "><a href="../Choosing-a-Key.html"><strong aria-hidden="true">3.</strong> Choosing a Key</a></li><li class="chapter-item expanded "><a href="../Checksums.html"><strong aria-hidden="true">4.</strong> Checksums</a></li><li class="chapter-item expanded "><a href="../Environment-Variables.html"><strong aria-hidden="true">5.</strong> Environment Variables</a></li><li class="chapter-item expanded "><a href="../Usage-Examples.html"><strong aria-hidden="true">6.</strong> Usage Examples</a></li><li class="chapter-item expanded "><a href="../technical-details/index.html"><strong aria-hidden="true">7.</strong> Technical Details</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../technical-details/Keys.html" class="active"><strong aria-hidden="true">7.1.</strong> Keys</a></li><li class="chapter-item expanded "><a href="../technical-details/Secure-Erase.html"><strong aria-hidden="true">7.2.</strong> Secure Erase</a></li><li class="chapter-item expanded "><a href="../technical-details/Directory-Packing.html"><strong aria-hidden="true">7.3.</strong> Directory Packing</a></li><li class="chapter-item expanded "><a href="../technical-details/Performance-Notes.html"><strong aria-hidden="true">7.4.</strong> Performance Notes</a></li></ol></li><li class="chapter-item expanded "><a href="../dexios-core/index.html"><strong aria-hidden="true">8.</strong> Dexios-Core</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../dexios-core/Headers.html"><strong aria-hidden="true">8.1.</strong> Headers</a></li><li class="chapter-item expanded "><a href="../dexios-core/Password-Hashing.html"><strong aria-hidden="true">8.2.</strong> Password Hashing</a></li><li class="chapter-item expanded "><a href="../dexios-core/Encryption.html"><strong aria-hidden="true">8.3.</strong> Encryption</a></li><li class="chapter-item expanded "><a href="../dexios-core/Protected-Wrapper.html"><strong aria-hidden="true">8.4.</strong> Protected Wrapper</a></li><li class="chapter-item expanded "><a href="../dexios-core/API.html"><strong aria-hidden="true">8.5.</strong> API Documentation</a></li><li class="chapter-item expanded "><a href="../dexios-core/Auditing.html"><strong aria-hidden="true">8.6.</strong> Auditing</a></li></ol></li><li class="chapter-item expanded "><a href="../Security-Policy.html"><strong aria-hidden="true">9.</strong> Security Policy</a></li><li class="chapter-item expanded "><a href="../Supporting-Dexios.html"><strong aria-hidden="true">10.</strong> Supporting Dexios</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -143,28 +143,28 @@
                 <div id="content" class="content">
                     <main>
                         <h2 id="obtaining-the-key"><a class="header" href="#obtaining-the-key">Obtaining the Key</a></h2>
-<p>All keys are wrapped in a <code>Secret&lt;&gt;</code>. This ensures that data does not leak, is not copied and is zeroed on drop. It only stays in memory for as long as it needs to.</p>
+<p>All keys are wrapped in <code>Protected&lt;&gt;</code>. This ensures that data does not leak, is not copied and is zeroed on drop. It only stays in memory for as long as it needs to.</p>
 <p>The key is checked, once, to ensure that it is not empty.</p>
-<p>Once the length has been validated, keys are then safely transported to the <code>argon2id</code> function. See <a href="Password-Hashing.html">Password Hashing</a> for more information.</p>
+<p>Once the length has been validated, keys are then safely transported to the <code>argon2id</code> function. See <a href="../dexios-core/Password-Hashing.html">Password Hashing</a> for more information.</p>
 <h3 id="reading-from-the-terminal"><a class="header" href="#reading-from-the-terminal">Reading from the Terminal</a></h3>
 <p>While reading from the terminal, the passwords are stored as <code>String</code>s. We use <code>termion</code> to handle password entry, this way your input is hidden.</p>
 <p>On encryption, where you need to enter the password twice, they are compared. The <code>String</code> used for validation is safely zeroed out, and the original is consumed into a <code>Vec&lt;u8&gt;</code>.</p>
 <p>On decryption, the password is only entered once, and it is consumed into a <code>Vec&lt;u8&gt;</code>.</p>
-<p>The <code>Vec&lt;u8&gt;</code> containing the key is wrapped into a <code>Secret&lt;Vec&gt;</code>, which takes ownership of the value.</p>
+<p>The <code>Vec&lt;u8&gt;</code> containing the key is wrapped into a <code>Protected&lt;Vec&gt;</code>, which takes ownership of the value.</p>
 <h3 id="reading-from-a-keyfile"><a class="header" href="#reading-from-a-keyfile">Reading from a Keyfile</a></h3>
-<p>The keyfile is opened, and it's contents are read into a <code>Vec&lt;u8&gt;</code>. The <code>Vec&lt;u8&gt;</code> is then wrapped into a <code>Secret&lt;Vec&gt;</code>, which takes ownership of the value.</p>
+<p>The keyfile is opened, and it's contents are read into a <code>Vec&lt;u8&gt;</code>. The <code>Vec&lt;u8&gt;</code> is then wrapped into a <code>Protected&lt;Vec&gt;</code>, which takes ownership of the value.</p>
 <h3 id="reading-from-environment-variables"><a class="header" href="#reading-from-environment-variables">Reading from Environment Variables</a></h3>
-<p>The <code>DEXIOS_KEY</code> environment variable is checked (to see if it exists) - if so, the contents are read into a <code>String</code>. It is then consumed into a <code>Vec&lt;u8&gt;</code>, which finally gets wrapped into a <code>Secret&lt;Vec&gt;</code>. This may seem cumbersome, but there are no copies or clones of the data, meaning it is safe.</p>
+<p>The <code>DEXIOS_KEY</code> environment variable is checked (to see if it exists) - if so, the contents are read into a <code>String</code>. It is then consumed into a <code>Vec&lt;u8&gt;</code>, which finally gets wrapped into a <code>Protected&lt;Vec&gt;</code>. This may seem cumbersome, but there are no copies or clones of the data, meaning it is safe.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../technical-details/Encryption.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../technical-details/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next" href="../technical-details/Password-Hashing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../technical-details/Secure-Erase.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -174,11 +174,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../technical-details/Encryption.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../technical-details/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next" href="../technical-details/Password-Hashing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../technical-details/Secure-Erase.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

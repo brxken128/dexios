@@ -32,15 +32,19 @@ We made a lot of (necessary) changes to how Dexios works. In hindsight, earlier 
 
 Going forward, starting with version 8, we have zero plans to make any incompatible changes. The header prepended to the start of each encrypted file contains a version identifier, and with that, we can be sure to always keep and maintain support for older versions.
 
-We encourage anyone who used an older version of Dexios to decrypt their files, update, and re-encrypt at your earliest convenience. This is to ensure that your files use the new [header standard](https://brxken128.github.io/dexios/technical-details/Headers.html).
+We encourage anyone who used an older version of Dexios to decrypt their files, update, and re-encrypt at your earliest convenience. This is to ensure that your files use the new [header standard](https://brxken128.github.io/dexios/dexios-core/Headers.html).
 
 ## Supported Operating Systems
 
-Windows, FreeBSD and Linux all are supported by Dexios!
+Windows, FreeBSD, Linux and Android all are supported by Dexios!
 
 Windows support was added in v8.3.0 - however, there is a catch. When you enter a password into the terminal, it will not be hidden - we have plans to fix this in the near future (keyfiles and environment variables still work flawlessly!) Please [open a Github issue](https://github.com/brxken128/dexios/issues) if you encounter anything not outlined here.
 
 On Windows, I highly recommend using Windows Terminal, or another terminal program, as `cmd` can't display the icons used by Dexios for command-line output.
+
+Android 12 was tested, and Dexios was installed within Termux. Everything is in working order, but please [open a Github issue](https://github.com/brxken128/dexios/issues) if you find something that doesn't work as intended.
+
+You may find notes on installing for specific platforms [in the documentation!](https://brxken128.github.io/dexios/Installing-and-Building.html)
 
 ## Contributing
 
@@ -94,6 +98,7 @@ It receives frequent updates and is the main source of documentation for Dexios.
 ### Quick Docs Links:
 
 - [Tested Operating Systems](https://brxken128.github.io/dexios/#tested-operating-systems)
-- [Performance Benchmarks](https://brxken128.github.io/dexios/#tested-operating-systems)
+- [Performance Benchmarks](https://brxken128.github.io/dexios/Checksums.html#performance)
 - [Usage Examples](https://brxken128.github.io/dexios/Usage-Examples.html)
 - [Technical Details](https://brxken128.github.io/dexios/technical-details/)
+- [Dexios-Core Details](https://brxken128.github.io/dexios/dexios-core/index.html)

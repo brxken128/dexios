@@ -82,7 +82,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="Introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="Installing-and-Building.html"><strong aria-hidden="true">2.</strong> Installing and Building</a></li><li class="chapter-item expanded "><a href="Choosing-a-Key.html"><strong aria-hidden="true">3.</strong> Choosing a Key</a></li><li class="chapter-item expanded "><a href="Checksums.html"><strong aria-hidden="true">4.</strong> Checksums</a></li><li class="chapter-item expanded "><a href="Environment-Variables.html"><strong aria-hidden="true">5.</strong> Environment Variables</a></li><li class="chapter-item expanded "><a href="Usage-Examples.html"><strong aria-hidden="true">6.</strong> Usage Examples</a></li><li class="chapter-item expanded "><a href="technical-details/index.html"><strong aria-hidden="true">7.</strong> Technical Details</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="technical-details/Encryption.html"><strong aria-hidden="true">7.1.</strong> Encryption</a></li><li class="chapter-item expanded "><a href="technical-details/Keys.html"><strong aria-hidden="true">7.2.</strong> Keys</a></li><li class="chapter-item expanded "><a href="technical-details/Password-Hashing.html"><strong aria-hidden="true">7.3.</strong> Password Hashing</a></li><li class="chapter-item expanded "><a href="technical-details/Headers.html"><strong aria-hidden="true">7.4.</strong> Headers</a></li><li class="chapter-item expanded "><a href="technical-details/Secure-Erase.html"><strong aria-hidden="true">7.5.</strong> Secure Erase</a></li><li class="chapter-item expanded "><a href="technical-details/Secret-Wrapper.html"><strong aria-hidden="true">7.6.</strong> Secret Wrapper</a></li><li class="chapter-item expanded "><a href="technical-details/Directory-Packing.html"><strong aria-hidden="true">7.7.</strong> Directory Packing</a></li><li class="chapter-item expanded "><a href="technical-details/Auditing.html"><strong aria-hidden="true">7.8.</strong> Auditing</a></li><li class="chapter-item expanded "><a href="technical-details/Performance-Notes.html"><strong aria-hidden="true">7.9.</strong> Performance Notes</a></li></ol></li><li class="chapter-item expanded "><a href="Security-Policy.html"><strong aria-hidden="true">8.</strong> Security Policy</a></li><li class="chapter-item expanded "><a href="Supporting-Dexios.html"><strong aria-hidden="true">9.</strong> Supporting Dexios</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="Introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="Installing-and-Building.html"><strong aria-hidden="true">2.</strong> Installing and Building</a></li><li class="chapter-item expanded "><a href="Choosing-a-Key.html"><strong aria-hidden="true">3.</strong> Choosing a Key</a></li><li class="chapter-item expanded "><a href="Checksums.html"><strong aria-hidden="true">4.</strong> Checksums</a></li><li class="chapter-item expanded "><a href="Environment-Variables.html"><strong aria-hidden="true">5.</strong> Environment Variables</a></li><li class="chapter-item expanded "><a href="Usage-Examples.html"><strong aria-hidden="true">6.</strong> Usage Examples</a></li><li class="chapter-item expanded "><a href="technical-details/index.html"><strong aria-hidden="true">7.</strong> Technical Details</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="technical-details/Keys.html"><strong aria-hidden="true">7.1.</strong> Keys</a></li><li class="chapter-item expanded "><a href="technical-details/Secure-Erase.html"><strong aria-hidden="true">7.2.</strong> Secure Erase</a></li><li class="chapter-item expanded "><a href="technical-details/Directory-Packing.html"><strong aria-hidden="true">7.3.</strong> Directory Packing</a></li><li class="chapter-item expanded "><a href="technical-details/Performance-Notes.html"><strong aria-hidden="true">7.4.</strong> Performance Notes</a></li></ol></li><li class="chapter-item expanded "><a href="dexios-core/index.html"><strong aria-hidden="true">8.</strong> Dexios-Core</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="dexios-core/Headers.html"><strong aria-hidden="true">8.1.</strong> Headers</a></li><li class="chapter-item expanded "><a href="dexios-core/Password-Hashing.html"><strong aria-hidden="true">8.2.</strong> Password Hashing</a></li><li class="chapter-item expanded "><a href="dexios-core/Encryption.html"><strong aria-hidden="true">8.3.</strong> Encryption</a></li><li class="chapter-item expanded "><a href="dexios-core/Protected-Wrapper.html"><strong aria-hidden="true">8.4.</strong> Protected Wrapper</a></li><li class="chapter-item expanded "><a href="dexios-core/API.html"><strong aria-hidden="true">8.5.</strong> API Documentation</a></li><li class="chapter-item expanded "><a href="dexios-core/Auditing.html"><strong aria-hidden="true">8.6.</strong> Auditing</a></li></ol></li><li class="chapter-item expanded "><a href="Security-Policy.html"><strong aria-hidden="true">9.</strong> Security Policy</a></li><li class="chapter-item expanded "><a href="Supporting-Dexios.html"><strong aria-hidden="true">10.</strong> Supporting Dexios</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -164,6 +164,7 @@
 <tr><td>FreeBSD 13</td><td>Yes</td></tr>
 <tr><td>FreeBSD 14</td><td>Yes</td></tr>
 <tr><td>Windows 11</td><td>Mostly<sup>1</sup></td></tr>
+<tr><td>Android 12</td><td>Yes</td></tr>
 </tbody></table>
 <p><sup>1</sup> The password will not be hidden in the terminal if you enter it manually. Keyfiles and environment variables still work as intended.</p>
 <h2 id="donating"><a class="header" href="#donating">Donating</a></h2>
@@ -176,6 +177,7 @@ ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD
 <p>Dexios will <strong>never</strong> collect your data. No data is sent to any server, nor are any requests.</p>
 <p>Everything is done locally on your hardware and your machine.</p>
 <p>I encourage all able users to take a peek at <a href="https://github.com/brxken128/dexios">the source code</a> and see for themselves.</p>
+<p>You may find the cryptographic functions in <a href="https://github.com/brxken128/dexios-core">dexios-core</a></p>
 <h2 id="thank-you"><a class="header" href="#thank-you">Thank you!</a></h2>
 <p>I'd like to give a huge &quot;thank you&quot; to the entire <a href="https://github.com/RustCrypto">RustCrypto Team</a> for their hard work within the Rust cryptography community. This program would not be possible without their countless hours of work and dedication.</p>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="installing"><a class="header" href="#installing">Installing</a></h2>
@@ -189,6 +191,11 @@ ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD
 <p>Please use Windows Terminal or another Terminal program, as <code>cmd</code> does not have support for the command-line icons used by Dexios.</p>
 <p>You may also use <code>cargo</code> for installing, just run the command:</p>
 <p><code>cargo install dexios</code></p>
+<h3 id="android"><a class="header" href="#android">Android</a></h3>
+<p>Dexios can be installed on Android devices, via <a href="https://termux.com/">Termux</a>. All features have been confirmed to work, but if you find any, please <a href="https://github.com/brxken128/dexios/issues">open a Github issue</a>.</p>
+<p>Dexios was tested on Android 12, with Termux v0.118.0, but it should work on a wide range of devices.</p>
+<p>To install, ensure you have <code>cargo</code> installed. You may install Dexios with the command:</p>
+<p><code>AR=llvm-ar cargo install dexios</code></p>
 <h2 id="building-notes"><a class="header" href="#building-notes">Building Notes</a></h2>
 <p><code>gcc</code> is required for building on Linux and FreeBSD.</p>
 <p>Manually setting <code>RUSTFLAGS</code> is no longer required, as the AEAD crates we use from the <a href="https://github.com/RustCrypto">RustCrypto Team</a> automatically detect, and take advantage of hardware cryptography primitives.</p>
@@ -210,8 +217,9 @@ ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD
 <p>The priority above is thrown out of the window if <code>-p</code> is specified, as this will prompt you for a password (even if the environment variable is set).</p>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="checksums"><a class="header" href="#checksums">Checksums</a></h2>
 <p>Hashing mode uses <code>BLAKE3</code> for verification, due to it's speed, security and regular updates. (very ideal for this use case).</p>
-<p>Checksums are not used by Dexios for anything security related, they are for your peace of mind.</p>
+<p>Checksums are not used by Dexios for anything security related - they are for your peace of mind.</p>
 <p>We hash the <strong>encrypted</strong> file (after encryption and before/during decryption). This is to ensure that your file wasn't tampered with between encrypting it and decrypting it. If the hash isn't the same then something <em>very</em> bad has happened.</p>
+<p>Since v8.5.0, checksums are calculated <em>after</em> the main process has been executed. This allows for us to keep our encryption/decryption functions cleaner, and less cluttered, which can help us maintain the core functionality. It would be hard to keep on-top of these critical functions otherwise.</p>
 <p>This was originally <code>sha3-512</code> in versions 3.x.x and below, and was <code>KangarooTwelve</code> in 4.x.x (via the <code>tiny_keccak</code> crate) but since v5 it has been changed to <code>BLAKE3</code> for a number of reasons. We have no plans to change <code>BLAKE3</code> at this moment in time - it's fast, secure, and does the job very well.</p>
 <h2 id="standalone-hashing-mode"><a class="header" href="#standalone-hashing-mode">Standalone Hashing Mode</a></h2>
 <p>You can use this by running <code>dexios hash test.enc</code>. It can also be ran on any file you'd like - encrypted or not.</p>
@@ -302,45 +310,57 @@ Remove `-maxdepth 1` to make this run recursively
 </details><div style="break-before: page; page-break-before: always;"></div><h1 id="technical-details"><a class="header" href="#technical-details">Technical Details</a></h1>
 <p>Here you will find all relevant technical details for Dexios.</p>
 <p>This page will be updated whenever changes are made and released - if anything looks out of date, please open a <a href="https://github.com/brxken128/dexios/issues">Github Issue</a>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="encryption"><a class="header" href="#encryption">Encryption</a></h2>
-<p>Encryption is done by default with <code>XChaCha20-Poly1305</code>, but Dexios also has options for <code>AES-256-GCM</code> and <code>Deoxys-II-256</code>. Encryption uses the key derived from <code>argon2id</code>.</p>
-<h3 id="stream-mode"><a class="header" href="#stream-mode">Stream Mode</a></h3>
-<p>The XChaCha20-Poly1305 nonce is 20 bytes long, and the AES-256-GCM nonce is 8 bytes long when stored. The stream encryptor dynamically changes the nonce, based on a 31-bit little endian counter and a 1-bit &quot;last block&quot; flag. Those last 32 bits (4 bytes) are appended to the end of the nonce - making the total nonce length 24/12 bytes respectively. This is done by the stream encryptor to ensure that identical data will not be encrypted with the same nonce.</p>
-<p>On encryption, the <a href="technical-details/Headers.html">header</a> is serialised and written to the start of the file. Then, Dexios reads the source file in 1MB blocks (1048576 bytes), and encrypts them using an LE31 stream encryptor. Each &quot;block&quot; is read, encrypted, written, and then hashed with BLAKE3 (if the option is selected). The salt and the nonce are always the same size, so we can avoid having to serialise/deserialise the data. This had a lot of <a href="https://github.com/brxken128/dexios/wiki/Checksums#performance">performance benefits</a>.</p>
-<p>For decryption, the <a href="technical-details/Headers.html">header</a> is is read and deserialised. Next, Dexios reads the remaining part of the encrypted file in 1MB blocks + 16 bytes, to account for the AEAD tag. Each &quot;block&quot; is read, decrypted, written, and then hashed with BLAKE3 (if the option is selected).</p>
-<h3 id="stream-mode---edge-cases"><a class="header" href="#stream-mode---edge-cases">Stream mode - Edge Cases</a></h3>
-<p>Edge cases regardigng <em>very specific</em> block sizes have been checked and confirmed to be working.</p>
-<p>The major concern was when a file contains bytes exactly divisible by <code>1048576</code>, but this is not an issue.</p>
-<p>To test this, I created a file with exactly <code>3145728</code> bytes (3x streaming blocks). I then instructed Dexios to show me the <code>read_count</code> when encrypting, and it read the file 4 times - 3 times for each of the 3 blocks, and one containing 0 bytes. The 0 bytes were encrypted using the <code>encrypt_last</code> function, adding 16 bytes to the end of the file.</p>
-<p>The total encrypted file size was <code>3145856</code> bytes - let's break it down.</p>
-<ul>
-<li>64 bytes are for the Dexios header</li>
-<li>(16*3) are for the AEAD tag, 16 bytes per block</li>
-</ul>
-<p>This brought our file size down to <code>3145744</code> bytes, which is a difference of 16 bytes compared to our source file. This confirms that the source data is encrypted completely, even in rather specific edge cases.</p>
-<p>Using <code>dexios hash</code>, we can confirm that the file hashes are exactly the same before encryption, and after decryption.</p>
-<h3 id="memory-mode"><a class="header" href="#memory-mode">Memory Mode</a></h3>
-<p>In memory mode, the nonce is static and 24/12 bytes (XChaCha20-Poly1305/AES-256-GCM) long, as the data is encrypted all in one pass.</p>
-<p>On encryption, the data is read from the source file and placed into a <code>Vec&lt;u8&gt;</code> before being encrypted. The <a href="technical-details/Headers.html">header</a> is written, and then the encrypted data is written to the file - in that order. If hashing mode is selected, the header and encrypted data will be hashed and the BLAKE3 hash will be printed.</p>
-<p>On decryption, the 16 byte salt (used for <a href="technical-details/Password-Hashing.html">hashing</a>) and the 24/12 byte nonce are read - in that order. Dexios reads the remainder of the file into a <code>Vec&lt;u8&gt;</code>, before decrypting it and writing the plaintext bytes to the output file. If hashing mode is selected, the salt, nonce and data will be hashed with BLAKE3 before it is decrypted and written - giving the user a prompt to continue with decryption (provided the hash matches).</p>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="obtaining-the-key"><a class="header" href="#obtaining-the-key">Obtaining the Key</a></h2>
-<p>All keys are wrapped in a <code>Secret&lt;&gt;</code>. This ensures that data does not leak, is not copied and is zeroed on drop. It only stays in memory for as long as it needs to.</p>
+<p>All keys are wrapped in <code>Protected&lt;&gt;</code>. This ensures that data does not leak, is not copied and is zeroed on drop. It only stays in memory for as long as it needs to.</p>
 <p>The key is checked, once, to ensure that it is not empty.</p>
-<p>Once the length has been validated, keys are then safely transported to the <code>argon2id</code> function. See <a href="technical-details/Password-Hashing.html">Password Hashing</a> for more information.</p>
+<p>Once the length has been validated, keys are then safely transported to the <code>argon2id</code> function. See <a href="technical-details/../dexios-core/Password-Hashing.html">Password Hashing</a> for more information.</p>
 <h3 id="reading-from-the-terminal"><a class="header" href="#reading-from-the-terminal">Reading from the Terminal</a></h3>
 <p>While reading from the terminal, the passwords are stored as <code>String</code>s. We use <code>termion</code> to handle password entry, this way your input is hidden.</p>
 <p>On encryption, where you need to enter the password twice, they are compared. The <code>String</code> used for validation is safely zeroed out, and the original is consumed into a <code>Vec&lt;u8&gt;</code>.</p>
 <p>On decryption, the password is only entered once, and it is consumed into a <code>Vec&lt;u8&gt;</code>.</p>
-<p>The <code>Vec&lt;u8&gt;</code> containing the key is wrapped into a <code>Secret&lt;Vec&gt;</code>, which takes ownership of the value.</p>
+<p>The <code>Vec&lt;u8&gt;</code> containing the key is wrapped into a <code>Protected&lt;Vec&gt;</code>, which takes ownership of the value.</p>
 <h3 id="reading-from-a-keyfile"><a class="header" href="#reading-from-a-keyfile">Reading from a Keyfile</a></h3>
-<p>The keyfile is opened, and it's contents are read into a <code>Vec&lt;u8&gt;</code>. The <code>Vec&lt;u8&gt;</code> is then wrapped into a <code>Secret&lt;Vec&gt;</code>, which takes ownership of the value.</p>
+<p>The keyfile is opened, and it's contents are read into a <code>Vec&lt;u8&gt;</code>. The <code>Vec&lt;u8&gt;</code> is then wrapped into a <code>Protected&lt;Vec&gt;</code>, which takes ownership of the value.</p>
 <h3 id="reading-from-environment-variables"><a class="header" href="#reading-from-environment-variables">Reading from Environment Variables</a></h3>
-<p>The <code>DEXIOS_KEY</code> environment variable is checked (to see if it exists) - if so, the contents are read into a <code>String</code>. It is then consumed into a <code>Vec&lt;u8&gt;</code>, which finally gets wrapped into a <code>Secret&lt;Vec&gt;</code>. This may seem cumbersome, but there are no copies or clones of the data, meaning it is safe.</p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="password-hashing"><a class="header" href="#password-hashing">Password Hashing</a></h2>
-<p>Password hashing is done with <code>argon2id</code>. It uses a 16-byte salt to derive the encryption key. Once a key has been hashed, it is dropped and zeroed out via the <code>zeroize</code> crate to ensure it stays in memory no longer than required.</p>
-<h3 id="handling-the-hash"><a class="header" href="#handling-the-hash">Handling the Hash</a></h3>
-<p>The hash is wrapped in a <code>Secret&lt;&gt;</code>, which means it can only be exposed when called for in the program. It is only ever exposed to the cryptographic ciphers, and it is dropped right after. We use a custom <code>Secret&lt;&gt;</code> wrapper which implements zeroize-on-drop, to ensure that all sensitive information is removed from memory once it is no longer required.</p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="headers"><a class="header" href="#headers">Headers</a></h2>
+<p>The <code>DEXIOS_KEY</code> environment variable is checked (to see if it exists) - if so, the contents are read into a <code>String</code>. It is then consumed into a <code>Vec&lt;u8&gt;</code>, which finally gets wrapped into a <code>Protected&lt;Vec&gt;</code>. This may seem cumbersome, but there are no copies or clones of the data, meaning it is safe.</p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="secure-erase"><a class="header" href="#secure-erase">Secure Erase</a></h2>
+<p>Due to the nature of SSDs and their controllers (wear levelling and such), it's almost impossible to fully erase a file - we can try our best though. It's not recommended to use the erase function on a large file (1gb+) on flash storage, as it will wear the drive down unneccessarily.</p>
+<p>First we generate enough random bytes to fill the file, seeded by the system. Those random bytes are then written over the file, covering all of the previous data. This is repeated twice (more if specified) to ensure the data is thoroughly gone. This may panic due to a lack of entropy - there's not much we can do in this case.</p>
+<p>Once the random bytes have been overwritten, we then overwrite all of the data one final time with just zeroes, before truncating the file length to 0. Afterwards, we remove the file using the system's methods (<code>unlink</code> on Unix and <code>DeleteFile</code> on Windows).</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="this-feature-has-been-deprecated-since-version-840"><a class="header" href="#this-feature-has-been-deprecated-since-version-840"><strong>This feature has been deprecated since Version 8.4.0</strong></a></h1>
+<h2 id="deprecated-notice"><a class="header" href="#deprecated-notice">Deprecated Notice</a></h2>
+<p>We have decided to remove this functionality entirely from Dexios. We did this for a few reasons:</p>
+<ul>
+<li>Pack modes cluttered up the codebase quite heavily</li>
+<li>Pack modes gave Dexios a larger attack-surface, with vulnerabilities such as <a href="https://snyk.io/research/zip-slip-vulnerability">zip slipping</a></li>
+</ul>
+<p>It didn't feel right to leave in packing mode, but remove unpacking, so both have been deprecated. As &quot;packing&quot; zipped the files, you may still access your data. Just run <code>dexios decrypt file.enc file.zip</code> and open it as you would with any other zip file.</p>
+<h2 id="directory-packing"><a class="header" href="#directory-packing">Directory &quot;Packing&quot;</a></h2>
+<p>After using the pack feature to create an archive, it is just a zip file. You may decrypt this as normal and open it for yourself, if you so wish.</p>
+<p>Folders encrypted with this mode have all of their information hidden. There is no way for anyone to deduce how large each file was, or their names/contents, once it has been encrypted.</p>
+<p>This mode does not preserve metadata, file attributes or permissions (yet).</p>
+<h3 id="creating-an-archive"><a class="header" href="#creating-an-archive">Creating an Archive</a></h3>
+<p>First, the files and directory structure are both indexed. While indexing, if any files/directories match the glob pattern, they will be ignored.</p>
+<p>The zip file is then initialised with a random 8 character alphanumeric extension, this is to prevent possible endless-loops (the buffer kept getting filled with the data that was just written).</p>
+<p>The directory structure is recreated within the zip file (if in recursive mode, this will include other directories and not just the source one), and all of the files are added.</p>
+<p>Stream reading is implemented if the file is larger than 1MB - if not then the file is just read into memory.</p>
+<p>Once the zip file has been created, it is <a href="technical-details/../dexios-core/Encryption.html">encrypted</a>. If the zip file is larger than 1mb, stream encryption will be used (unless specified manually).</p>
+<p>We then erase the temporary zip file, using 8 passes of the <a href="technical-details/Secure-Erase.html">secure erase</a> feature.</p>
+<h3 id="unpacking-an-archive"><a class="header" href="#unpacking-an-archive">Unpacking an Archive</a></h3>
+<p>First, the zip file is decrypted as a temporary file with a random 8 character alphanumeric extension. This will use memory mode if it's less than 1MB, or if specified - otherwise stream mode will be used.</p>
+<p>We then open the temporary zip file for reading, recreate the directory structure within the output directory, and extract each file to the correct path within the output directory.</p>
+<p>Once all of the files have been successfully extracted, we securely erase the temporary zip file. This again uses 8 passes of the <a href="technical-details/Secure-Erase.html">secure erase</a> feature.</p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="performance-notes"><a class="header" href="#performance-notes">Performance Notes</a></h2>
+<p>Please note that performance is heavily dependent on your hardware - mostly disk speed. Dexios has had a <em>lot</em> of performance optimisations applied throughout the versions, but we're getting to the point where the main factor is disk speed.</p>
+<p>To see this for yourself, run one command without the <code>-b</code> switch, and the very same command with the <code>-b</code> switch.</p>
+<p>Using <code>Deoxys-II-256</code> will result in degraded performance, please view the <a href="technical-details/../Introduction.html#security-notices">Security Notices</a> for relevant information.</p>
+<p>We will continue to optimise Dexios where possible.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="dexios-core"><a class="header" href="#dexios-core">Dexios-Core</a></h1>
+<p>This chapter contains all of the information regarding <code>dexios-core</code>, the core library that Dexios uses.</p>
+<p>This core library was created in order to separate the cryptographic functions away from the end-user application. Not only does this make Dexios more maintainable, but it means that the core functionality can be used in many other projects as well. It also means that the core library can expand and offer different functionality that we don't feel is a good fit for Dexios itself.</p>
+<p>The core library handles password hashing, encryption/decryption, and management of Dexios headers. Dexios-Core also holds the <code>Protected</code> value wrapper.</p>
+<p>You may find the <code>dexios-core</code> repo <a href="https://github.com/brxken128/dexios-core">on Github</a></p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="headers---managed-by-dexios-core"><a class="header" href="#headers---managed-by-dexios-core">Headers - Managed by <code>dexios-core</code></a></h2>
 <h3 id="structure"><a class="header" href="#structure">Structure</a></h3>
 <p>The full header is 64 bytes - it contains relevant information about the encrypted data.</p>
 <p>V1 Headers (v8.0.0 - v8.2.0):</p>
@@ -394,65 +414,62 @@ Remove `-maxdepth 1` to make this run recursively
 <p>Headers are restored by reading the first 64 bytes of the provided input file, and writing them to the first 64 bytes of the output file.</p>
 <h3 id="signing-v830---yanked-feature"><a class="header" href="#signing-v830---yanked-feature">Signing (v8.3.0 - yanked feature)</a></h3>
 <p>Headers are signed using your hashed encryption key.</p>
-<p>On encryption, the headers are signed when the ciphers/stream ciphers are initialised, this way we only have to hash your key once. The key is never cloned within memory, and it is zeroed out (using <code>zeroize</code> and our <a href="technical-details/Secret-Wrapper.html">secret wrapper</a>) once the header has been signed.</p>
+<p>On encryption, the headers are signed when the ciphers/stream ciphers are initialised, this way we only have to hash your key once. The key is never cloned within memory, and it is zeroed out (using <code>zeroize</code> and our <a href="dexios-core/Protected-Wrapper.html">protected wrapper</a>) once the header has been signed.</p>
 <p>The signature is generated from the first 48 bytes of the header - this is where all of the important information is enclosed.</p>
 <h3 id="verifying-v830---yanked-feature"><a class="header" href="#verifying-v830---yanked-feature">Verifying (v8.3.0 - yanked feature)</a></h3>
 <p>On decryption, the headers are verified when the ciphers/stream ciphers are initialised. Once again, the key is zeroed out once the header has been verified.</p>
 <p>If a single byte of the header changes, decryption will not continue as the signature will not match. This is to prevent a malicious actor from tampering with the header. </p>
 <p><strong>If the signature doesn't match, but you're positive your key is correct, it is best to assume the header was tampered with.</strong></p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="secure-erase"><a class="header" href="#secure-erase">Secure Erase</a></h2>
-<p>Due to the nature of SSDs and their controllers (wear levelling and such), it's almost impossible to fully erase a file - we can try our best though. It's not recommended to use the erase function on a large file (1gb+) on flash storage, as it will wear the drive down unneccessarily.</p>
-<p>First we generate enough random bytes to fill the file, seeded by the system. Those random bytes are then written over the file, covering all of the previous data. This is repeated twice (more if specified) to ensure the data is thoroughly gone. This may panic due to a lack of entropy - there's not much we can do in this case.</p>
-<p>Once the random bytes have been overwritten, we then overwrite all of the data one final time with just zeroes, before truncating the file length to 0. Afterwards, we remove the file using the system's methods (<code>unlink</code> on Unix and <code>DeleteFile</code> on Windows).</p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="secret-wrapper"><a class="header" href="#secret-wrapper">Secret Wrapper</a></h2>
-<p>We have implemented our own <code>Secret&lt;&gt;</code> wrapper/type, that implements zeroize-on-drop. This ensures all sensitive information is securely zeroed-out once it is no longer required, and that the sensitive informatiton is only accessed when explicit calls are made. Our implementation was inspired by the <code>secrecy</code> crate's functionality, so I'd like to provide a huge thanks to the original creators.</p>
-<p>Secrets do not implement any copying/cloning, and there are none done manually within the codebase. This is to prevent possible leaks of data.</p>
-<p>Secrets are also redcated from debug logs and such, and they will show &quot;[REDACTED]&quot; whenever they are printed. They do not implement <code>fmt::display</code>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="this-feature-has-been-deprecated-since-version-840"><a class="header" href="#this-feature-has-been-deprecated-since-version-840"><strong>This feature has been deprecated since Version 8.4.0</strong></a></h1>
-<h2 id="deprecated-notice"><a class="header" href="#deprecated-notice">Deprecated Notice</a></h2>
-<p>We have decided to remove this functionality entirely from Dexios. We did this for a few reasons:</p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="password-hashing---managed-by-dexios-core"><a class="header" href="#password-hashing---managed-by-dexios-core">Password Hashing - Managed by <code>dexios-core</code></a></h2>
+<p>Password hashing is done with <code>argon2id</code>. It uses a 16-byte salt to derive the encryption key. Once a key has been hashed, it is dropped and zeroed out via the <code>zeroize</code> crate to ensure it stays in memory no longer than required.</p>
+<h3 id="handling-the-hash"><a class="header" href="#handling-the-hash">Handling the Hash</a></h3>
+<p>The hash is wrapped in <code>Protected&lt;&gt;</code>, which means it can only be exposed when called for in the program. It is only ever exposed to the cryptographic ciphers, and it is dropped right after. We use a custom <code>Protected&lt;&gt;</code> wrapper which implements zeroize-on-drop, to ensure that all sensitive information is removed from memory once it is no longer required.</p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="encryption---managed-by-dexios-core"><a class="header" href="#encryption---managed-by-dexios-core">Encryption - Managed by <code>dexios-core</code></a></h2>
+<p>Encryption is done by default with <code>XChaCha20-Poly1305</code>, but Dexios also has options for <code>AES-256-GCM</code> and <code>Deoxys-II-256</code>. Encryption uses the key derived from <code>argon2id</code>.</p>
+<p>Stream Mode should be the default - it works on all files, even those less than the 1MiB <code>BLOCK_SIZE</code>.</p>
+<h3 id="stream-mode"><a class="header" href="#stream-mode">Stream Mode</a></h3>
+<p>The XChaCha20-Poly1305 nonce is 20 bytes long, and the AES-256-GCM nonce is 8 bytes long when stored. The stream encryptor dynamically changes the nonce, based on a 31-bit little endian counter and a 1-bit &quot;last block&quot; flag. Those last 32 bits (4 bytes) are appended to the end of the nonce - making the total nonce length 24/12 bytes respectively. This is done by the stream encryptor to ensure that identical data will not be encrypted with the same nonce.</p>
+<p>On encryption, the <a href="dexios-core/Headers.html">header</a> is serialised and written to the start of the file. Then, Dexios reads the source file in 1MiB blocks (1048576 bytes), and encrypts them using an LE31 stream encryptor. Each &quot;block&quot; is read, encrypted, written. The salt and the nonce are always the same size, so we can avoid having to serialise/deserialise the data. This had a lot of <a href="dexios-core/../Checksums.html#performance">performance benefits</a>.</p>
+<p>For decryption, the <a href="dexios-core/Headers.html">header</a> is is read and deserialised. Next, Dexios reads the remaining part of the encrypted file in 1MiB blocks + 16 bytes, to account for the AEAD tag. Each &quot;block&quot; is read, decrypted, and then written.</p>
+<h3 id="stream-mode---edge-cases"><a class="header" href="#stream-mode---edge-cases">Stream mode - Edge Cases</a></h3>
+<p>Edge cases regardigng <em>very specific</em> block sizes have been checked and confirmed to be working.</p>
+<p>The major concern was when a file contains bytes exactly divisible by <code>1048576</code>, but this is not an issue.</p>
+<p>To test this, I created a file with exactly <code>3145728</code> bytes (3x streaming blocks). I then instructed Dexios to show me the <code>read_count</code> when encrypting, and it read the file 4 times - 3 times for each of the 3 blocks, and one containing 0 bytes. The 0 bytes were encrypted using the <code>encrypt_last</code> function, adding 16 bytes to the end of the file.</p>
+<p>The total encrypted file size was <code>3145856</code> bytes - let's break it down.</p>
 <ul>
-<li>Pack modes cluttered up the codebase quite heavily</li>
-<li>Pack modes gave Dexios a larger attack-surface, with vulnerabilities such as <a href="https://snyk.io/research/zip-slip-vulnerability">zip slipping</a></li>
+<li>64 bytes are for the Dexios header</li>
+<li>(16*3) are for the AEAD tag, 16 bytes per block</li>
 </ul>
-<p>It didn't feel right to leave in packing mode, but remove unpacking, so both have been deprecated. As &quot;packing&quot; zipped the files, you may still access your data. Just run <code>dexios decrypt file.enc file.zip</code> and open it as you would with any other zip file.</p>
-<h2 id="directory-packing"><a class="header" href="#directory-packing">Directory &quot;Packing&quot;</a></h2>
-<p>After using the pack feature to create an archive, it is just a zip file. You may decrypt this as normal and open it for yourself, if you so wish.</p>
-<p>Folders encrypted with this mode have all of their information hidden. There is no way for anyone to deduce how large each file was, or their names/contents, once it has been encrypted.</p>
-<p>This mode does not preserve metadata, file attributes or permissions (yet).</p>
-<h3 id="creating-an-archive"><a class="header" href="#creating-an-archive">Creating an Archive</a></h3>
-<p>First, the files and directory structure are both indexed. While indexing, if any files/directories match the glob pattern, they will be ignored.</p>
-<p>The zip file is then initialised with a random 8 character alphanumeric extension, this is to prevent possible endless-loops (the buffer kept getting filled with the data that was just written).</p>
-<p>The directory structure is recreated within the zip file (if in recursive mode, this will include other directories and not just the source one), and all of the files are added.</p>
-<p>Stream reading is implemented if the file is larger than 1MB - if not then the file is just read into memory.</p>
-<p>Once the zip file has been created, it is <a href="technical-details/Encryption.html">encrypted</a>. If the zip file is larger than 1mb, stream encryption will be used (unless specified manually).</p>
-<p>We then erase the temporary zip file, using 8 passes of the <a href="technical-details/Secure-Erase.html">secure erase</a> feature.</p>
-<h3 id="unpacking-an-archive"><a class="header" href="#unpacking-an-archive">Unpacking an Archive</a></h3>
-<p>First, the zip file is decrypted as a temporary file with a random 8 character alphanumeric extension. This will use memory mode if it's less than 1MB, or if specified - otherwise stream mode will be used.</p>
-<p>We then open the temporary zip file for reading, recreate the directory structure within the output directory, and extract each file to the correct path within the output directory.</p>
-<p>Once all of the files have been successfully extracted, we securely erase the temporary zip file. This again uses 8 passes of the <a href="technical-details/Secure-Erase.html">secure erase</a> feature.</p>
+<p>This brought our file size down to <code>3145744</code> bytes, which is a difference of 16 bytes compared to our source file. This confirms that the source data is encrypted completely, even in rather specific edge cases.</p>
+<p>Using <code>dexios hash</code>, we can confirm that the file hashes are exactly the same before encryption, and after decryption.</p>
+<h3 id="memory-mode"><a class="header" href="#memory-mode">Memory Mode</a></h3>
+<p>Memory mode should only be used in <em>very</em> specific cases. Streaming mode works on files less than the <code>BLOCK_SIZE</code> (1MiB) and should be favoured.</p>
+<p>In memory mode, the nonce is static and 24/12 bytes (XChaCha20-Poly1305/AES-256-GCM) long, as the data is encrypted all in one pass.</p>
+<p>On encryption, the data is read from the source file and placed into a <code>Vec&lt;u8&gt;</code> before being encrypted. The <a href="dexios-core/Headers.html">header</a> is written, and then the encrypted data is written to the file - in that order.</p>
+<p>On decryption, the 16 byte salt (used for <a href="dexios-core/Password-Hashing.html">hashing</a>) and the 24/12 byte nonce are read - in that order. Dexios reads the remainder of the file into a <code>Vec&lt;u8&gt;</code>, before decrypting it and writing the plaintext bytes to the output file.</p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="protected-wrapper"><a class="header" href="#protected-wrapper">Protected Wrapper</a></h2>
+<p>We have implemented our own <code>Protected&lt;&gt;</code> wrapper/type, that implements zeroize-on-drop. This ensures all sensitive information is securely zeroed-out once it is no longer required, and that the sensitive informatiton is only accessed when explicit calls are made. Our implementation was inspired by the <code>secrecy</code> crate's functionality, so I'd like to provide a huge thanks to the original creators.</p>
+<p>Protected values do not implement any copying/cloning, and there are none done manually within the codebase. This is to prevent possible leaks of data.</p>
+<p>The only way to access the information held within this type, is to call <code>.expose()</code> - this makes things very manageable. With this, we are able to quickly and easily see wherever protected information is accessed. Not only does this allow us to detect potentially malicious pull requests and such, but it also makes <a href="dexios-core/Auditing.html">auditing</a> a lot easier.</p>
+<p>Protected values are also redcated from debug logs and such, and they will show &quot;[REDACTED]&quot; whenever they are printed. They do not implement <code>fmt::display</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div><p>You may find all of the information about how to use <code>dexios-core</code> on the <a href="https://docs.rs/dexios-core">docs.rs page</a>.</p>
+<p>This documentation covers just about everything that can be done, and is a great starting point to implementing Dexios within your own program!</p>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="auditing"><a class="header" href="#auditing">Auditing</a></h2>
 <h3 id="official-audit"><a class="header" href="#official-audit">Official Audit</a></h3>
-<p>We currently have no plans to purchase an official audit from a company such as Cure53, as we just do not have the money. They're expensive, and they're only &quot;valid&quot; for a snapshot of your code, so it's probably not worth it for us.</p>
+<p>We currently have no plans to purchase an official audit from a company, as we just do not have the money. They're expensive, and they're only &quot;valid&quot; for a snapshot of your code, so it's probably not worth it for us.</p>
 <p>We do use audited encryption libraries, so we're probably covered on that front. Rust doesn't allow for most issues thanks to it's compiler and lints, and with a bit of thought, we can prevent incorrect usage of these libraries.</p>
 <h3 id="auditing-yourself"><a class="header" href="#auditing-yourself">Auditing Yourself</a></h3>
 <p>If anyone would like to take a dive into the code, and ensure that cryptography-related functions are written correctly, you may find items of interest within these directories:</p>
 <ul>
-<li><code>src/encrypt/crypto.rs</code> - this handles stream and memory encryption</li>
-<li><code>src/decrypt/crypto.rs</code> - this handles stream and memory decryption</li>
-<li><code>src/key.rs</code> - this handles reading the key from certain inputs, and the hashing of said keys</li>
-<li><code>src/streams.rs</code> - this initialises our STREAMs, for both encrypt and decrypt modes</li>
+<li><code>src/stream.rs</code> - this handles STREAM initialisation, encryption and decryption</li>
+<li><code>src/cipher.rs</code> - this handles &quot;memory&quot; initialisation, encryption and decryption</li>
+<li><code>src/key.rs</code> - this handles salt generation and <code>argon2id</code> hashing</li>
+<li><code>src/primitives.rs</code> - these are the constants used, and it contains a function for generating the nonce</li>
 <li><code>src/header.rs</code> - this contains functions for serialising/deserialising/getting the AAD of headers</li>
-<li><code>src/secret.rs</code> - this contains our <code>Secret&lt;&gt;</code> wrapper that implements zeroize-on-drop, to erase secrets from memory once they're no longer in use</li>
-<li><code>src/global/global.rs</code> - this just matches the enum type, and runs the appropriate AEAD functions</li>
+<li><code>src/protected.rs</code> - this contains our <code>Protected&lt;&gt;</code> wrapper that implements zeroize-on-drop, to erase secrets from memory once they're no longer in use</li>
 </ul>
-<p>I'd highly recommend taking a peek into <code>key.rs</code>, <code>streams.rs</code>, and both <code>crypto.rs</code> files.</p>
+<p>I'd highly recommend taking a peek into <code>key.rs</code>, <code>stream.rs</code>, and <code>cipher.rs</code> - these are the main cryptographic files.</p>
 <p>If you happen to find anything problematic, please <a href="https://github.com/brxken128/dexios/issues">open a Github issue</a> or email <code>brxken128@tutanota.com</code>. This may be done anonymously.</p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="performance-notes"><a class="header" href="#performance-notes">Performance Notes</a></h2>
-<p>Please note that performance is heavily dependent on your hardware - mostly disk speed. Dexios has had a <em>lot</em> of performance optimisations applied throughout the versions, but we're getting to the point where the main factor is disk speed.</p>
-<p>To see this for yourself, run one command without the <code>-b</code> switch, and the very same command with the <code>-b</code> switch.</p>
-<p>Using <code>Deoxys-II-256</code> will result in degraded performance, please view the <a href="technical-details/../Introduction.html#security-notices">Security Notices</a> for relevant information.</p>
-<p>We will continue to optimise Dexios where possible.</p>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="reporting-a-vulnerability"><a class="header" href="#reporting-a-vulnerability">Reporting a Vulnerability</a></h2>
 <p>Please report any vulnerabilities as a Github issue - we believe all issues should be known, and they are likely to get resolved very quickly this way. Thank you.</p>
 <p>As an alternative, you may contact <code>brxken128@tutanota.com</code></p>

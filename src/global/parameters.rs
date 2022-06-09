@@ -1,15 +1,14 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::enums::{
-    Algorithm, BenchMode, EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
-};
+use crate::global::states::{EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode};
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
 use clap::ArgMatches;
+use dexios_core::primitives::Algorithm;
 use paris::warn;
 
-use super::ALGORITHMS;
+use dexios_core::primitives::ALGORITHMS;
 
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches
@@ -58,14 +57,6 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         EraseMode::IgnoreFile(0)
     };
 
-    let bench = if sub_matches.is_present("bench") {
-        //specify to not write to filesystem, for benchmarking and saving wear on hardware
-        BenchMode::BenchmarkInMemory
-    } else {
-        // default
-        BenchMode::WriteToFilesystem
-    };
-
     let password = if sub_matches.is_present("password") {
         //Overwrite, so the user provided password is used and ignore environment supplied one?!
         PasswordMode::ForceUserProvidedPassword
@@ -77,7 +68,6 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
     Ok(CryptoParams {
         hash_mode,
         skip,
-        bench,
         password,
         erase,
         keyfile,

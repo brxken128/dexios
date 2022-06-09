@@ -1,99 +1,21 @@
-use std::io::stdin;
-use std::io::stdout;
-use std::io::Write;
-use std::time::Instant;
+use std::io::{stdin, stdout, Write};
 
-use crate::file::get_bytes;
-use crate::global::enums::HeaderVersion;
-use crate::global::enums::KeyFile;
-use crate::global::enums::PasswordMode;
-use crate::global::SALT_LEN;
-use crate::secret::Secret;
 use anyhow::{Context, Result};
-use argon2::Argon2;
-use argon2::Params;
-use paris::info;
-use paris::success;
-use paris::warn;
-use rand::prelude::StdRng;
-use rand::RngCore;
-use rand::SeedableRng;
-use std::result::Result::Ok;
-use zeroize::Zeroize;
+use dexios_core::protected::Protected;
+use dexios_core::Zeroize;
+use paris::{info, warn};
 
-#[cfg(target_family = "unix")]
-use termion::input::TermRead;
-
-#[cfg(target_family = "windows")]
-use std::io::BufRead;
-
-// this generates a salt for password hashing
-pub fn gen_salt() -> [u8; SALT_LEN] {
-    let mut salt: [u8; SALT_LEN] = [0; SALT_LEN];
-    StdRng::from_entropy().fill_bytes(&mut salt);
-    salt
-}
-
-// this handles argon2 hashing with the provided key
-// it returns the key hashed with a specified salt
-// it also ensures that raw_key is zeroed out
-pub fn argon2_hash(
-    raw_key: Secret<Vec<u8>>,
-    salt: &[u8; SALT_LEN],
-    version: &HeaderVersion,
-) -> Result<Secret<[u8; 32]>> {
-    let mut key = [0u8; 32];
-
-    let params = match version {
-        HeaderVersion::V1 => {
-            // 8MiB of memory, 8 iterations, 4 levels of parallelism
-            let params = Params::new(8192, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN));
-            match params {
-                std::result::Result::Ok(parameters) => parameters,
-                Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
-            }
-        }
-        HeaderVersion::V2 => {
-            // 256MiB of memory, 8 iterations, 4 levels of parallelism
-            let params = Params::new(262_144, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN));
-            match params {
-                std::result::Result::Ok(parameters) => parameters,
-                Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
-            }
-        }
-        HeaderVersion::V3 => {
-            // 256MiB of memory, 10 iterations, 4 levels of parallelism
-            let params = Params::new(262_144, 10, 4, Some(Params::DEFAULT_OUTPUT_LEN));
-            match params {
-                std::result::Result::Ok(parameters) => parameters,
-                Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
-            }
-        }
-    };
-
-    let hash_start_time = Instant::now();
-    let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
-    let result = argon2.hash_password_into(raw_key.expose(), salt, &mut key);
-    drop(raw_key);
-    let hash_duration = hash_start_time.elapsed();
-    success!(
-        "Successfully hashed your key [took {:.2}s]",
-        hash_duration.as_secs_f32()
-    );
-
-    if result.is_err() {
-        return Err(anyhow::anyhow!(
-            "Error while hashing your key with argon2id"
-        ));
-    }
-
-    Ok(Secret::new(key))
-}
+use crate::{
+    file::get_bytes,
+    global::states::{KeyFile, PasswordMode},
+};
 
 // this function interacts with stdin and stdout to hide password input
 // it uses termion's `read_passwd` function for terminal manipulation
 #[cfg(target_family = "unix")]
 fn read_password_from_stdin_unix(prompt: &str) -> Result<String> {
+    use termion::input::TermRead;
+
     let stdout = stdout();
     let mut stdout = stdout.lock();
     let stdin = stdin();
@@ -119,6 +41,7 @@ fn read_password_from_stdin_unix(prompt: &str) -> Result<String> {
 
 #[cfg(target_family = "windows")]
 fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
+    use std::io::BufRead;
     let mut stdout = stdout();
     let stdin = stdin();
 
@@ -138,7 +61,7 @@ fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
 
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes
-fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
+fn get_password(validation: bool) -> Result<Protected<Vec<u8>>> {
     Ok(loop {
         #[cfg(target_family = "unix")]
         let input =
@@ -147,7 +70,7 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
         let input =
             read_password_from_stdin_windows("Password: ").context("Unable to read password")?;
         if !validation {
-            return Ok(Secret::new(input.into_bytes()));
+            return Ok(Protected::new(input.into_bytes()));
         }
 
         #[cfg(target_family = "unix")]
@@ -159,7 +82,7 @@ fn get_password(validation: bool) -> Result<Secret<Vec<u8>>> {
 
         if input == input_validation && !input.is_empty() {
             input_validation.zeroize();
-            break Secret::new(input.into_bytes());
+            break Protected::new(input.into_bytes());
         } else if input.is_empty() {
             warn!("Password cannot be empty, please try again.");
         } else {
@@ -179,16 +102,16 @@ pub fn get_secret(
     keyfile: &KeyFile,
     validation: bool,
     password_mode: PasswordMode,
-) -> Result<Secret<Vec<u8>>> {
+) -> Result<Protected<Vec<u8>>> {
     let key = if keyfile != &KeyFile::None {
-        let keyfile_name = keyfile.get_contents()?;
+        let keyfile_name = keyfile.get_inner()?;
         info!("Reading key from {}", keyfile_name);
         get_bytes(&keyfile_name)?
     } else if std::env::var("DEXIOS_KEY").is_ok()
         && password_mode == PasswordMode::NormalKeySourcePriority
     {
         info!("Reading key from DEXIOS_KEY environment variable");
-        Secret::new(
+        Protected::new(
             std::env::var("DEXIOS_KEY")
                 .context("Unable to read DEXIOS_KEY from environment variable")?
                 .into_bytes(),

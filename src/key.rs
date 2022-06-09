@@ -1,5 +1,5 @@
 //! This module handles key-related functionality within `dexios-core`
-//! 
+//!
 //! It contains methods for `argon2id` hashing, and securely generating a salt
 
 use super::primitives::SALT_LEN;
@@ -14,15 +14,15 @@ use rand::RngCore;
 use rand::SeedableRng;
 
 /// This generates a salt, of the specified `SALT_LEN`
-/// 
+///
 /// This salt can be directly passed to `argon2id_hash()`
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// let salt = gen_salt();
 /// ```
-/// 
+///
 #[must_use]
 pub fn gen_salt() -> [u8; SALT_LEN] {
     let mut salt: [u8; SALT_LEN] = [0; SALT_LEN];
@@ -31,24 +31,24 @@ pub fn gen_salt() -> [u8; SALT_LEN] {
 }
 
 /// This handles `argon2id` hashing of a raw key
-/// 
+///
 /// It requires a user to generate the salt
-/// 
+///
 /// `HeaderVersion` is required as the parameters are linked to specific header versions
-/// 
+///
 /// It returns a `Protected<[u8; 32]>` - `Protected` wrappers are used for all sensitive information within `dexios-core`
-/// 
+///
 /// This function ensures that `raw_key` is securely erased from memory once hashed
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// let salt = gen_salt();
 /// let secret_data = "secure key".as_bytes().to_vec();
 /// let raw_key = Protected::new(secret_data);
 /// let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
 /// ```
-/// 
+///
 pub fn argon2id_hash(
     raw_key: Protected<Vec<u8>>,
     salt: &[u8; SALT_LEN],

@@ -12,18 +12,18 @@
 //!
 //! I'd like to give a huge thank you to the authors of the [secrecy crate](https://crates.io/crates/secrecy),
 //! as that crate's functionality inspired this implementation.
-//! 
+//!
 //! # Examples
-//! 
+//!
 //! ```
 //! let secret_data = "this is classified information".to_string();
 //! let protected_data = Protected::new(secret_data);
-//! 
+//!
 //! // the only way to access the data within the `Protected` wrapper
 //! // is by calling `.expose()`
 //! let value = protected_data.expose();
 //! ```
-//! 
+//!
 
 use std::fmt::Debug;
 use zeroize::Zeroize;

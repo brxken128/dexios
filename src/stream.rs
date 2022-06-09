@@ -21,7 +21,7 @@ use crate::primitives::{Algorithm, BLOCK_SIZE};
 use crate::protected::Protected;
 
 /// This `enum` contains streams for that are used solely for encryption
-/// 
+///
 /// It has definitions for all AEADs supported by `dexios-core`
 pub enum EncryptionStreams {
     Aes256Gcm(Box<EncryptorLE31<Aes256Gcm>>),
@@ -30,7 +30,7 @@ pub enum EncryptionStreams {
 }
 
 /// This `enum` contains streams for that are used solely for decryption
-/// 
+///
 /// It has definitions for all AEADs supported by `dexios-core`
 pub enum DecryptionStreams {
     Aes256Gcm(Box<DecryptorLE31<Aes256Gcm>>),
@@ -40,19 +40,19 @@ pub enum DecryptionStreams {
 
 impl EncryptionStreams {
     /// This method can be used to quickly create an `EncryptionStreams` object
-    /// 
+    ///
     /// It requies a 32-byte hashed key, which will be dropped once the stream has been initialized
-    /// 
+    ///
     /// It requires a pre-generated nonce, which you may generate with `gen_nonce()`
-    /// 
+    ///
     /// If the nonce length is not exact, you will receive an error.
-    /// 
+    ///
     /// It will create the stream with the specified algorithm, and it will also generate the appropriate nonce
-    /// 
+    ///
     /// The `EncryptionStreams` object is returned
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// // obviously the key should contain data, not be an empty vec
     /// let raw_key = Protected::new(vec![0u8; 128]);
@@ -62,7 +62,7 @@ impl EncryptionStreams {
     /// let nonce = gen_nonce(Algorithm::XChaCha20Poly1305, Mode::StreamMode);
     /// let encrypt_stream = EncryptionStreams::initialize(key, &nonce, Algorithm::XChaCha20Poly1305).unwrap();
     /// ```
-    /// 
+    ///
     pub fn initialize(
         key: Protected<[u8; 32]>,
         nonce: &[u8],
@@ -71,7 +71,7 @@ impl EncryptionStreams {
         let streams = match algorithm {
             Algorithm::Aes256Gcm => {
                 if nonce.len() != 8 {
-                    return Err(anyhow::anyhow!("Nonce is not the correct length"))
+                    return Err(anyhow::anyhow!("Nonce is not the correct length"));
                 }
 
                 let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
@@ -88,7 +88,7 @@ impl EncryptionStreams {
             }
             Algorithm::XChaCha20Poly1305 => {
                 if nonce.len() != 20 {
-                    return Err(anyhow::anyhow!("Nonce is not the correct length"))
+                    return Err(anyhow::anyhow!("Nonce is not the correct length"));
                 }
 
                 let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
@@ -105,7 +105,7 @@ impl EncryptionStreams {
             }
             Algorithm::DeoxysII256 => {
                 if nonce.len() != 11 {
-                    return Err(anyhow::anyhow!("Nonce is not the correct length"))
+                    return Err(anyhow::anyhow!("Nonce is not the correct length"));
                 }
 
                 let cipher = match DeoxysII256::new_from_slice(key.expose()) {
@@ -127,7 +127,7 @@ impl EncryptionStreams {
     }
 
     /// This is used for encrypting the *next* block of data in streaming mode
-    /// 
+    ///
     /// It requires either some plaintext, or an `aead::Payload` (that contains the plaintext and the AAD)
     pub fn encrypt_next<'msg, 'aad>(
         &mut self,
@@ -141,7 +141,7 @@ impl EncryptionStreams {
     }
 
     /// This is used for encrypting the *last* block of data in streaming mode. It consumes the stream object to prevent further usage.
-    /// 
+    ///
     /// It requires either some plaintext, or an `aead::Payload` (that contains the plaintext and the AAD)
     pub fn encrypt_last<'msg, 'aad>(
         self,
@@ -155,28 +155,28 @@ impl EncryptionStreams {
     }
 
     /// This is a convenience function for reading from a reader, encrypting, and writing to the writer.
-    /// 
+    ///
     /// Every single block is provided with the AAD
-    /// 
+    ///
     /// Valid AAD must be provided if you are using `HeaderVersion::V3` and above. It must be empty if the `HeaderVersion` is lower.
-    /// 
+    ///
     /// You are free to use a custom AAD, just ensure that it is present for decryption, or else you will receive an error.
-    /// 
+    ///
     /// This does not handle writing the header.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// let mut input_file = File::open("input").unwrap();
     /// let mut output_file = File::create("output.encrypted").unwrap();
-    /// 
+    ///
     /// // aad should be generated from the header (only for encryption)
     /// let aad = header.serialize().unwrap();
-    /// 
+    ///
     /// let encrypt_stream = EncryptionStreams::initialize(key, &nonce, Algorithm::XChaCha20Poly1305).unwrap();
     /// encrypt_stream.encrypt_file(&mut input_file, &mut output_file, &aad);
     /// ```
-    /// 
+    ///
     pub fn encrypt_file(
         mut self,
         reader: &mut impl Read,
@@ -232,17 +232,17 @@ impl EncryptionStreams {
 
 impl DecryptionStreams {
     /// This method can be used to quickly create an `DecryptionStreams` object
-    /// 
+    ///
     /// It requies a 32-byte hashed key, which will be dropped once the stream has been initialized
-    /// 
+    ///
     /// It requires the same nonce that was returned upon initializing `EncryptionStreams`
-    /// 
+    ///
     /// It will create the stream with the specified algorithm
-    /// 
+    ///
     /// The `DecryptionStreams` object will be returned
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// // obviously the key should contain data, not be an empty vec
     /// let raw_key = Protected::new(vec![0u8; 128]);
@@ -251,10 +251,10 @@ impl DecryptionStreams {
     ///
     /// // this nonce should be read from somewhere, not generated
     /// let nonce = gen_nonce(Algorithm::XChaCha20Poly1305, Mode::StreamMode);
-    /// 
+    ///
     /// let decrypt_stream = DecryptionStreams::initialize(key, &nonce, Algorithm::XChaCha20Poly1305).unwrap();
     /// ```
-    /// 
+    ///
     pub fn initialize(
         key: Protected<[u8; 32]>,
         nonce: &[u8],
@@ -307,9 +307,9 @@ impl DecryptionStreams {
     }
 
     /// This is used for decrypting the *next* block of data in streaming mode
-    /// 
+    ///
     /// It requires either some plaintext, or an `aead::Payload` (that contains the plaintext and the AAD)
-    /// 
+    ///
     /// Whatever you provided as AAD while encrypting must be present during decryption, or else you will receive an error.
     pub fn decrypt_next<'msg, 'aad>(
         &mut self,
@@ -323,9 +323,9 @@ impl DecryptionStreams {
     }
 
     /// This is used for decrypting the *last* block of data in streaming mode. It consumes the stream object to prevent further usage.
-    /// 
+    ///
     /// It requires either some plaintext, or an `aead::Payload` (that contains the plaintext and the AAD)
-    /// 
+    ///
     /// Whatever you provided as AAD while encrypting must be present during decryption, or else you will receive an error.
     pub fn decrypt_last<'msg, 'aad>(
         self,
@@ -339,26 +339,26 @@ impl DecryptionStreams {
     }
 
     /// This is a convenience function for reading from a reader, decrypting, and writing to the writer.
-    /// 
+    ///
     /// Every single block is provided with the AAD
-    /// 
+    ///
     /// Valid AAD must be provided if you are using `HeaderVersion::V3` and above. It must be empty if the `HeaderVersion` is lower. Whatever you provided as AAD while encrypting must be present during decryption, or else you will receive an error.
-    /// 
+    ///
     /// This does not handle writing the header.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// let mut input_file = File::open("input.encrypted").unwrap();
     /// let mut output_file = File::create("output").unwrap();
-    /// 
+    ///
     /// // aad should be retrieved from the `Header` (with `Header::deserialize()`)
     /// let aad = Vec::new();
-    /// 
+    ///
     /// let decrypt_stream = DecryptionStreams::initialize(key, &nonce, Algorithm::XChaCha20Poly1305).unwrap();
     /// decrypt_stream.decrypt_file(&mut input_file, &mut output_file, &aad);
     /// ```
-    /// 
+    ///
     pub fn decrypt_file(
         mut self,
         reader: &mut impl Read,

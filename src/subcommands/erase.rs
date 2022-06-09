@@ -32,7 +32,8 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
             secure_erase(file.to_str().context("Unable to get &str from PathBuf")?, passes)?;
         }
         std::fs::remove_dir_all(input).context("Unable to delete directory")?;
-        // delete dir
+        logger.success(format!("Deleted directory: {}", input));
+        return Ok(())
     }
 
     let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;

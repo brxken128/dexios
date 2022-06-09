@@ -24,16 +24,29 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
 
     if data.is_dir() {
         drop(file);
-        if !get_answer("This is a directory, would you like to erase all files within it?", false, false)? {
+        if !get_answer(
+            "This is a directory, would you like to erase all files within it?",
+            false,
+            false,
+        )? {
             std::process::exit(0);
         }
-        let (files, _) = crate::file::get_paths_in_dir(input, crate::global::states::DirectoryMode::Recursive, &Vec::<String>::new(), &crate::global::states::HiddenFilesMode::Include, &crate::global::states::PrintMode::Quiet)?;
+        let (files, _) = crate::file::get_paths_in_dir(
+            input,
+            crate::global::states::DirectoryMode::Recursive,
+            &Vec::<String>::new(),
+            &crate::global::states::HiddenFilesMode::Include,
+            &crate::global::states::PrintMode::Quiet,
+        )?;
         for file in files {
-            secure_erase(file.to_str().context("Unable to get &str from PathBuf")?, passes)?;
+            secure_erase(
+                file.to_str().context("Unable to get &str from PathBuf")?,
+                passes,
+            )?;
         }
         std::fs::remove_dir_all(input).context("Unable to delete directory")?;
         logger.success(format!("Deleted directory: {}", input));
-        return Ok(())
+        return Ok(());
     }
 
     let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;

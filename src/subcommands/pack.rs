@@ -12,7 +12,7 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::states::{EraseSourceDir, DirectoryMode, PrintMode},
+    global::states::{DirectoryMode, EraseSourceDir, PrintMode},
     global::structs::{CryptoParams, PackParams},
 };
 

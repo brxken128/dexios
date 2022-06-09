@@ -2,7 +2,7 @@
 // it returns information (e.g. CryptoParams) to functions that require it
 
 use crate::global::states::{
-    EraseSourceDir, EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
+    EraseMode, EraseSourceDir, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
 };
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;

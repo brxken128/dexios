@@ -193,3 +193,29 @@ jobs:
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile --aead 3 1KB.bin 1KB.enc
     - name: Decrypt 1KB file (Deoxys-II-256)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 1KB.enc 1KB.bin
+  pack:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Retrieve Dexios
+      uses: actions/download-artifact@v3
+      with:
+        name: dexios
+        path: target/release/dexios
+    - name: Make Binary Executable
+      run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
+    - name: Make Directory
+      run: mkdir test
+    - name: Generate test files
+      run: dd if=/dev/urandom of=test/1.bin bs=1M count=10 && dd if=/dev/urandom of=test/2.bin bs=1M count=10 && dd if=/dev/urandom of=test/3.bin bs=1M count=10 && dd if=/dev/urandom of=test/4.bin bs=1M count=10
+    - name: Generate keyfile
+      run: dd if=/dev/urandom of=keyfile bs=1 count=4096
+    - name: Pack+Encrypt test directory with exclude (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack --exclude="1.bin" -eyk keyfile --aead 1 test/ output.zip
+    - name: Remove Directory
+      run: rm -rf test/
+    - name: Decrypt+Unpack archive (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack -dyk keyfile output.zip .
+    - name: List files in directory
+      run: ls -lla test/

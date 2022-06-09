@@ -37,7 +37,7 @@ impl std::fmt::Display for Algorithm {
 
 /// This defines the possible modes used for encrypting/decrypting
 #[derive(PartialEq, Eq)]
-pub enum CipherMode {
+pub enum Mode {
     MemoryMode,
     StreamMode,
 }

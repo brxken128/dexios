@@ -9,7 +9,7 @@
 //!
 //! It allows for serialization, deserialization, and has a convenience function for quickly writing the header to a file.
 
-use super::primitives::{Algorithm, CipherMode, SALT_LEN};
+use super::primitives::{Algorithm, Mode, SALT_LEN};
 use anyhow::{Context, Result};
 use std::io::{Cursor, Read, Seek, Write};
 
@@ -35,7 +35,7 @@ pub enum HeaderVersion {
 #[allow(clippy::module_name_repetitions)]
 pub struct HeaderType {
     pub version: HeaderVersion,
-    pub mode: CipherMode,
+    pub mode: Mode,
     pub algorithm: Algorithm,
 }
 
@@ -62,7 +62,7 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
         Algorithm::DeoxysII256 => 15,
     };
 
-    if header_info.mode == CipherMode::StreamMode {
+    if header_info.mode == Mode::StreamMode {
         nonce_len -= 4; // the last 4 bytes are dynamic in stream mode
     }
 
@@ -162,8 +162,8 @@ impl Header {
             .context("Unable to read encryption mode's bytes from header")?;
 
         let mode = match mode_bytes {
-            [0x0C, 0x01] => CipherMode::StreamMode,
-            [0x0C, 0x02] => CipherMode::MemoryMode,
+            [0x0C, 0x01] => Mode::StreamMode,
+            [0x0C, 0x02] => Mode::MemoryMode,
             _ => return Err(anyhow::anyhow!("Error getting cipher mode from header")),
         };
 
@@ -244,14 +244,14 @@ impl Header {
 
     /// This is a private function used for serialization
     /// 
-    /// It converts a `CipherMode` into the associated raw bytes
+    /// It converts a `Mode` into the associated raw bytes
     fn serialize_mode(&self) -> [u8; 2] {
         match self.header_type.mode {
-            CipherMode::StreamMode => {
+            Mode::StreamMode => {
                 let info: [u8; 2] = [0x0C, 0x01];
                 info
             }
-            CipherMode::MemoryMode => {
+            Mode::MemoryMode => {
                 let info: [u8; 2] = [0x0C, 0x02];
                 info
             }

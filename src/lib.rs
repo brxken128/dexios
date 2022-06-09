@@ -33,6 +33,8 @@
 //!
 //! Dexios-Core exclusively uses AEADs provided by the [RustCrypto Team](https://github.com/RustCrypto), so I'd like to give them a huge thank you for their hard work (this wouldn't have been possible without them!)
 
+pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub mod cipher;
 pub mod header;
 pub mod key;

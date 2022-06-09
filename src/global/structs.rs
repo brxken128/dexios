@@ -10,7 +10,7 @@ pub struct CryptoParams {
     pub keyfile: KeyFile,
 }
 
-pub struct PackMode {
+pub struct PackParams {
     pub dir_mode: DirectoryMode,
     pub hidden: HiddenFilesMode,
     pub exclude: Vec<String>,

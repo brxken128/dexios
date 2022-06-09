@@ -13,7 +13,7 @@ use zip::write::FileOptions;
 use crate::{
     file::get_paths_in_dir,
     global::states::{DirectoryMode, PrintMode},
-    global::structs::{CryptoParams, PackMode},
+    global::structs::{CryptoParams, PackParams},
 };
 
 // this first indexes the input directory
@@ -26,7 +26,7 @@ use crate::{
 pub fn pack(
     input: &str,
     output: &str,
-    pack_params: &PackMode,
+    pack_params: &PackParams,
     params: &CryptoParams,
     algorithm: Algorithm,
 ) -> Result<()> {

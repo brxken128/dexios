@@ -14,7 +14,7 @@ use aes_gcm::Aes256Gcm;
 use anyhow::Context;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
-use rand::{prelude::StdRng, Rng, SeedableRng};
+// use rand::{prelude::StdRng, Rng, SeedableRng, RngCore};
 use zeroize::Zeroize;
 
 use crate::primitives::{Algorithm, BLOCK_SIZE};
@@ -43,16 +43,23 @@ impl EncryptionStreams {
     /// 
     /// It requies a 32-byte hashed key, which will be dropped once the stream has been initialized
     /// 
+    /// It requires a pre-generated nonce, which you may generate with `gen_nonce()`
+    /// 
+    /// If the nonce length is not exact, you will receive an error.
+    /// 
     /// It will create the stream with the specified algorithm, and it will also generate the appropriate nonce
     /// 
-    /// Both the nonce and the `EncryptionStreams` object are returned
+    /// The `EncryptionStreams` object is returned
     pub fn initialize(
         key: Protected<[u8; 32]>,
+        nonce: Vec<u8>,
         algorithm: Algorithm,
-    ) -> anyhow::Result<(Self, Vec<u8>)> {
-        let (streams, nonce) = match algorithm {
+    ) -> anyhow::Result<Self> {
+        let streams = match algorithm {
             Algorithm::Aes256Gcm => {
-                let nonce = StdRng::from_entropy().gen::<[u8; 8]>();
+                if nonce.len() != 8 {
+                    return Err(anyhow::anyhow!("Nonce is not the correct length"))
+                }
 
                 let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
@@ -64,13 +71,12 @@ impl EncryptionStreams {
                 };
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
-                (
-                    EncryptionStreams::Aes256Gcm(Box::new(stream)),
-                    nonce.to_vec(),
-                )
+                EncryptionStreams::Aes256Gcm(Box::new(stream))
             }
             Algorithm::XChaCha20Poly1305 => {
-                let nonce = StdRng::from_entropy().gen::<[u8; 20]>();
+                if nonce.len() != 20 {
+                    return Err(anyhow::anyhow!("Nonce is not the correct length"))
+                }
 
                 let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
@@ -82,13 +88,12 @@ impl EncryptionStreams {
                 };
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
-                (
-                    EncryptionStreams::XChaCha20Poly1305(Box::new(stream)),
-                    nonce.to_vec(),
-                )
+                EncryptionStreams::XChaCha20Poly1305(Box::new(stream))
             }
             Algorithm::DeoxysII256 => {
-                let nonce = StdRng::from_entropy().gen::<[u8; 11]>();
+                if nonce.len() != 11 {
+                    return Err(anyhow::anyhow!("Nonce is not the correct length"))
+                }
 
                 let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
@@ -100,15 +105,12 @@ impl EncryptionStreams {
                 };
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
-                (
-                    EncryptionStreams::DeoxysII256(Box::new(stream)),
-                    nonce.to_vec(),
-                )
+                EncryptionStreams::DeoxysII256(Box::new(stream))
             }
         };
 
         drop(key);
-        Ok((streams, nonce))
+        Ok(streams)
     }
 
     /// This is used for encrypting the *next* block of data in streaming mode

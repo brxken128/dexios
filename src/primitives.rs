@@ -41,3 +41,24 @@ pub enum Mode {
     MemoryMode,
     StreamMode,
 }
+
+/// This can be used to generate a nonce for encryption
+/// It requires both the algorithm and the mode, so it can correctly determine the nonce length
+/// This nonce can be passed directly to `EncryptionStreams::initialize()`
+pub fn gen_nonce(algorithm: Algorithm, mode: Mode) -> Vec<u8> {
+    use rand::{prelude::StdRng, SeedableRng, RngCore};
+
+    let mut nonce_len = match algorithm {
+        Algorithm::Aes256Gcm => 12,
+        Algorithm::XChaCha20Poly1305 => 24,
+        Algorithm::DeoxysII256 => 15,
+    };
+
+    if mode == Mode::StreamMode {
+        nonce_len -= 4;
+    }
+
+    let mut nonce = vec![0u8; nonce_len];
+    StdRng::from_entropy().fill_bytes(&mut nonce);
+    nonce
+}

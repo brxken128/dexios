@@ -49,7 +49,7 @@ pub enum Mode {
 /// # Examples
 ///
 /// ```
-/// let nonce = gen_nonce(Algorithm::XChaCha20Poly1305, Mode::StreamMode);
+/// let nonce = gen_nonce(&Algorithm::XChaCha20Poly1305, &Mode::StreamMode);
 /// ```
 ///
 #[must_use]

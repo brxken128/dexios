@@ -1,14 +1,19 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::states::{EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode};
+use crate::global::states::{
+    DeleteSourceDir, EraseMode, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
+};
 use crate::global::structs::CryptoParams;
+use crate::global::structs::PackParams;
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 use dexios_core::primitives::Algorithm;
 use paris::warn;
 
 use dexios_core::primitives::ALGORITHMS;
+
+use super::states::{DirectoryMode, HiddenFilesMode, PrintMode};
 
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches
@@ -129,6 +134,94 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
     };
 
     Ok(passes)
+}
+
+pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams)> {
+    let keyfile = if sub_matches.is_present("keyfile") {
+        KeyFile::Some(
+            sub_matches
+                .value_of("keyfile")
+                .context("No keyfile/invalid text provided")?
+                .to_string(),
+        )
+    } else {
+        KeyFile::None
+    };
+
+    let hash_mode = if sub_matches.is_present("hash") {
+        //specify to emit hash after operation
+        HashMode::CalculateHash
+    } else {
+        // default
+        HashMode::NoHash
+    };
+
+    let skip = skipmode(sub_matches);
+
+    let erase = EraseMode::IgnoreFile(0);
+
+    let password = if sub_matches.is_present("password") {
+        //Overwrite, so the user provided password is used and ignore environment supplied one?!
+        PasswordMode::ForceUserProvidedPassword
+    } else {
+        // default
+        PasswordMode::NormalKeySourcePriority
+    };
+
+    let crypto_params = CryptoParams {
+        hash_mode,
+        skip,
+        password,
+        erase,
+        keyfile,
+    };
+
+    let print_mode = if sub_matches.is_present("verbose") {
+        //specify to emit hash after operation
+        PrintMode::Verbose
+    } else {
+        // default
+        PrintMode::Quiet
+    };
+
+    let dir_mode = if sub_matches.is_present("recursive") {
+        //specify to emit hash after operation
+        DirectoryMode::Recursive
+    } else {
+        // default
+        DirectoryMode::Singular
+    };
+
+    let hidden = if sub_matches.is_present("hidden") {
+        //specify to emit hash after operation
+        HiddenFilesMode::Include
+    } else {
+        // default
+        HiddenFilesMode::Exclude
+    };
+
+    let exclude: Vec<String> = if sub_matches.is_present("exclude") {
+        let list: Vec<&str> = sub_matches.values_of("exclude").unwrap().collect();
+        list.iter().map(std::string::ToString::to_string).collect()
+    } else {
+        Vec::new()
+    };
+
+    let delete_source = if sub_matches.is_present("delete") {
+        DeleteSourceDir::Delete
+    } else {
+        DeleteSourceDir::Retain
+    };
+
+    let pack_params = PackParams {
+        dir_mode,
+        hidden,
+        exclude,
+        print_mode,
+        delete_source,
+    };
+
+    Ok((crypto_params, pack_params))
 }
 
 pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {

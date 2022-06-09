@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Versions 6 and above will receive security updates, and they will be backported depending on the vulnerability severity.
+Versions 7 and above will receive security updates, and they will be backported depending on the vulnerability severity.
 
 | Version | Supported          |
 | ------- | ------------------ |

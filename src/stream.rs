@@ -52,7 +52,7 @@ impl EncryptionStreams {
     /// The `EncryptionStreams` object is returned
     pub fn initialize(
         key: Protected<[u8; 32]>,
-        nonce: Vec<u8>,
+        nonce: &[u8],
         algorithm: Algorithm,
     ) -> anyhow::Result<Self> {
         let streams = match algorithm {
@@ -70,7 +70,7 @@ impl EncryptionStreams {
                     }
                 };
 
-                let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
+                let stream = EncryptorLE31::from_aead(cipher, nonce.into());
                 EncryptionStreams::Aes256Gcm(Box::new(stream))
             }
             Algorithm::XChaCha20Poly1305 => {
@@ -87,7 +87,7 @@ impl EncryptionStreams {
                     }
                 };
 
-                let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
+                let stream = EncryptorLE31::from_aead(cipher, nonce.into());
                 EncryptionStreams::XChaCha20Poly1305(Box::new(stream))
             }
             Algorithm::DeoxysII256 => {
@@ -104,7 +104,7 @@ impl EncryptionStreams {
                     }
                 };
 
-                let stream = EncryptorLE31::from_aead(cipher, nonce.as_slice().into());
+                let stream = EncryptorLE31::from_aead(cipher, nonce.into());
                 EncryptionStreams::DeoxysII256(Box::new(stream))
             }
         };

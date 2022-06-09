@@ -12,7 +12,7 @@ use zip::write::FileOptions;
 
 use crate::{
     file::get_paths_in_dir,
-    global::states::{DirectoryMode, PrintMode},
+    global::states::{DirectoryMode, PrintMode, DeleteSourceDir},
     global::structs::{CryptoParams, PackParams},
 };
 
@@ -28,6 +28,7 @@ pub fn pack(
     output: &str,
     pack_params: &PackParams,
     params: &CryptoParams,
+    delete_source: &DeleteSourceDir,
     algorithm: Algorithm,
 ) -> Result<()> {
     let mut logger = Logger::new();

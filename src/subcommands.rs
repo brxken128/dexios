@@ -57,3 +57,20 @@ pub fn pack(sub_matches: &ArgMatches) -> Result<()> {
     let aead = encrypt_additional_params(sub_matches)?;
     pack::pack(&get_param("input", sub_matches)?, &get_param("output", sub_matches)?, &pack_params, &crypto_params, aead)
 }
+
+pub fn unpack(sub_matches: &ArgMatches) -> Result<()> {
+    use super::global::states::PrintMode;
+
+    let crypto_params = parameter_handler(sub_matches)?;
+    let header = decrypt_additional_params(sub_matches)?;
+
+    let print_mode = if sub_matches.is_present("verbose") {
+        //specify to emit hash after operation
+        PrintMode::Verbose
+    } else {
+        // default
+        PrintMode::Quiet
+    };
+
+    unpack::unpack(&get_param("input", sub_matches)?, &get_param("output", sub_matches)?, &header, &print_mode, &crypto_params)
+}

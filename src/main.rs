@@ -29,6 +29,9 @@ fn main() -> Result<()> {
         Some(("pack", sub_matches)) => {
             subcommands::pack(sub_matches)?;
         }
+        Some(("unpack", sub_matches)) => {
+            subcommands::unpack(sub_matches)?;
+        }
         Some(("hash", sub_matches)) => {
             let files: Vec<String> = if sub_matches.is_present("input") {
                 let list: Vec<&str> = sub_matches.values_of("input").unwrap().collect();

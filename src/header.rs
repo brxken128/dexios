@@ -124,6 +124,23 @@ impl Header {
     /// The AAD for older versions is empty as no AAD is the default for AEADs, and the header validation was not in place prior to V3.
     /// 
     /// NOTE: This leaves the cursor at 64 bytes into the buffer, as that is the size of the header
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// let header_bytes: [u8; 64] = [
+    ///     222, 2, 14, 1, 12, 1, 142, 88, 243, 144, 119, 187, 189, 190, 121, 90, 211, 56, 185, 14, 76,
+    ///     45, 16, 5, 237, 72, 7, 203, 13, 145, 13, 155, 210, 29, 128, 142, 241, 233, 42, 168, 243,
+    ///     129, 0, 0, 0, 0, 0, 0, 214, 45, 3, 4, 11, 212, 129, 123, 192, 157, 185, 109, 151, 225, 233,
+    ///     161,
+    /// ];
+    /// let mut cursor = Cursor::new(header_bytes);
+    ///
+    /// // the cursor may be a file, this is just an example
+    /// 
+    /// let (header, aad) = Header::deserialize(&mut cursor).unwrap();
+    /// ```
+    /// 
     pub fn deserialize(reader: &mut (impl Read + Seek)) -> Result<(Self, Vec<u8>)> {
         let mut full_header_bytes = [0u8; 64];
         reader
@@ -279,6 +296,13 @@ impl Header {
     /// The returned bytes may be used as AAD, or written to a file
     /// 
     /// NOTE: This should **NOT** be used for validating AAD, only creating it. Use the AAD returned from `deserialize()` for validation.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// let header_bytes = header.serialize().unwrap();
+    /// ```
+    /// 
     pub fn serialize(&self) -> Result<Vec<u8>> {
         let tag = self.get_tag();
         let bytes = match self.header_type.version {
@@ -299,6 +323,15 @@ impl Header {
     }
 
     /// This is a convenience function for writing a header to a writer
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// let mut output_file = File::create("test").unwrap();
+    /// 
+    /// header.write(&mut output_file).unwrap();
+    /// ```
+    /// 
     pub fn write(&self, writer: &mut impl Write) -> Result<()> {
         let header_bytes = self.serialize()?;
         writer

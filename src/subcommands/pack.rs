@@ -28,7 +28,6 @@ pub fn pack(
     output: &str,
     pack_params: &PackParams,
     params: &CryptoParams,
-    delete_source: &DeleteSourceDir,
     algorithm: Algorithm,
 ) -> Result<()> {
     let mut logger = Logger::new();
@@ -141,6 +140,10 @@ pub fn pack(
     super::encrypt::stream_mode(&tmp_name, output, params, algorithm)?;
 
     super::erase::secure_erase(&tmp_name, 2)?; // cleanup our tmp file
+
+    if pack_params.delete_source == DeleteSourceDir::Delete {
+        std::fs::remove_dir_all(input).context("Unable to delete source directory")?;
+    }
 
     logger.success(format!("Your output file is: {}", output));
 

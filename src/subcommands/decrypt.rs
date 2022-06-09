@@ -27,6 +27,8 @@ use dexios_core::stream::DecryptionStreams;
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
 // it also manages using a detached header file if selected
+// it creates the Cipher object, and uses that for decryption
+// it then writes the decrypted data to the file
 pub fn memory_mode(
     input: &str,
     output: &str,
@@ -76,7 +78,7 @@ pub fn memory_mode(
 
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
-    let mut output_file = File::create(output)?; // !!!attach context here
+    let mut output_file = File::create(output).context("Unable to create output file")?;
 
     let hash_start_time = Instant::now();
     let key = argon2id_hash(raw_key, &header.salt, &header.header_type.version)?;
@@ -128,8 +130,9 @@ pub fn memory_mode(
 }
 
 // this function is for decrypting a file in stream mode
-// it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
+// it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the header says so (backwards-compat)
 // it also manages using a detached header file if selected
+// it creates the stream object and uses the convenience function provided by dexios-core
 pub fn stream_mode(
     input: &str,
     output: &str,

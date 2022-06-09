@@ -22,7 +22,7 @@ pub fn encrypt(sub_matches: &ArgMatches) -> Result<()> {
     let params = parameter_handler(sub_matches)?;
     let algorithm = encrypt_additional_params(sub_matches)?;
 
-    // stream mode is the default - it'll redirect to memory mode if the file is too small
+    // stream mode is the only mode to decrypt (v8.5.0+)
     encrypt::stream_mode(
         &get_param("input", sub_matches)?,
         &get_param("output", sub_matches)?,
@@ -35,7 +35,7 @@ pub fn decrypt(sub_matches: &ArgMatches) -> Result<()> {
     let params = parameter_handler(sub_matches)?;
     let header = decrypt_additional_params(sub_matches)?;
 
-    // stream decrypt is the default as it will redirect to memory mode if the header says so
+    // stream decrypt is the default as it will redirect to memory mode if the header says so (for backwards-compat)
     decrypt::stream_mode(
         &get_param("input", sub_matches)?,
         &get_param("output", sub_matches)?,

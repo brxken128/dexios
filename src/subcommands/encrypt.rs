@@ -19,7 +19,8 @@ use std::time::Instant;
 use dexios_core::stream::EncryptionStreams;
 
 // this function is for encrypting a file in stream mode
-// it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
+// it handles any user-facing interactiveness, opening files
+// it creates the stream object and uses the convenience function provided by dexios-core
 pub fn stream_mode(
     input: &str,
     output: &str,

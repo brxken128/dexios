@@ -18,6 +18,7 @@ use super::prompt::{get_answer, overwrite_check};
 // this function dumps the first 64 bytes of
 // the input file into the output file
 // it's used for extracting an encrypted file's header for backups and such
+// it implements a check to ensure the header is valid
 pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     let mut logger = Logger::new();
     logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
@@ -54,6 +55,7 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 // this function reads the first 64 bytes (header) from the input file
 // and then overwrites the first 64 bytes of the output file with it
 // this can be used for restoring a dumped header to a file that had it's header stripped
+// it implements a check to ensure the header is valid before restoring to a file
 pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     let mut logger = Logger::new();
     logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
@@ -98,6 +100,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
 // this wipes the first 64 bytes (header) from the provided file
 // it can be useful for storing the header separate from the file, to make an attacker's life that little bit harder
+// it implements a check to ensure the header is valid before stripping
 pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
     let mut logger = Logger::new();
     logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");

@@ -189,6 +189,93 @@ pub fn get_matches() -> clap::ArgMatches {
                 ),
         )
         .subcommand(
+            Command::new("pack")
+            .about("Pack and encrypt an entire directory")
+            .short_flag('p')
+            .arg(
+                Arg::new("input")
+                    .value_name("input")
+                    .takes_value(true)
+                    .required(true)
+                    .help("The directory to encrypt"),
+            )
+            .arg(
+                Arg::new("output")
+                    .value_name("output")
+                    .takes_value(true)
+                    .required(true)
+                    .help("The output file"),
+            )
+            .arg(
+                Arg::new("verbose")
+                    .short('v')
+                    .long("verbose")
+                    .takes_value(false)
+                    .help("Show a detailed output"),
+            )
+            .arg(
+                Arg::new("recursive")
+                    .short('r')
+                    .long("recursive")
+                    .takes_value(false)
+                    .help("Index files and folders within other folders (index recursively)"),
+            )
+            .arg(
+                Arg::new("hidden")
+                    .long("hidden")
+                    .takes_value(false)
+                    .help("Include hidden files"),
+            )
+            .arg(
+                Arg::new("keyfile")
+                    .short('k')
+                    .long("keyfile")
+                    .value_name("file")
+                    .takes_value(true)
+                    .help("Use a keyfile instead of a password"),
+            )
+            .arg(
+                Arg::new("erase")
+                    .long("erase")
+                    .value_name("# of passes")
+                    .takes_value(true)
+                    .require_equals(true)
+                    .help("Securely erase the input file once complete (default is 2 passes)")
+                    .min_values(0)
+                    .default_missing_value("2"),
+            )
+            .arg(
+                Arg::new("hash")
+                    .short('H')
+                    .long("hash")
+                    .takes_value(false)
+                    .help("Return a BLAKE3 hash of the encrypted file"),
+            )
+            .arg(
+                Arg::new("skip")
+                    .short('y')
+                    .long("skip")
+                    .takes_value(false)
+                    .help("Skip all prompts"),
+            )
+            .arg(
+                Arg::new("password")
+                    .short('p')
+                    .long("password")
+                    .takes_value(false)
+                    .help("Interactively ask for your password")
+                    .conflicts_with("keyfile"),
+            )
+            .arg(
+                Arg::new("aead")
+                    .short('a')
+                    .long("aead")
+                    .value_name("aead to use for encryption")
+                    .takes_value(true)
+                    .help("select an AEAD (\"dexios list aead\" to see all possible values)"),
+            )
+        )
+        .subcommand(
             Command::new("header")
                 .about("Manipulate encrypted headers (for advanced users)")
                 .subcommand_required(true)

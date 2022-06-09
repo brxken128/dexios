@@ -227,6 +227,16 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("Include hidden files"),
             )
             .arg(
+                Arg::new("exclude")
+                    .long("exclude")
+                    .value_name("pattern to exclude")
+                    .takes_value(true)
+                    .require_equals(true)
+                    .help("Exclude a file/folder (e.g. --exclude=\"Documents\") (encrypt mode only)")
+                    .min_values(0)
+                    .multiple_occurrences(true),
+            )
+            .arg(
                 Arg::new("keyfile")
                     .short('k')
                     .long("keyfile")

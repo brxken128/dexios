@@ -6,8 +6,8 @@ use crate::global::states::HeaderFile;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
 use dexios_core::header;
-use dexios_core::key::argon2_hash;
-use dexios_core::primitives::CipherMode;
+use dexios_core::key::argon2id_hash;
+use dexios_core::primitives::Mode;
 use paris::Logger;
 
 use anyhow::anyhow;
@@ -22,7 +22,7 @@ use std::io::Read;
 use std::io::Seek;
 use std::process::exit;
 
-use dexios_core::stream::DecryptStreamCiphers;
+use dexios_core::stream::DecryptionStreams;
 
 // this function is for decrypting a file in memory mode
 // it's responsible for  handling user-facing interactiveness, and calling the correct functions where appropriate
@@ -79,7 +79,7 @@ pub fn memory_mode(
     let mut output_file = File::create(output)?; // !!!attach context here
 
     let hash_start_time = Instant::now();
-    let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
+    let key = argon2id_hash(raw_key, &header.salt, &header.header_type.version)?;
     let hash_duration = hash_start_time.elapsed();
     success!(
         "Successfully hashed your key [took {:.2}s]",
@@ -88,7 +88,7 @@ pub fn memory_mode(
 
     let decrypt_start_time = Instant::now();
 
-    let ciphers = Ciphers::initialize(key, header.header_type.algorithm)?;
+    let ciphers = Ciphers::initialize(key, &header.header_type.algorithm)?;
 
     let payload = Payload {
         aad: &aad,
@@ -159,7 +159,7 @@ pub fn stream_mode(
         HeaderFile::None => header::Header::deserialize(&mut input_file)?,
     };
 
-    if header.header_type.cipher_mode == CipherMode::MemoryMode {
+    if header.header_type.mode == Mode::MemoryMode {
         drop(input_file);
         return memory_mode(input, output, header_file, params);
     }
@@ -180,7 +180,7 @@ pub fn stream_mode(
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
     let hash_start_time = Instant::now();
-    let key = argon2_hash(raw_key, header.salt, &header.header_type.header_version)?;
+    let key = argon2id_hash(raw_key, &header.salt, &header.header_type.version)?;
     let hash_duration = hash_start_time.elapsed();
     success!(
         "Successfully hashed your key [took {:.2}s]",
@@ -190,7 +190,7 @@ pub fn stream_mode(
     let decrypt_start_time = Instant::now();
 
     let streams =
-        DecryptStreamCiphers::initialize(key, &header.nonce, header.header_type.algorithm)?;
+        DecryptionStreams::initialize(key, &header.nonce, &header.header_type.algorithm)?;
 
     streams.decrypt_file(&mut input_file, &mut output_file, &aad)?;
 

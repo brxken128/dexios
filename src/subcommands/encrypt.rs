@@ -6,16 +6,17 @@ use crate::global::structs::CryptoParams;
 use anyhow::Context;
 use anyhow::{Ok, Result};
 use dexios_core::header::{Header, HeaderType, HEADER_VERSION};
-use dexios_core::key::{argon2_hash, gen_salt};
+use dexios_core::key::{argon2id_hash, gen_salt};
 use dexios_core::primitives::Algorithm;
-use dexios_core::primitives::CipherMode;
+use dexios_core::primitives::Mode;
+use dexios_core::primitives::gen_nonce;
 use paris::Logger;
 use std::fs::File;
 use std::io::Write;
 use std::process::exit;
 use std::time::Instant;
 
-use dexios_core::stream::EncryptStreamCiphers;
+use dexios_core::stream::EncryptionStreams;
 
 // this function is for encrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the input file isn't large enough
@@ -48,14 +49,14 @@ pub fn stream_mode(
     logger.info(format!("Encrypting {} (this may take a while)", input));
 
     let header_type = HeaderType {
-        header_version: HEADER_VERSION,
-        cipher_mode: CipherMode::StreamMode,
+        version: HEADER_VERSION,
+        mode: Mode::StreamMode,
         algorithm,
     };
 
     let salt = gen_salt();
     let hash_start_time = Instant::now();
-    let key = argon2_hash(raw_key, salt, &header_type.header_version)?;
+    let key = argon2id_hash(raw_key, &salt, &header_type.version)?;
     let hash_duration = hash_start_time.elapsed();
     logger.success(format!(
         "Successfully hashed your key [took {:.2}s]",
@@ -63,7 +64,8 @@ pub fn stream_mode(
     ));
 
     let encrypt_start_time = Instant::now();
-    let (streams, nonce) = EncryptStreamCiphers::initialize(key, header_type.algorithm)?;
+    let nonce = gen_nonce(&header_type.algorithm, &header_type.mode);
+    let streams = EncryptionStreams::initialize(key, &nonce, &header_type.algorithm)?;
 
     let header = Header {
         header_type,

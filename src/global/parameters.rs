@@ -11,7 +11,7 @@ use paris::warn;
 
 use dexios_core::primitives::ALGORITHMS;
 
-use super::states::{PrintMode, DirectoryMode, HiddenFilesMode};
+use super::states::{DirectoryMode, HiddenFilesMode, PrintMode};
 
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches
@@ -205,9 +205,12 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
         Vec::new()
     };
 
-
-
-    let pack_params = PackParams { dir_mode, exclude, hidden, print_mode, };
+    let pack_params = PackParams {
+        dir_mode,
+        exclude,
+        hidden,
+        print_mode,
+    };
 
     Ok((crypto_params, pack_params))
 }

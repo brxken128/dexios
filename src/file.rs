@@ -1,7 +1,11 @@
 use anyhow::{Context, Ok, Result};
 use dexios_core::protected::Protected;
 use paris::Logger;
-use std::{fs::{File, read_dir}, io::Read, path::PathBuf};
+use std::{
+    fs::{read_dir, File},
+    io::Read,
+    path::PathBuf,
+};
 
 use crate::global::states::{DirectoryMode, HiddenFilesMode, PrintMode};
 

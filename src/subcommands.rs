@@ -5,8 +5,8 @@ use clap::ArgMatches;
 // it gets params and sends them to the appropriate functions
 
 use crate::global::parameters::{
-    decrypt_additional_params, encrypt_additional_params, erase_params, get_param,
-    parameter_handler, pack_params,
+    decrypt_additional_params, encrypt_additional_params, erase_params, get_param, pack_params,
+    parameter_handler,
 };
 
 pub mod decrypt;
@@ -16,8 +16,8 @@ pub mod hashing;
 pub mod header;
 pub mod key;
 pub mod list;
-pub mod prompt;
 pub mod pack;
+pub mod prompt;
 pub mod unpack;
 
 pub fn encrypt(sub_matches: &ArgMatches) -> Result<()> {
@@ -55,7 +55,13 @@ pub fn erase(sub_matches: &ArgMatches) -> Result<()> {
 pub fn pack(sub_matches: &ArgMatches) -> Result<()> {
     let (crypto_params, pack_params) = pack_params(sub_matches)?;
     let aead = encrypt_additional_params(sub_matches)?;
-    pack::pack(&get_param("input", sub_matches)?, &get_param("output", sub_matches)?, &pack_params, &crypto_params, aead)
+    pack::pack(
+        &get_param("input", sub_matches)?,
+        &get_param("output", sub_matches)?,
+        &pack_params,
+        &crypto_params,
+        aead,
+    )
 }
 
 pub fn unpack(sub_matches: &ArgMatches) -> Result<()> {
@@ -72,5 +78,11 @@ pub fn unpack(sub_matches: &ArgMatches) -> Result<()> {
         PrintMode::Quiet
     };
 
-    unpack::unpack(&get_param("input", sub_matches)?, &get_param("output", sub_matches)?, &header, &print_mode, &crypto_params)
+    unpack::unpack(
+        &get_param("input", sub_matches)?,
+        &get_param("output", sub_matches)?,
+        &header,
+        &print_mode,
+        &crypto_params,
+    )
 }

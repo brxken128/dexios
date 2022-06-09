@@ -119,9 +119,7 @@ pub fn pack(
                 let read_count = file_reader.read(&mut buffer)?;
                 zip_writer
                     .write_all(&buffer[..read_count])
-                    .with_context(|| {
-                        format!("Unable to write to the output file: {}", output)
-                    })?;
+                    .with_context(|| format!("Unable to write to the output file: {}", output))?;
                 if read_count != BLOCK_SIZE {
                     break;
                 }

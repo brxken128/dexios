@@ -1,11 +1,14 @@
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use rand::distributions::{Alphanumeric, DistString};
 
-use crate::global::{states::{HeaderFile, PrintMode, SkipMode}, structs::CryptoParams};
+use crate::global::{
+    states::{HeaderFile, PrintMode, SkipMode},
+    structs::CryptoParams,
+};
 use paris::Logger;
-use std::{time::Instant, str::FromStr};
 use std::fs::File;
 use std::path::PathBuf;
+use std::{str::FromStr, time::Instant};
 
 use super::prompt::get_answer;
 

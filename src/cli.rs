@@ -207,6 +207,13 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("The output file"),
             )
             .arg(
+                Arg::new("delete")
+                    .short('d')
+                    .long("delete")
+                    .takes_value(false)
+                    .help("Delete the source directory once packed"),
+            )
+            .arg(
                 Arg::new("verbose")
                     .short('v')
                     .long("verbose")

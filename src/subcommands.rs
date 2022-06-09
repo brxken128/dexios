@@ -17,6 +17,8 @@ pub mod header;
 pub mod key;
 pub mod list;
 pub mod prompt;
+pub mod pack;
+pub mod unpack;
 
 pub fn encrypt(sub_matches: &ArgMatches) -> Result<()> {
     let params = parameter_handler(sub_matches)?;

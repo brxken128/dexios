@@ -192,8 +192,7 @@ pub fn stream_mode(
 
     let decrypt_start_time = Instant::now();
 
-    let streams =
-        DecryptionStreams::initialize(key, &header.nonce, &header.header_type.algorithm)?;
+    let streams = DecryptionStreams::initialize(key, &header.nonce, &header.header_type.algorithm)?;
 
     streams.decrypt_file(&mut input_file, &mut output_file, &aad)?;
 

@@ -8,6 +8,29 @@
 //! * whether the file was encrypted in "memory" or stream mode
 //!
 //! It allows for serialization, deserialization, and has a convenience function for quickly writing the header to a file.
+//! 
+//! # Examples
+//!
+//! ```
+//! let header_bytes: [u8; 64] = [
+//!     222, 2, 14, 1, 12, 1, 142, 88, 243, 144, 119, 187, 189, 190, 121, 90, 211, 56, 185, 14, 76,
+//!     45, 16, 5, 237, 72, 7, 203, 13, 145, 13, 155, 210, 29, 128, 142, 241, 233, 42, 168, 243,
+//!     129, 0, 0, 0, 0, 0, 0, 214, 45, 3, 4, 11, 212, 129, 123, 192, 157, 185, 109, 151, 225, 233,
+//!     161,
+//! ];
+//! let mut cursor = Cursor::new(header_bytes);
+//!
+//! // the cursor may be a file, this is just an example
+//!
+//! let (header, aad) = Header::deserialize(&mut cursor).unwrap();
+//! ```
+//!
+//! ```
+//! let mut output_file = File::create("test").unwrap();
+//!
+//! header.write(&mut output_file).unwrap();
+//! ```
+//! 
 
 use super::primitives::{Algorithm, Mode, SALT_LEN};
 use anyhow::{Context, Result};

@@ -146,6 +146,7 @@
 <p>Due to the nature of SSDs and their controllers (wear levelling and such), it's almost impossible to fully erase a file - we can try our best though. It's not recommended to use the erase function on a large file (1gb+) on flash storage, as it will wear the drive down unneccessarily.</p>
 <p>First we generate enough random bytes to fill the file, seeded by the system. Those random bytes are then written over the file, covering all of the previous data. This is repeated twice (more if specified) to ensure the data is thoroughly gone. This may panic due to a lack of entropy - there's not much we can do in this case.</p>
 <p>Once the random bytes have been overwritten, we then overwrite all of the data one final time with just zeroes, before truncating the file length to 0. Afterwards, we remove the file using the system's methods (<code>unlink</code> on Unix and <code>DeleteFile</code> on Windows).</p>
+<p>If you pass a directory to erase mode, it will prompt you to erase <em>every</em> file within the directory, before deleting it. This functionality was added in v8.6.0, and it allows you to securely erase many files at once. Use with extreme caution!</p>
 
                     </main>
 

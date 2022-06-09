@@ -53,7 +53,7 @@ pub enum Mode {
 /// ```
 ///
 #[must_use]
-pub fn gen_nonce(algorithm: Algorithm, mode: Mode) -> Vec<u8> {
+pub fn gen_nonce(algorithm: &Algorithm, mode: &Mode) -> Vec<u8> {
     use rand::{prelude::StdRng, RngCore, SeedableRng};
 
     let mut nonce_len = match algorithm {
@@ -62,7 +62,7 @@ pub fn gen_nonce(algorithm: Algorithm, mode: Mode) -> Vec<u8> {
         Algorithm::DeoxysII256 => 15,
     };
 
-    if mode == Mode::StreamMode {
+    if mode == &Mode::StreamMode {
         nonce_len -= 4;
     }
 

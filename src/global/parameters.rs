@@ -13,7 +13,7 @@ use paris::warn;
 
 use dexios_core::primitives::ALGORITHMS;
 
-use super::states::{DirectoryMode, HiddenFilesMode, PrintMode};
+use super::states::{DirectoryMode, PrintMode};
 
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches
@@ -192,14 +192,6 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
         DirectoryMode::Singular
     };
 
-    let hidden = if sub_matches.is_present("hidden") {
-        //specify to emit hash after operation
-        HiddenFilesMode::Include
-    } else {
-        // default
-        HiddenFilesMode::Exclude
-    };
-
     let exclude: Vec<String> = if sub_matches.is_present("exclude") {
         let list: Vec<&str> = sub_matches.values_of("exclude").unwrap().collect();
         list.iter().map(std::string::ToString::to_string).collect()
@@ -215,7 +207,6 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
 
     let pack_params = PackParams {
         dir_mode,
-        hidden,
         exclude,
         print_mode,
         erase_source,

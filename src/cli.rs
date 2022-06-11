@@ -227,12 +227,6 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("Index files and folders within other folders (index recursively)"),
             )
             .arg(
-                Arg::new("hidden")
-                    .long("hidden")
-                    .takes_value(false)
-                    .help("Include hidden files"),
-            )
-            .arg(
                 Arg::new("exclude")
                     .long("exclude")
                     .value_name("pattern to exclude")

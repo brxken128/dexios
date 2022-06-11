@@ -32,16 +32,6 @@ pub fn pack(
 ) -> Result<()> {
     let mut logger = Logger::new();
 
-    // let index_start_time = Instant::now();
-
-    // let index_duration = index_start_time.elapsed();
-    // let file_count = files.len();
-    // logger.success(format!(
-    //     "Indexed {} files [took {:.2}s]",
-    //     file_count,
-    //     index_duration.as_secs_f32()
-    // ));
-
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
     let tmp_name = format!("{}.{}", output, random_extension); // e.g. "output.kjHSD93l"
 
@@ -59,21 +49,6 @@ pub fn pack(
         .compression_method(zip::CompressionMethod::Stored)
         .large_file(true)
         .unix_permissions(0o755);
-
-    // zip.add_directory(input, options)
-    //     .context("Unable to add directory to zip")?;
-
-    // if pack_params.dir_mode == DirectoryMode::Recursive {
-    //     let directories = dirs.context("Error unwrapping Vec containing list of directories.")?; // this should always be *something* anyway
-    //     for dir in directories {
-    //         zip.add_directory(
-    //             dir.to_str()
-    //                 .context("Error converting directory path to string")?,
-    //             options,
-    //         )
-    //         .context("Unable to add directory to zip")?;
-    //     }
-    // }
 
     let mut item_count = 0;
 

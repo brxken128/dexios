@@ -12,7 +12,6 @@ pub struct CryptoParams {
 
 pub struct PackParams {
     pub dir_mode: DirectoryMode,
-    pub exclude: Vec<String>,
     pub print_mode: PrintMode,
     pub erase_source: EraseSourceDir,
 }

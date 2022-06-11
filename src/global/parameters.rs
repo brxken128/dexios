@@ -192,13 +192,6 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
         DirectoryMode::Singular
     };
 
-    let exclude: Vec<String> = if sub_matches.is_present("exclude") {
-        let list: Vec<&str> = sub_matches.values_of("exclude").unwrap().collect();
-        list.iter().map(std::string::ToString::to_string).collect()
-    } else {
-        Vec::new()
-    };
-
     let erase_source = if sub_matches.is_present("erase") {
         EraseSourceDir::Erase
     } else {
@@ -207,7 +200,6 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
 
     let pack_params = PackParams {
         dir_mode,
-        exclude,
         print_mode,
         erase_source,
     };

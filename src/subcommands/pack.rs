@@ -70,10 +70,6 @@ pub fn pack(
         let item_data = item.context("Unable to get path of item, skipping")?;
         let item = item_data.path();
 
-        #[cfg(unix)]
-        let item_str = item.to_str().context("Error converting directory path to string")?;
-
-        #[cfg(windows)]
         let item_str = item.to_str().context("Error converting directory path to string")?.replace(r"\", "/");
 
         if item.is_dir() {

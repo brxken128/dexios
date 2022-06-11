@@ -49,6 +49,33 @@ pub fn unpack(
     ));
 
     for i in 0..file_count {
+        // recreate the directory structure first
+        let mut full_path = PathBuf::from_str(output)
+            .context("Unable to create a PathBuf from your output directory")?;
+
+        let item = archive.by_index(i).context("Unable to index the archive")?;
+        match item.enclosed_name() {
+            Some(path) => full_path.push(path),
+            None => continue,
+        };
+
+        // zip slip prevention
+        if item.name().contains("..") {
+            continue;
+        }
+
+        #[cfg(windows)] // zip slip prevention
+        if item.name().contains(".\\") {
+            continue;
+        }
+
+        if item.is_dir() {
+            // if it's a directory, recreate the structure
+            std::fs::create_dir_all(full_path).context("Unable to create an output directory")?;
+        }
+    }
+
+    for i in 0..file_count {
         let mut full_path = PathBuf::from_str(output)
             .context("Unable to create a PathBuf from your output directory")?;
 
@@ -68,10 +95,7 @@ pub fn unpack(
             continue;
         }
 
-        if file.is_dir() {
-            // if it's a directory, recreate the structure
-            std::fs::create_dir_all(full_path).context("Unable to create an output directory")?;
-        } else {
+        if file.is_file() {
             // this must be a file
             let file_name: String = full_path
                 .clone()

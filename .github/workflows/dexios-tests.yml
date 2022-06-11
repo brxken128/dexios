@@ -211,8 +211,8 @@ jobs:
       run: dd if=/dev/urandom of=test/1.bin bs=1M count=10 && dd if=/dev/urandom of=test/2.bin bs=1M count=10 && dd if=/dev/urandom of=test/3.bin bs=1M count=10 && dd if=/dev/urandom of=test/4.bin bs=1M count=10
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
-    - name: Pack+Encrypt test directory with exclude (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack --exclude="1.bin" -yk keyfile --aead 1 test/ output.zip
+    - name: Pack+Encrypt test directory (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack -yk keyfile --aead 1 test/ output.zip
     - name: Remove Directory
       run: rm -rf test/
     - name: Decrypt+Unpack archive (XChaCha20-Poly1305)

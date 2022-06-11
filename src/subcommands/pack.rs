@@ -98,24 +98,16 @@ pub fn pack(
 
         let zip_writer = zip.by_ref();
         let mut file_reader = File::open(item)?;
-        let file_size = file_reader.metadata().unwrap().len();
-
-        if file_size <= BLOCK_SIZE.try_into().unwrap() {
-            let mut data = Vec::new();
-            file_reader.read_to_end(&mut data)?;
-            zip_writer.write_all(&data)?;
-        } else {
             // stream read/write here
-            let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
+        let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
-            loop {
-                let read_count = file_reader.read(&mut buffer)?;
-                zip_writer
-                    .write_all(&buffer[..read_count])
-                    .with_context(|| format!("Unable to write to the output file: {}", output))?;
-                if read_count != BLOCK_SIZE {
-                    break;
-                }
+        loop {
+            let read_count = file_reader.read(&mut buffer)?;
+            zip_writer
+                .write_all(&buffer[..read_count])
+                .with_context(|| format!("Unable to write to the output file: {}", output))?;
+            if read_count != BLOCK_SIZE {
+                break;
             }
         }
     }

@@ -48,9 +48,10 @@ pub fn unpack(
         file_count, output
     ));
 
-    for i in 0..file_count { // recreate the directory structure first
+    for i in 0..file_count {
+        // recreate the directory structure first
         let mut full_path = PathBuf::from_str(output)
-        .context("Unable to create a PathBuf from your output directory")?;
+            .context("Unable to create a PathBuf from your output directory")?;
 
         let item = archive.by_index(i).context("Unable to index the archive")?;
         match item.enclosed_name() {

@@ -98,7 +98,7 @@ pub fn pack(
 
         let zip_writer = zip.by_ref();
         let mut file_reader = File::open(item)?;
-            // stream read/write here
+        // stream read/write here
         let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
         loop {

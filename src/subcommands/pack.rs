@@ -13,7 +13,7 @@ use zip::write::FileOptions;
 
 use crate::{
     global::states::{DirectoryMode, EraseSourceDir, PrintMode},
-    global::{structs::{CryptoParams, PackParams}},
+    global::structs::{CryptoParams, PackParams},
 };
 
 // this first indexes the input directory

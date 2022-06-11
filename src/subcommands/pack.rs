@@ -70,10 +70,11 @@ pub fn pack(
         let item_data = item.context("Unable to get path of item, skipping")?;
         let item = item_data.path();
 
+        let item_str = item.to_str().context("Error converting directory path to string")?.replace(r"\", "/");
+
         if item.is_dir() {
             zip.add_directory(
-                item.to_str()
-                    .context("Error converting directory path to string")?,
+                item_str,
                 options,
             )
             .context("Unable to add directory to zip")?;
@@ -82,8 +83,7 @@ pub fn pack(
         }
 
         zip.start_file(
-            item.to_str()
-                .context("Error converting file path to string")?,
+            item_str,
             options,
         )
         .context("Unable to add file to zip")?;

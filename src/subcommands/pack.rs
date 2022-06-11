@@ -95,10 +95,6 @@ pub fn pack(
         let item_data = item.context("Unable to get path of item, skipping")?;
         let item = item_data.path();
 
-        if pack_params.print_mode == PrintMode::Verbose {
-            println!("Adding: {}", item.to_str().unwrap());
-        }
-
         if item.is_dir() {
             zip.add_directory(
                 item.to_str()

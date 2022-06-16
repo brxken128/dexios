@@ -302,7 +302,7 @@ impl Header {
 
         let aad = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
-            HeaderVersion::V3 => full_header_bytes.to_vec(),
+            HeaderVersion::V3 => full_header_bytes.clone(),
             HeaderVersion::V4 => {
                 let master_key_nonce_len = calc_nonce_len(&HeaderType {
                     version,

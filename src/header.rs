@@ -408,22 +408,51 @@ impl Header {
     ///
     pub fn serialize(&self) -> Result<Vec<u8>> {
         let tag = self.get_tag();
-        let bytes = match self.header_type.version {
+        match self.header_type.version {
             HeaderVersion::V1 => {
-                return Err(anyhow::anyhow!(
+                Err(anyhow::anyhow!(
                     "Serializing V1 headers has been deprecated"
                 ))
             }
             HeaderVersion::V2 => {
-                return Err(anyhow::anyhow!(
+                Err(anyhow::anyhow!(
                     "Serializing V2 headers has been deprecated"
                 ))
             }
-            HeaderVersion::V3 => self.serialize_v3(&tag),
-            HeaderVersion::V4 => self.serialize_v4(&tag),
-        };
+            HeaderVersion::V3 => Ok(self.serialize_v3(&tag)),
+            HeaderVersion::V4 => Ok(self.serialize_v4(&tag)),
+        }
+    }
 
-        Ok(bytes)
+    pub fn create_aad(&self) -> Result<Vec<u8>> {
+        let tag = self.get_tag();
+        match self.header_type.version {
+            HeaderVersion::V1 => {
+                Err(anyhow::anyhow!(
+                    "Serializing V1 headers has been deprecated"
+                ))
+            }
+            HeaderVersion::V2 => {
+                Err(anyhow::anyhow!(
+                    "Serializing V2 headers has been deprecated"
+                ))
+            }
+            HeaderVersion::V3 => Ok(self.serialize_v3(&tag)),
+            HeaderVersion::V4 => {
+                let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
+                let master_key_nonce_len = calc_nonce_len(&HeaderType { version: self.header_type.version, algorithm: self.header_type.algorithm, mode: Mode::MemoryMode });
+                let padding2 = vec![0u8; 32 - master_key_nonce_len];
+                let mut header_bytes = Vec::<u8>::new();
+                header_bytes.extend_from_slice(&tag.version);
+                header_bytes.extend_from_slice(&tag.algorithm);
+                header_bytes.extend_from_slice(&tag.mode);
+                header_bytes.extend_from_slice(&self.salt);
+                header_bytes.extend_from_slice(&self.nonce);
+                header_bytes.extend_from_slice(&padding);
+                header_bytes.extend_from_slice(&padding2);
+                Ok(header_bytes)
+            }
+        }
     }
 
     /// This is a convenience function for writing a header to a writer

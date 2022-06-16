@@ -6,6 +6,7 @@ use crate::global::states::HeaderFile;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
 use dexios_core::header;
+use dexios_core::header::HeaderVersion;
 use dexios_core::key::argon2id_hash;
 use dexios_core::primitives::Mode;
 use paris::Logger;
@@ -29,6 +30,7 @@ use dexios_core::stream::DecryptionStreams;
 // it also manages using a detached header file if selected
 // it creates the Cipher object, and uses that for decryption
 // it then writes the decrypted data to the file
+// this only needs to be friendly to V3 headers and below, V4 headers use stream-mode by default
 pub fn memory_mode(
     input: &str,
     output: &str,
@@ -152,12 +154,13 @@ pub fn stream_mode(
 
     let (header, aad) = match header_file {
         HeaderFile::Some(contents) => {
-            input_file
-                .seek(std::io::SeekFrom::Start(64))
-                .context("Unable to seek input file")?;
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
-            header::Header::deserialize(&mut header_file)?
+            let (header, aad) = header::Header::deserialize(&mut header_file)?;
+            input_file
+                .seek(std::io::SeekFrom::Start(header.get_size()))
+                .context("Unable to seek input file")?;
+            (header, aad)
         }
         HeaderFile::None => header::Header::deserialize(&mut input_file)?,
     };

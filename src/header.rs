@@ -171,6 +171,7 @@ impl Header {
     /// let (header, aad) = Header::deserialize(&mut cursor).unwrap();
     /// ```
     ///
+    #[allow(clippy::too_many_lines)]
     pub fn deserialize(reader: &mut (impl Read + Seek)) -> Result<(Self, Vec<u8>)> {
         let mut version_bytes = [0u8; 2];
         reader

@@ -6,7 +6,7 @@ use crate::global::structs::CryptoParams;
 use anyhow::Context;
 use anyhow::{Ok, Result};
 use dexios_core::header::{Header, HeaderType, HEADER_VERSION};
-use dexios_core::key::{argon2id_hash, gen_salt};
+use dexios_core::key::{balloon_hash, gen_salt};
 use dexios_core::primitives::gen_nonce;
 use dexios_core::primitives::Algorithm;
 use dexios_core::primitives::Mode;
@@ -57,7 +57,7 @@ pub fn stream_mode(
 
     let salt = gen_salt();
     let hash_start_time = Instant::now();
-    let key = argon2id_hash(raw_key, &salt, &header_type.version)?;
+    let key = balloon_hash(raw_key, &salt, &header_type.version)?;
     let hash_duration = hash_start_time.elapsed();
     logger.success(format!(
         "Successfully hashed your key [took {:.2}s]",
@@ -72,6 +72,7 @@ pub fn stream_mode(
         header_type,
         nonce,
         salt,
+        encrypted_master_key: None,
     };
 
     header.write(&mut output_file)?;

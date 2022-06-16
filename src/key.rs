@@ -86,7 +86,6 @@ pub fn argon2id_hash(
         }
         HeaderVersion::V3 => {
             // 256MiB of memory, 10 iterations, 4 levels of parallelism
-            // !!!NEEDS MORE TWEAKING
             let params = Params::new(262_144, 10, 4, Some(Params::DEFAULT_OUTPUT_LEN));
             match params {
                 std::result::Result::Ok(parameters) => parameters,
@@ -126,7 +125,7 @@ pub fn balloon_hash(
         }
         HeaderVersion::V4 => {
             // change this to v4
-            let params = balloon_hash::Params::new(2097152, 1, 4);
+            let params = balloon_hash::Params::new(16384, 1, 1);
             match params {
                 Ok(parameters) => parameters,
                 Err(_) => {
@@ -138,7 +137,7 @@ pub fn balloon_hash(
         }
     };
 
-    let balloon = Balloon::<blake3::Hasher>::new(balloon_hash::Algorithm::BalloonM, params, None);
+    let balloon = Balloon::<blake3::Hasher>::new(balloon_hash::Algorithm::Balloon, params, None);
     let result = balloon.hash(raw_key.expose(), salt);
     drop(raw_key);
 

@@ -124,7 +124,7 @@ pub fn balloon_hash(
             ))
         }
         HeaderVersion::V4 => {
-            let params = balloon_hash::Params::new(32768, 4, 1);
+            let params = balloon_hash::Params::new(32768, 8, 1);
             match params {
                 Ok(parameters) => parameters,
                 Err(_) => {

@@ -5,9 +5,13 @@ use crate::global::states::HashMode;
 use crate::global::states::HeaderFile;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
+use dexios_core::Zeroize;
 use dexios_core::header;
+use dexios_core::header::HeaderVersion;
 use dexios_core::key::argon2id_hash;
+use dexios_core::key::balloon_hash;
 use dexios_core::primitives::Mode;
+use dexios_core::protected::Protected;
 use paris::Logger;
 
 use anyhow::anyhow;
@@ -184,13 +188,44 @@ pub fn stream_mode(
 
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
-    let hash_start_time = Instant::now();
-    let key = argon2id_hash(raw_key, &header.salt, &header.header_type.version)?;
-    let hash_duration = hash_start_time.elapsed();
-    success!(
-        "Successfully hashed your key [took {:.2}s]",
-        hash_duration.as_secs_f32()
-    );
+    let key = match header.header_type.version {
+        HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
+            let hash_start_time = Instant::now();
+            let key = argon2id_hash(raw_key, &header.salt, &header.header_type.version)?;
+            let hash_duration = hash_start_time.elapsed();
+            success!(
+                "Successfully hashed your key [took {:.2}s]",
+                hash_duration.as_secs_f32()
+            );
+            key
+        }
+        HeaderVersion::V4 => {
+            let hash_start_time = Instant::now();
+            let key = balloon_hash(raw_key, &header.salt, &header.header_type.version)?;
+            let hash_duration = hash_start_time.elapsed();
+            success!(
+                "Successfully hashed your key [took {:.2}s]",
+                hash_duration.as_secs_f32()
+            );
+            let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
+
+            let master_key_result = cipher.decrypt(&header.master_key_nonce.unwrap(), header.master_key_encrypted.unwrap().as_slice());
+            let mut master_key_decrypted = match master_key_result {
+                std::result::Result::Ok(bytes) => bytes,
+                Err(_) => return Err(anyhow::anyhow!("Unable to decrypt your master key"))
+            };
+
+            let mut master_key = [0u8; 32];
+
+            for (i, byte) in master_key_decrypted.iter().enumerate() {
+                master_key[i] = *byte;
+            }
+
+            master_key_decrypted.zeroize();
+            Protected::new(master_key)
+        }
+    };
+
 
     let decrypt_start_time = Instant::now();
 

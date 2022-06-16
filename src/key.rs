@@ -146,7 +146,6 @@ pub fn balloon_hash(
             let mut key_bytes = key_gen_array.to_vec();
             let mut key = [0u8; 32];
 
-            println!("{}", key_bytes.len()); // DEBUGGING
 
             for (i, byte) in key_bytes.iter().enumerate() {
                 key[i] = *byte;
@@ -157,7 +156,6 @@ pub fn balloon_hash(
 
             Ok(Protected::new(key))
         }
-        // Err(_) => Err(anyhow::anyhow!("Error while hashing your key"))
-        Err(e) => return Err(anyhow::anyhow!(e.to_string()))
+        Err(_) => Err(anyhow::anyhow!("Error while hashing your key"))
     }
 }

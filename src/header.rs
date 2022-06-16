@@ -102,7 +102,7 @@ pub struct Header {
     pub header_type: HeaderType,
     pub nonce: Vec<u8>,
     pub salt: [u8; SALT_LEN],
-    pub encrypted_master_key: Option<Vec<u8>>,
+    pub master_key_encrypted: Option<Vec<u8>>,
     pub master_key_nonce: Option<Vec<u8>>,
 }
 
@@ -236,7 +236,7 @@ impl Header {
         let mut salt = [0u8; 16];
         let mut nonce = vec![0u8; nonce_len];
 
-        let (encrypted_master_key, master_key_nonce): (Option<Vec<u8>>, Option<Vec<u8>>) = match header_type.version {
+        let (master_key_encrypted, master_key_nonce): (Option<Vec<u8>>, Option<Vec<u8>>) = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V3 => {
                 cursor
                     .read_exact(&mut salt)
@@ -270,7 +270,7 @@ impl Header {
                 (None, None)
                 }
             HeaderVersion::V4 => {
-                let mut encrypted_master_key = vec![0u8; 48];
+                let mut master_key_encrypted = vec![0u8; 48];
                 let master_key_nonce_len = calc_nonce_len(&HeaderType { version, algorithm, mode: Mode::MemoryMode });
                 let mut master_key_nonce = vec![0u8; master_key_nonce_len];
                 cursor
@@ -283,7 +283,7 @@ impl Header {
                     .read_exact(&mut vec![0u8; 26 - nonce_len])
                     .context("Unable to read padding from header")?;
                 cursor
-                    .read_exact(&mut encrypted_master_key)
+                    .read_exact(&mut master_key_encrypted)
                     .context("Unable to read encrypted master key from header")?;
                 cursor
                     .read_exact(&mut master_key_nonce)
@@ -291,7 +291,7 @@ impl Header {
                     cursor
                     .read_exact(&mut vec![0u8; 32 - master_key_nonce_len])
                     .context("Unable to read padding from header")?;
-                (Some(encrypted_master_key), Some(master_key_nonce))
+                (Some(master_key_encrypted), Some(master_key_nonce))
             }
         };
 
@@ -306,7 +306,7 @@ impl Header {
                 header_type,
                 nonce,
                 salt,
-                encrypted_master_key,
+                master_key_encrypted,
                 master_key_nonce
             },
             aad,
@@ -375,7 +375,7 @@ impl Header {
         header_bytes.extend_from_slice(&self.salt);
         header_bytes.extend_from_slice(&self.nonce);
         header_bytes.extend_from_slice(&padding);
-        header_bytes.extend_from_slice(&self.encrypted_master_key.clone().unwrap());
+        header_bytes.extend_from_slice(&self.master_key_encrypted.clone().unwrap());
         header_bytes.extend_from_slice(&self.master_key_nonce.clone().unwrap());
         header_bytes.extend_from_slice(&padding2);
         header_bytes

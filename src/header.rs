@@ -186,7 +186,7 @@ impl Header {
             [0xDE, 0x01] => HeaderVersion::V1,
             [0xDE, 0x02] => HeaderVersion::V2,
             [0xDE, 0x03] => HeaderVersion::V3,
-            [0xDE, 0x04] => HeaderVersion::V3,
+            [0xDE, 0x04] => HeaderVersion::V4,
             _ => return Err(anyhow::anyhow!("Error getting version from header")),
         };
 

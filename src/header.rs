@@ -48,6 +48,7 @@ pub enum HeaderVersion {
     V1,
     V2,
     V3,
+    V4,
 }
 
 /// This is the Header's type - it contains the specific details that are needed to decrypt the data
@@ -133,6 +134,10 @@ impl Header {
             }
             HeaderVersion::V3 => {
                 let info: [u8; 2] = [0xDE, 0x03];
+                info
+            }
+            HeaderVersion::V4 => {
+                let info: [u8; 2] = [0xDE, 0x04];
                 info
             }
         }

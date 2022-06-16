@@ -171,11 +171,6 @@ impl Header {
     /// ```
     ///
     pub fn deserialize(reader: &mut (impl Read + Seek)) -> Result<(Self, Vec<u8>)> {
-        // let mut full_header_bytes = [0u8; 64];
-        // reader
-        //     .read_exact(&mut full_header_bytes)
-        //     .context("Unable to read full 64 bytes of the header")?;
-
         let mut version_bytes = [0u8; 2];
         reader
             .read_exact(&mut version_bytes)

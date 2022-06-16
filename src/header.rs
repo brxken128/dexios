@@ -298,7 +298,20 @@ impl Header {
         let aad = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
             HeaderVersion::V3 => full_header_bytes.to_vec(),
-            HeaderVersion::V4 => full_header_bytes[..48].to_vec(),
+            HeaderVersion::V4 => {
+                let master_key_nonce_len = calc_nonce_len(&HeaderType { version, algorithm, mode: Mode::MemoryMode });
+                let mut aad = vec![0u8; 80];
+
+                // this is for the version/algorithm/mode/salt/nonce
+                aad.extend_from_slice(&full_header_bytes[..48]);
+
+                // this is for the padding that's appended to the end of the master key's nonce
+                // the master key/master key nonce aren't included as they may change
+                // the master key nonce length will be fixed, as otherwise the algorithm has changed
+                // and that requires re-encrypting anyway
+                aad.extend_from_slice(&full_header_bytes[(96 + master_key_nonce_len)..]);
+                aad
+            },
         };
 
         Ok((

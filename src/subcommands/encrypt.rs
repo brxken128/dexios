@@ -98,7 +98,7 @@ pub fn stream_mode(
 
     header.write(&mut output_file)?;
 
-    let aad = header.serialize()?;
+    let aad = header.create_aad()?;
 
     streams.encrypt_file(&mut input_file, &mut output_file, &aad)?;
 

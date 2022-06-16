@@ -125,7 +125,7 @@ pub fn balloon_hash(
         }
         HeaderVersion::V4 => {
             // change this to v4
-            let params = balloon_hash::Params::new(2097152, 1, 1);
+            let params = balloon_hash::Params::new(2097152, 1, 4);
             match params {
                 Ok(parameters) => parameters,
                 Err(_) => {
@@ -137,7 +137,7 @@ pub fn balloon_hash(
         }
     };
 
-    let balloon = Balloon::<blake3::Hasher>::new(balloon_hash::Algorithm::Balloon, params, None);
+    let balloon = Balloon::<blake3::Hasher>::new(balloon_hash::Algorithm::BalloonM, params, None);
     let result = balloon.hash(raw_key.expose(), salt);
     drop(raw_key);
 

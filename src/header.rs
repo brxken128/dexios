@@ -436,6 +436,7 @@ impl Header {
         }
     }
 
+    #[must_use]
     pub fn get_size(&self) -> u64 {
         match self.header_type.version {
             HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => 64,

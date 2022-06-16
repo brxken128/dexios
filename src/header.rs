@@ -8,7 +8,7 @@
 //! * whether the file was encrypted in "memory" or stream mode
 //!
 //! It allows for serialization, deserialization, and has a convenience function for quickly writing the header to a file.
-//! 
+//!
 //! # Examples
 //!
 //! ```
@@ -30,7 +30,7 @@
 //!
 //! header.write(&mut output_file).unwrap();
 //! ```
-//! 
+//!
 
 use super::primitives::{Algorithm, Mode, SALT_LEN};
 use anyhow::{Context, Result};
@@ -175,7 +175,9 @@ impl Header {
         reader
             .read_exact(&mut version_bytes)
             .context("Unable to read version from the header")?;
-        reader.seek(std::io::SeekFrom::Current(-2)).context("Unable to seek back to start of header")?;
+        reader
+            .seek(std::io::SeekFrom::Current(-2))
+            .context("Unable to seek back to start of header")?;
 
         let version = match version_bytes {
             [0xDE, 0x01] => HeaderVersion::V1,
@@ -196,7 +198,9 @@ impl Header {
             .context("Unable to read full bytes of the header")?;
 
         let mut cursor = Cursor::new(full_header_bytes.clone());
-        cursor.seek(std::io::SeekFrom::Start(2)).context("Unable to seek past version bytes")?; // seek past the version bytes as we already have those
+        cursor
+            .seek(std::io::SeekFrom::Start(2))
+            .context("Unable to seek past version bytes")?; // seek past the version bytes as we already have those
 
         let mut algorithm_bytes = [0u8; 2];
         cursor
@@ -285,7 +289,7 @@ impl Header {
         let aad = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
             HeaderVersion::V3 => full_header_bytes.to_vec(),
-            HeaderVersion::V4 => full_header_bytes[..48].to_vec()
+            HeaderVersion::V4 => full_header_bytes[..48].to_vec(),
         };
 
         Ok((
@@ -293,7 +297,7 @@ impl Header {
                 header_type,
                 nonce,
                 salt,
-                encrypted_master_key
+                encrypted_master_key,
             },
             aad,
         ))

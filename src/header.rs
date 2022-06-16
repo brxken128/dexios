@@ -8,7 +8,7 @@
 //! * whether the file was encrypted in "memory" or stream mode
 //!
 //! It allows for serialization, deserialization, and has a convenience function for quickly writing the header to a file.
-//! 
+//!
 //! # Examples
 //!
 //! ```
@@ -30,7 +30,7 @@
 //!
 //! header.write(&mut output_file).unwrap();
 //! ```
-//! 
+//!
 
 use super::primitives::{Algorithm, Mode, SALT_LEN};
 use anyhow::{Context, Result};
@@ -39,15 +39,16 @@ use std::io::{Cursor, Read, Seek, Write};
 /// This defines the latest header version, so program's using this can easily stay up to date.
 ///
 /// It's also here to just help users keep track
-pub const HEADER_VERSION: HeaderVersion = HeaderVersion::V3;
+pub const HEADER_VERSION: HeaderVersion = HeaderVersion::V4;
 
 /// This stores all possible versions of the header
 #[allow(clippy::module_name_repetitions)]
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum HeaderVersion {
     V1,
     V2,
     V3,
+    V4,
 }
 
 /// This is the Header's type - it contains the specific details that are needed to decrypt the data
@@ -101,6 +102,8 @@ pub struct Header {
     pub header_type: HeaderType,
     pub nonce: Vec<u8>,
     pub salt: [u8; SALT_LEN],
+    pub master_key_encrypted: Option<Vec<u8>>,
+    pub master_key_nonce: Option<Vec<u8>>,
 }
 
 impl Header {
@@ -135,6 +138,10 @@ impl Header {
                 let info: [u8; 2] = [0xDE, 0x03];
                 info
             }
+            HeaderVersion::V4 => {
+                let info: [u8; 2] = [0xDE, 0x04];
+                info
+            }
         }
     }
 
@@ -164,25 +171,38 @@ impl Header {
     /// let (header, aad) = Header::deserialize(&mut cursor).unwrap();
     /// ```
     ///
+    #[allow(clippy::too_many_lines)]
     pub fn deserialize(reader: &mut (impl Read + Seek)) -> Result<(Self, Vec<u8>)> {
-        let mut full_header_bytes = [0u8; 64];
-        reader
-            .read_exact(&mut full_header_bytes)
-            .context("Unable to read full 64 bytes of the header")?;
-
-        let mut cursor = Cursor::new(full_header_bytes);
-
         let mut version_bytes = [0u8; 2];
-        cursor
+        reader
             .read_exact(&mut version_bytes)
-            .context("Unable to read version's bytes from header")?;
+            .context("Unable to read version from the header")?;
+        reader
+            .seek(std::io::SeekFrom::Current(-2))
+            .context("Unable to seek back to start of header")?;
 
         let version = match version_bytes {
             [0xDE, 0x01] => HeaderVersion::V1,
             [0xDE, 0x02] => HeaderVersion::V2,
             [0xDE, 0x03] => HeaderVersion::V3,
+            [0xDE, 0x04] => HeaderVersion::V4,
             _ => return Err(anyhow::anyhow!("Error getting version from header")),
         };
+
+        let header_length: usize = match version {
+            HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => 64,
+            HeaderVersion::V4 => 128,
+        };
+
+        let mut full_header_bytes = vec![0u8; header_length];
+        reader
+            .read_exact(&mut full_header_bytes)
+            .context("Unable to read full bytes of the header")?;
+
+        let mut cursor = Cursor::new(full_header_bytes.clone());
+        cursor
+            .seek(std::io::SeekFrom::Start(2))
+            .context("Unable to seek past version bytes")?; // seek past the version bytes as we already have those
 
         let mut algorithm_bytes = [0u8; 2];
         cursor
@@ -212,44 +232,96 @@ impl Header {
             algorithm,
             mode,
         };
+
         let nonce_len = calc_nonce_len(&header_type);
         let mut salt = [0u8; 16];
         let mut nonce = vec![0u8; nonce_len];
 
-        match header_type.version {
-            HeaderVersion::V1 | HeaderVersion::V3 => {
-                cursor
-                    .read_exact(&mut salt)
-                    .context("Unable to read salt from header")?;
-                cursor
-                    .read_exact(&mut [0; 16])
-                    .context("Unable to read empty bytes from header")?;
-                cursor
-                    .read_exact(&mut nonce)
-                    .context("Unable to read nonce from header")?;
-                cursor
-                    .read_exact(&mut vec![0u8; 26 - nonce_len])
-                    .context("Unable to read final padding from header")?;
-            }
-            HeaderVersion::V2 => {
-                cursor
-                    .read_exact(&mut salt)
-                    .context("Unable to read salt from header")?;
-                cursor
-                    .read_exact(&mut nonce)
-                    .context("Unable to read nonce from header")?;
-                cursor
-                    .read_exact(&mut vec![0u8; 26 - nonce_len])
-                    .context("Unable to read empty bytes from header")?;
-                cursor
-                    .read_exact(&mut [0u8; 16])
-                    .context("Unable to read final padding from header")?;
-            }
-        };
+        let (master_key_encrypted, master_key_nonce): (Option<Vec<u8>>, Option<Vec<u8>>) =
+            match header_type.version {
+                HeaderVersion::V1 | HeaderVersion::V3 => {
+                    cursor
+                        .read_exact(&mut salt)
+                        .context("Unable to read salt from header")?;
+                    cursor
+                        .read_exact(&mut [0; 16])
+                        .context("Unable to read empty bytes from header")?;
+                    cursor
+                        .read_exact(&mut nonce)
+                        .context("Unable to read nonce from header")?;
+                    cursor
+                        .read_exact(&mut vec![0u8; 26 - nonce_len])
+                        .context("Unable to read final padding from header")?;
+
+                    (None, None)
+                }
+                HeaderVersion::V2 => {
+                    cursor
+                        .read_exact(&mut salt)
+                        .context("Unable to read salt from header")?;
+                    cursor
+                        .read_exact(&mut nonce)
+                        .context("Unable to read nonce from header")?;
+                    cursor
+                        .read_exact(&mut vec![0u8; 26 - nonce_len])
+                        .context("Unable to read empty bytes from header")?;
+                    cursor
+                        .read_exact(&mut [0u8; 16])
+                        .context("Unable to read final padding from header")?;
+
+                    (None, None)
+                }
+                HeaderVersion::V4 => {
+                    let mut master_key_encrypted = vec![0u8; 48];
+                    let master_key_nonce_len = calc_nonce_len(&HeaderType {
+                        version,
+                        algorithm,
+                        mode: Mode::MemoryMode,
+                    });
+                    let mut master_key_nonce = vec![0u8; master_key_nonce_len];
+                    cursor
+                        .read_exact(&mut salt)
+                        .context("Unable to read salt from header")?;
+                    cursor
+                        .read_exact(&mut nonce)
+                        .context("Unable to read nonce from header")?;
+                    cursor
+                        .read_exact(&mut vec![0u8; 26 - nonce_len])
+                        .context("Unable to read padding from header")?;
+                    cursor
+                        .read_exact(&mut master_key_encrypted)
+                        .context("Unable to read encrypted master key from header")?;
+                    cursor
+                        .read_exact(&mut master_key_nonce)
+                        .context("Unable to read master key nonce from header")?;
+                    cursor
+                        .read_exact(&mut vec![0u8; 32 - master_key_nonce_len])
+                        .context("Unable to read padding from header")?;
+                    (Some(master_key_encrypted), Some(master_key_nonce))
+                }
+            };
 
         let aad = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
-            HeaderVersion::V3 => full_header_bytes.to_vec(),
+            HeaderVersion::V3 => full_header_bytes.clone(),
+            HeaderVersion::V4 => {
+                let master_key_nonce_len = calc_nonce_len(&HeaderType {
+                    version,
+                    algorithm,
+                    mode: Mode::MemoryMode,
+                });
+                let mut aad = Vec::new();
+
+                // this is for the version/algorithm/mode/salt/nonce
+                aad.extend_from_slice(&full_header_bytes[..48]);
+
+                // this is for the padding that's appended to the end of the master key's nonce
+                // the master key/master key nonce aren't included as they may change
+                // the master key nonce length will be fixed, as otherwise the algorithm has changed
+                // and that requires re-encrypting anyway
+                aad.extend_from_slice(&full_header_bytes[(96 + master_key_nonce_len)..]);
+                aad
+            }
         };
 
         Ok((
@@ -257,6 +329,8 @@ impl Header {
                 header_type,
                 nonce,
                 salt,
+                master_key_encrypted,
+                master_key_nonce,
             },
             aad,
         ))
@@ -310,7 +384,30 @@ impl Header {
         header_bytes.extend_from_slice(&self.salt);
         header_bytes.extend_from_slice(&[0; 16]);
         header_bytes.extend_from_slice(&self.nonce);
-        header_bytes.extend(&padding);
+        header_bytes.extend_from_slice(&padding);
+        header_bytes
+    }
+
+    fn serialize_v4(&self, tag: &HeaderTag) -> Vec<u8> {
+        let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
+        let padding2 = vec![
+            0u8;
+            32 - calc_nonce_len(&HeaderType {
+                version: self.header_type.version,
+                algorithm: self.header_type.algorithm,
+                mode: Mode::MemoryMode
+            })
+        ];
+        let mut header_bytes = Vec::<u8>::new();
+        header_bytes.extend_from_slice(&tag.version);
+        header_bytes.extend_from_slice(&tag.algorithm);
+        header_bytes.extend_from_slice(&tag.mode);
+        header_bytes.extend_from_slice(&self.salt);
+        header_bytes.extend_from_slice(&self.nonce);
+        header_bytes.extend_from_slice(&padding);
+        header_bytes.extend_from_slice(&self.master_key_encrypted.clone().unwrap());
+        header_bytes.extend_from_slice(&self.master_key_nonce.clone().unwrap());
+        header_bytes.extend_from_slice(&padding2);
         header_bytes
     }
 
@@ -328,21 +425,55 @@ impl Header {
     ///
     pub fn serialize(&self) -> Result<Vec<u8>> {
         let tag = self.get_tag();
-        let bytes = match self.header_type.version {
-            HeaderVersion::V1 => {
-                return Err(anyhow::anyhow!(
-                    "Serializing V1 headers has been deprecated"
-                ))
-            }
-            HeaderVersion::V2 => {
-                return Err(anyhow::anyhow!(
-                    "Serializing V2 headers has been deprecated"
-                ))
-            }
-            HeaderVersion::V3 => self.serialize_v3(&tag),
-        };
+        match self.header_type.version {
+            HeaderVersion::V1 => Err(anyhow::anyhow!(
+                "Serializing V1 headers has been deprecated"
+            )),
+            HeaderVersion::V2 => Err(anyhow::anyhow!(
+                "Serializing V2 headers has been deprecated"
+            )),
+            HeaderVersion::V3 => Ok(self.serialize_v3(&tag)),
+            HeaderVersion::V4 => Ok(self.serialize_v4(&tag)),
+        }
+    }
 
-        Ok(bytes)
+    #[must_use]
+    pub fn get_size(&self) -> u64 {
+        match self.header_type.version {
+            HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => 64,
+            HeaderVersion::V4 => 128,
+        }
+    }
+
+    pub fn create_aad(&self) -> Result<Vec<u8>> {
+        let tag = self.get_tag();
+        match self.header_type.version {
+            HeaderVersion::V1 => Err(anyhow::anyhow!(
+                "Serializing V1 headers has been deprecated"
+            )),
+            HeaderVersion::V2 => Err(anyhow::anyhow!(
+                "Serializing V2 headers has been deprecated"
+            )),
+            HeaderVersion::V3 => Ok(self.serialize_v3(&tag)),
+            HeaderVersion::V4 => {
+                let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
+                let master_key_nonce_len = calc_nonce_len(&HeaderType {
+                    version: self.header_type.version,
+                    algorithm: self.header_type.algorithm,
+                    mode: Mode::MemoryMode,
+                });
+                let padding2 = vec![0u8; 32 - master_key_nonce_len];
+                let mut header_bytes = Vec::<u8>::new();
+                header_bytes.extend_from_slice(&tag.version);
+                header_bytes.extend_from_slice(&tag.algorithm);
+                header_bytes.extend_from_slice(&tag.mode);
+                header_bytes.extend_from_slice(&self.salt);
+                header_bytes.extend_from_slice(&self.nonce);
+                header_bytes.extend_from_slice(&padding);
+                header_bytes.extend_from_slice(&padding2);
+                Ok(header_bytes)
+            }
+        }
     }
 
     /// This is a convenience function for writing a header to a writer

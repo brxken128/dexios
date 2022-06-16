@@ -3,7 +3,7 @@
 //! This is where streaming mode encryption, decryption and initialization is handled.
 //!
 //! There are also some convenience functions for quickly encrypting and decrypting files.
-//! 
+//!
 //! # Examples
 //!
 //! ```

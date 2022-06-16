@@ -33,7 +33,7 @@ use zeroize::Zeroize;
 ///
 #[must_use]
 pub fn gen_salt() -> [u8; SALT_LEN] {
-    let mut salt: [u8; SALT_LEN] = [0; SALT_LEN];
+    let mut salt = [0u8; SALT_LEN];
     StdRng::from_entropy().fill_bytes(&mut salt);
     salt
 }

@@ -227,7 +227,7 @@ impl Header {
         };
 
         let header_type = HeaderType {
-            version: version.clone(),
+            version,
             algorithm,
             mode,
         };

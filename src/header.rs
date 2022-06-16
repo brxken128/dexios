@@ -102,6 +102,7 @@ pub struct Header {
     pub header_type: HeaderType,
     pub nonce: Vec<u8>,
     pub salt: [u8; SALT_LEN],
+    pub encrypted_master_key: Option<Vec<u8>>,
 }
 
 impl Header {
@@ -170,17 +171,16 @@ impl Header {
     /// ```
     ///
     pub fn deserialize(reader: &mut (impl Read + Seek)) -> Result<(Self, Vec<u8>)> {
-        let mut full_header_bytes = [0u8; 64];
-        reader
-            .read_exact(&mut full_header_bytes)
-            .context("Unable to read full 64 bytes of the header")?;
-
-        let mut cursor = Cursor::new(full_header_bytes);
+        // let mut full_header_bytes = [0u8; 64];
+        // reader
+        //     .read_exact(&mut full_header_bytes)
+        //     .context("Unable to read full 64 bytes of the header")?;
 
         let mut version_bytes = [0u8; 2];
-        cursor
+        reader
             .read_exact(&mut version_bytes)
-            .context("Unable to read version's bytes from header")?;
+            .context("Unable to read version from the header")?;
+        reader.seek(std::io::SeekFrom::Current(-2)).context("Unable to seek back to start of header")?;
 
         let version = match version_bytes {
             [0xDE, 0x01] => HeaderVersion::V1,
@@ -189,6 +189,19 @@ impl Header {
             [0xDE, 0x04] => HeaderVersion::V4,
             _ => return Err(anyhow::anyhow!("Error getting version from header")),
         };
+
+        let header_length: usize = match version {
+            HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => 64,
+            HeaderVersion::V4 => 96,
+        };
+
+        let mut full_header_bytes = vec![0u8; header_length];
+        reader
+            .read_exact(&mut full_header_bytes)
+            .context("Unable to read full bytes of the header")?;
+
+        let mut cursor = Cursor::new(full_header_bytes.clone());
+        cursor.seek(std::io::SeekFrom::Start(2)).context("Unable to seek past version bytes")?; // seek past the version bytes as we already have those
 
         let mut algorithm_bytes = [0u8; 2];
         cursor
@@ -218,11 +231,12 @@ impl Header {
             algorithm,
             mode,
         };
+
         let nonce_len = calc_nonce_len(&header_type);
         let mut salt = [0u8; 16];
         let mut nonce = vec![0u8; nonce_len];
 
-        match header_type.version {
+        let encrypted_master_key: Option<Vec<u8>> = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V3 => {
                 cursor
                     .read_exact(&mut salt)
@@ -236,6 +250,8 @@ impl Header {
                 cursor
                     .read_exact(&mut vec![0u8; 26 - nonce_len])
                     .context("Unable to read final padding from header")?;
+
+                None
             }
             HeaderVersion::V2 => {
                 cursor
@@ -250,12 +266,31 @@ impl Header {
                 cursor
                     .read_exact(&mut [0u8; 16])
                     .context("Unable to read final padding from header")?;
+
+                None
+            }
+            HeaderVersion::V4 => {
+                let mut encrypted_key = vec![0u8; 48];
+                cursor
+                    .read_exact(&mut salt)
+                    .context("Unable to read salt from header")?;
+                cursor
+                    .read_exact(&mut nonce)
+                    .context("Unable to read nonce from header")?;
+                cursor
+                    .read_exact(&mut vec![0u8; 26 - nonce_len])
+                    .context("Unable to read final padding from header")?;
+                cursor
+                    .read_exact(&mut encrypted_key)
+                    .context("Unable to read empty bytes from header")?;
+                Some(encrypted_key)
             }
         };
 
         let aad = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
             HeaderVersion::V3 => full_header_bytes.to_vec(),
+            HeaderVersion::V4 => full_header_bytes[..48].to_vec()
         };
 
         Ok((
@@ -263,6 +298,7 @@ impl Header {
                 header_type,
                 nonce,
                 salt,
+                encrypted_master_key
             },
             aad,
         ))
@@ -316,7 +352,21 @@ impl Header {
         header_bytes.extend_from_slice(&self.salt);
         header_bytes.extend_from_slice(&[0; 16]);
         header_bytes.extend_from_slice(&self.nonce);
-        header_bytes.extend(&padding);
+        header_bytes.extend_from_slice(&padding);
+        header_bytes
+    }
+
+    fn serialize_v4(&self, tag: &HeaderTag) -> Vec<u8> {
+        let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
+        let mut header_bytes = Vec::<u8>::new();
+        header_bytes.extend_from_slice(&tag.version);
+        header_bytes.extend_from_slice(&tag.algorithm);
+        header_bytes.extend_from_slice(&tag.mode);
+        header_bytes.extend_from_slice(&self.salt);
+        // header_bytes.extend_from_slice(&[0; 16])
+        header_bytes.extend_from_slice(&self.nonce);
+        header_bytes.extend_from_slice(&padding);
+        header_bytes.extend_from_slice(&self.encrypted_master_key.clone().unwrap());
         header_bytes
     }
 
@@ -346,6 +396,7 @@ impl Header {
                 ))
             }
             HeaderVersion::V3 => self.serialize_v3(&tag),
+            HeaderVersion::V4 => self.serialize_v4(&tag),
         };
 
         Ok(bytes)

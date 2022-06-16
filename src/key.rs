@@ -92,6 +92,7 @@ pub fn argon2id_hash(
                 Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
             }
         }
+        HeaderVersion::V4 => return Err(anyhow::anyhow!("argon2id is not supported on header versions above V3.")),
     };
 
     let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
@@ -115,8 +116,8 @@ pub fn balloon_hash(
     use balloon_hash::Balloon;
 
     let params = match version {
-        HeaderVersion::V1 | HeaderVersion::V2 => return Err(anyhow::anyhow!("Balloon hashing is not supported in header versions below V4.")),
-        HeaderVersion::V3 => { // change this to v4
+        HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => return Err(anyhow::anyhow!("Balloon hashing is not supported in header versions below V4.")),
+        HeaderVersion::V4 => { // change this to v4
             let params = balloon_hash::Params::new(262_144, 6, 4);
             match params {
                 Ok(parameters) => parameters,

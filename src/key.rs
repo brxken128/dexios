@@ -16,11 +16,10 @@ use super::primitives::SALT_LEN;
 use super::header::HeaderVersion;
 use super::protected::Protected;
 use anyhow::Result;
-use argon2::Argon2;
-use argon2::Params;
 use rand::prelude::StdRng;
 use rand::RngCore;
 use rand::SeedableRng;
+use zeroize::Zeroize;
 
 /// This generates a salt, of the specified `SALT_LEN`
 ///
@@ -63,6 +62,9 @@ pub fn argon2id_hash(
     salt: &[u8; SALT_LEN],
     version: &HeaderVersion,
 ) -> Result<Protected<[u8; 32]>> {
+    use argon2::Argon2;
+    use argon2::Params;
+
     let mut key = [0u8; 32];
 
     let params = match version {
@@ -98,9 +100,44 @@ pub fn argon2id_hash(
 
     if result.is_err() {
         return Err(anyhow::anyhow!(
-            "Error while hashing your key with argon2id"
+            "Error while hashing your key"
         ));
     }
 
     Ok(Protected::new(key))
+}
+
+pub fn balloon_hash(
+    raw_key: Protected<Vec<u8>>,
+    salt: &[u8; SALT_LEN],
+    version: &HeaderVersion,
+) -> Result<Protected<Vec<u8>>> {
+    use balloon_hash::Balloon;
+
+    let params = match version {
+        HeaderVersion::V1 | HeaderVersion::V2 => return Err(anyhow::anyhow!("Balloon hashing is not supported in header versions below V4.")),
+        HeaderVersion::V3 => { // change this to v4
+            let params = balloon_hash::Params::new(262_144, 6, 4);
+            match params {
+                Ok(parameters) => parameters,
+                Err(_) => return Err(anyhow::anyhow!("Error initialising balloon hashing parameters")),
+            }
+        }
+    };
+
+    let balloon = Balloon::<blake3::Hasher>::new(balloon_hash::Algorithm::Balloon, params, None);
+    let result = balloon.hash(raw_key.expose(), salt);
+    drop(raw_key);
+
+    if result.is_err() {
+        return Err(anyhow::anyhow!(
+            "Error while hashing your key"
+        ));
+    }
+
+    let mut key_ga = result.unwrap();
+    let key_bytes = key_ga.to_vec();
+    let key = Protected::new(key_bytes);
+    key_ga.zeroize();
+    Ok(key)
 }

@@ -128,10 +128,11 @@ pub fn balloon_hash(
             let params = balloon_hash::Params::new(1024, 6, 4);
             match params {
                 Ok(parameters) => parameters,
-                Err(_) => {
-                    return Err(anyhow::anyhow!(
-                        "Error initialising balloon hashing parameters"
-                    ))
+                Err(e) => {
+                    // return Err(anyhow::anyhow!(
+                    //     "Error initialising balloon hashing parameters"
+                    // ))
+                    return Err(anyhow::anyhow!(e.to_string()))
                 }
             }
         }

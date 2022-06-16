@@ -141,13 +141,12 @@ pub fn balloon_hash(
     let result = balloon.hash(raw_key.expose(), salt);
     drop(raw_key);
 
-    if result.is_err() {
-        return Err(anyhow::anyhow!("Error while hashing your key"));
+    return match result {
+        Ok(mut key_gen_array) => {
+            let key_bytes = key_gen_array.to_vec();
+            key_gen_array.zeroize();
+            Ok(Protected::new(key_bytes))
+        }
+        Err(_) => Err(anyhow::anyhow!("Error while hashing your key"))
     }
-
-    let mut key_ga = result.unwrap();
-    let key_bytes = key_ga.to_vec();
-    let key = Protected::new(key_bytes);
-    key_ga.zeroize();
-    Ok(key)
 }

@@ -300,9 +300,7 @@ impl Header {
             HeaderVersion::V3 => full_header_bytes.to_vec(),
             HeaderVersion::V4 => {
                 let master_key_nonce_len = calc_nonce_len(&HeaderType { version, algorithm, mode: Mode::MemoryMode });
-                let aad_length = 48 + (128 - (96 + master_key_nonce_len));
-                println!("{aad_length}");
-                let mut aad = vec![0u8; aad_length];
+                let mut aad = Vec::new();
 
                 // this is for the version/algorithm/mode/salt/nonce
                 aad.extend_from_slice(&full_header_bytes[..48]);

@@ -20,7 +20,7 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 blake3 = "1.3.1"
 rand = "0.8.5"
-dexios-core = "1.0.0"
+dexios-core = { git = "https://github.com/brxken128/dexios-core", branch = "master" }
 
 walkdir = "2.3.2"
 

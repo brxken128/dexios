@@ -43,7 +43,7 @@ pub const HEADER_VERSION: HeaderVersion = HeaderVersion::V4;
 
 /// This stores all possible versions of the header
 #[allow(clippy::module_name_repetitions)]
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum HeaderVersion {
     V1,
     V2,
@@ -103,6 +103,7 @@ pub struct Header {
     pub nonce: Vec<u8>,
     pub salt: [u8; SALT_LEN],
     pub encrypted_master_key: Option<Vec<u8>>,
+    pub master_key_nonce: Option<Vec<u8>>,
 }
 
 impl Header {
@@ -189,7 +190,7 @@ impl Header {
 
         let header_length: usize = match version {
             HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => 64,
-            HeaderVersion::V4 => 96,
+            HeaderVersion::V4 => 128,
         };
 
         let mut full_header_bytes = vec![0u8; header_length];
@@ -226,7 +227,7 @@ impl Header {
         };
 
         let header_type = HeaderType {
-            version,
+            version: version.clone(),
             algorithm,
             mode,
         };
@@ -235,7 +236,7 @@ impl Header {
         let mut salt = [0u8; 16];
         let mut nonce = vec![0u8; nonce_len];
 
-        let encrypted_master_key: Option<Vec<u8>> = match header_type.version {
+        let (encrypted_master_key, master_key_nonce): (Option<Vec<u8>>, Option<Vec<u8>>) = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V3 => {
                 cursor
                     .read_exact(&mut salt)
@@ -250,7 +251,7 @@ impl Header {
                     .read_exact(&mut vec![0u8; 26 - nonce_len])
                     .context("Unable to read final padding from header")?;
 
-                None
+                (None, None)
             }
             HeaderVersion::V2 => {
                 cursor
@@ -266,10 +267,12 @@ impl Header {
                     .read_exact(&mut [0u8; 16])
                     .context("Unable to read final padding from header")?;
 
-                None
-            }
+                (None, None)
+                }
             HeaderVersion::V4 => {
-                let mut encrypted_key = vec![0u8; 48];
+                let mut encrypted_master_key = vec![0u8; 48];
+                let master_key_nonce_len = calc_nonce_len(&HeaderType { version, algorithm, mode: Mode::MemoryMode });
+                let mut master_key_nonce = vec![0u8; master_key_nonce_len];
                 cursor
                     .read_exact(&mut salt)
                     .context("Unable to read salt from header")?;
@@ -278,11 +281,17 @@ impl Header {
                     .context("Unable to read nonce from header")?;
                 cursor
                     .read_exact(&mut vec![0u8; 26 - nonce_len])
-                    .context("Unable to read final padding from header")?;
+                    .context("Unable to read padding from header")?;
                 cursor
-                    .read_exact(&mut encrypted_key)
-                    .context("Unable to read empty bytes from header")?;
-                Some(encrypted_key)
+                    .read_exact(&mut encrypted_master_key)
+                    .context("Unable to read encrypted master key from header")?;
+                cursor
+                    .read_exact(&mut master_key_nonce)
+                    .context("Unable to read master key nonce from header")?;
+                    cursor
+                    .read_exact(&mut vec![0u8; 32 - master_key_nonce_len])
+                    .context("Unable to read padding from header")?;
+                (Some(encrypted_master_key), Some(master_key_nonce))
             }
         };
 
@@ -298,6 +307,7 @@ impl Header {
                 nonce,
                 salt,
                 encrypted_master_key,
+                master_key_nonce
             },
             aad,
         ))
@@ -357,15 +367,17 @@ impl Header {
 
     fn serialize_v4(&self, tag: &HeaderTag) -> Vec<u8> {
         let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
+        let padding2 = vec![0u8; 32 - calc_nonce_len(&HeaderType { version: self.header_type.version, algorithm: self.header_type.algorithm, mode: Mode::MemoryMode })];
         let mut header_bytes = Vec::<u8>::new();
         header_bytes.extend_from_slice(&tag.version);
         header_bytes.extend_from_slice(&tag.algorithm);
         header_bytes.extend_from_slice(&tag.mode);
         header_bytes.extend_from_slice(&self.salt);
-        // header_bytes.extend_from_slice(&[0; 16])
         header_bytes.extend_from_slice(&self.nonce);
         header_bytes.extend_from_slice(&padding);
         header_bytes.extend_from_slice(&self.encrypted_master_key.clone().unwrap());
+        header_bytes.extend_from_slice(&self.master_key_nonce.clone().unwrap());
+        header_bytes.extend_from_slice(&padding2);
         header_bytes
     }
 

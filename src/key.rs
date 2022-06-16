@@ -114,7 +114,7 @@ pub fn balloon_hash(
     raw_key: Protected<Vec<u8>>,
     salt: &[u8; SALT_LEN],
     version: &HeaderVersion,
-) -> Result<Protected<Vec<u8>>> {
+) -> Result<Protected<[u8; 32]>> {
     use balloon_hash::Balloon;
 
     let params = match version {
@@ -141,11 +141,19 @@ pub fn balloon_hash(
     let result = balloon.hash(raw_key.expose(), salt);
     drop(raw_key);
 
-    return match result {
+    match result {
         Ok(mut key_gen_array) => {
-            let key_bytes = key_gen_array.to_vec();
+            let mut key_bytes = key_gen_array.to_vec();
+            let mut key = [0u8; 32];
+
+            for (i, byte) in key_bytes.iter().enumerate() {
+                key[i] = *byte;
+            }
+
+            key_bytes.zeroize();
             key_gen_array.zeroize();
-            Ok(Protected::new(key_bytes))
+
+            Ok(Protected::new(key))
         }
         Err(_) => Err(anyhow::anyhow!("Error while hashing your key"))
     }

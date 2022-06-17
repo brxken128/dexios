@@ -87,7 +87,7 @@ impl KeyFile {
             )), // should never happen
         }
     }
-    
+
     pub fn is_present(&self) -> bool {
         match self {
             KeyFile::Some(_) => true,

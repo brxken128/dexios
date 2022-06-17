@@ -4,41 +4,33 @@ use std::{
     process::exit,
 };
 
-use std::io::Cursor;
-use anyhow::{Context, Result};
-use paris::{success, Logger};
-use dexios_core::header::{Header, HeaderVersion};
-use crate::global::states::{SkipMode, KeyFile};
-use super::prompt::{get_answer, overwrite_check};
 use super::key::get_secret;
+use super::prompt::{get_answer, overwrite_check};
 use crate::global::states::PasswordMode;
+use crate::global::states::{KeyFile, SkipMode};
+use anyhow::{Context, Result};
 use dexios_core::cipher::Ciphers;
+use dexios_core::header::{Header, HeaderVersion};
 use dexios_core::primitives::Mode;
 use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
 use dexios_core::{key::balloon_hash, primitives::gen_nonce};
-use std::time::Instant;
 use paris::info;
+use paris::{success, Logger};
+use std::io::Cursor;
+use std::time::Instant;
 
 // it takes the path to the header file
 pub fn update_key(input: &str, keyfile_old: &KeyFile, keyfile_new: &KeyFile) -> Result<()> {
     if !keyfile_old.is_present() {
         info!("Please enter your old password below");
     }
-    let raw_key_old = get_secret(
-        keyfile_old,
-        false,
-        PasswordMode::NormalKeySourcePriority,
-    )?;
+    let raw_key_old = get_secret(keyfile_old, false, PasswordMode::NormalKeySourcePriority)?;
 
     if !keyfile_new.is_present() {
         info!("Please enter your new password below");
     }
-    let raw_key_new = get_secret(
-        keyfile_new,
-        true,
-        PasswordMode::NormalKeySourcePriority,
-    )?;
+    let raw_key_new = get_secret(keyfile_new, true, PasswordMode::NormalKeySourcePriority)?;
 
     let mut input_file = OpenOptions::new()
         .read(true)

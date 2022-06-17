@@ -20,7 +20,6 @@ use paris::{success, Logger};
 use std::io::Cursor;
 use std::time::Instant;
 
-// it takes the path to the header file
 pub fn update_key(input: &str, keyfile_old: &KeyFile, keyfile_new: &KeyFile) -> Result<()> {
     if !keyfile_old.is_present() {
         info!("Please enter your old password below");

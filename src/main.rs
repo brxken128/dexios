@@ -50,6 +50,8 @@ fn main() -> Result<()> {
         }
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("update-key") => {
+                // these could probably do with being in `parameters.rs`
+
                 let sub_matches_update_key = sub_matches.subcommand_matches("update-key").unwrap();
                 let keyfile_old = if sub_matches.is_present("keyfile-old") {
                     KeyFile::Some(

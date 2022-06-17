@@ -99,6 +99,8 @@ pub fn update_key(input: &str) -> Result<()> {
     let master_key_nonce_new = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
     let master_key_result = cipher.encrypt(&master_key_nonce_new, master_key.expose().as_slice());
 
+    drop(master_key);
+
     let master_key_encrypted = match master_key_result {
         std::result::Result::Ok(bytes) => bytes,
         Err(_) => return Err(anyhow::anyhow!("Unable to encrypt your master key")),

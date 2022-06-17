@@ -83,7 +83,7 @@ pub fn pack(
         let item_str = item
             .to_str()
             .context("Error converting directory path to string")?
-            .replace(r"\", "/");
+            .replace('\\', "/");
 
         if item.is_dir() {
             zip.add_directory(item_str, options)

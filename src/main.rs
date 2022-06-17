@@ -48,7 +48,7 @@ fn main() -> Result<()> {
         }
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("update-key") => {
-                let sub_matches_update_key = sub_matches.subcommand_matches("dump").unwrap();
+                let sub_matches_update_key = sub_matches.subcommand_matches("update-key").unwrap();
 
                 subcommands::header::update_key(
                     &get_param("input", sub_matches_update_key)?,

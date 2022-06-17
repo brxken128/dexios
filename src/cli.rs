@@ -369,6 +369,23 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(true)
                                 .required(true)
                                 .help("The encrypted file"),
+                                
+                        )
+                        .arg(
+                            Arg::new("keyfile-old")
+                                .short('k')
+                                .long("keyfile-old")
+                                .value_name("file")
+                                .takes_value(true)
+                                .help("Use your old keyfile for decryption"),
+                        )
+                        .arg(
+                            Arg::new("keyfile-new")
+                                .short('n')
+                                .long("keyfile-new")
+                                .value_name("file")
+                                .takes_value(true)
+                                .help("Use a keyfile as the new key"),
                         ),
                 )
                 .subcommand(

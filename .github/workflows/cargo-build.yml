@@ -84,3 +84,22 @@ jobs:
       with:
         name: dexios-windows-amd64
         path: target/release/dexios.exe
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+      with:
+          toolchain: stable
+    - name: Build
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release
+    - name: Strip
+      run: strip target/release/dexios
+    - name: Upload Binary as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: dexios-macos-amd64
+        path: target/release/dexios

@@ -13,7 +13,7 @@ use zip::write::FileOptions;
 
 use crate::{
     global::states::{DirectoryMode, EraseSourceDir, PrintMode},
-    global::structs::{CryptoParams, PackParams},
+    global::{structs::{CryptoParams, PackParams}, states::Compression},
 };
 
 // this first indexes the input directory
@@ -45,10 +45,21 @@ pub fn pack(
     let zip_start_time = Instant::now();
 
     let mut zip = zip::ZipWriter::new(file);
-    let options = FileOptions::default()
-        .compression_method(zip::CompressionMethod::Stored)
-        .large_file(true)
-        .unix_permissions(0o755);
+
+    let options = match pack_params.compression {
+        Compression::None => {
+            FileOptions::default()
+                .compression_method(zip::CompressionMethod::Stored)
+                .large_file(true)
+                .unix_permissions(0o755)
+        }
+        Compression::Zstd => {
+            FileOptions::default()
+            .compression_method(zip::CompressionMethod::Zstd)
+            .large_file(true)
+            .unix_permissions(0o755)
+        }
+    };
 
     let mut item_count = 0;
 

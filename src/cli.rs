@@ -220,6 +220,13 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("Show a detailed output"),
             )
             .arg(
+                Arg::new("zstd")
+                    .short('z')
+                    .long("zstd")
+                    .takes_value(false)
+                    .help("Use ZSTD compression"),
+            )
+            .arg(
                 Arg::new("recursive")
                     .short('r')
                     .long("recursive")

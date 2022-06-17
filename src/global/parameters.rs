@@ -13,7 +13,7 @@ use paris::warn;
 
 use dexios_core::primitives::ALGORITHMS;
 
-use super::states::{DirectoryMode, PrintMode};
+use super::states::{Compression, DirectoryMode, PrintMode};
 
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches
@@ -198,10 +198,17 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
         EraseSourceDir::Retain
     };
 
+    let compression = if sub_matches.is_present("zstd") {
+        Compression::Zstd
+    } else {
+        Compression::None
+    };
+
     let pack_params = PackParams {
         dir_mode,
         print_mode,
         erase_source,
+        compression,
     };
 
     Ok((crypto_params, pack_params))

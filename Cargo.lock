@@ -311,7 +311,7 @@ dependencies = [
 [[package]]
 name = "dexios-core"
 version = "1.0.0"
-source = "git+https://github.com/brxken128/dexios-core?branch=master#64df2ed8fff9520b6987b498c756ff4fd2903723"
+source = "git+https://github.com/brxken128/dexios-core?branch=master#487a8437b8a195701fb300eddb68158f570cdf72"
 dependencies = [
  "aead",
  "aes-gcm",

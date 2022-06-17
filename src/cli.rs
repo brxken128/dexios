@@ -360,6 +360,18 @@ pub fn get_matches() -> clap::ArgMatches {
                 .about("Manipulate encrypted headers (for advanced users)")
                 .subcommand_required(true)
                 .subcommand(
+                    Command::new("update-key")
+                        .about("Update an encrypted file's key (Password only)")
+                        .arg_required_else_help(true)
+                        .arg(
+                            Arg::new("input")
+                                .value_name("input")
+                                .takes_value(true)
+                                .required(true)
+                                .help("The encrypted file"),
+                        ),
+                )
+                .subcommand(
                     Command::new("dump")
                         .about("Dump a header")
                         .arg_required_else_help(true)

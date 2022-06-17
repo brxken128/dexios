@@ -13,7 +13,7 @@ use paris::warn;
 
 use dexios_core::primitives::ALGORITHMS;
 
-use super::states::{DirectoryMode, PrintMode, Compression};
+use super::states::{Compression, DirectoryMode, PrintMode};
 
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches
@@ -208,7 +208,7 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
         dir_mode,
         print_mode,
         erase_source,
-        compression
+        compression,
     };
 
     Ok((crypto_params, pack_params))

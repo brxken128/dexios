@@ -13,9 +13,9 @@ use dexios_core::primitives::Algorithm;
 use dexios_core::primitives::Mode;
 use dexios_core::protected::Protected;
 use paris::Logger;
+use rand::prelude::StdRng;
 use rand::RngCore;
 use rand::SeedableRng;
-use rand::prelude::StdRng;
 use std::fs::File;
 use std::io::Write;
 use std::process::exit;
@@ -82,7 +82,7 @@ pub fn stream_mode(
 
     let master_key_encrypted = match master_key_result {
         std::result::Result::Ok(bytes) => bytes,
-        Err(_) => return Err(anyhow::anyhow!("Unable to encrypt your master key"))
+        Err(_) => return Err(anyhow::anyhow!("Unable to encrypt your master key")),
     };
 
     let nonce = gen_nonce(&header_type.algorithm, &header_type.mode);

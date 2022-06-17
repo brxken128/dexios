@@ -106,7 +106,7 @@ pub fn update_key(input: &str) -> Result<()> {
 
     let header_new = Header { header_type: header.header_type, nonce: header.nonce, salt: header.salt, master_key_encrypted: Some(master_key_encrypted), master_key_nonce: Some(master_key_nonce_new) };
 
-    input_file.seek(std::io::SeekFrom::Current(header_size)).context("Unable to seek back to the start of your input file")?;
+    input_file.seek(std::io::SeekFrom::Current(-header_size)).context("Unable to seek back to the start of your input file")?;
     header_new.write(&mut input_file)?;
 
     success!("Key successfully updated for {}", input);

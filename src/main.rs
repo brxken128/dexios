@@ -3,6 +3,8 @@ use global::parameters::get_param;
 use global::parameters::skipmode;
 use std::result::Result::Ok;
 use subcommands::list::show_values;
+use crate::global::states::KeyFile;
+use anyhow::Context;
 
 mod cli;
 mod file;
@@ -49,8 +51,28 @@ fn main() -> Result<()> {
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("update-key") => {
                 let sub_matches_update_key = sub_matches.subcommand_matches("update-key").unwrap();
+                let keyfile_old = if sub_matches.is_present("keyfile-old") {
+                    KeyFile::Some(
+                        sub_matches
+                            .value_of("keyfile-old")
+                            .context("No keyfile/invalid text provided")?
+                            .to_string(),
+                    )
+                } else {
+                    KeyFile::None
+                };
 
-                subcommands::header::update_key(&get_param("input", sub_matches_update_key)?)?;
+                let keyfile_new = if sub_matches.is_present("keyfile-new") {
+                    KeyFile::Some(
+                        sub_matches
+                            .value_of("keyfile-new")
+                            .context("No keyfile/invalid text provided")?
+                            .to_string(),
+                    )
+                } else {
+                    KeyFile::None
+                };
+                subcommands::header::update_key(&get_param("input", sub_matches_update_key)?, keyfile_old, keyfile_new)?;
             }
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();

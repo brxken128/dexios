@@ -4,8 +4,6 @@ use global::parameters::key_update_params;
 use global::parameters::skipmode;
 use std::result::Result::Ok;
 use subcommands::list::show_values;
-use crate::global::states::KeyFile;
-use anyhow::Context;
 
 mod cli;
 mod file;
@@ -55,7 +53,7 @@ fn main() -> Result<()> {
 
                 let (keyfile_old, keyfile_new) = key_update_params(sub_matches_update_key)?;
 
-                subcommands::header::update_key(&get_param("input", sub_matches_update_key)?, keyfile_old, keyfile_new)?;
+                subcommands::header::update_key(&get_param("input", sub_matches_update_key)?, &keyfile_old, &keyfile_new)?;
             }
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();

@@ -21,12 +21,12 @@ use std::time::Instant;
 use paris::info;
 
 // it takes the path to the header file
-pub fn update_key(input: &str, keyfile_old: KeyFile, keyfile_new: KeyFile) -> Result<()> {
+pub fn update_key(input: &str, keyfile_old: &KeyFile, keyfile_new: &KeyFile) -> Result<()> {
     if !keyfile_old.is_present() {
         info!("Please enter your old password below");
     }
     let raw_key_old = get_secret(
-        &keyfile_old,
+        keyfile_old,
         false,
         PasswordMode::NormalKeySourcePriority,
     )?;
@@ -35,7 +35,7 @@ pub fn update_key(input: &str, keyfile_old: KeyFile, keyfile_new: KeyFile) -> Re
         info!("Please enter your new password below");
     }
     let raw_key_new = get_secret(
-        &keyfile_new,
+        keyfile_new,
         true,
         PasswordMode::NormalKeySourcePriority,
     )?;

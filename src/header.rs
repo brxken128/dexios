@@ -43,7 +43,7 @@ pub const HEADER_VERSION: HeaderVersion = HeaderVersion::V4;
 
 /// This stores all possible versions of the header
 #[allow(clippy::module_name_repetitions)]
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, PartialOrd)]
 pub enum HeaderVersion {
     V1,
     V2,

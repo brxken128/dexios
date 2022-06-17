@@ -61,14 +61,6 @@ pub fn update_key(input: &str) -> Result<()> {
     let master_key_encrypted = header.master_key_encrypted.unwrap();
     let master_key_nonce = header.master_key_nonce.unwrap();
 
-    // hash both keys
-    // decrypt master key
-    // encrypt master key with new key
-    // re-create the header with the new information
-    // seek back to the start of the file
-    // write it
-    // change input_file to use r/w openoptions
-
     let hash_start_time = Instant::now();
     let key_old = balloon_hash(raw_key_old, &header.salt, &header.header_type.version)?;
     let hash_duration = hash_start_time.elapsed();

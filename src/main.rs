@@ -47,6 +47,13 @@ fn main() -> Result<()> {
             show_values(&get_param("input", sub_matches)?)?;
         }
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
+            Some("update-key") => {
+                let sub_matches_update_key = sub_matches.subcommand_matches("dump").unwrap();
+
+                subcommands::header::update_key(
+                    &get_param("input", sub_matches_update_key)?,
+                )?;
+            }
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
                 let skip = skipmode(sub_matches_dump);

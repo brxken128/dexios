@@ -11,6 +11,11 @@ pub enum DirectoryMode {
     Recursive,
 }
 
+pub enum Compression {
+    None,
+    Zstd,
+}
+
 #[derive(PartialEq)]
 pub enum HiddenFilesMode {
     Include,

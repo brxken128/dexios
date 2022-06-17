@@ -53,9 +53,9 @@ fn main() -> Result<()> {
                 // these could probably do with being in `parameters.rs`
 
                 let sub_matches_update_key = sub_matches.subcommand_matches("update-key").unwrap();
-                let keyfile_old = if sub_matches.is_present("keyfile-old") {
+                let keyfile_old = if sub_matches_update_key.is_present("keyfile-old") {
                     KeyFile::Some(
-                        sub_matches
+                        sub_matches_update_key
                             .value_of("keyfile-old")
                             .context("No keyfile/invalid text provided")?
                             .to_string(),
@@ -64,9 +64,9 @@ fn main() -> Result<()> {
                     KeyFile::None
                 };
 
-                let keyfile_new = if sub_matches.is_present("keyfile-new") {
+                let keyfile_new = if sub_matches_update_key.is_present("keyfile-new") {
                     KeyFile::Some(
-                        sub_matches
+                        sub_matches_update_key
                             .value_of("keyfile-new")
                             .context("No keyfile/invalid text provided")?
                             .to_string(),

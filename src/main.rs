@@ -1,5 +1,6 @@
 use anyhow::Result;
 use global::parameters::get_param;
+use global::parameters::key_update_params;
 use global::parameters::skipmode;
 use std::result::Result::Ok;
 use subcommands::list::show_values;
@@ -50,30 +51,10 @@ fn main() -> Result<()> {
         }
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("update-key") => {
-                // these could probably do with being in `parameters.rs`
-
                 let sub_matches_update_key = sub_matches.subcommand_matches("update-key").unwrap();
-                let keyfile_old = if sub_matches_update_key.is_present("keyfile-old") {
-                    KeyFile::Some(
-                        sub_matches_update_key
-                            .value_of("keyfile-old")
-                            .context("No keyfile/invalid text provided")?
-                            .to_string(),
-                    )
-                } else {
-                    KeyFile::None
-                };
 
-                let keyfile_new = if sub_matches_update_key.is_present("keyfile-new") {
-                    KeyFile::Some(
-                        sub_matches_update_key
-                            .value_of("keyfile-new")
-                            .context("No keyfile/invalid text provided")?
-                            .to_string(),
-                    )
-                } else {
-                    KeyFile::None
-                };
+                let (keyfile_old, keyfile_new) = key_update_params(sub_matches_update_key)?;
+
                 subcommands::header::update_key(&get_param("input", sub_matches_update_key)?, keyfile_old, keyfile_new)?;
             }
             Some("dump") => {

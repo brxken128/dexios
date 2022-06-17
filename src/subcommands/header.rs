@@ -7,13 +7,136 @@ use std::{
 use std::io::Cursor;
 
 use anyhow::{Context, Result};
-use paris::Logger;
+use paris::{info, success, Logger};
 
-use dexios_core::header::Header;
+use dexios_core::header::{Header, HeaderVersion};
 
 use crate::global::states::SkipMode;
 
 use super::prompt::{get_answer, overwrite_check};
+
+// it takes the path to the header file
+pub fn update_key(input: &str) -> Result<()> {
+    use super::key::get_secret;
+    use crate::global::states::{KeyFile, PasswordMode};
+    use dexios_core::cipher::Ciphers;
+    use dexios_core::primitives::Mode;
+    use dexios_core::protected::Protected;
+    use dexios_core::Zeroize;
+    use dexios_core::{key::balloon_hash, primitives::gen_nonce};
+    use std::time::Instant;
+
+    info!("Getting old key!");
+    let raw_key_old = get_secret(
+        &KeyFile::None,
+        false,
+        PasswordMode::ForceUserProvidedPassword,
+    )?;
+    info!("Getting new key!");
+    let raw_key_new = get_secret(
+        &KeyFile::None,
+        true,
+        PasswordMode::ForceUserProvidedPassword,
+    )?;
+
+    let mut input_file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(input)
+        .with_context(|| format!("Unable to open input file: {}", input))?;
+
+    let (header, _) = dexios_core::header::Header::deserialize(&mut input_file)?;
+
+    if header.header_type.version < HeaderVersion::V4 {
+        return Err(anyhow::anyhow!(
+            "Updating a key is not supported in header versions below V4."
+        ));
+    }
+
+    let header_size: i64 = header
+        .get_size()
+        .try_into()
+        .context("Unable to convert header size (u64) to i64")?;
+
+    let master_key_encrypted = header.master_key_encrypted.unwrap();
+    let master_key_nonce = header.master_key_nonce.unwrap();
+
+    // hash both keys
+    // decrypt master key
+    // encrypt master key with new key
+    // re-create the header with the new information
+    // seek back to the start of the file
+    // write it
+    // change input_file to use r/w openoptions
+
+    let hash_start_time = Instant::now();
+    let key_old = balloon_hash(raw_key_old, &header.salt, &header.header_type.version)?;
+    let hash_duration = hash_start_time.elapsed();
+    success!(
+        "Successfully hashed your old key [took {:.2}s]",
+        hash_duration.as_secs_f32()
+    );
+
+    let hash_start_time = Instant::now();
+    let key_new = balloon_hash(raw_key_new, &header.salt, &header.header_type.version)?;
+    let hash_duration = hash_start_time.elapsed();
+    success!(
+        "Successfully hashed your new key [took {:.2}s]",
+        hash_duration.as_secs_f32()
+    );
+
+    let cipher = Ciphers::initialize(key_old, &header.header_type.algorithm)?;
+
+    let master_key_result = cipher.decrypt(&master_key_nonce, master_key_encrypted.as_slice());
+    let mut master_key_decrypted = match master_key_result {
+        std::result::Result::Ok(bytes) => bytes,
+        Err(_) => {
+            return Err(anyhow::anyhow!(
+                "Unable to decrypt your master key (maybe you supplied a wrong key?)"
+            ))
+        }
+    };
+
+    let mut master_key = [0u8; 32];
+
+    for (i, byte) in master_key_decrypted.iter().enumerate() {
+        master_key[i] = *byte;
+    }
+
+    master_key_decrypted.zeroize();
+    let master_key = Protected::new(master_key);
+
+    drop(cipher);
+
+    let cipher = Ciphers::initialize(key_new, &header.header_type.algorithm)?;
+
+    let master_key_nonce_new = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
+    let master_key_result = cipher.encrypt(&master_key_nonce_new, master_key.expose().as_slice());
+
+    drop(master_key);
+
+    let master_key_encrypted = match master_key_result {
+        std::result::Result::Ok(bytes) => bytes,
+        Err(_) => return Err(anyhow::anyhow!("Unable to encrypt your master key")),
+    };
+
+    let header_new = Header {
+        header_type: header.header_type,
+        nonce: header.nonce,
+        salt: header.salt,
+        master_key_encrypted: Some(master_key_encrypted),
+        master_key_nonce: Some(master_key_nonce_new),
+    };
+
+    input_file
+        .seek(std::io::SeekFrom::Current(-header_size))
+        .context("Unable to seek back to the start of your input file")?;
+    header_new.write(&mut input_file)?;
+
+    success!("Key successfully updated for {}", input);
+
+    Ok(())
+}
 
 // this function dumps the first 64 bytes of
 // the input file into the output file

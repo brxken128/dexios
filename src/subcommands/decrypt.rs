@@ -215,7 +215,7 @@ pub fn stream_mode(
             );
             let mut master_key_decrypted = match master_key_result {
                 std::result::Result::Ok(bytes) => bytes,
-                Err(_) => return Err(anyhow::anyhow!("Unable to decrypt your master key")),
+                Err(_) => return Err(anyhow::anyhow!("Unable to decrypt your master key (maybe you supplied a wrong key?)")),
             };
 
             let mut master_key = [0u8; 32];

@@ -221,3 +221,29 @@ pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {
         SkipMode::ShowPrompts
     }
 }
+
+pub fn key_update_params(sub_matches: &ArgMatches) -> Result<(KeyFile, KeyFile)> {
+    let keyfile_old = if sub_matches.is_present("keyfile-old") {
+        KeyFile::Some(
+            sub_matches
+                .value_of("keyfile-old")
+                .context("No keyfile/invalid text provided")?
+                .to_string(),
+        )
+    } else {
+        KeyFile::None
+    };
+
+    let keyfile_new = if sub_matches.is_present("keyfile-new") {
+        KeyFile::Some(
+            sub_matches
+                .value_of("keyfile-new")
+                .context("No keyfile/invalid text provided")?
+                .to_string(),
+        )
+    } else {
+        KeyFile::None
+    };
+
+    Ok((keyfile_old, keyfile_new))
+}

@@ -4,40 +4,32 @@ use std::{
     process::exit,
 };
 
-use std::io::Cursor;
-
-use anyhow::{Context, Result};
-use paris::{info, success, Logger};
-
-use dexios_core::header::{Header, HeaderVersion};
-
-use crate::global::states::SkipMode;
-
+use super::key::get_secret;
 use super::prompt::{get_answer, overwrite_check};
+use crate::global::states::PasswordMode;
+use crate::global::states::{KeyFile, SkipMode};
+use anyhow::{Context, Result};
+use dexios_core::cipher::Ciphers;
+use dexios_core::header::{Header, HeaderVersion};
+use dexios_core::primitives::Mode;
+use dexios_core::protected::Protected;
+use dexios_core::Zeroize;
+use dexios_core::{key::balloon_hash, primitives::gen_nonce};
+use paris::info;
+use paris::{success, Logger};
+use std::io::Cursor;
+use std::time::Instant;
 
-// it takes the path to the header file
-pub fn update_key(input: &str) -> Result<()> {
-    use super::key::get_secret;
-    use crate::global::states::{KeyFile, PasswordMode};
-    use dexios_core::cipher::Ciphers;
-    use dexios_core::primitives::Mode;
-    use dexios_core::protected::Protected;
-    use dexios_core::Zeroize;
-    use dexios_core::{key::balloon_hash, primitives::gen_nonce};
-    use std::time::Instant;
+pub fn update_key(input: &str, keyfile_old: &KeyFile, keyfile_new: &KeyFile) -> Result<()> {
+    if !keyfile_old.is_present() {
+        info!("Please enter your old password below");
+    }
+    let raw_key_old = get_secret(keyfile_old, false, PasswordMode::NormalKeySourcePriority)?;
 
-    info!("Getting old key!");
-    let raw_key_old = get_secret(
-        &KeyFile::None,
-        false,
-        PasswordMode::ForceUserProvidedPassword,
-    )?;
-    info!("Getting new key!");
-    let raw_key_new = get_secret(
-        &KeyFile::None,
-        true,
-        PasswordMode::ForceUserProvidedPassword,
-    )?;
+    if !keyfile_new.is_present() {
+        info!("Please enter your new password below");
+    }
+    let raw_key_new = get_secret(keyfile_new, true, PasswordMode::NormalKeySourcePriority)?;
 
     let mut input_file = OpenOptions::new()
         .read(true)
@@ -60,14 +52,6 @@ pub fn update_key(input: &str) -> Result<()> {
 
     let master_key_encrypted = header.master_key_encrypted.unwrap();
     let master_key_nonce = header.master_key_nonce.unwrap();
-
-    // hash both keys
-    // decrypt master key
-    // encrypt master key with new key
-    // re-create the header with the new information
-    // seek back to the start of the file
-    // write it
-    // change input_file to use r/w openoptions
 
     let hash_start_time = Instant::now();
     let key_old = balloon_hash(raw_key_old, &header.salt, &header.header_type.version)?;

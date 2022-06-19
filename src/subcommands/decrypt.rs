@@ -215,7 +215,7 @@ pub fn stream_mode(
                 std::result::Result::Ok(bytes) => bytes,
                 Err(_) => {
                     return Err(anyhow::anyhow!(
-                        "Unable to decrypt your master key (maybe you supplied a wrong key?)"
+                        "Unable to decrypt your master key (maybe you supplied the wrong key?)"
                     ))
                 }
             };

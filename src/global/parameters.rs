@@ -1,9 +1,7 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::states::{
-    EraseMode, EraseSourceDir, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
-};
+use crate::global::states::{EraseMode, EraseSourceDir, HashMode, HeaderFile, SkipMode};
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
 use anyhow::{Context, Result};
@@ -13,7 +11,7 @@ use paris::warn;
 
 use dexios_core::primitives::ALGORITHMS;
 
-use super::states::{Compression, DirectoryMode, PrintMode};
+use super::states::{Compression, DirectoryMode, Key, PrintMode};
 
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches
@@ -24,15 +22,19 @@ pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
 }
 
 pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
-    let keyfile = if sub_matches.is_present("keyfile") {
-        KeyFile::Some(
+    let key = if sub_matches.is_present("keyfile") {
+        Key::Keyfile(
             sub_matches
                 .value_of("keyfile")
                 .context("No keyfile/invalid text provided")?
                 .to_string(),
         )
+    } else if std::env::var("DEXIOS_KEY").is_ok() {
+        Key::Env
+    } else if sub_matches.is_present("autogenerate") {
+        Key::Generate
     } else {
-        KeyFile::None
+        Key::User
     };
 
     let hash_mode = if sub_matches.is_present("hash") {
@@ -62,20 +64,11 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         EraseMode::IgnoreFile(0)
     };
 
-    let password = if sub_matches.is_present("password") {
-        //Overwrite, so the user provided password is used and ignore environment supplied one?!
-        PasswordMode::ForceUserProvidedPassword
-    } else {
-        // default
-        PasswordMode::NormalKeySourcePriority
-    };
-
     Ok(CryptoParams {
         hash_mode,
         skip,
-        password,
         erase,
-        keyfile,
+        key,
     })
 }
 
@@ -137,15 +130,19 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
 }
 
 pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams)> {
-    let keyfile = if sub_matches.is_present("keyfile") {
-        KeyFile::Some(
+    let key = if sub_matches.is_present("keyfile") {
+        Key::Keyfile(
             sub_matches
                 .value_of("keyfile")
                 .context("No keyfile/invalid text provided")?
                 .to_string(),
         )
+    } else if std::env::var("DEXIOS_KEY").is_ok() {
+        Key::Env
+    } else if sub_matches.is_present("autogenerate") {
+        Key::Generate
     } else {
-        KeyFile::None
+        Key::User
     };
 
     let hash_mode = if sub_matches.is_present("hash") {
@@ -160,20 +157,11 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
 
     let erase = EraseMode::IgnoreFile(0);
 
-    let password = if sub_matches.is_present("password") {
-        //Overwrite, so the user provided password is used and ignore environment supplied one?!
-        PasswordMode::ForceUserProvidedPassword
-    } else {
-        // default
-        PasswordMode::NormalKeySourcePriority
-    };
-
     let crypto_params = CryptoParams {
         hash_mode,
         skip,
-        password,
         erase,
-        keyfile,
+        key,
     };
 
     let print_mode = if sub_matches.is_present("verbose") {
@@ -222,28 +210,30 @@ pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {
     }
 }
 
-pub fn key_update_params(sub_matches: &ArgMatches) -> Result<(KeyFile, KeyFile)> {
-    let keyfile_old = if sub_matches.is_present("keyfile-old") {
-        KeyFile::Some(
+pub fn key_update_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
+    let key_old = if sub_matches.is_present("keyfile-old") {
+        Key::Keyfile(
             sub_matches
                 .value_of("keyfile-old")
                 .context("No keyfile/invalid text provided")?
                 .to_string(),
         )
     } else {
-        KeyFile::None
+        Key::User
     };
 
-    let keyfile_new = if sub_matches.is_present("keyfile-new") {
-        KeyFile::Some(
+    let key_new = if sub_matches.is_present("keyfile-new") {
+        Key::Keyfile(
             sub_matches
                 .value_of("keyfile-new")
                 .context("No keyfile/invalid text provided")?
                 .to_string(),
         )
+    } else if sub_matches.is_present("autogenerate") {
+        Key::Generate
     } else {
-        KeyFile::None
+        Key::User
     };
 
-    Ok((keyfile_old, keyfile_new))
+    Ok((key_old, key_new))
 }

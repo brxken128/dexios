@@ -1,8 +1,8 @@
-use super::key::get_secret;
 use super::prompt::overwrite_check;
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
 use crate::global::states::HeaderFile;
+use crate::global::states::PasswordState;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
 use dexios_core::header;
@@ -74,7 +74,7 @@ pub fn memory_mode(
         read_duration.as_secs_f32()
     ));
 
-    let raw_key = get_secret(&params.keyfile, false, params.password)?;
+    let raw_key = params.key.get_secret(&PasswordState::Direct)?;
 
     logger.info(format!(
         "Using {} for decryption",
@@ -177,7 +177,7 @@ pub fn stream_mode(
         exit(0);
     }
 
-    let raw_key = get_secret(&params.keyfile, false, params.password)?;
+    let raw_key = params.key.get_secret(&PasswordState::Direct)?;
 
     let mut output_file = File::create(output)?; // !!!attach context here
 

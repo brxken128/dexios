@@ -48,6 +48,13 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("Return a BLAKE3 hash of the encrypted file"),
         )
         .arg(
+            Arg::new("autogenerate")
+                .long("auto")
+                .takes_value(false)
+                .help("Autogenerate a passphrase")
+                .conflicts_with("keyfile"),
+        )
+        .arg(
             Arg::new("skip")
                 .short('y')
                 .long("skip")
@@ -220,6 +227,13 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("Show a detailed output"),
             )
             .arg(
+                Arg::new("autogenerate")
+                    .long("auto")
+                    .takes_value(false)
+                    .help("Autogenerate a passphrase")
+                    .conflicts_with("keyfile"),
+            )
+            .arg(
                 Arg::new("zstd")
                     .short('z')
                     .long("zstd")
@@ -369,7 +383,13 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(true)
                                 .required(true)
                                 .help("The encrypted file"),
-                                
+                        )
+                        .arg(
+                            Arg::new("autogenerate")
+                                .long("auto")
+                                .takes_value(false)
+                                .help("Autogenerate a passphrase (this will be your new key)")
+                                .conflicts_with("keyfile-new"),
                         )
                         .arg(
                             Arg::new("keyfile-old")

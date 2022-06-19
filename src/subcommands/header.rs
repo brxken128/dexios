@@ -1,13 +1,12 @@
 use std::{
     fs::{File, OpenOptions},
-    io::{Read, Seek, Write},
+    io::{Seek, Write},
     process::exit,
 };
 
-use super::key::get_secret;
 use super::prompt::{get_answer, overwrite_check};
-use crate::global::states::PasswordMode;
-use crate::global::states::{KeyFile, SkipMode};
+use crate::global::states::PasswordState;
+use crate::global::states::{Key, SkipMode};
 use anyhow::{Context, Result};
 use dexios_core::cipher::Ciphers;
 use dexios_core::header::{Header, HeaderVersion};
@@ -17,19 +16,23 @@ use dexios_core::Zeroize;
 use dexios_core::{key::balloon_hash, primitives::gen_nonce};
 use paris::info;
 use paris::{success, Logger};
-use std::io::Cursor;
 use std::time::Instant;
 
-pub fn update_key(input: &str, keyfile_old: &KeyFile, keyfile_new: &KeyFile) -> Result<()> {
-    if !keyfile_old.is_present() {
-        info!("Please enter your old password below");
+pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
+    match key_old {
+        Key::User => info!("Please enter your old key below"),
+        Key::Keyfile(_) => info!("Reading your old keyfile"),
+        _ => (),
     }
-    let raw_key_old = get_secret(keyfile_old, false, PasswordMode::NormalKeySourcePriority)?;
+    let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
 
-    if !keyfile_new.is_present() {
-        info!("Please enter your new password below");
+    match key_new {
+        Key::Generate => info!("Generating a new key"),
+        Key::User => info!("Please enter your new key below"),
+        Key::Keyfile(_) => info!("Reading your new keyfile"),
+        Key::Env => (),
     }
-    let raw_key_new = get_secret(keyfile_new, true, PasswordMode::NormalKeySourcePriority)?;
+    let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
 
     let mut input_file = OpenOptions::new()
         .read(true)
@@ -130,20 +133,18 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     let mut logger = Logger::new();
     logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
 
-    let mut header = [0u8; 64];
-
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
-    input_file
-        .read_exact(&mut header)
-        .with_context(|| format!("Unable to read header from file: {}", input))?;
 
-    let mut header_reader = Cursor::new(header);
-    if Header::deserialize(&mut header_reader).is_err() {
+    let header_result = Header::deserialize(&mut input_file);
+
+    if header_result.is_err() {
         logger.error("File does not contain a valid Dexios header - exiting");
         drop(input_file);
         exit(1);
     }
+
+    let (header, _) = header_result.context("Error unwrapping the header's result")?; // this should never happen
 
     if !overwrite_check(output, skip)? {
         std::process::exit(0);
@@ -151,9 +152,8 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
     let mut output_file =
         File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
-    output_file
-        .write_all(&header)
-        .with_context(|| format!("Unable to write header to output file: {}", output))?;
+
+    header.write(&mut output_file)?;
 
     logger.success(format!("Header dumped to {} successfully.", output));
     Ok(())
@@ -170,33 +170,30 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         "Are you sure you'd like to restore the header in {} to {}?",
         input, output
     );
+
     if !get_answer(&prompt, false, skip == SkipMode::HidePrompts)? {
         exit(0);
     }
 
-    let mut header = vec![0u8; 64];
-
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open header file: {}", input))?;
-    input_file
-        .read_exact(&mut header)
-        .with_context(|| format!("Unable to read header from file: {}", input))?;
 
-    let mut header_reader = Cursor::new(header.clone());
-    if Header::deserialize(&mut header_reader).is_err() {
+    let header_result = Header::deserialize(&mut input_file);
+
+    if header_result.is_err() {
         logger.error("File does not contain a valid Dexios header - exiting");
         drop(input_file);
         exit(1);
     }
+
+    let (header, _) = header_result.context("Error unwrapping the header's result")?; // this should never happen
 
     let mut output_file = OpenOptions::new()
         .write(true)
         .open(output)
         .with_context(|| format!("Unable to open output file: {}", output))?;
 
-    output_file
-        .write_all(&header)
-        .with_context(|| format!("Unable to write header to file: {}", output))?;
+    header.write(&mut output_file)?;
 
     logger.success(format!(
         "Header restored to {} from {} successfully.",
@@ -222,26 +219,36 @@ pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
         exit(0);
     }
 
-    let buffer = vec![0u8; 64];
-
     let mut input_file = OpenOptions::new()
         .read(true)
         .write(true)
         .open(input)
         .with_context(|| format!("Unable to open input file: {}", input))?;
 
-    if Header::deserialize(&mut input_file).is_err() {
+    let header_result = Header::deserialize(&mut input_file);
+
+    if header_result.is_err() {
         logger.error("File does not contain a valid Dexios header - exiting");
         drop(input_file);
         exit(1);
-    } else {
-        input_file
-            .seek(std::io::SeekFrom::Current(-64))
-            .context("Unable to seek back to the start of the file")?;
     }
 
+    let (header, _) = header_result.context("Error unwrapping the header's result")?; // this should never happen
+    let size: i64 = header
+        .get_size()
+        .try_into()
+        .context("Error getting header's size as i64")?;
+
     input_file
-        .write_all(&buffer)
+        .seek(std::io::SeekFrom::Current(-size))
+        .context("Unable to seek back to the start of the file")?;
+
+    input_file
+        .write_all(&vec![
+            0;
+            size.try_into()
+                .context("Error getting header's size as usize")?
+        ])
         .with_context(|| format!("Unable to wipe header for file: {}", input))?;
 
     logger.success(format!("Header stripped from {} successfully.", input));

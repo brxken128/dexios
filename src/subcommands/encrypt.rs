@@ -1,7 +1,7 @@
-use super::key::get_secret;
 use super::prompt::overwrite_check;
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
+use crate::global::states::PasswordState;
 use crate::global::structs::CryptoParams;
 use anyhow::Context;
 use anyhow::{Ok, Result};
@@ -47,7 +47,7 @@ pub fn stream_mode(
         exit(0);
     }
 
-    let raw_key = get_secret(&params.keyfile, true, params.password)?;
+    let raw_key = params.key.get_secret(&PasswordState::Validate)?;
 
     let mut output_file = File::create(output)?; // !!!attach context
 

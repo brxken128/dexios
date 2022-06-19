@@ -13,7 +13,7 @@ use paris::warn;
 
 use dexios_core::primitives::ALGORITHMS;
 
-use super::states::{Compression, DirectoryMode, PrintMode};
+use super::states::{Compression, DirectoryMode, PrintMode, Key};
 
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches
@@ -24,15 +24,14 @@ pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
 }
 
 pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
-    let keyfile = if sub_matches.is_present("keyfile") {
-        KeyFile::Some(
-            sub_matches
-                .value_of("keyfile")
-                .context("No keyfile/invalid text provided")?
-                .to_string(),
-        )
+    let key = if sub_matches.is_present("keyfile") {
+        Key::Keyfile(sub_matches.value_of("keyfile").context("No keyfile/invalid text provided")?.to_string())
+    } else if std::env::var("DEXIOS_KEY").is_ok() {
+        Key::Env
+    } else if sub_matches.is_present("autogenerate") {
+        Key::Generate
     } else {
-        KeyFile::None
+        Key::User
     };
 
     let hash_mode = if sub_matches.is_present("hash") {
@@ -75,7 +74,7 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         skip,
         password,
         erase,
-        keyfile,
+        key,
     })
 }
 
@@ -137,15 +136,14 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
 }
 
 pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams)> {
-    let keyfile = if sub_matches.is_present("keyfile") {
-        KeyFile::Some(
-            sub_matches
-                .value_of("keyfile")
-                .context("No keyfile/invalid text provided")?
-                .to_string(),
-        )
+    let key = if sub_matches.is_present("keyfile") {
+        Key::Keyfile(sub_matches.value_of("keyfile").context("No keyfile/invalid text provided")?.to_string())
+    } else if std::env::var("DEXIOS_KEY").is_ok() {
+        Key::Env
+    } else if sub_matches.is_present("autogenerate") {
+        Key::Generate
     } else {
-        KeyFile::None
+        Key::User
     };
 
     let hash_mode = if sub_matches.is_present("hash") {
@@ -173,7 +171,7 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
         skip,
         password,
         erase,
-        keyfile,
+        key,
     };
 
     let print_mode = if sub_matches.is_present("verbose") {

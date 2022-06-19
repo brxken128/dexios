@@ -1,7 +1,7 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::states::{EraseMode, EraseSourceDir, HashMode, HeaderFile, SkipMode};
+use crate::global::states::{EraseMode, EraseSourceDir, HashMode, HeaderLocation, SkipMode};
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
 use anyhow::{Context, Result};
@@ -94,16 +94,16 @@ pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Result<Algorithm> 
     }
 }
 
-pub fn decrypt_additional_params(sub_matches: &ArgMatches) -> Result<HeaderFile> {
+pub fn decrypt_additional_params(sub_matches: &ArgMatches) -> Result<HeaderLocation> {
     let header = if sub_matches.is_present("header") {
-        HeaderFile::Some(
+        HeaderLocation::Detached(
             sub_matches
                 .value_of("header")
                 .context("No header/invalid text provided")?
                 .to_string(),
         )
     } else {
-        HeaderFile::None
+        HeaderLocation::Embedded
     };
 
     Ok(header)

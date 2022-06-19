@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use rand::distributions::{Alphanumeric, DistString};
 
 use crate::global::{
-    states::{HeaderFile, PrintMode, SkipMode},
+    states::{HeaderLocation, PrintMode, SkipMode},
     structs::CryptoParams,
 };
 use paris::Logger;
@@ -19,7 +19,7 @@ use super::prompt::get_answer;
 pub fn unpack(
     input: &str,         // encrypted zip file
     output: &str,        // directory
-    header: &HeaderFile, // for decrypt function
+    header: &HeaderLocation, // for decrypt function
     print_mode: &PrintMode,
     params: &CryptoParams, // params for decrypt function
 ) -> Result<()> {

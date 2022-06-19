@@ -1,7 +1,7 @@
 use super::prompt::overwrite_check;
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
-use crate::global::states::HeaderFile;
+use crate::global::states::HeaderLocation;
 use crate::global::states::PasswordState;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
@@ -36,7 +36,7 @@ use dexios_core::stream::DecryptionStreams;
 pub fn memory_mode(
     input: &str,
     output: &str,
-    header_file: &HeaderFile,
+    header_file: &HeaderLocation,
     params: &CryptoParams,
 ) -> Result<()> {
     let mut logger = Logger::new();
@@ -49,7 +49,7 @@ pub fn memory_mode(
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
     let (header, aad) = match header_file {
-        HeaderFile::Some(contents) => {
+        HeaderLocation::Detached(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
             let (header, aad) = header::Header::deserialize(&mut header_file)?;
@@ -58,7 +58,7 @@ pub fn memory_mode(
                 .context("Unable to seek input file")?;
             (header, aad)
         }
-        HeaderFile::None => header::Header::deserialize(&mut input_file)?,
+        HeaderLocation::Embedded => header::Header::deserialize(&mut input_file)?,
     };
 
     let read_start_time = Instant::now();
@@ -141,7 +141,7 @@ pub fn memory_mode(
 pub fn stream_mode(
     input: &str,
     output: &str,
-    header_file: &HeaderFile,
+    header_file: &HeaderLocation,
     params: &CryptoParams,
 ) -> Result<()> {
     let mut logger = Logger::new();
@@ -156,7 +156,7 @@ pub fn stream_mode(
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
     let (header, aad) = match header_file {
-        HeaderFile::Some(contents) => {
+        HeaderLocation::Detached(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
             let (header, aad) = header::Header::deserialize(&mut header_file)?;
@@ -165,7 +165,7 @@ pub fn stream_mode(
                 .context("Unable to seek input file")?;
             (header, aad)
         }
-        HeaderFile::None => header::Header::deserialize(&mut input_file)?,
+        HeaderLocation::Embedded => header::Header::deserialize(&mut input_file)?,
     };
 
     if header.header_type.mode == Mode::MemoryMode {

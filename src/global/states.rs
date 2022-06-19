@@ -73,6 +73,10 @@ pub enum PasswordState {
 }
 
 impl Key {
+    // this handles getting the secret, and returning it
+    // it relies on `parameters.rs`' handling and logic to determine which route to get the key
+    // it can handle keyfiles, env variables, automatically generating and letting the user enter a key
+    // it has a check for if the keyfile is empty or not
     pub fn get_secret(&self, pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
         let secret = match self {
             Key::Keyfile(path) => get_bytes(&path)?,

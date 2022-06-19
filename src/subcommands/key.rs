@@ -91,13 +91,6 @@ pub fn get_password(pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
     })
 }
 
-// this takes in the keyfile string - if if's not empty, get those bytes
-// next, if the env var DEXIOS_KEY is set, retrieve the value
-// if neither of the above are true, ask the user for their specified key
-// if validation is true, call get_password_with_validation and require it be entered twice
-// if not, just get the key once
-// it also checks that the key is not empty
-
 pub fn generate_passphrase() -> Protected<String> {
     let collection = include_str!("wordlist.lst");
     let words = collection.split('\n').collect::<Vec<&str>>();

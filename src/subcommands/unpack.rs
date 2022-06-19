@@ -19,7 +19,6 @@ use super::prompt::get_answer;
 pub fn unpack(
     input: &str,         // encrypted zip file
     output: &str,        // directory
-    header: &HeaderLocation, // for decrypt function
     print_mode: &PrintMode,
     params: &CryptoParams, // params for decrypt function
 ) -> Result<()> {
@@ -29,7 +28,7 @@ pub fn unpack(
     // this is the name of the decrypted zip file
     let tmp_name = format!("{}.{}", input, random_extension); // e.g. "input.kjHSD93l"
 
-    super::decrypt::stream_mode(input, &tmp_name, header, params)?;
+    super::decrypt::stream_mode(input, &tmp_name, params)?;
 
     let zip_start_time = Instant::now();
     let file = File::open(&tmp_name).context("Unable to open temporary archive")?;

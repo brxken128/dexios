@@ -36,7 +36,6 @@ use dexios_core::stream::DecryptionStreams;
 pub fn memory_mode(
     input: &str,
     output: &str,
-    header_file: &HeaderLocation,
     params: &CryptoParams,
 ) -> Result<()> {
     let mut logger = Logger::new();
@@ -48,7 +47,7 @@ pub fn memory_mode(
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let (header, aad) = match header_file {
+    let (header, aad) = match &params.header_location {
         HeaderLocation::Detached(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
@@ -141,7 +140,6 @@ pub fn memory_mode(
 pub fn stream_mode(
     input: &str,
     output: &str,
-    header_file: &HeaderLocation,
     params: &CryptoParams,
 ) -> Result<()> {
     let mut logger = Logger::new();
@@ -155,7 +153,7 @@ pub fn stream_mode(
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let (header, aad) = match header_file {
+    let (header, aad) = match &params.header_location {
         HeaderLocation::Detached(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
@@ -170,7 +168,7 @@ pub fn stream_mode(
 
     if header.header_type.mode == Mode::MemoryMode {
         drop(input_file);
-        return memory_mode(input, output, header_file, params);
+        return memory_mode(input, output, params);
     }
 
     if !overwrite_check(output, params.skip)? {

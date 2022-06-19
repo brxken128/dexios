@@ -51,7 +51,8 @@ pub fn get_matches() -> clap::ArgMatches {
             Arg::new("autogenerate")
                 .long("auto")
                 .takes_value(false)
-                .help("Autogenerate a passphrase"),
+                .help("Autogenerate a passphrase")
+                .conflicts_with("keyfile"),
         )
         .arg(
             Arg::new("skip")
@@ -229,7 +230,8 @@ pub fn get_matches() -> clap::ArgMatches {
                 Arg::new("autogenerate")
                     .long("auto")
                     .takes_value(false)
-                    .help("Autogenerate a passphrase"),
+                    .help("Autogenerate a passphrase")
+                    .conflicts_with("keyfile"),
             )
             .arg(
                 Arg::new("zstd")
@@ -386,7 +388,8 @@ pub fn get_matches() -> clap::ArgMatches {
                             Arg::new("autogenerate")
                                 .long("auto")
                                 .takes_value(false)
-                                .help("Autogenerate a passphrase (this will be your new key)"),
+                                .help("Autogenerate a passphrase (this will be your new key)")
+                                .conflicts_with("keyfile-new"),
                         )
                         .arg(
                             Arg::new("keyfile-old")

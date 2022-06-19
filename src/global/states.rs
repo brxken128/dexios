@@ -3,7 +3,10 @@
 // enabled if selected by the user
 // some enums are used purely by dexios to handle things (e.g. detached header files)
 
-use anyhow::Result;
+use anyhow::{Result, Context};
+use dexios_core::protected::Protected;
+
+use crate::{file::get_bytes, subcommands::key::get_password};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {
@@ -62,6 +65,45 @@ pub enum PasswordMode {
 pub enum KeyFile {
     Some(String),
     None,
+}
+
+pub enum Key {
+    Keyfile(String),
+    Env,
+    Generate,
+    User,
+}
+
+#[derive(PartialEq)]
+pub enum PasswordState {
+    Validate,
+    Direct, // maybe not the best name
+}
+
+impl Key {
+    pub fn get_secret(self, pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
+        let secret = match self {
+            Key::Keyfile(path) => {
+                get_bytes(&path)?
+            }
+            Key::Env => {
+                Protected::new(
+                    std::env::var("DEXIOS_KEY")
+                        .context("Unable to read DEXIOS_KEY from environment variable")?
+                        .into_bytes(),
+                )
+            }
+            Key::User => {
+                get_password(pass_state)?
+            }
+            Key::Generate => {
+                
+                todo!()
+            }
+        };
+
+        Ok(secret)
+    }
 }
 
 pub enum HeaderFile {

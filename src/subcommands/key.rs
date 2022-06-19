@@ -7,7 +7,7 @@ use paris::{info, warn};
 
 use crate::{
     file::get_bytes,
-    global::states::{KeyFile, PasswordMode},
+    global::states::{KeyFile, PasswordMode, PasswordState},
 };
 
 // this function interacts with stdin and stdout to hide password input
@@ -61,7 +61,7 @@ fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
 
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes
-fn get_password(validation: bool) -> Result<Protected<Vec<u8>>> {
+pub fn get_password(pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
     Ok(loop {
         #[cfg(target_family = "unix")]
         let input =
@@ -69,7 +69,7 @@ fn get_password(validation: bool) -> Result<Protected<Vec<u8>>> {
         #[cfg(target_family = "windows")]
         let input =
             read_password_from_stdin_windows("Password: ").context("Unable to read password")?;
-        if !validation {
+        if pass_state == &PasswordState::Direct {
             return Ok(Protected::new(input.into_bytes()));
         }
 
@@ -100,7 +100,7 @@ fn get_password(validation: bool) -> Result<Protected<Vec<u8>>> {
 #[allow(clippy::module_name_repetitions)] // possibly temporary - need a way to handle this (maybe key::handler?)
 pub fn get_secret(
     keyfile: &KeyFile,
-    validation: bool,
+    pass_state: &PasswordState,
     password_mode: PasswordMode,
 ) -> Result<Protected<Vec<u8>>> {
     let key = if keyfile != &KeyFile::None {
@@ -117,11 +117,17 @@ pub fn get_secret(
                 .into_bytes(),
         )
     } else {
-        get_password(validation)?
+        get_password(pass_state)?
     };
     if key.expose().is_empty() {
         Err(anyhow::anyhow!("The specified key is empty!"))
     } else {
         Ok(key)
     }
+}
+
+pub fn generate_passphrase() -> Result<Protected<String>> {
+    
+
+    todo!()
 }

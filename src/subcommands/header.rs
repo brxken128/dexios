@@ -6,7 +6,7 @@ use std::{
 
 use super::key::get_secret;
 use super::prompt::{get_answer, overwrite_check};
-use crate::global::states::PasswordMode;
+use crate::global::states::{PasswordMode, PasswordState};
 use crate::global::states::{KeyFile, SkipMode};
 use anyhow::{Context, Result};
 use dexios_core::cipher::Ciphers;
@@ -24,12 +24,12 @@ pub fn update_key(input: &str, keyfile_old: &KeyFile, keyfile_new: &KeyFile) -> 
     if !keyfile_old.is_present() {
         info!("Please enter your old password below");
     }
-    let raw_key_old = get_secret(keyfile_old, false, PasswordMode::NormalKeySourcePriority)?;
+    let raw_key_old = get_secret(keyfile_old, &PasswordState::Direct, PasswordMode::NormalKeySourcePriority)?;
 
     if !keyfile_new.is_present() {
         info!("Please enter your new password below");
     }
-    let raw_key_new = get_secret(keyfile_new, true, PasswordMode::NormalKeySourcePriority)?;
+    let raw_key_new = get_secret(keyfile_new, &PasswordState::Validate, PasswordMode::NormalKeySourcePriority)?;
 
     let mut input_file = OpenOptions::new()
         .read(true)

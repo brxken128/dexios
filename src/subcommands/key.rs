@@ -136,7 +136,7 @@ pub fn generate_passphrase() -> Protected<String> {
     for _ in 0..3 {
         let index = StdRng::from_entropy().gen_range(0..=words.len());
         passphrase.push_str(words[index]);
-        passphrase.push_str("-");
+        passphrase.push_str('-');
     }
 
     for _ in 0..5 {

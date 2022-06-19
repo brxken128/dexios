@@ -4,9 +4,8 @@ use std::{
     process::exit,
 };
 
-use super::key::get_secret;
 use super::prompt::{get_answer, overwrite_check};
-use crate::global::states::{KeyFile, SkipMode};
+use crate::{global::states::{KeyFile, SkipMode}, subcommands::key::get_secret};
 use crate::global::states::{PasswordMode, PasswordState};
 use anyhow::{Context, Result};
 use dexios_core::cipher::Ciphers;

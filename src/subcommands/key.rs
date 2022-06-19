@@ -127,7 +127,7 @@ pub fn get_secret(
     }
 }
 
-pub fn generate_passphrase() -> Result<Protected<String>> {
+pub fn generate_passphrase() -> Protected<String> {
     let collection = include_str!("wordlist.lst");
     let words = collection.split('\n').collect::<Vec<&str>>();
 
@@ -144,5 +144,5 @@ pub fn generate_passphrase() -> Result<Protected<String>> {
         passphrase.push(number.into());
     }
 
-    Ok(Protected::new(passphrase))
+    Protected::new(passphrase)
 }

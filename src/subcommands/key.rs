@@ -4,6 +4,7 @@ use anyhow::{Context, Result};
 use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
 use paris::{info, warn};
+use rand::{prelude::StdRng, SeedableRng, Rng};
 
 use crate::{
     file::get_bytes,
@@ -127,7 +128,21 @@ pub fn get_secret(
 }
 
 pub fn generate_passphrase() -> Result<Protected<String>> {
-    
+    let collection = include_str!("wordlist.lst");
+    let words = collection.split('\n').collect::<Vec<&str>>();
 
-    todo!()
+    let mut passphrase = String::new();
+
+    for _ in 0..3 {
+        let index = StdRng::from_entropy().gen_range(0..=words.len());
+        passphrase.push_str(words[index]);
+        passphrase.push_str("-");
+    }
+
+    for _ in 0..5 {
+        let number = StdRng::from_entropy().gen_range(0..=9);
+        passphrase.push(number.into());
+    }
+
+    Ok(Protected::new(passphrase))
 }

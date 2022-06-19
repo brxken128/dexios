@@ -2,7 +2,7 @@
 // it returns information (e.g. CryptoParams) to functions that require it
 
 use crate::global::states::{
-    EraseMode, EraseSourceDir, HashMode, HeaderFile, KeyFile, PasswordMode, SkipMode,
+    EraseMode, EraseSourceDir, HashMode, HeaderFile, SkipMode,
 };
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
@@ -61,18 +61,9 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         EraseMode::IgnoreFile(0)
     };
 
-    let password = if sub_matches.is_present("password") {
-        //Overwrite, so the user provided password is used and ignore environment supplied one?!
-        PasswordMode::ForceUserProvidedPassword
-    } else {
-        // default
-        PasswordMode::NormalKeySourcePriority
-    };
-
     Ok(CryptoParams {
         hash_mode,
         skip,
-        password,
         erase,
         key,
     })
@@ -158,18 +149,9 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
 
     let erase = EraseMode::IgnoreFile(0);
 
-    let password = if sub_matches.is_present("password") {
-        //Overwrite, so the user provided password is used and ignore environment supplied one?!
-        PasswordMode::ForceUserProvidedPassword
-    } else {
-        // default
-        PasswordMode::NormalKeySourcePriority
-    };
-
     let crypto_params = CryptoParams {
         hash_mode,
         skip,
-        password,
         erase,
         key,
     };
@@ -220,28 +202,20 @@ pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {
     }
 }
 
-pub fn key_update_params(sub_matches: &ArgMatches) -> Result<(KeyFile, KeyFile)> {
-    let keyfile_old = if sub_matches.is_present("keyfile-old") {
-        KeyFile::Some(
-            sub_matches
-                .value_of("keyfile-old")
-                .context("No keyfile/invalid text provided")?
-                .to_string(),
-        )
+pub fn key_update_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
+    let key_old = if sub_matches.is_present("keyfile-old") {
+        Key::Keyfile(sub_matches.value_of("keyfile-old").context("No keyfile/invalid text provided")?.to_string())
     } else {
-        KeyFile::None
+        Key::User
     };
 
-    let keyfile_new = if sub_matches.is_present("keyfile-new") {
-        KeyFile::Some(
-            sub_matches
-                .value_of("keyfile-new")
-                .context("No keyfile/invalid text provided")?
-                .to_string(),
-        )
+    let key_new = if sub_matches.is_present("keyfile-new") {
+        Key::Keyfile(sub_matches.value_of("keyfile-new").context("No keyfile/invalid text provided")?.to_string())
+    }  else if sub_matches.is_present("autogenerate") {
+        Key::Generate
     } else {
-        KeyFile::None
+        Key::User
     };
 
-    Ok((keyfile_old, keyfile_new))
+    Ok((key_old, key_new))
 }

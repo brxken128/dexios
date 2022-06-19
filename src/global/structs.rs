@@ -1,11 +1,10 @@
-use crate::global::states::{HashMode, PasswordMode, SkipMode};
+use crate::global::states::{HashMode, SkipMode};
 
 use super::states::{Compression, DirectoryMode, EraseMode, EraseSourceDir, PrintMode, Key};
 
 pub struct CryptoParams {
     pub hash_mode: HashMode,
     pub skip: SkipMode,
-    pub password: PasswordMode,
     pub erase: EraseMode,
     pub key: Key,
 }

@@ -139,9 +139,9 @@ pub fn generate_passphrase() -> Protected<String> {
         passphrase.push('-');
     }
 
-    for _ in 0..5 {
-        let number = StdRng::from_entropy().gen_range(0..=9);
-        passphrase.push(number.into());
+    for _ in 0..6 {
+        let number: i64 = StdRng::from_entropy().gen_range(0..=9);
+        passphrase.push_str(&number.to_string());
     }
 
     Protected::new(passphrase)

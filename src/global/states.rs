@@ -85,7 +85,7 @@ pub enum PasswordState {
 }
 
 impl Key {
-    pub fn get_secret(self, pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
+    pub fn get_secret(&self, pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
         let secret = match self {
             Key::Keyfile(path) => get_bytes(&path)?,
             Key::Env => Protected::new(

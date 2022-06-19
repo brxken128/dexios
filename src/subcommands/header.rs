@@ -246,7 +246,8 @@ pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
     input_file
         .write_all(&vec![
             0;
-            header_size.try_into()
+            header_size
+                .try_into()
                 .context("Error getting header's size as usize")?
         ])
         .with_context(|| format!("Unable to wipe header for file: {}", input))?;

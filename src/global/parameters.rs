@@ -80,7 +80,7 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         skip,
         erase,
         key,
-        header_location
+        header_location,
     })
 }
 

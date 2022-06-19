@@ -107,15 +107,20 @@ pub fn stream_mode(
                 exit(0);
             }
 
-            let mut header_file = File::create(path).context("Unable to create file for the header")?;
+            let mut header_file =
+                File::create(path).context("Unable to create file for the header")?;
 
-            header.write(&mut header_file).context("Unable to write header to the file")?;
+            header
+                .write(&mut header_file)
+                .context("Unable to write header to the file")?;
 
-            let header_size = header.get_size().try_into().context("Unable to get header size as i64")?;
+            let header_size = header
+                .get_size()
+                .try_into()
+                .context("Unable to get header size as i64")?;
             output_file.seek(std::io::SeekFrom::Current(header_size))?;
         }
     }
-
 
     let aad = header.create_aad()?;
 

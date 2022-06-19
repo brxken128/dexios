@@ -5,8 +5,7 @@ use clap::ArgMatches;
 // it gets params and sends them to the appropriate functions
 
 use crate::global::parameters::{
-    encrypt_additional_params, erase_params, get_param, pack_params,
-    parameter_handler,
+    encrypt_additional_params, erase_params, get_param, pack_params, parameter_handler,
 };
 
 pub mod decrypt;

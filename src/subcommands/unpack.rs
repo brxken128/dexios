@@ -17,8 +17,8 @@ use super::prompt::get_answer;
 // once finished, it erases the temporary file to avoid any residual data
 #[allow(clippy::module_name_repetitions)]
 pub fn unpack(
-    input: &str,         // encrypted zip file
-    output: &str,        // directory
+    input: &str,  // encrypted zip file
+    output: &str, // directory
     print_mode: &PrintMode,
     params: &CryptoParams, // params for decrypt function
 ) -> Result<()> {

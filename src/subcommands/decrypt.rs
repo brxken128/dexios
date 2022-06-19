@@ -33,11 +33,7 @@ use dexios_core::stream::DecryptionStreams;
 // it also manages using a detached header file if selected
 // it creates the Cipher object, and uses that for decryption
 // it then writes the decrypted data to the file
-pub fn memory_mode(
-    input: &str,
-    output: &str,
-    params: &CryptoParams,
-) -> Result<()> {
+pub fn memory_mode(input: &str, output: &str, params: &CryptoParams) -> Result<()> {
     let mut logger = Logger::new();
 
     if !overwrite_check(output, params.skip)? {
@@ -137,11 +133,7 @@ pub fn memory_mode(
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the header says so (backwards-compat)
 // it also manages using a detached header file if selected
 // it creates the stream object and uses the convenience function provided by dexios-core
-pub fn stream_mode(
-    input: &str,
-    output: &str,
-    params: &CryptoParams,
-) -> Result<()> {
+pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<()> {
     let mut logger = Logger::new();
 
     if input == output {

@@ -3,12 +3,11 @@ use std::io::{stdin, stdout, Write};
 use anyhow::{Context, Result};
 use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
-use paris::{info, warn};
+use paris::warn;
 use rand::{prelude::StdRng, Rng, SeedableRng};
 
 use crate::{
-    file::get_bytes,
-    global::states::{KeyFile, PasswordMode, PasswordState},
+    global::states::PasswordState,
 };
 
 // this function interacts with stdin and stdout to hide password input
@@ -98,34 +97,6 @@ pub fn get_password(pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
 // if validation is true, call get_password_with_validation and require it be entered twice
 // if not, just get the key once
 // it also checks that the key is not empty
-#[allow(clippy::module_name_repetitions)] // possibly temporary - need a way to handle this (maybe key::handler?)
-pub fn get_secret(
-    keyfile: &KeyFile,
-    pass_state: &PasswordState,
-    password_mode: PasswordMode,
-) -> Result<Protected<Vec<u8>>> {
-    let key = if keyfile != &KeyFile::None {
-        let keyfile_name = keyfile.get_inner()?;
-        info!("Reading key from {}", keyfile_name);
-        get_bytes(&keyfile_name)?
-    } else if std::env::var("DEXIOS_KEY").is_ok()
-        && password_mode == PasswordMode::NormalKeySourcePriority
-    {
-        info!("Reading key from DEXIOS_KEY environment variable");
-        Protected::new(
-            std::env::var("DEXIOS_KEY")
-                .context("Unable to read DEXIOS_KEY from environment variable")?
-                .into_bytes(),
-        )
-    } else {
-        get_password(pass_state)?
-    };
-    if key.expose().is_empty() {
-        Err(anyhow::anyhow!("The specified key is empty!"))
-    } else {
-        Ok(key)
-    }
-}
 
 pub fn generate_passphrase() -> Protected<String> {
     let collection = include_str!("wordlist.lst");

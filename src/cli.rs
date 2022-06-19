@@ -55,6 +55,13 @@ pub fn get_matches() -> clap::ArgMatches {
                 .conflicts_with("keyfile"),
         )
         .arg(
+            Arg::new("header")
+                .long("header")
+                .value_name("file")
+                .takes_value(true)
+                .help("Store the header separately from the file"),
+        )
+        .arg(
             Arg::new("skip")
                 .short('y')
                 .long("skip")
@@ -232,6 +239,13 @@ pub fn get_matches() -> clap::ArgMatches {
                     .takes_value(false)
                     .help("Autogenerate a passphrase")
                     .conflicts_with("keyfile"),
+            )
+            .arg(
+                Arg::new("header")
+                    .long("header")
+                    .value_name("file")
+                    .takes_value(true)
+                    .help("Store the header separately from the file"),
             )
             .arg(
                 Arg::new("zstd")

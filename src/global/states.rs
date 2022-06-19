@@ -103,7 +103,11 @@ impl Key {
             }
         };
 
-        Ok(secret)
+        if secret.expose().is_empty() {
+            Err(anyhow::anyhow!("The specified key is empty!"))
+        } else {
+            Ok(secret)
+        }
     }
 }
 

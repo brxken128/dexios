@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use rand::distributions::{Alphanumeric, DistString};
 
 use crate::global::{
-    states::{HeaderLocation, PrintMode, SkipMode},
+    states::{PrintMode, SkipMode},
     structs::CryptoParams,
 };
 use paris::Logger;

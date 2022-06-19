@@ -99,7 +99,9 @@ pub fn generate_passphrase() -> Protected<String> {
 
     for _ in 0..3 {
         let index = StdRng::from_entropy().gen_range(0..=words.len());
-        passphrase.push_str(words[index]);
+        let word = words[index];
+        let capitalized_word = word[..1].to_uppercase() + &word[1..];
+        passphrase.push_str(&capitalized_word);
         passphrase.push('-');
     }
 

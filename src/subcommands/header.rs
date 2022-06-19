@@ -30,7 +30,7 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
         Key::Generate => info!("Generating a new key"),
         Key::User => info!("Please enter your new key below"),
         Key::Keyfile(_) => info!("Reading your new keyfile"),
-        _ => (),
+        Key::Env => (),
     }
     let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
 

@@ -79,7 +79,7 @@ impl Key {
     // it has a check for if the keyfile is empty or not
     pub fn get_secret(&self, pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
         let secret = match self {
-            Key::Keyfile(path) => get_bytes(&path)?,
+            Key::Keyfile(path) => get_bytes(path)?,
             Key::Env => Protected::new(
                 std::env::var("DEXIOS_KEY")
                     .context("Unable to read DEXIOS_KEY from environment variable")?

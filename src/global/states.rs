@@ -5,8 +5,9 @@
 
 use anyhow::{Result, Context};
 use dexios_core::protected::Protected;
+use paris::warn;
 
-use crate::{file::get_bytes, subcommands::key::get_password};
+use crate::{file::get_bytes, subcommands::key::{get_password, generate_passphrase}};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {
@@ -97,8 +98,11 @@ impl Key {
                 get_password(pass_state)?
             }
             Key::Generate => {
-                
-                todo!()
+                let passphrase = generate_passphrase();
+                warn!("Your generated passphrase is: {}", passphrase.expose());
+                let key = Protected::new(passphrase.expose().clone().into_bytes());
+                drop(passphrase);
+                key
             }
         };
 

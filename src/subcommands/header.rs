@@ -1,6 +1,6 @@
 use std::{
     fs::{File, OpenOptions},
-    io::{Read, Seek, Write},
+    io::{Seek, Write},
     process::exit,
 };
 
@@ -16,7 +16,6 @@ use dexios_core::Zeroize;
 use dexios_core::{key::balloon_hash, primitives::gen_nonce};
 use paris::info;
 use paris::{success, Logger};
-use std::io::Cursor;
 use std::time::Instant;
 
 pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {

@@ -5,8 +5,8 @@ use std::{
 };
 
 use super::prompt::{get_answer, overwrite_check};
-use crate::{global::states::{KeyFile, SkipMode}, subcommands::key::get_secret};
-use crate::global::states::{PasswordMode, PasswordState};
+use crate::global::states::{SkipMode, Key};
+use crate::global::states::PasswordState;
 use anyhow::{Context, Result};
 use dexios_core::cipher::Ciphers;
 use dexios_core::header::{Header, HeaderVersion};
@@ -19,24 +19,21 @@ use paris::{success, Logger};
 use std::io::Cursor;
 use std::time::Instant;
 
-pub fn update_key(input: &str, keyfile_old: &KeyFile, keyfile_new: &KeyFile) -> Result<()> {
-    if !keyfile_old.is_present() {
-        info!("Please enter your old password below");
+pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
+    match key_old {
+        Key::User => info!("Please enter your old key below"),
+        Key::Keyfile(_) => info!("Reading your old keyfile"),
+        _ => ()
     }
-    let raw_key_old = get_secret(
-        keyfile_old,
-        &PasswordState::Direct,
-        PasswordMode::NormalKeySourcePriority,
-    )?;
+    let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
 
-    if !keyfile_new.is_present() {
-        info!("Please enter your new password below");
+    match key_new {
+        Key::Generate => info!("Generating a new key"),
+        Key::User => info!("Please enter your new key below"),
+        Key::Keyfile(_) => info!("Reading your new keyfile"),
+        _ => ()
     }
-    let raw_key_new = get_secret(
-        keyfile_new,
-        &PasswordState::Validate,
-        PasswordMode::NormalKeySourcePriority,
-    )?;
+    let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
 
     let mut input_file = OpenOptions::new()
         .read(true)

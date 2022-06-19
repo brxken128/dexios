@@ -234,19 +234,19 @@ pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
     }
 
     let (header, _) = header_result.context("Error unwrapping the header's result")?; // this should never happen
-    let size: i64 = header
+    let header_size: i64 = header
         .get_size()
         .try_into()
         .context("Error getting header's size as i64")?;
 
     input_file
-        .seek(std::io::SeekFrom::Current(-size))
+        .seek(std::io::SeekFrom::Current(-header_size))
         .context("Unable to seek back to the start of the file")?;
 
     input_file
         .write_all(&vec![
             0;
-            size.try_into()
+            header_size.try_into()
                 .context("Error getting header's size as usize")?
         ])
         .with_context(|| format!("Unable to wipe header for file: {}", input))?;

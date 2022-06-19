@@ -59,18 +59,6 @@ pub enum SkipMode {
     HidePrompts,
 }
 
-#[derive(PartialEq, Copy, Clone)]
-pub enum PasswordMode {
-    ForceUserProvidedPassword,
-    NormalKeySourcePriority,
-}
-
-#[derive(PartialEq)]
-pub enum KeyFile {
-    Some(String),
-    None,
-}
-
 pub enum Key {
     Keyfile(String),
     Env,
@@ -121,24 +109,6 @@ impl EraseMode {
         match self {
             EraseMode::EraseFile(passes) => passes,
             EraseMode::IgnoreFile(_) => 0,
-        }
-    }
-}
-
-impl KeyFile {
-    pub fn get_inner(&self) -> Result<String> {
-        match self {
-            KeyFile::Some(data) => Ok(data.to_string()),
-            KeyFile::None => Err(anyhow::anyhow!(
-                "Tried using a keyfile when one wasn't provided"
-            )), // should never happen
-        }
-    }
-
-    pub fn is_present(&self) -> bool {
-        match self {
-            KeyFile::Some(_) => true,
-            KeyFile::None => false,
         }
     }
 }

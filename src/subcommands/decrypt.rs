@@ -1,7 +1,7 @@
 use super::prompt::overwrite_check;
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
-use crate::global::states::HeaderFile;
+use crate::global::states::HeaderLocation;
 use crate::global::states::PasswordState;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
@@ -33,12 +33,7 @@ use dexios_core::stream::DecryptionStreams;
 // it also manages using a detached header file if selected
 // it creates the Cipher object, and uses that for decryption
 // it then writes the decrypted data to the file
-pub fn memory_mode(
-    input: &str,
-    output: &str,
-    header_file: &HeaderFile,
-    params: &CryptoParams,
-) -> Result<()> {
+pub fn memory_mode(input: &str, output: &str, params: &CryptoParams) -> Result<()> {
     let mut logger = Logger::new();
 
     if !overwrite_check(output, params.skip)? {
@@ -48,8 +43,8 @@ pub fn memory_mode(
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let (header, aad) = match header_file {
-        HeaderFile::Some(contents) => {
+    let (header, aad) = match &params.header_location {
+        HeaderLocation::Detached(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
             let (header, aad) = header::Header::deserialize(&mut header_file)?;
@@ -58,7 +53,7 @@ pub fn memory_mode(
                 .context("Unable to seek input file")?;
             (header, aad)
         }
-        HeaderFile::None => header::Header::deserialize(&mut input_file)?,
+        HeaderLocation::Embedded => header::Header::deserialize(&mut input_file)?,
     };
 
     let read_start_time = Instant::now();
@@ -138,12 +133,7 @@ pub fn memory_mode(
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the header says so (backwards-compat)
 // it also manages using a detached header file if selected
 // it creates the stream object and uses the convenience function provided by dexios-core
-pub fn stream_mode(
-    input: &str,
-    output: &str,
-    header_file: &HeaderFile,
-    params: &CryptoParams,
-) -> Result<()> {
+pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<()> {
     let mut logger = Logger::new();
 
     if input == output {
@@ -155,8 +145,8 @@ pub fn stream_mode(
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let (header, aad) = match header_file {
-        HeaderFile::Some(contents) => {
+    let (header, aad) = match &params.header_location {
+        HeaderLocation::Detached(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
             let (header, aad) = header::Header::deserialize(&mut header_file)?;
@@ -165,12 +155,12 @@ pub fn stream_mode(
                 .context("Unable to seek input file")?;
             (header, aad)
         }
-        HeaderFile::None => header::Header::deserialize(&mut input_file)?,
+        HeaderLocation::Embedded => header::Header::deserialize(&mut input_file)?,
     };
 
     if header.header_type.mode == Mode::MemoryMode {
         drop(input_file);
-        return memory_mode(input, output, header_file, params);
+        return memory_mode(input, output, params);
     }
 
     if !overwrite_check(output, params.skip)? {
@@ -217,7 +207,7 @@ pub fn stream_mode(
                 std::result::Result::Ok(bytes) => bytes,
                 Err(_) => {
                     return Err(anyhow::anyhow!(
-                        "Unable to decrypt your master key (maybe you supplied a wrong key?)"
+                        "Unable to decrypt your master key (maybe you supplied the wrong key?)"
                     ))
                 }
             };

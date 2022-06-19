@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use rand::distributions::{Alphanumeric, DistString};
 
 use crate::global::{
-    states::{HeaderFile, PrintMode, SkipMode},
+    states::{PrintMode, SkipMode},
     structs::CryptoParams,
 };
 use paris::Logger;
@@ -17,9 +17,8 @@ use super::prompt::get_answer;
 // once finished, it erases the temporary file to avoid any residual data
 #[allow(clippy::module_name_repetitions)]
 pub fn unpack(
-    input: &str,         // encrypted zip file
-    output: &str,        // directory
-    header: &HeaderFile, // for decrypt function
+    input: &str,  // encrypted zip file
+    output: &str, // directory
     print_mode: &PrintMode,
     params: &CryptoParams, // params for decrypt function
 ) -> Result<()> {
@@ -29,7 +28,7 @@ pub fn unpack(
     // this is the name of the decrypted zip file
     let tmp_name = format!("{}.{}", input, random_extension); // e.g. "input.kjHSD93l"
 
-    super::decrypt::stream_mode(input, &tmp_name, header, params)?;
+    super::decrypt::stream_mode(input, &tmp_name, params)?;
 
     let zip_start_time = Instant::now();
     let file = File::open(&tmp_name).context("Unable to open temporary archive")?;

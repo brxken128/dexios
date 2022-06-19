@@ -1,6 +1,7 @@
 use super::prompt::overwrite_check;
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
+use crate::global::states::HeaderLocation;
 use crate::global::states::PasswordState;
 use crate::global::structs::CryptoParams;
 use anyhow::Context;
@@ -17,6 +18,7 @@ use rand::prelude::StdRng;
 use rand::RngCore;
 use rand::SeedableRng;
 use std::fs::File;
+use std::io::Seek;
 use std::io::Write;
 use std::process::exit;
 use std::time::Instant;
@@ -96,7 +98,29 @@ pub fn stream_mode(
         master_key_nonce: Some(master_key_nonce),
     };
 
-    header.write(&mut output_file)?;
+    match &params.header_location {
+        HeaderLocation::Embedded => {
+            header.write(&mut output_file)?;
+        }
+        HeaderLocation::Detached(path) => {
+            if !overwrite_check(path, params.skip)? {
+                exit(0);
+            }
+
+            let mut header_file =
+                File::create(path).context("Unable to create file for the header")?;
+
+            header
+                .write(&mut header_file)
+                .context("Unable to write header to the file")?;
+
+            let header_size = header
+                .get_size()
+                .try_into()
+                .context("Unable to get header size as i64")?;
+            output_file.seek(std::io::SeekFrom::Current(header_size))?;
+        }
+    }
 
     let aad = header.create_aad()?;
 

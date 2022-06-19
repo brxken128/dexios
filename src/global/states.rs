@@ -41,6 +41,11 @@ pub enum PrintMode {
     Quiet,
 }
 
+pub enum HeaderLocation {
+    Embedded,
+    Detached(String),
+}
+
 #[derive(PartialEq, Clone, Copy)]
 pub enum EraseMode {
     EraseFile(i32),
@@ -101,11 +106,6 @@ impl Key {
             Ok(secret)
         }
     }
-}
-
-pub enum HeaderFile {
-    Some(String),
-    None,
 }
 
 impl EraseMode {

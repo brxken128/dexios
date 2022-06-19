@@ -1,7 +1,7 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::states::{EraseMode, EraseSourceDir, HashMode, HeaderFile, SkipMode};
+use crate::global::states::{EraseMode, EraseSourceDir, HashMode, HeaderLocation, SkipMode};
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
 use anyhow::{Context, Result};
@@ -64,11 +64,23 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         EraseMode::IgnoreFile(0)
     };
 
+    let header_location = if sub_matches.is_present("header") {
+        HeaderLocation::Detached(
+            sub_matches
+                .value_of("header")
+                .context("No header/invalid text provided")?
+                .to_string(),
+        )
+    } else {
+        HeaderLocation::Embedded
+    };
+
     Ok(CryptoParams {
         hash_mode,
         skip,
         erase,
         key,
+        header_location,
     })
 }
 
@@ -92,21 +104,6 @@ pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Result<Algorithm> 
     } else {
         Ok(ALGORITHMS[provided_aead - 1]) // -1 to account for indexing starting at 0
     }
-}
-
-pub fn decrypt_additional_params(sub_matches: &ArgMatches) -> Result<HeaderFile> {
-    let header = if sub_matches.is_present("header") {
-        HeaderFile::Some(
-            sub_matches
-                .value_of("header")
-                .context("No header/invalid text provided")?
-                .to_string(),
-        )
-    } else {
-        HeaderFile::None
-    };
-
-    Ok(header)
 }
 
 pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
@@ -157,11 +154,23 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
 
     let erase = EraseMode::IgnoreFile(0);
 
+    let header_location = if sub_matches.is_present("header") {
+        HeaderLocation::Detached(
+            sub_matches
+                .value_of("header")
+                .context("No header/invalid text provided")?
+                .to_string(),
+        )
+    } else {
+        HeaderLocation::Embedded
+    };
+
     let crypto_params = CryptoParams {
         hash_mode,
         skip,
         erase,
         key,
+        header_location,
     };
 
     let print_mode = if sub_matches.is_present("verbose") {

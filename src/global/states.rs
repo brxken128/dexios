@@ -3,11 +3,14 @@
 // enabled if selected by the user
 // some enums are used purely by dexios to handle things (e.g. detached header files)
 
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use dexios_core::protected::Protected;
 use paris::warn;
 
-use crate::{file::get_bytes, subcommands::key::{get_password, generate_passphrase}};
+use crate::{
+    file::get_bytes,
+    subcommands::key::{generate_passphrase, get_password},
+};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {
@@ -84,19 +87,13 @@ pub enum PasswordState {
 impl Key {
     pub fn get_secret(self, pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
         let secret = match self {
-            Key::Keyfile(path) => {
-                get_bytes(&path)?
-            }
-            Key::Env => {
-                Protected::new(
-                    std::env::var("DEXIOS_KEY")
-                        .context("Unable to read DEXIOS_KEY from environment variable")?
-                        .into_bytes(),
-                )
-            }
-            Key::User => {
-                get_password(pass_state)?
-            }
+            Key::Keyfile(path) => get_bytes(&path)?,
+            Key::Env => Protected::new(
+                std::env::var("DEXIOS_KEY")
+                    .context("Unable to read DEXIOS_KEY from environment variable")?
+                    .into_bytes(),
+            ),
+            Key::User => get_password(pass_state)?,
             Key::Generate => {
                 let passphrase = generate_passphrase();
                 warn!("Your generated passphrase is: {}", passphrase.expose());

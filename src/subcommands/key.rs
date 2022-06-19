@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
 use paris::{info, warn};
-use rand::{prelude::StdRng, SeedableRng, Rng};
+use rand::{prelude::StdRng, Rng, SeedableRng};
 
 use crate::{
     file::get_bytes,
@@ -136,7 +136,7 @@ pub fn generate_passphrase() -> Protected<String> {
     for _ in 0..3 {
         let index = StdRng::from_entropy().gen_range(0..=words.len());
         passphrase.push_str(words[index]);
-        passphrase.push_str('-');
+        passphrase.push('-');
     }
 
     for _ in 0..5 {

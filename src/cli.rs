@@ -384,6 +384,12 @@ pub fn get_matches() -> clap::ArgMatches {
                                 
                         )
                         .arg(
+                            Arg::new("autogenerate")
+                                .long("auto")
+                                .takes_value(false)
+                                .help("Autogenerate a passphrase (this will be your new key)"),
+                        )
+                        .arg(
                             Arg::new("keyfile-old")
                                 .short('k')
                                 .long("keyfile-old")

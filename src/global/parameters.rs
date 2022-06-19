@@ -1,9 +1,7 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::states::{
-    EraseMode, EraseSourceDir, HashMode, HeaderFile, SkipMode,
-};
+use crate::global::states::{EraseMode, EraseSourceDir, HashMode, HeaderFile, SkipMode};
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
 use anyhow::{Context, Result};
@@ -13,7 +11,7 @@ use paris::warn;
 
 use dexios_core::primitives::ALGORITHMS;
 
-use super::states::{Compression, DirectoryMode, PrintMode, Key};
+use super::states::{Compression, DirectoryMode, Key, PrintMode};
 
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches
@@ -25,7 +23,12 @@ pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
 
 pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
     let key = if sub_matches.is_present("keyfile") {
-        Key::Keyfile(sub_matches.value_of("keyfile").context("No keyfile/invalid text provided")?.to_string())
+        Key::Keyfile(
+            sub_matches
+                .value_of("keyfile")
+                .context("No keyfile/invalid text provided")?
+                .to_string(),
+        )
     } else if std::env::var("DEXIOS_KEY").is_ok() {
         Key::Env
     } else if sub_matches.is_present("autogenerate") {
@@ -128,7 +131,12 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
 
 pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams)> {
     let key = if sub_matches.is_present("keyfile") {
-        Key::Keyfile(sub_matches.value_of("keyfile").context("No keyfile/invalid text provided")?.to_string())
+        Key::Keyfile(
+            sub_matches
+                .value_of("keyfile")
+                .context("No keyfile/invalid text provided")?
+                .to_string(),
+        )
     } else if std::env::var("DEXIOS_KEY").is_ok() {
         Key::Env
     } else if sub_matches.is_present("autogenerate") {
@@ -204,14 +212,24 @@ pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {
 
 pub fn key_update_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
     let key_old = if sub_matches.is_present("keyfile-old") {
-        Key::Keyfile(sub_matches.value_of("keyfile-old").context("No keyfile/invalid text provided")?.to_string())
+        Key::Keyfile(
+            sub_matches
+                .value_of("keyfile-old")
+                .context("No keyfile/invalid text provided")?
+                .to_string(),
+        )
     } else {
         Key::User
     };
 
     let key_new = if sub_matches.is_present("keyfile-new") {
-        Key::Keyfile(sub_matches.value_of("keyfile-new").context("No keyfile/invalid text provided")?.to_string())
-    }  else if sub_matches.is_present("autogenerate") {
+        Key::Keyfile(
+            sub_matches
+                .value_of("keyfile-new")
+                .context("No keyfile/invalid text provided")?
+                .to_string(),
+        )
+    } else if sub_matches.is_present("autogenerate") {
         Key::Generate
     } else {
         Key::User

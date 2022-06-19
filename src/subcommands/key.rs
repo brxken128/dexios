@@ -6,9 +6,7 @@ use dexios_core::Zeroize;
 use paris::warn;
 use rand::{prelude::StdRng, Rng, SeedableRng};
 
-use crate::{
-    global::states::PasswordState,
-};
+use crate::global::states::PasswordState;
 
 // this function interacts with stdin and stdout to hide password input
 // it uses termion's `read_passwd` function for terminal manipulation

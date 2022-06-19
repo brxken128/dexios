@@ -381,7 +381,6 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(true)
                                 .required(true)
                                 .help("The encrypted file"),
-                                
                         )
                         .arg(
                             Arg::new("autogenerate")

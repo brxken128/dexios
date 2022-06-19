@@ -5,8 +5,8 @@ use std::{
 };
 
 use super::prompt::{get_answer, overwrite_check};
-use crate::global::states::{SkipMode, Key};
 use crate::global::states::PasswordState;
+use crate::global::states::{Key, SkipMode};
 use anyhow::{Context, Result};
 use dexios_core::cipher::Ciphers;
 use dexios_core::header::{Header, HeaderVersion};
@@ -22,7 +22,7 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
     match key_old {
         Key::User => info!("Please enter your old key below"),
         Key::Keyfile(_) => info!("Reading your old keyfile"),
-        _ => ()
+        _ => (),
     }
     let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
 
@@ -30,7 +30,7 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
         Key::Generate => info!("Generating a new key"),
         Key::User => info!("Please enter your new key below"),
         Key::Keyfile(_) => info!("Reading your new keyfile"),
-        _ => ()
+        _ => (),
     }
     let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
 
@@ -152,7 +152,7 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
     let mut output_file =
         File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
-    
+
     header.write(&mut output_file)?;
 
     logger.success(format!("Header dumped to {} successfully.", output));
@@ -232,16 +232,23 @@ pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
         drop(input_file);
         exit(1);
     }
-        
+
     let (header, _) = header_result.context("Error unwrapping the header's result")?; // this should never happen
-    let size: i64 = header.get_size().try_into().context("Error getting header's size as i64")?;
+    let size: i64 = header
+        .get_size()
+        .try_into()
+        .context("Error getting header's size as i64")?;
 
     input_file
         .seek(std::io::SeekFrom::Current(-size))
         .context("Unable to seek back to the start of the file")?;
-    
+
     input_file
-        .write_all(&vec![0; size.try_into().context("Error getting header's size as usize")?])
+        .write_all(&vec![
+            0;
+            size.try_into()
+                .context("Error getting header's size as usize")?
+        ])
         .with_context(|| format!("Unable to wipe header for file: {}", input))?;
 
     logger.success(format!("Header stripped from {} successfully.", input));

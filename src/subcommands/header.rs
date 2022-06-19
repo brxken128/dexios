@@ -134,20 +134,18 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     let mut logger = Logger::new();
     logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
 
-    let mut header = [0u8; 64];
-
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
-    input_file
-        .read_exact(&mut header)
-        .with_context(|| format!("Unable to read header from file: {}", input))?;
 
-    let mut header_reader = Cursor::new(header);
-    if Header::deserialize(&mut header_reader).is_err() {
+    let result = Header::deserialize(&mut input_file);
+
+    if result.is_err() {
         logger.error("File does not contain a valid Dexios header - exiting");
         drop(input_file);
         exit(1);
     }
+
+    let (header, _) = result.context("Error unwrapping header")?;
 
     if !overwrite_check(output, skip)? {
         std::process::exit(0);
@@ -155,9 +153,7 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
     let mut output_file =
         File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
-    output_file
-        .write_all(&header)
-        .with_context(|| format!("Unable to write header to output file: {}", output))?;
+    header.write(&mut output_file)?;
 
     logger.success(format!("Header dumped to {} successfully.", output));
     Ok(())

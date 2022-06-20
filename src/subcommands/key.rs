@@ -89,6 +89,12 @@ pub fn get_password(pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
     })
 }
 
+// this autogenerates a passphrase, which can be selected with `--auto`
+// it reads the EFF large list of words, and puts them all into a vec
+// 3 words are then chosen at random, and 6 digits are also
+// the 3 words and the digits are separated with -
+// the words are also capitalised
+// this passphrase should provide adequate protection, while not being too hard to remember
 pub fn generate_passphrase() -> Protected<String> {
     let collection = include_str!("wordlist.lst");
     let words = collection.split('\n').collect::<Vec<&str>>();

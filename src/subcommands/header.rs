@@ -18,6 +18,11 @@ use paris::info;
 use paris::{success, Logger};
 use std::time::Instant;
 
+// this functions take both an old and a new key state
+// these key states can be auto generated (new key only), keyfiles or user provided
+// it hashes both of them, decrypts the master key with the old key, and re-encrypts it with the new key
+// it then writes the updated header to the file
+// the AAD remains the same as V4+ AAD does not contain the master key or the nonce
 pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
     match key_old {
         Key::User => info!("Please enter your old key below"),
@@ -125,7 +130,7 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
     Ok(())
 }
 
-// this function dumps the first 64 bytes of
+// this function dumps the first 64/128 bytes of
 // the input file into the output file
 // it's used for extracting an encrypted file's header for backups and such
 // it implements a check to ensure the header is valid
@@ -159,8 +164,8 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     Ok(())
 }
 
-// this function reads the first 64 bytes (header) from the input file
-// and then overwrites the first 64 bytes of the output file with it
+// this function reads the first 64/128 bytes (header) from the input file
+// and then overwrites the first 64/128 bytes of the output file with it
 // this can be used for restoring a dumped header to a file that had it's header stripped
 // it implements a check to ensure the header is valid before restoring to a file
 pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
@@ -202,7 +207,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     Ok(())
 }
 
-// this wipes the first 64 bytes (header) from the provided file
+// this wipes the first 64/128 bytes (header) from the provided file
 // it can be useful for storing the header separate from the file, to make an attacker's life that little bit harder
 // it implements a check to ensure the header is valid before stripping
 pub fn strip(input: &str, skip: SkipMode) -> Result<()> {

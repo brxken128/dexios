@@ -92,7 +92,7 @@ pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Result<Algorithm> 
             .parse()
             .context(
                 "Invalid AEAD selected! Use \"dexios list aead\" to see all possible values.",
-            )? // add context here
+            )?
     } else {
         1
     };

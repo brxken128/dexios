@@ -5,7 +5,7 @@
 /// NOTE: Stream mode can be used to encrypt files less than this size, provided the implementation is correct
 pub const BLOCK_SIZE: usize = 1_048_576; // 1024*1024 bytes
 
-/// This is the length of the salt used for `argon2id` hashing
+/// This is the length of the salt used for password hashing
 pub const SALT_LEN: usize = 16; // bytes
 
 /// This is an `enum` containing all AEADs supported by `dexios-core`

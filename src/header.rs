@@ -388,6 +388,9 @@ impl Header {
         header_bytes
     }
 
+    /// This is a private function (called by `serialize()`)
+    ///
+    /// It serializes V4 headers
     fn serialize_v4(&self, tag: &HeaderTag) -> Vec<u8> {
         let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
         let padding2 = vec![
@@ -415,7 +418,13 @@ impl Header {
     ///
     /// The returned bytes may be used as AAD, or written to a file
     ///
-    /// NOTE: This should **NOT** be used for validating AAD, only creating it. Use the AAD returned from `deserialize()` for validation.
+    /// NOTE: This should **NOT** be used for validating or creating AAD.
+    /// 
+    /// It only has support for V3 headers and above
+    /// 
+    /// Create AAD with `create_aad()`.
+    /// 
+    /// Use the AAD returned from `deserialize()` for validation.
     ///
     /// # Examples
     ///
@@ -445,6 +454,11 @@ impl Header {
         }
     }
 
+    /// This is for creating AAD
+    /// 
+    /// It only has support for V3 headers and above
+    /// 
+    /// It will return the bytes used for AAD
     pub fn create_aad(&self) -> Result<Vec<u8>> {
         let tag = self.get_tag();
         match self.header_type.version {

@@ -10,7 +10,7 @@
 //! // obviously the key should contain data, not be an empty vec
 //! let raw_key = Protected::new(vec![0u8; 128]);
 //! let salt = gen_salt();
-//! let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
+//! let key = balloon_hash(raw_key, &salt, &HeaderVersion::V4).unwrap();
 //!
 //! // this nonce should be read from somewhere, not generated
 //! let nonce = gen_nonce(&Algorithm::XChaCha20Poly1305, &Mode::StreamMode);
@@ -79,7 +79,7 @@ impl EncryptionStreams {
     /// // obviously the key should contain data, not be an empty vec
     /// let raw_key = Protected::new(vec![0u8; 128]);
     /// let salt = gen_salt();
-    /// let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
+    /// let key = balloon_hash(raw_key, &salt, &HeaderVersion::V4).unwrap();
     ///
     /// let nonce = gen_nonce(&Algorithm::XChaCha20Poly1305, &Mode::StreamMode);
     /// let encrypt_stream = EncryptionStreams::initialize(key, &nonce, &Algorithm::XChaCha20Poly1305).unwrap();
@@ -100,7 +100,7 @@ impl EncryptionStreams {
                     Ok(cipher) => cipher,
                     Err(_) => {
                         return Err(anyhow::anyhow!(
-                            "Unable to create cipher with argon2id hashed key."
+                            "Unable to create cipher with hashed key."
                         ))
                     }
                 };
@@ -117,7 +117,7 @@ impl EncryptionStreams {
                     Ok(cipher) => cipher,
                     Err(_) => {
                         return Err(anyhow::anyhow!(
-                            "Unable to create cipher with argon2id hashed key."
+                            "Unable to create cipher with hashed key."
                         ))
                     }
                 };
@@ -134,7 +134,7 @@ impl EncryptionStreams {
                     Ok(cipher) => cipher,
                     Err(_) => {
                         return Err(anyhow::anyhow!(
-                            "Unable to create cipher with argon2id hashed key."
+                            "Unable to create cipher with hashed key."
                         ))
                     }
                 };
@@ -269,7 +269,7 @@ impl DecryptionStreams {
     /// // obviously the key should contain data, not be an empty vec
     /// let raw_key = Protected::new(vec![0u8; 128]);
     /// let salt = gen_salt();
-    /// let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
+    /// let key = balloon_hash(raw_key, &salt, &HeaderVersion::V4).unwrap();
     ///
     /// // this nonce should be read from somewhere, not generated
     /// let nonce = gen_nonce(&Algorithm::XChaCha20Poly1305, &Mode::StreamMode);
@@ -288,7 +288,7 @@ impl DecryptionStreams {
                     Ok(cipher) => cipher,
                     Err(_) => {
                         return Err(anyhow::anyhow!(
-                            "Unable to create cipher with argon2id hashed key."
+                            "Unable to create cipher with hashed key."
                         ))
                     }
                 };
@@ -301,7 +301,7 @@ impl DecryptionStreams {
                     Ok(cipher) => cipher,
                     Err(_) => {
                         return Err(anyhow::anyhow!(
-                            "Unable to create cipher with argon2id hashed key."
+                            "Unable to create cipher with hashed key."
                         ))
                     }
                 };
@@ -314,7 +314,7 @@ impl DecryptionStreams {
                     Ok(cipher) => cipher,
                     Err(_) => {
                         return Err(anyhow::anyhow!(
-                            "Unable to create cipher with argon2id hashed key."
+                            "Unable to create cipher with hashed key."
                         ))
                     }
                 };

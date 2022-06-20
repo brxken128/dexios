@@ -1,6 +1,6 @@
 //! This module handles key-related functionality within `dexios-core`
 //!
-//! It contains methods for `argon2id` hashing, and securely generating a salt
+//! It contains methods for `argon2id` and `balloon` hashing, and securely generating a salt
 //!
 //! # Examples
 //!
@@ -23,7 +23,7 @@ use zeroize::Zeroize;
 
 /// This generates a salt, of the specified `SALT_LEN`
 ///
-/// This salt can be directly passed to `argon2id_hash()`
+/// This salt can be directly passed to `argon2id_hash()` or `balloon_hash()`
 ///
 /// # Examples
 ///
@@ -110,6 +110,28 @@ pub fn argon2id_hash(
     Ok(Protected::new(key))
 }
 
+
+/// This handles BLAKE3-Balloon hashing of a raw key
+///
+/// It requires a user to generate the salt
+///
+/// `HeaderVersion` is required as the parameters are linked to specific header versions
+/// 
+/// It's only supported on header versions V4 and above.
+///
+/// It returns a `Protected<[u8; 32]>` - `Protected` wrappers are used for all sensitive information within `dexios-core`
+///
+/// This function ensures that `raw_key` is securely erased from memory once hashed
+///
+/// # Examples
+///
+/// ```
+/// let salt = gen_salt();
+/// let secret_data = "secure key".as_bytes().to_vec();
+/// let raw_key = Protected::new(secret_data);
+/// let key = balloon_hash(raw_key, &salt, &HeaderVersion::V4).unwrap();
+/// ```
+///
 pub fn balloon_hash(
     raw_key: Protected<Vec<u8>>,
     salt: &[u8; SALT_LEN],

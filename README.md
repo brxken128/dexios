@@ -25,7 +25,8 @@ Dexios-Core makes it easy to integrate the Dexios format into your own projects 
 * Convenience functions for encrypting/decrypting
 * 3 AEADs (XChaCha20-Poly1305, AES-256-GCM, Deoxys-II-256)
 * Easy management of encrypted headers (no more worrying about where to store a nonce!)
-* Fast `argon2id` hashing with secure parameters
+* Easy `argon2id` hashing with secure parameters
+* Easy `balloon` hashing with secure parameters and BLAKE3
 * Frequent updates and feature additions!
 
 ## Donating
@@ -70,7 +71,7 @@ Encrypting and decrypting in-memory:
 // obviously the key should contain data, not be an empty vec
 let raw_key = Protected::new(vec![0u8; 128]);
 let salt = gen_salt();
-let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
+let key = balloon_hash(raw_key, &salt, &HeaderVersion::V4).unwrap();
 let cipher = Ciphers::initialize(key, &Algorithm::XChaCha20Poly1305).unwrap();
 
 let secret = "super secret information";

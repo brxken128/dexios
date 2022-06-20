@@ -99,9 +99,7 @@ impl EncryptionStreams {
                 let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
                     Err(_) => {
-                        return Err(anyhow::anyhow!(
-                            "Unable to create cipher with hashed key."
-                        ))
+                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
                     }
                 };
 
@@ -116,9 +114,7 @@ impl EncryptionStreams {
                 let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
                     Err(_) => {
-                        return Err(anyhow::anyhow!(
-                            "Unable to create cipher with hashed key."
-                        ))
+                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
                     }
                 };
 
@@ -133,9 +129,7 @@ impl EncryptionStreams {
                 let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
                     Err(_) => {
-                        return Err(anyhow::anyhow!(
-                            "Unable to create cipher with hashed key."
-                        ))
+                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
                     }
                 };
 
@@ -287,9 +281,7 @@ impl DecryptionStreams {
                 let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
                     Err(_) => {
-                        return Err(anyhow::anyhow!(
-                            "Unable to create cipher with hashed key."
-                        ))
+                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
                     }
                 };
 
@@ -300,9 +292,7 @@ impl DecryptionStreams {
                 let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
                     Err(_) => {
-                        return Err(anyhow::anyhow!(
-                            "Unable to create cipher with hashed key."
-                        ))
+                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
                     }
                 };
 
@@ -313,9 +303,7 @@ impl DecryptionStreams {
                 let cipher = match DeoxysII256::new_from_slice(key.expose()) {
                     Ok(cipher) => cipher,
                     Err(_) => {
-                        return Err(anyhow::anyhow!(
-                            "Unable to create cipher with hashed key."
-                        ))
+                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
                     }
                 };
 

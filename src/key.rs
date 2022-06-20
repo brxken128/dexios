@@ -110,13 +110,12 @@ pub fn argon2id_hash(
     Ok(Protected::new(key))
 }
 
-
 /// This handles BLAKE3-Balloon hashing of a raw key
 ///
 /// It requires a user to generate the salt
 ///
 /// `HeaderVersion` is required as the parameters are linked to specific header versions
-/// 
+///
 /// It's only supported on header versions V4 and above.
 ///
 /// It returns a `Protected<[u8; 32]>` - `Protected` wrappers are used for all sensitive information within `dexios-core`

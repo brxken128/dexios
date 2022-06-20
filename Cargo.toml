@@ -25,7 +25,7 @@ dexios-core = "1.0.0"
 walkdir = "2.3.2"
 
 clap = { version = "3.1.18", features = ["cargo"] }
-anyhow = "1.0.57"
+anyhow = "1.0.58"
 paris = { version = "1.5.13", features = ["macros"] }
 
 zip = { version = "0.6.2", default-features = false }

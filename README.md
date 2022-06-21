@@ -64,6 +64,18 @@ To securely erase a file:
 
 `dexios erase secret.txt`
 
+## The Defaults
+
+The defaults used in Dexios are more than adequate for even the most paranoid of users.
+
+By running the simple command `dexios -e input.txt output.enc`, you are using the following:
+
+* `XChaCha20-Poly1305`
+* `BLAKE3-Balloon` hashing
+* Sensitive data being completely erased from memory
+* A tamper-resistant header that is authenticated along with every block of encrypted data
+* LE31 STREAM encryption
+
 ## Update Status
 
 Dexios will receive frequent updates, and they are always tested before being released.

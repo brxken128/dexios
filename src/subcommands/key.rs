@@ -59,6 +59,7 @@ fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
 
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes
+// if direct mode is enabled, it just reads the password once and returns it instantly
 pub fn get_password(pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
     Ok(loop {
         #[cfg(target_family = "unix")]

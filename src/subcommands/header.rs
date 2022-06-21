@@ -24,21 +24,6 @@ use std::time::Instant;
 // it then writes the updated header to the file
 // the AAD remains the same as V4+ AAD does not contain the master key or the nonce
 pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
-    match key_old {
-        Key::User => info!("Please enter your old key below"),
-        Key::Keyfile(_) => info!("Reading your old keyfile"),
-        _ => (),
-    }
-    let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
-
-    match key_new {
-        Key::Generate => info!("Generating a new key"),
-        Key::User => info!("Please enter your new key below"),
-        Key::Keyfile(_) => info!("Reading your new keyfile"),
-        Key::Env => (),
-    }
-    let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
-
     let mut input_file = OpenOptions::new()
         .read(true)
         .write(true)
@@ -60,6 +45,21 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
     let master_key_encrypted = header.master_key_encrypted.unwrap();
     let master_key_nonce = header.master_key_nonce.unwrap();
+
+    match key_old {
+        Key::User => info!("Please enter your old key below"),
+        Key::Keyfile(_) => info!("Reading your old keyfile"),
+        _ => (),
+    }
+    let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
+
+    match key_new {
+        Key::Generate => info!("Generating a new key"),
+        Key::User => info!("Please enter your new key below"),
+        Key::Keyfile(_) => info!("Reading your new keyfile"),
+        Key::Env => (),
+    }
+    let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
 
     let hash_start_time = Instant::now();
     let key_old = balloon_hash(raw_key_old, &header.salt, &header.header_type.version)?;

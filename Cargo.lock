@@ -39,9 +39,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.57"
+version = "1.0.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08f9b8508dccb7687a1d6c4ce66b2b0ecef467c94667de27d8d7fe1f8d2a9cdc"
+checksum = "bb07d2053ccdbe10e2af2995a2f116c1330396493dc1269f6a91d0ae82e19704"
 
 [[package]]
 name = "argon2"
@@ -85,9 +85,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "balloon-hash"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c73886089335b4602296330bb53b626d517271d73c9e17b8d387faf668c5639"
+checksum = "7c513ebf2e5559f2ba30b8780f2eee89c8a69842734441a536a4be2f5cab7612"
 dependencies = [
  "crypto-bigint",
  "digest",
@@ -254,9 +254,9 @@ dependencies = [
 
 [[package]]
 name = "crypto-bigint"
-version = "0.3.2"
+version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03c6a1d5fa1de37e071642dfa44ec552ca5b299adb128fab16138e24b548fd21"
+checksum = "ac961631d66e80ac7ac2ac01320628ce214ad2b5ef0a88ceb86eae459069e2b4"
 dependencies = [
  "generic-array",
  "subtle",
@@ -310,8 +310,9 @@ dependencies = [
 
 [[package]]
 name = "dexios-core"
-version = "1.0.0"
-source = "git+https://github.com/brxken128/dexios-core?branch=master#487a8437b8a195701fb300eddb68158f570cdf72"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4284083555cb9724eb6cc43ec176df9824291fe061c113655298706fedb54bbb"
 dependencies = [
  "aead",
  "aes-gcm",

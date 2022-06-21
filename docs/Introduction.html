@@ -152,8 +152,18 @@
 <p>The <a href="https://github.com/RustCrypto/AEADs/tree/master/aes-gcm">AES-GCM crate</a> has received a security audit by NCC group, with no significant findings. You can view the audit <a href="https://research.nccgroup.com/2020/02/26/public-report-rustcrypto-aes-gcm-and-chacha20poly1305-implementation-review/">here</a>.</p>
 <p>The <a href="https://github.com/RustCrypto/AEADs/tree/master/chacha20poly1305">ChaCha20-Poly1305 crate</a> has received a security audit by NCC group, with no significant findings. You can view the audit <a href="https://research.nccgroup.com/2020/02/26/public-report-rustcrypto-aes-gcm-and-chacha20poly1305-implementation-review/">here</a></p>
 <p>The <code>deoxys</code> crate does not have a formal audit, and it is still rather experimental. Due to how new Deoxys is, relatively speaking, it's extremely hard to find a good implementation. We opted to use one created by the same <a href="https://github.com/RustCrypto">RustCrypto Team</a> that almost all of our other cryptographic dependencies rely on. You <strong>will</strong> experience decreased encryption and decryption performance while using Deoxys.</p>
-<p><code>argon2</code> is regarded as the most secure password hashing algorithm at the time being, due to how resistant it is to cracking - that's why we use it! It's especially ideal while dealing with low-entropy inputs, such as passwords.</p>
+<p>We use <code>BLAKE3-Balloon</code> hashing for passwords (as of v8.7.0), and older versions used <code>argon2id</code> with good, hard parameters. Both hashing algorithms are regarded as secure, and both APIs are provided by the RustCrypto Team.</p>
 <p>All other cryptographic functions are deemed secure - but they don't protect your data, so any vulnerabilities in them would not have a detrimental effect on the security and integrity of said data.</p>
+<h2 id="the-defaults"><a class="header" href="#the-defaults">The Defaults</a></h2>
+<p>The defaults used in Dexios are more than adequate for even the most paranoid of users.</p>
+<p>By running the simple command <code>dexios -e input.txt output.enc</code>, you are using the following:</p>
+<ul>
+<li><code>XChaCha20-Poly1305</code></li>
+<li><code>BLAKE3-Balloon</code> hashing</li>
+<li>Sensitive data being completely erased from memory</li>
+<li>A tamper-resistant header that is authenticated along with every block of encrypted data</li>
+<li>LE31 STREAM encryption</li>
+</ul>
 <h2 id="tested-operating-systems"><a class="header" href="#tested-operating-systems">Tested Operating Systems</a></h2>
 <table><thead><tr><th>OS</th><th>Working?</th></tr></thead><tbody>
 <tr><td>Void Linux</td><td>Yes</td></tr>
@@ -164,6 +174,7 @@
 <tr><td>FreeBSD 14</td><td>Yes</td></tr>
 <tr><td>Windows 11</td><td>Mostly<sup>1</sup></td></tr>
 <tr><td>Android 12</td><td>Yes</td></tr>
+<tr><td>MacOS</td><td>Yes</td></tr>
 </tbody></table>
 <p><sup>1</sup> The password will not be hidden in the terminal if you enter it manually. Keyfiles and environment variables still work as intended.</p>
 <h2 id="donating"><a class="header" href="#donating">Donating</a></h2>

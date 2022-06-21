@@ -19,7 +19,7 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 # for errors, only temporary
-anyhow = "1.0.57"
+anyhow = "1.0.58"
 
 # AEADS
 aes-gcm = "0.9.4"
@@ -32,7 +32,7 @@ zeroize = "1.3.0"
 
 # for password hashing
 argon2 = "0.4.0"
-balloon-hash = "0.2.0"
+balloon-hash = "0.2.1"
 blake3 = { version = "1.3.1", features = ["traits-preview"] }
 
 # for generating random bytes

@@ -48,6 +48,20 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("Return a BLAKE3 hash of the encrypted file"),
         )
         .arg(
+            Arg::new("autogenerate")
+                .long("auto")
+                .takes_value(false)
+                .help("Autogenerate a passphrase")
+                .conflicts_with("keyfile"),
+        )
+        .arg(
+            Arg::new("header")
+                .long("header")
+                .value_name("file")
+                .takes_value(true)
+                .help("Store the header separately from the file"),
+        )
+        .arg(
             Arg::new("skip")
                 .short('y')
                 .long("skip")
@@ -220,6 +234,27 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("Show a detailed output"),
             )
             .arg(
+                Arg::new("autogenerate")
+                    .long("auto")
+                    .takes_value(false)
+                    .help("Autogenerate a passphrase")
+                    .conflicts_with("keyfile"),
+            )
+            .arg(
+                Arg::new("header")
+                    .long("header")
+                    .value_name("file")
+                    .takes_value(true)
+                    .help("Store the header separately from the file"),
+            )
+            .arg(
+                Arg::new("zstd")
+                    .short('z')
+                    .long("zstd")
+                    .takes_value(false)
+                    .help("Use ZSTD compression"),
+            )
+            .arg(
                 Arg::new("recursive")
                     .short('r')
                     .long("recursive")
@@ -352,6 +387,41 @@ pub fn get_matches() -> clap::ArgMatches {
             Command::new("header")
                 .about("Manipulate encrypted headers (for advanced users)")
                 .subcommand_required(true)
+                .subcommand(
+                    Command::new("update-key")
+                        .about("Update an encrypted file's key (Password only)")
+                        .arg_required_else_help(true)
+                        .arg(
+                            Arg::new("input")
+                                .value_name("input")
+                                .takes_value(true)
+                                .required(true)
+                                .help("The encrypted file"),
+                        )
+                        .arg(
+                            Arg::new("autogenerate")
+                                .long("auto")
+                                .takes_value(false)
+                                .help("Autogenerate a passphrase (this will be your new key)")
+                                .conflicts_with("keyfile-new"),
+                        )
+                        .arg(
+                            Arg::new("keyfile-old")
+                                .short('k')
+                                .long("keyfile-old")
+                                .value_name("file")
+                                .takes_value(true)
+                                .help("Use your old keyfile for decryption"),
+                        )
+                        .arg(
+                            Arg::new("keyfile-new")
+                                .short('n')
+                                .long("keyfile-new")
+                                .value_name("file")
+                                .takes_value(true)
+                                .help("Use a keyfile as the new key"),
+                        ),
+                )
                 .subcommand(
                     Command::new("dump")
                         .about("Dump a header")

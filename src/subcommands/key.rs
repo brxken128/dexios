@@ -3,12 +3,10 @@ use std::io::{stdin, stdout, Write};
 use anyhow::{Context, Result};
 use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
-use paris::{info, warn};
+use paris::warn;
+use rand::{prelude::StdRng, Rng, SeedableRng};
 
-use crate::{
-    file::get_bytes,
-    global::states::{KeyFile, PasswordMode},
-};
+use crate::global::states::PasswordState;
 
 // this function interacts with stdin and stdout to hide password input
 // it uses termion's `read_passwd` function for terminal manipulation
@@ -61,7 +59,8 @@ fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
 
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes
-fn get_password(validation: bool) -> Result<Protected<Vec<u8>>> {
+// if direct mode is enabled, it just reads the password once and returns it instantly
+pub fn get_password(pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
     Ok(loop {
         #[cfg(target_family = "unix")]
         let input =
@@ -69,7 +68,7 @@ fn get_password(validation: bool) -> Result<Protected<Vec<u8>>> {
         #[cfg(target_family = "windows")]
         let input =
             read_password_from_stdin_windows("Password: ").context("Unable to read password")?;
-        if !validation {
+        if pass_state == &PasswordState::Direct {
             return Ok(Protected::new(input.into_bytes()));
         }
 
@@ -91,37 +90,30 @@ fn get_password(validation: bool) -> Result<Protected<Vec<u8>>> {
     })
 }
 
-// this takes in the keyfile string - if if's not empty, get those bytes
-// next, if the env var DEXIOS_KEY is set, retrieve the value
-// if neither of the above are true, ask the user for their specified key
-// if validation is true, call get_password_with_validation and require it be entered twice
-// if not, just get the key once
-// it also checks that the key is not empty
-#[allow(clippy::module_name_repetitions)] // possibly temporary - need a way to handle this (maybe key::handler?)
-pub fn get_secret(
-    keyfile: &KeyFile,
-    validation: bool,
-    password_mode: PasswordMode,
-) -> Result<Protected<Vec<u8>>> {
-    let key = if keyfile != &KeyFile::None {
-        let keyfile_name = keyfile.get_inner()?;
-        info!("Reading key from {}", keyfile_name);
-        get_bytes(&keyfile_name)?
-    } else if std::env::var("DEXIOS_KEY").is_ok()
-        && password_mode == PasswordMode::NormalKeySourcePriority
-    {
-        info!("Reading key from DEXIOS_KEY environment variable");
-        Protected::new(
-            std::env::var("DEXIOS_KEY")
-                .context("Unable to read DEXIOS_KEY from environment variable")?
-                .into_bytes(),
-        )
-    } else {
-        get_password(validation)?
-    };
-    if key.expose().is_empty() {
-        Err(anyhow::anyhow!("The specified key is empty!"))
-    } else {
-        Ok(key)
+// this autogenerates a passphrase, which can be selected with `--auto`
+// it reads the EFF large list of words, and puts them all into a vec
+// 3 words are then chosen at random, and 6 digits are also
+// the 3 words and the digits are separated with -
+// the words are also capitalised
+// this passphrase should provide adequate protection, while not being too hard to remember
+pub fn generate_passphrase() -> Protected<String> {
+    let collection = include_str!("wordlist.lst");
+    let words = collection.split('\n').collect::<Vec<&str>>();
+
+    let mut passphrase = String::new();
+
+    for _ in 0..3 {
+        let index = StdRng::from_entropy().gen_range(0..=words.len());
+        let word = words[index];
+        let capitalized_word = word[..1].to_uppercase() + &word[1..];
+        passphrase.push_str(&capitalized_word);
+        passphrase.push('-');
     }
+
+    for _ in 0..6 {
+        let number: i64 = StdRng::from_entropy().gen_range(0..=9);
+        passphrase.push_str(&number.to_string());
+    }
+
+    Protected::new(passphrase)
 }

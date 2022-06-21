@@ -153,8 +153,18 @@
 <p>The <a href="https://github.com/RustCrypto/AEADs/tree/master/aes-gcm">AES-GCM crate</a> has received a security audit by NCC group, with no significant findings. You can view the audit <a href="https://research.nccgroup.com/2020/02/26/public-report-rustcrypto-aes-gcm-and-chacha20poly1305-implementation-review/">here</a>.</p>
 <p>The <a href="https://github.com/RustCrypto/AEADs/tree/master/chacha20poly1305">ChaCha20-Poly1305 crate</a> has received a security audit by NCC group, with no significant findings. You can view the audit <a href="https://research.nccgroup.com/2020/02/26/public-report-rustcrypto-aes-gcm-and-chacha20poly1305-implementation-review/">here</a></p>
 <p>The <code>deoxys</code> crate does not have a formal audit, and it is still rather experimental. Due to how new Deoxys is, relatively speaking, it's extremely hard to find a good implementation. We opted to use one created by the same <a href="https://github.com/RustCrypto">RustCrypto Team</a> that almost all of our other cryptographic dependencies rely on. You <strong>will</strong> experience decreased encryption and decryption performance while using Deoxys.</p>
-<p><code>argon2</code> is regarded as the most secure password hashing algorithm at the time being, due to how resistant it is to cracking - that's why we use it! It's especially ideal while dealing with low-entropy inputs, such as passwords.</p>
+<p>We use <code>BLAKE3-Balloon</code> hashing for passwords (as of v8.7.0), and older versions used <code>argon2id</code> with good, hard parameters. Both hashing algorithms are regarded as secure, and both APIs are provided by the RustCrypto Team.</p>
 <p>All other cryptographic functions are deemed secure - but they don't protect your data, so any vulnerabilities in them would not have a detrimental effect on the security and integrity of said data.</p>
+<h2 id="the-defaults"><a class="header" href="#the-defaults">The Defaults</a></h2>
+<p>The defaults used in Dexios are more than adequate for even the most paranoid of users.</p>
+<p>By running the simple command <code>dexios -e input.txt output.enc</code>, you are using the following:</p>
+<ul>
+<li><code>XChaCha20-Poly1305</code></li>
+<li><code>BLAKE3-Balloon</code> hashing</li>
+<li>Sensitive data being completely erased from memory</li>
+<li>A tamper-resistant header that is authenticated along with every block of encrypted data</li>
+<li>LE31 STREAM encryption</li>
+</ul>
 <h2 id="tested-operating-systems"><a class="header" href="#tested-operating-systems">Tested Operating Systems</a></h2>
 <table><thead><tr><th>OS</th><th>Working?</th></tr></thead><tbody>
 <tr><td>Void Linux</td><td>Yes</td></tr>
@@ -165,6 +175,7 @@
 <tr><td>FreeBSD 14</td><td>Yes</td></tr>
 <tr><td>Windows 11</td><td>Mostly<sup>1</sup></td></tr>
 <tr><td>Android 12</td><td>Yes</td></tr>
+<tr><td>MacOS</td><td>Yes</td></tr>
 </tbody></table>
 <p><sup>1</sup> The password will not be hidden in the terminal if you enter it manually. Keyfiles and environment variables still work as intended.</p>
 <h2 id="donating"><a class="header" href="#donating">Donating</a></h2>
@@ -207,14 +218,14 @@ ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD
 <p><code>dd</code> can provide a suitable keyfile if you'd prefer a higher level of security:</p>
 <p><code>dd if=/dev/urandom of=keyfile bs=1 count=4096</code> for a 4kb random keyfile</p>
 <p>If you lose your file's key/keyfile, there is no recovering the encrypted data. This is not unique to Dexios - it's the nature of encryption as a whole.</p>
-<h2 id="key-inputs"><a class="header" href="#key-inputs">Key Inputs</a></h2>
-<p>The priority is as follows:</p>
-<ol>
-<li>First, Dexios will check for whether or not you have specified a keyfile (via <code>-k</code> or <code>--keyfile</code>)</li>
-<li>If no keyfile is detected, it will look for the <code>DEXIOS_KEY</code> environment variable</li>
-<li>If neither of the above are found, you will be shown a prompt to enter a password manually</li>
-</ol>
-<p>The priority above is thrown out of the window if <code>-p</code> is specified, as this will prompt you for a password (even if the environment variable is set).</p>
+<h2 id="options-for-providing-a-key"><a class="header" href="#options-for-providing-a-key">Options for providing a key</a></h2>
+<p>You may provide keys in a few ways:</p>
+<ul>
+<li><code>-k</code> for giving path to a keyfile</li>
+<li><code>--auto</code> to tell Dexios to <a href="technical-details/Keys.html#autogenerating-a-key-v870">auto-generate a key</a></li>
+<li>The <code>DEXIOS_KEY</code> environment variable</li>
+<li>A user-provided password (this can be chosen by just running Dexios, and providing none of the above)</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="checksums"><a class="header" href="#checksums">Checksums</a></h2>
 <p>Hashing mode uses <code>BLAKE3</code> for verification, due to it's speed, security and regular updates. (very ideal for this use case).</p>
 <p>Checksums are not used by Dexios for anything security related - they are for your peace of mind.</p>
@@ -314,6 +325,8 @@ Remove `-maxdepth 1` to make this run recursively
 <p>All keys are wrapped in <code>Protected&lt;&gt;</code>. This ensures that data does not leak, is not copied and is zeroed on drop. It only stays in memory for as long as it needs to.</p>
 <p>The key is checked, once, to ensure that it is not empty.</p>
 <p>Once the length has been validated, keys are then safely transported to the <code>argon2id</code> function. See <a href="technical-details/../dexios-core/Password-Hashing.html">Password Hashing</a> for more information.</p>
+<h2 id="autogenerating-a-key-v870"><a class="header" href="#autogenerating-a-key-v870">Autogenerating a Key (v8.7.0+)</a></h2>
+<p>The option to autogenerate passphrases has been added. It uses the <a href="https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt">EFF Large Wordlist</a> to generate 3 completely random words, and then 6 digits for the end. The words are all capitalised, and are separated with <code>-</code>. This should provide more than enough protection, due to the absurd amount of possible combinations there are.</p>
 <h3 id="reading-from-the-terminal"><a class="header" href="#reading-from-the-terminal">Reading from the Terminal</a></h3>
 <p>While reading from the terminal, the passwords are stored as <code>String</code>s. We use <code>termion</code> to handle password entry, this way your input is hidden.</p>
 <p>On encryption, where you need to enter the password twice, they are compared. The <code>String</code> used for validation is safely zeroed out, and the original is consumed into a <code>Vec&lt;u8&gt;</code>.</p>
@@ -359,7 +372,7 @@ Remove `-maxdepth 1` to make this run recursively
 <p>This core library was created in order to separate the cryptographic functions away from the end-user application. Not only does this make Dexios more maintainable, but it means that the core functionality can be used in many other projects as well. It also means that the core library can expand and offer different functionality that we don't feel is a good fit for Dexios itself.</p>
 <p>The core library handles password hashing, encryption/decryption, and management of Dexios headers. Dexios-Core also holds the <code>Protected</code> value wrapper.</p>
 <p>You may find the <code>dexios-core</code> repo <a href="https://github.com/brxken128/dexios-core">on Github</a></p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="headers---managed-by-dexios-core"><a class="header" href="#headers---managed-by-dexios-core">Headers - Managed by <code>dexios-core</code></a></h2>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="headers"><a class="header" href="#headers">Headers</a></h2>
 <h3 id="structure"><a class="header" href="#structure">Structure</a></h3>
 <p>The full header is 64 bytes - it contains relevant information about the encrypted data.</p>
 <p>V1 Headers (v8.0.0 - v8.2.0):</p>
@@ -384,7 +397,7 @@ Remove `-maxdepth 1` to make this run recursively
 <li>We then pad the headers with zeroes until we reach a total of 48 bytes</li>
 <li>The last 16 bytes contain a truncated SHA3-512 HMAC signature</li>
 </ul>
-<p>V3 Headers (v8.4.0+):</p>
+<p>V3 Headers (v8.4.0-v8.6.0):</p>
 <ul>
 <li>The first two bytes of each header <em>should</em> contain <code>0xDE</code> - this signifies that it is indeed a Dexios file.</li>
 <li>The next two bytes signify the header version - as of v8.4.0, this is <code>0x03</code></li>
@@ -394,6 +407,19 @@ Remove `-maxdepth 1` to make this run recursively
 <li>We then have 16 bytes of empty space, this has the potential to store more information in later versions</li>
 <li>We then have the <code>n</code> byte nonce - this is determined by the encryption algorithm and encryption mode</li>
 <li>We finally have enough zeroes to reach 64 bytes - this is extra empty space that may be used in later revisions</li>
+</ul>
+<p>V4 Headers (v8.7.0+):</p>
+<ul>
+<li>The first two bytes of each header <em>should</em> contain <code>0xDE</code> - this signifies that it is indeed a Dexios file.</li>
+<li>The next two bytes signify the header version - as of v8.7.0, this is <code>0x04</code></li>
+<li>The next two bytes contain the encryption algorithm, such as XChaCha20-Poly1305</li>
+<li>The next two bytes contain the encryption <em>mode</em>, which is either stream or memory</li>
+<li>The next 16 bytes contain the salt used for <code>balloon</code> hashing</li>
+<li>We then have the <code>n</code> byte nonce used for encrypting the data - this is determined by the encryption algorithm (in LE31 STREAM mode)</li>
+<li>Next we have enough padding to reach 48 bytes into the header</li>
+<li>We then have the encrypted master key, which is 48 bytes (32 for the data, 16 for the AEAD tag)</li>
+<li>We then have the <code>n</code> byte nonce used for encrypting the master key - this is determined by the encryption algorithm (in standard cipher/memory mode)</li>
+<li>We finally have enough padding to reach a total of 128 bytes in length</li>
 </ul>
 <h3 id="authenticating-the-header-with-aad-v840"><a class="header" href="#authenticating-the-header-with-aad-v840">Authenticating the Header with AAD (v8.4.0+)</a></h3>
 <p>Headers are calculated as a byte array (including the padding), and provided as AAD (additional authenticated data) to <strong>every block</strong> in stream mode, and the whole block in memory mode.</p>
@@ -405,29 +431,37 @@ Remove `-maxdepth 1` to make this run recursively
 <li>HMAC required additional computational power - this is something a lot of older systems do not have</li>
 </ul>
 <p>On the other hand, AAD requires hardly any further computational power, or cluttering of the codebase - it's already implemented by the AEAD crates that we use.</p>
+<p>For V4 Headers, the AAD is generated based on the first 48 bytes (for salt, nonce, version, algorithm, mode information, padding) and then the padding from the end. Authenticating the padding isn't necessary, but it could help prevent some forms of tampering.</p>
+<h3 id="changing-a-key-v870"><a class="header" href="#changing-a-key-v870">Changing a Key (v8.7.0+)</a></h3>
+<p>You can provide keyfiles with the <code>-k</code> and <code>-n</code> switches (for old and new keyfiles respectively). You may provide just an old keyfile, and <code>--auto</code> for autogenerating a new passphrase. The combinations are there to allow for you to easily change any key.</p>
+<p>The file is first opened, and the header is deserialized. Both keys are then obtained, and are subsequently <a href="dexios-core/Password-Hashing.html">hashed</a>.</p>
+<p>Once both keys have been hashed successfully, the master key stored within the header is decrypted (with the nonce provided in the header), using the old key. It is then re-encrypted with your new key, and a new nonce, before being written back to the file.</p>
+<p>Currently, only one keyslot is supported per file, but there are plans to add more in the future. This means you could decrypt easily using a keyfile, and have a backup password/another keyfile in case your primary one is lost.</p>
 <h3 id="stripping"><a class="header" href="#stripping">Stripping</a></h3>
-<p>Headers are stripped by zeroing out the first 64 bytes of the file - this is where the header is stored.</p>
+<p>Headers are stripped by zeroing out the first n<sup>1</sup> bytes of the file - this is where the header is stored. Headers are first deserialized to ensure you are stripping a valid Dexios header.</p>
+<p><sup>1</sup> This is dependent on the header version</p>
 <h3 id="dumping"><a class="header" href="#dumping">Dumping</a></h3>
-<p>Headers are dumped by reading the first 64 bytes of the input file, and writing them to the output file.</p>
+<p>Headers are dumped by reading/deserializing the header from the input file, and writing them to the output file. This is a protective measure to ensure that you are dumping a valid Dexios header.</p>
 <h3 id="restoring"><a class="header" href="#restoring">Restoring</a></h3>
-<p>Headers are restored by reading the first 64 bytes of the provided input file, and writing them to the first 64 bytes of the output file.</p>
-<h3 id="signing-v830---yanked-feature"><a class="header" href="#signing-v830---yanked-feature">Signing (v8.3.0 - yanked feature)</a></h3>
+<p>Headers are restored by deserializing the header provided in the input file, and writing the header to the output file.</p>
+<h3 id="signing-v830---replaced-by-aad"><a class="header" href="#signing-v830---replaced-by-aad">Signing (v8.3.0 - replaced by AAD)</a></h3>
 <p>Headers are signed using your hashed encryption key.</p>
 <p>On encryption, the headers are signed when the ciphers/stream ciphers are initialised, this way we only have to hash your key once. The key is never cloned within memory, and it is zeroed out (using <code>zeroize</code> and our <a href="dexios-core/Protected-Wrapper.html">protected wrapper</a>) once the header has been signed.</p>
 <p>The signature is generated from the first 48 bytes of the header - this is where all of the important information is enclosed.</p>
-<h3 id="verifying-v830---yanked-feature"><a class="header" href="#verifying-v830---yanked-feature">Verifying (v8.3.0 - yanked feature)</a></h3>
+<h3 id="verifying-v830---replaced-by-aad"><a class="header" href="#verifying-v830---replaced-by-aad">Verifying (v8.3.0 - replaced by AAD)</a></h3>
 <p>On decryption, the headers are verified when the ciphers/stream ciphers are initialised. Once again, the key is zeroed out once the header has been verified.</p>
 <p>If a single byte of the header changes, decryption will not continue as the signature will not match. This is to prevent a malicious actor from tampering with the header. </p>
 <p><strong>If the signature doesn't match, but you're positive your key is correct, it is best to assume the header was tampered with.</strong></p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="password-hashing---managed-by-dexios-core"><a class="header" href="#password-hashing---managed-by-dexios-core">Password Hashing - Managed by <code>dexios-core</code></a></h2>
-<p>Password hashing is done with <code>argon2id</code>. It uses a 16-byte salt to derive the encryption key. Once a key has been hashed, it is dropped and zeroed out via the <code>zeroize</code> crate to ensure it stays in memory no longer than required.</p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="password-hashing"><a class="header" href="#password-hashing">Password Hashing</a></h2>
+<p>Password hashing was done with <code>argon2id</code> in all versions prior to v8.7.0. In versions v8.7.0 and above, BLAKE3-Balloon hashing is used. Both modes use a 16-byte salt to derive the encryption key. Once a key has been hashed, it is dropped and zeroed out via the <code>zeroize</code> crate to ensure it stays in memory no longer than required.</p>
 <h3 id="handling-the-hash"><a class="header" href="#handling-the-hash">Handling the Hash</a></h3>
 <p>The hash is wrapped in <code>Protected&lt;&gt;</code>, which means it can only be exposed when called for in the program. It is only ever exposed to the cryptographic ciphers, and it is dropped right after. We use a custom <code>Protected&lt;&gt;</code> wrapper which implements zeroize-on-drop, to ensure that all sensitive information is removed from memory once it is no longer required.</p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="encryption---managed-by-dexios-core"><a class="header" href="#encryption---managed-by-dexios-core">Encryption - Managed by <code>dexios-core</code></a></h2>
-<p>Encryption is done by default with <code>XChaCha20-Poly1305</code>, but Dexios also has options for <code>AES-256-GCM</code> and <code>Deoxys-II-256</code>. Encryption uses the key derived from <code>argon2id</code>.</p>
-<p>Stream Mode should be the default - it works on all files, even those less than the 1MiB <code>BLOCK_SIZE</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="encryption"><a class="header" href="#encryption">Encryption</a></h2>
+<p>Encryption is done by default with <a href="https://tools.ietf.org/html/rfc8439"><code>XChaCha20-Poly1305</code></a>, but Dexios also has options for <a href="https://en.wikipedia.org/wiki/AES-GCM-SIV"><code>AES-256-GCM</code></a> and <a href="https://sites.google.com/view/deoxyscipher"><code>Deoxys-II-256</code></a>. Encryption uses the key derived from <code>argon2id</code>/<code>balloon</code> hashing.</p>
+<p>Stream mode should be the default - it works on all files, even those less than the 1MiB <code>BLOCK_SIZE</code>.</p>
 <h3 id="stream-mode"><a class="header" href="#stream-mode">Stream Mode</a></h3>
 <p>The XChaCha20-Poly1305 nonce is 20 bytes long, and the AES-256-GCM nonce is 8 bytes long when stored. The stream encryptor dynamically changes the nonce, based on a 31-bit little endian counter and a 1-bit &quot;last block&quot; flag. Those last 32 bits (4 bytes) are appended to the end of the nonce - making the total nonce length 24/12 bytes respectively. This is done by the stream encryptor to ensure that identical data will not be encrypted with the same nonce.</p>
+<p>On encryption (as of v8.7.0), a completely random 32-byte &quot;master key&quot; is generated. The user's key is then used to encrypt the master key, and that is included within the header (along with the random nonce). This was implemented as it will allow us to add features such as changing a key, or allowing multiple keys to decrypt the same file.</p>
 <p>On encryption, the <a href="dexios-core/Headers.html">header</a> is serialised and written to the start of the file. Then, Dexios reads the source file in 1MiB blocks (1048576 bytes), and encrypts them using an LE31 stream encryptor. Each &quot;block&quot; is read, encrypted, written. The salt and the nonce are always the same size, so we can avoid having to serialise/deserialise the data. This had a lot of <a href="dexios-core/../Checksums.html#performance">performance benefits</a>.</p>
 <p>For decryption, the <a href="dexios-core/Headers.html">header</a> is is read and deserialised. Next, Dexios reads the remaining part of the encrypted file in 1MiB blocks + 16 bytes, to account for the AEAD tag. Each &quot;block&quot; is read, decrypted, and then written.</p>
 <h3 id="stream-mode---edge-cases"><a class="header" href="#stream-mode---edge-cases">Stream mode - Edge Cases</a></h3>

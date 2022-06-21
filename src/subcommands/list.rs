@@ -3,7 +3,6 @@ use anyhow::{Ok, Result};
 use dexios_core::primitives::ALGORITHMS;
 
 // this just lists values contained within arrays
-
 pub fn show_values(input: &str) -> Result<()> {
     match input.to_lowercase().as_str() {
         "aead" => {

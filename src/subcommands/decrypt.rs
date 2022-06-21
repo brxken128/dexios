@@ -1,13 +1,17 @@
-use super::key::get_secret;
 use super::prompt::overwrite_check;
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
-use crate::global::states::HeaderFile;
+use crate::global::states::HeaderLocation;
+use crate::global::states::PasswordState;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
 use dexios_core::header;
+use dexios_core::header::HeaderVersion;
 use dexios_core::key::argon2id_hash;
+use dexios_core::key::balloon_hash;
 use dexios_core::primitives::Mode;
+use dexios_core::protected::Protected;
+use dexios_core::Zeroize;
 use paris::Logger;
 
 use anyhow::anyhow;
@@ -29,12 +33,7 @@ use dexios_core::stream::DecryptionStreams;
 // it also manages using a detached header file if selected
 // it creates the Cipher object, and uses that for decryption
 // it then writes the decrypted data to the file
-pub fn memory_mode(
-    input: &str,
-    output: &str,
-    header_file: &HeaderFile,
-    params: &CryptoParams,
-) -> Result<()> {
+pub fn memory_mode(input: &str, output: &str, params: &CryptoParams) -> Result<()> {
     let mut logger = Logger::new();
 
     if !overwrite_check(output, params.skip)? {
@@ -44,16 +43,17 @@ pub fn memory_mode(
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let (header, aad) = match header_file {
-        HeaderFile::Some(contents) => {
-            input_file
-                .seek(std::io::SeekFrom::Start(64))
-                .context("Unable to seek input file")?;
+    let (header, aad) = match &params.header_location {
+        HeaderLocation::Detached(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
-            header::Header::deserialize(&mut header_file)?
+            let (header, aad) = header::Header::deserialize(&mut header_file)?;
+            input_file
+                .seek(std::io::SeekFrom::Start(header.get_size()))
+                .context("Unable to seek input file")?;
+            (header, aad)
         }
-        HeaderFile::None => header::Header::deserialize(&mut input_file)?,
+        HeaderLocation::Embedded => header::Header::deserialize(&mut input_file)?,
     };
 
     let read_start_time = Instant::now();
@@ -69,7 +69,7 @@ pub fn memory_mode(
         read_duration.as_secs_f32()
     ));
 
-    let raw_key = get_secret(&params.keyfile, false, params.password)?;
+    let raw_key = params.key.get_secret(&PasswordState::Direct)?;
 
     logger.info(format!(
         "Using {} for decryption",
@@ -133,12 +133,7 @@ pub fn memory_mode(
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if the header says so (backwards-compat)
 // it also manages using a detached header file if selected
 // it creates the stream object and uses the convenience function provided by dexios-core
-pub fn stream_mode(
-    input: &str,
-    output: &str,
-    header_file: &HeaderFile,
-    params: &CryptoParams,
-) -> Result<()> {
+pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<()> {
     let mut logger = Logger::new();
 
     if input == output {
@@ -150,28 +145,29 @@ pub fn stream_mode(
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
 
-    let (header, aad) = match header_file {
-        HeaderFile::Some(contents) => {
-            input_file
-                .seek(std::io::SeekFrom::Start(64))
-                .context("Unable to seek input file")?;
+    let (header, aad) = match &params.header_location {
+        HeaderLocation::Detached(contents) => {
             let mut header_file = File::open(contents)
                 .with_context(|| format!("Unable to open header file: {}", input))?;
-            header::Header::deserialize(&mut header_file)?
+            let (header, aad) = header::Header::deserialize(&mut header_file)?;
+            input_file
+                .seek(std::io::SeekFrom::Start(header.get_size()))
+                .context("Unable to seek input file")?;
+            (header, aad)
         }
-        HeaderFile::None => header::Header::deserialize(&mut input_file)?,
+        HeaderLocation::Embedded => header::Header::deserialize(&mut input_file)?,
     };
 
     if header.header_type.mode == Mode::MemoryMode {
         drop(input_file);
-        return memory_mode(input, output, header_file, params);
+        return memory_mode(input, output, params);
     }
 
     if !overwrite_check(output, params.skip)? {
         exit(0);
     }
 
-    let raw_key = get_secret(&params.keyfile, false, params.password)?;
+    let raw_key = params.key.get_secret(&PasswordState::Direct)?;
 
     let mut output_file = File::create(output)?; // !!!attach context here
 
@@ -182,13 +178,50 @@ pub fn stream_mode(
 
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
-    let hash_start_time = Instant::now();
-    let key = argon2id_hash(raw_key, &header.salt, &header.header_type.version)?;
-    let hash_duration = hash_start_time.elapsed();
-    success!(
-        "Successfully hashed your key [took {:.2}s]",
-        hash_duration.as_secs_f32()
-    );
+    let key = match header.header_type.version {
+        HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
+            let hash_start_time = Instant::now();
+            let key = argon2id_hash(raw_key, &header.salt, &header.header_type.version)?;
+            let hash_duration = hash_start_time.elapsed();
+            success!(
+                "Successfully hashed your key [took {:.2}s]",
+                hash_duration.as_secs_f32()
+            );
+            key
+        }
+        HeaderVersion::V4 => {
+            let hash_start_time = Instant::now();
+            let key = balloon_hash(raw_key, &header.salt, &header.header_type.version)?;
+            let hash_duration = hash_start_time.elapsed();
+            success!(
+                "Successfully hashed your key [took {:.2}s]",
+                hash_duration.as_secs_f32()
+            );
+            let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
+
+            let master_key_result = cipher.decrypt(
+                &header.master_key_nonce.unwrap(),
+                header.master_key_encrypted.unwrap().as_slice(),
+            );
+            let mut master_key_decrypted = match master_key_result {
+                std::result::Result::Ok(bytes) => bytes,
+                Err(_) => {
+                    return Err(anyhow::anyhow!(
+                        "Unable to decrypt your master key (maybe you supplied the wrong key?)"
+                    ))
+                }
+            };
+
+            let mut master_key = [0u8; 32];
+
+            for (i, byte) in master_key_decrypted.iter().enumerate() {
+                master_key[i] = *byte;
+            }
+
+            master_key_decrypted.zeroize();
+            Protected::new(master_key)
+        }
+    };
 
     let decrypt_start_time = Instant::now();
 

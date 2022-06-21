@@ -1,17 +1,24 @@
-use super::key::get_secret;
 use super::prompt::overwrite_check;
 use crate::global::states::EraseMode;
 use crate::global::states::HashMode;
+use crate::global::states::HeaderLocation;
+use crate::global::states::PasswordState;
 use crate::global::structs::CryptoParams;
 use anyhow::Context;
 use anyhow::{Ok, Result};
+use dexios_core::cipher::Ciphers;
 use dexios_core::header::{Header, HeaderType, HEADER_VERSION};
-use dexios_core::key::{argon2id_hash, gen_salt};
+use dexios_core::key::{balloon_hash, gen_salt};
 use dexios_core::primitives::gen_nonce;
 use dexios_core::primitives::Algorithm;
 use dexios_core::primitives::Mode;
+use dexios_core::protected::Protected;
 use paris::Logger;
+use rand::prelude::StdRng;
+use rand::RngCore;
+use rand::SeedableRng;
 use std::fs::File;
+use std::io::Seek;
 use std::io::Write;
 use std::process::exit;
 use std::time::Instant;
@@ -42,7 +49,7 @@ pub fn stream_mode(
         exit(0);
     }
 
-    let raw_key = get_secret(&params.keyfile, true, params.password)?;
+    let raw_key = params.key.get_secret(&PasswordState::Validate)?;
 
     let mut output_file = File::create(output)?; // !!!attach context
 
@@ -57,7 +64,7 @@ pub fn stream_mode(
 
     let salt = gen_salt();
     let hash_start_time = Instant::now();
-    let key = argon2id_hash(raw_key, &salt, &header_type.version)?;
+    let key = balloon_hash(raw_key, &salt, &header_type.version)?;
     let hash_duration = hash_start_time.elapsed();
     logger.success(format!(
         "Successfully hashed your key [took {:.2}s]",
@@ -65,18 +72,57 @@ pub fn stream_mode(
     ));
 
     let encrypt_start_time = Instant::now();
+
+    let mut master_key = [0u8; 32];
+    StdRng::from_entropy().fill_bytes(&mut master_key);
+
+    let master_key = Protected::new(master_key);
+
+    let master_key_nonce = gen_nonce(&header_type.algorithm, &Mode::MemoryMode);
+    let cipher = Ciphers::initialize(key, &header_type.algorithm)?;
+    let master_key_result = cipher.encrypt(&master_key_nonce, master_key.expose().as_slice());
+
+    let master_key_encrypted = match master_key_result {
+        std::result::Result::Ok(bytes) => bytes,
+        Err(_) => return Err(anyhow::anyhow!("Unable to encrypt your master key")),
+    };
+
     let nonce = gen_nonce(&header_type.algorithm, &header_type.mode);
-    let streams = EncryptionStreams::initialize(key, &nonce, &header_type.algorithm)?;
+    let streams = EncryptionStreams::initialize(master_key, &nonce, &header_type.algorithm)?;
 
     let header = Header {
         header_type,
         nonce,
         salt,
+        master_key_encrypted: Some(master_key_encrypted),
+        master_key_nonce: Some(master_key_nonce),
     };
 
-    header.write(&mut output_file)?;
+    match &params.header_location {
+        HeaderLocation::Embedded => {
+            header.write(&mut output_file)?;
+        }
+        HeaderLocation::Detached(path) => {
+            if !overwrite_check(path, params.skip)? {
+                exit(0);
+            }
 
-    let aad = header.serialize()?;
+            let mut header_file =
+                File::create(path).context("Unable to create file for the header")?;
+
+            header
+                .write(&mut header_file)
+                .context("Unable to write header to the file")?;
+
+            let header_size = header
+                .get_size()
+                .try_into()
+                .context("Unable to get header size as i64")?;
+            output_file.seek(std::io::SeekFrom::Current(header_size))?;
+        }
+    }
+
+    let aad = header.create_aad()?;
 
     streams.encrypt_file(&mut input_file, &mut output_file, &aad)?;
 

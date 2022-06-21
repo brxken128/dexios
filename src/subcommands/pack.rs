@@ -13,7 +13,10 @@ use zip::write::FileOptions;
 
 use crate::{
     global::states::{DirectoryMode, EraseSourceDir, PrintMode},
-    global::structs::{CryptoParams, PackParams},
+    global::{
+        states::Compression,
+        structs::{CryptoParams, PackParams},
+    },
 };
 
 // this first indexes the input directory
@@ -45,10 +48,17 @@ pub fn pack(
     let zip_start_time = Instant::now();
 
     let mut zip = zip::ZipWriter::new(file);
-    let options = FileOptions::default()
-        .compression_method(zip::CompressionMethod::Stored)
-        .large_file(true)
-        .unix_permissions(0o755);
+
+    let options = match pack_params.compression {
+        Compression::None => FileOptions::default()
+            .compression_method(zip::CompressionMethod::Stored)
+            .large_file(true)
+            .unix_permissions(0o755),
+        Compression::Zstd => FileOptions::default()
+            .compression_method(zip::CompressionMethod::Zstd)
+            .large_file(true)
+            .unix_permissions(0o755),
+    };
 
     let mut item_count = 0;
 
@@ -70,23 +80,20 @@ pub fn pack(
         let item_data = item.context("Unable to get path of item, skipping")?;
         let item = item_data.path();
 
-        let item_str = item.to_str().context("Error converting directory path to string")?.replace(r"\", "/");
+        let item_str = item
+            .to_str()
+            .context("Error converting directory path to string")?
+            .replace('\\', "/");
 
         if item.is_dir() {
-            zip.add_directory(
-                item_str,
-                options,
-            )
-            .context("Unable to add directory to zip")?;
+            zip.add_directory(item_str, options)
+                .context("Unable to add directory to zip")?;
 
             continue;
         }
 
-        zip.start_file(
-            item_str,
-            options,
-        )
-        .context("Unable to add file to zip")?;
+        zip.start_file(item_str, options)
+            .context("Unable to add file to zip")?;
 
         if pack_params.print_mode == PrintMode::Verbose {
             logger.info(format!(

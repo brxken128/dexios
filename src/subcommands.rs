@@ -5,8 +5,7 @@ use clap::ArgMatches;
 // it gets params and sends them to the appropriate functions
 
 use crate::global::parameters::{
-    decrypt_additional_params, encrypt_additional_params, erase_params, get_param, pack_params,
-    parameter_handler,
+    encrypt_additional_params, erase_params, get_param, pack_params, parameter_handler,
 };
 
 pub mod decrypt;
@@ -35,13 +34,12 @@ pub fn encrypt(sub_matches: &ArgMatches) -> Result<()> {
 
 pub fn decrypt(sub_matches: &ArgMatches) -> Result<()> {
     let params = parameter_handler(sub_matches)?;
-    let header = decrypt_additional_params(sub_matches)?;
+    // let header = decrypt_additional_params(sub_matches)?;
 
     // stream decrypt is the default as it will redirect to memory mode if the header says so (for backwards-compat)
     decrypt::stream_mode(
         &get_param("input", sub_matches)?,
         &get_param("output", sub_matches)?,
-        &header,
         &params,
     )
 }
@@ -69,7 +67,6 @@ pub fn unpack(sub_matches: &ArgMatches) -> Result<()> {
     use super::global::states::PrintMode;
 
     let crypto_params = parameter_handler(sub_matches)?;
-    let header = decrypt_additional_params(sub_matches)?;
 
     let print_mode = if sub_matches.is_present("verbose") {
         //specify to emit hash after operation
@@ -82,7 +79,6 @@ pub fn unpack(sub_matches: &ArgMatches) -> Result<()> {
     unpack::unpack(
         &get_param("input", sub_matches)?,
         &get_param("output", sub_matches)?,
-        &header,
         &print_mode,
         &crypto_params,
     )

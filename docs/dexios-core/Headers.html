@@ -142,7 +142,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h2 id="headers---managed-by-dexios-core"><a class="header" href="#headers---managed-by-dexios-core">Headers - Managed by <code>dexios-core</code></a></h2>
+                        <h2 id="headers"><a class="header" href="#headers">Headers</a></h2>
 <h3 id="structure"><a class="header" href="#structure">Structure</a></h3>
 <p>The full header is 64 bytes - it contains relevant information about the encrypted data.</p>
 <p>V1 Headers (v8.0.0 - v8.2.0):</p>
@@ -167,7 +167,7 @@
 <li>We then pad the headers with zeroes until we reach a total of 48 bytes</li>
 <li>The last 16 bytes contain a truncated SHA3-512 HMAC signature</li>
 </ul>
-<p>V3 Headers (v8.4.0+):</p>
+<p>V3 Headers (v8.4.0-v8.6.0):</p>
 <ul>
 <li>The first two bytes of each header <em>should</em> contain <code>0xDE</code> - this signifies that it is indeed a Dexios file.</li>
 <li>The next two bytes signify the header version - as of v8.4.0, this is <code>0x03</code></li>
@@ -177,6 +177,19 @@
 <li>We then have 16 bytes of empty space, this has the potential to store more information in later versions</li>
 <li>We then have the <code>n</code> byte nonce - this is determined by the encryption algorithm and encryption mode</li>
 <li>We finally have enough zeroes to reach 64 bytes - this is extra empty space that may be used in later revisions</li>
+</ul>
+<p>V4 Headers (v8.7.0+):</p>
+<ul>
+<li>The first two bytes of each header <em>should</em> contain <code>0xDE</code> - this signifies that it is indeed a Dexios file.</li>
+<li>The next two bytes signify the header version - as of v8.7.0, this is <code>0x04</code></li>
+<li>The next two bytes contain the encryption algorithm, such as XChaCha20-Poly1305</li>
+<li>The next two bytes contain the encryption <em>mode</em>, which is either stream or memory</li>
+<li>The next 16 bytes contain the salt used for <code>balloon</code> hashing</li>
+<li>We then have the <code>n</code> byte nonce used for encrypting the data - this is determined by the encryption algorithm (in LE31 STREAM mode)</li>
+<li>Next we have enough padding to reach 48 bytes into the header</li>
+<li>We then have the encrypted master key, which is 48 bytes (32 for the data, 16 for the AEAD tag)</li>
+<li>We then have the <code>n</code> byte nonce used for encrypting the master key - this is determined by the encryption algorithm (in standard cipher/memory mode)</li>
+<li>We finally have enough padding to reach a total of 128 bytes in length</li>
 </ul>
 <h3 id="authenticating-the-header-with-aad-v840"><a class="header" href="#authenticating-the-header-with-aad-v840">Authenticating the Header with AAD (v8.4.0+)</a></h3>
 <p>Headers are calculated as a byte array (including the padding), and provided as AAD (additional authenticated data) to <strong>every block</strong> in stream mode, and the whole block in memory mode.</p>
@@ -188,17 +201,24 @@
 <li>HMAC required additional computational power - this is something a lot of older systems do not have</li>
 </ul>
 <p>On the other hand, AAD requires hardly any further computational power, or cluttering of the codebase - it's already implemented by the AEAD crates that we use.</p>
+<p>For V4 Headers, the AAD is generated based on the first 48 bytes (for salt, nonce, version, algorithm, mode information, padding) and then the padding from the end. Authenticating the padding isn't necessary, but it could help prevent some forms of tampering.</p>
+<h3 id="changing-a-key-v870"><a class="header" href="#changing-a-key-v870">Changing a Key (v8.7.0+)</a></h3>
+<p>You can provide keyfiles with the <code>-k</code> and <code>-n</code> switches (for old and new keyfiles respectively). You may provide just an old keyfile, and <code>--auto</code> for autogenerating a new passphrase. The combinations are there to allow for you to easily change any key.</p>
+<p>The file is first opened, and the header is deserialized. Both keys are then obtained, and are subsequently <a href="Password-Hashing.html">hashed</a>.</p>
+<p>Once both keys have been hashed successfully, the master key stored within the header is decrypted (with the nonce provided in the header), using the old key. It is then re-encrypted with your new key, and a new nonce, before being written back to the file.</p>
+<p>Currently, only one keyslot is supported per file, but there are plans to add more in the future. This means you could decrypt easily using a keyfile, and have a backup password/another keyfile in case your primary one is lost.</p>
 <h3 id="stripping"><a class="header" href="#stripping">Stripping</a></h3>
-<p>Headers are stripped by zeroing out the first 64 bytes of the file - this is where the header is stored.</p>
+<p>Headers are stripped by zeroing out the first n<sup>1</sup> bytes of the file - this is where the header is stored. Headers are first deserialized to ensure you are stripping a valid Dexios header.</p>
+<p><sup>1</sup> This is dependent on the header version</p>
 <h3 id="dumping"><a class="header" href="#dumping">Dumping</a></h3>
-<p>Headers are dumped by reading the first 64 bytes of the input file, and writing them to the output file.</p>
+<p>Headers are dumped by reading/deserializing the header from the input file, and writing them to the output file. This is a protective measure to ensure that you are dumping a valid Dexios header.</p>
 <h3 id="restoring"><a class="header" href="#restoring">Restoring</a></h3>
-<p>Headers are restored by reading the first 64 bytes of the provided input file, and writing them to the first 64 bytes of the output file.</p>
-<h3 id="signing-v830---yanked-feature"><a class="header" href="#signing-v830---yanked-feature">Signing (v8.3.0 - yanked feature)</a></h3>
+<p>Headers are restored by deserializing the header provided in the input file, and writing the header to the output file.</p>
+<h3 id="signing-v830---replaced-by-aad"><a class="header" href="#signing-v830---replaced-by-aad">Signing (v8.3.0 - replaced by AAD)</a></h3>
 <p>Headers are signed using your hashed encryption key.</p>
 <p>On encryption, the headers are signed when the ciphers/stream ciphers are initialised, this way we only have to hash your key once. The key is never cloned within memory, and it is zeroed out (using <code>zeroize</code> and our <a href="Protected-Wrapper.html">protected wrapper</a>) once the header has been signed.</p>
 <p>The signature is generated from the first 48 bytes of the header - this is where all of the important information is enclosed.</p>
-<h3 id="verifying-v830---yanked-feature"><a class="header" href="#verifying-v830---yanked-feature">Verifying (v8.3.0 - yanked feature)</a></h3>
+<h3 id="verifying-v830---replaced-by-aad"><a class="header" href="#verifying-v830---replaced-by-aad">Verifying (v8.3.0 - replaced by AAD)</a></h3>
 <p>On decryption, the headers are verified when the ciphers/stream ciphers are initialised. Once again, the key is zeroed out once the header has been verified.</p>
 <p>If a single byte of the header changes, decryption will not continue as the signature will not match. This is to prevent a malicious actor from tampering with the header. </p>
 <p><strong>If the signature doesn't match, but you're positive your key is correct, it is best to assume the header was tampered with.</strong></p>

@@ -146,6 +146,8 @@
 <p>All keys are wrapped in <code>Protected&lt;&gt;</code>. This ensures that data does not leak, is not copied and is zeroed on drop. It only stays in memory for as long as it needs to.</p>
 <p>The key is checked, once, to ensure that it is not empty.</p>
 <p>Once the length has been validated, keys are then safely transported to the <code>argon2id</code> function. See <a href="../dexios-core/Password-Hashing.html">Password Hashing</a> for more information.</p>
+<h2 id="autogenerating-a-key-v870"><a class="header" href="#autogenerating-a-key-v870">Autogenerating a Key (v8.7.0+)</a></h2>
+<p>The option to autogenerate passphrases has been added. It uses the <a href="https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt">EFF Large Wordlist</a> to generate 3 completely random words, and then 6 digits for the end. The words are all capitalised, and are separated with <code>-</code>. This should provide more than enough protection, due to the absurd amount of possible combinations there are.</p>
 <h3 id="reading-from-the-terminal"><a class="header" href="#reading-from-the-terminal">Reading from the Terminal</a></h3>
 <p>While reading from the terminal, the passwords are stored as <code>String</code>s. We use <code>termion</code> to handle password entry, this way your input is hidden.</p>
 <p>On encryption, where you need to enter the password twice, they are compared. The <code>String</code> used for validation is safely zeroed out, and the original is consumed into a <code>Vec&lt;u8&gt;</code>.</p>

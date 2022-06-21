@@ -147,14 +147,14 @@
 <p><code>dd</code> can provide a suitable keyfile if you'd prefer a higher level of security:</p>
 <p><code>dd if=/dev/urandom of=keyfile bs=1 count=4096</code> for a 4kb random keyfile</p>
 <p>If you lose your file's key/keyfile, there is no recovering the encrypted data. This is not unique to Dexios - it's the nature of encryption as a whole.</p>
-<h2 id="key-inputs"><a class="header" href="#key-inputs">Key Inputs</a></h2>
-<p>The priority is as follows:</p>
-<ol>
-<li>First, Dexios will check for whether or not you have specified a keyfile (via <code>-k</code> or <code>--keyfile</code>)</li>
-<li>If no keyfile is detected, it will look for the <code>DEXIOS_KEY</code> environment variable</li>
-<li>If neither of the above are found, you will be shown a prompt to enter a password manually</li>
-</ol>
-<p>The priority above is thrown out of the window if <code>-p</code> is specified, as this will prompt you for a password (even if the environment variable is set).</p>
+<h2 id="options-for-providing-a-key"><a class="header" href="#options-for-providing-a-key">Options for providing a key</a></h2>
+<p>You may provide keys in a few ways:</p>
+<ul>
+<li><code>-k</code> for giving path to a keyfile</li>
+<li><code>--auto</code> to tell Dexios to <a href="technical-details/Keys.html#autogenerating-a-key-v870">auto-generate a key</a></li>
+<li>The <code>DEXIOS_KEY</code> environment variable</li>
+<li>A user-provided password (this can be chosen by just running Dexios, and providing none of the above)</li>
+</ul>
 
                     </main>
 

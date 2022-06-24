@@ -1,0 +1,34 @@
+[package]
+name = "dexios"
+version = "8.7.0"
+authors = ["brxken128 <brxken128@tutanota.com>"]
+readme = "README.md"
+edition = "2021"
+description = "Secure, fast and authenticated command-line encryption of files with modern algorithms and an audited encryption backend."
+keywords = ["encryption", "utility", "file", "command-line", "secure"]
+categories = ["cryptography", "command-line-utilities"]
+rust-version = "1.57"
+repository = "https://github.com/brxken128/dexios"
+homepage = "https://github.com/brxken128/dexios"
+documentation = "https://brxken128.github.io/dexios"
+license = "BSD-2-Clause"
+
+# this is for sites other than crates.io, who may still use it
+[badges]
+maintenance = { status = "actively-developed" }
+
+[dependencies]
+blake3 = "1.3.1"
+rand = "0.8.5"
+dexios-core = "1.1.1"
+
+walkdir = "2.3.2"
+
+clap = { version = "3.1.18", features = ["cargo"] }
+anyhow = "1.0.57"
+paris = { version = "1.5.13", features = ["macros"] }
+
+zip = { version = "0.6.2", default-features = false, features = ["zstd"] }
+
+[target.'cfg(unix)'.dependencies]
+termion = "1.5.6"

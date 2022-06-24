@@ -1,2 +1,5 @@
-/target
-/Cargo.lock
+/dexios-core/target
+/dexios-core/Cargo.lock
+/dexios/target
+/notes.md
+/dexios/CHANGELOG.md

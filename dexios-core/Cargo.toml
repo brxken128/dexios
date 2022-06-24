@@ -1,0 +1,39 @@
+[package]
+name = "dexios-core"
+description = "A library for encrypting/decrypting, password hashing, and for managing encrypted file headers that adhere to the Dexios format."
+version = "1.1.1"
+readme = "README.md"
+authors = ["brxken128 <brxken128@tutanota.com>"]
+homepage = "https://brxken128.github.io/dexios/dexios-core/"
+repository = "https://github.com/brxken128/dexios-core"
+documentation = "https://docs.rs/dexios-core/latest/dexios_core/"
+categories = ["cryptography", "encoding", "data-structures"]
+rust-version = "1.57"
+keywords = ["encryption", "secure"]
+edition = "2021"
+license = "BSD-2-Clause"
+
+# this is for sites other than crates.io, who may still use it
+[badges]
+maintenance = { status = "actively-developed" }
+
+[dependencies]
+# for errors, only temporary
+anyhow = "1.0.58"
+
+# AEADS
+aes-gcm = "0.9.4"
+chacha20poly1305 = "0.9.0"
+deoxys = "0.0.2"
+aead = { version = "0.4.3", features = ["stream"] }
+
+# for wiping sensitive information from memory
+zeroize = "1.3.0"
+
+# for password hashing
+argon2 = "0.4.0"
+balloon-hash = "0.2.1"
+blake3 = { version = "1.3.1", features = ["traits-preview"] }
+
+# for generating random bytes
+rand = "0.8.5"

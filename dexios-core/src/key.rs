@@ -65,8 +65,6 @@ pub fn argon2id_hash(
     use argon2::Argon2;
     use argon2::Params;
 
-    let mut key = [0u8; 32];
-
     let params = match version {
         HeaderVersion::V1 => {
             // 8MiB of memory, 8 iterations, 4 levels of parallelism
@@ -99,6 +97,7 @@ pub fn argon2id_hash(
         }
     };
 
+    let mut key = [0u8; 32];
     let argon2 = Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params);
     let result = argon2.hash_password_into(raw_key.expose(), salt, &mut key);
     drop(raw_key);
@@ -157,24 +156,14 @@ pub fn balloon_hash(
         }
     };
 
+    let mut key = [0u8; 32];
     let balloon = Balloon::<blake3::Hasher>::new(balloon_hash::Algorithm::Balloon, params, None);
-    let result = balloon.hash(raw_key.expose(), salt);
+    let result = balloon.hash_into(&raw_key.expose(), salt, &mut key);
     drop(raw_key);
 
-    match result {
-        Ok(mut key_gen_array) => {
-            let mut key_bytes = key_gen_array.to_vec();
-            let mut key = [0u8; 32];
-
-            for (i, byte) in key_bytes.iter().enumerate() {
-                key[i] = *byte;
-            }
-
-            key_bytes.zeroize();
-            key_gen_array.zeroize();
-
-            Ok(Protected::new(key))
-        }
-        Err(_) => Err(anyhow::anyhow!("Error while hashing your key")),
+    if result.is_err() {
+        return Err(anyhow::anyhow!("Error while hashing your key"));
     }
+
+    Ok(Protected::new(key))
 }

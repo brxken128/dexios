@@ -19,7 +19,6 @@ use anyhow::Result;
 use rand::prelude::StdRng;
 use rand::RngCore;
 use rand::SeedableRng;
-use zeroize::Zeroize;
 
 /// This generates a salt, of the specified `SALT_LEN`
 ///

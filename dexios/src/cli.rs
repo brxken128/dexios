@@ -69,14 +69,6 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("Skip all prompts"),
         )
         .arg(
-            Arg::new("password")
-                .short('p')
-                .long("password")
-                .takes_value(false)
-                .help("Interactively ask for your password")
-                .conflicts_with("keyfile"),
-        )
-        .arg(
             Arg::new("aead")
                 .short('a')
                 .long("aead")
@@ -140,14 +132,6 @@ pub fn get_matches() -> clap::ArgMatches {
                 .long("skip")
                 .takes_value(false)
                 .help("Skip all prompts"),
-        )
-        .arg(
-            Arg::new("password")
-                .short('p')
-                .long("password")
-                .takes_value(false)
-                .help("Interactively ask for your password")
-                .conflicts_with("keyfile"),
         );
 
     Command::new("dexios")

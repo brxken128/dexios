@@ -119,7 +119,7 @@ pub fn memory_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
     ));
 
     if params.hash_mode == HashMode::CalculateHash {
-        super::hashing::hash_stream(&vec![input.to_string()])?;
+        super::hashing::hash_stream(&[input.to_string()])?;
     }
 
     if params.erase != EraseMode::IgnoreFile(0) {
@@ -238,7 +238,7 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
     ));
 
     if params.hash_mode == HashMode::CalculateHash {
-        super::hashing::hash_stream(&vec![input.to_string()])?;
+        super::hashing::hash_stream(&[input.to_string()])?;
     }
 
     if params.erase != EraseMode::IgnoreFile(0) {

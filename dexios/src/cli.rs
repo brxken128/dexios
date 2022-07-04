@@ -254,16 +254,6 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("Use a keyfile instead of a password"),
             )
             .arg(
-                Arg::new("erase")
-                    .long("erase")
-                    .value_name("# of passes")
-                    .takes_value(true)
-                    .require_equals(true)
-                    .help("Securely erase the input file once complete (default is 2 passes)")
-                    .min_values(0)
-                    .default_missing_value("2"),
-            )
-            .arg(
                 Arg::new("hash")
                     .short('H')
                     .long("hash")

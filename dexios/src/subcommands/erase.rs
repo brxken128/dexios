@@ -3,7 +3,7 @@ use paris::Logger;
 use rand::RngCore;
 use std::{
     fs::File,
-    io::{BufWriter, Write},
+    io::{BufWriter, Seek, Write},
     time::Instant,
 };
 
@@ -62,6 +62,10 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     let content_size = data.len();
 
     for _ in 0..passes {
+        writer
+            .rewind()
+            .with_context(|| format!("Unable to reset cursor position: {}", input))?;
+
         if content_size < BLOCK_SIZE {
             // if file is smaller than the 512 byte "block"
             let mut buf = vec![
@@ -104,13 +108,12 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     }
 
     // overwrite with zeros for good measure
-    let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
-    let mut writer = BufWriter::new(file);
-    for _ in 0..content_size {
-        writer
-            .write(&[0])
-            .with_context(|| format!("Unable to overwrite with zeros: {}", input))?;
-    }
+    writer
+        .rewind()
+        .with_context(|| format!("Unable to reset cursor position: {}", input))?;
+    writer
+        .write_all(&[0].repeat(content_size as usize))
+        .with_context(|| format!("Unable to overwrite with zeros: {}", input))?;
     writer
         .flush()
         .with_context(|| format!("Unable to flush file: {}", input))?;

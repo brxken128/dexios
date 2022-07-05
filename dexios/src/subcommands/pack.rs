@@ -19,37 +19,57 @@ use crate::{
     },
 };
 
+pub struct Request<'a> {
+    pub input_file: &'a str,
+    pub output_file: &'a str,
+    pub pack_params: PackParams,
+    pub crypto_params: CryptoParams,
+    pub algorithm: Algorithm,
+}
+
 // this first indexes the input directory
 // once it has the total number of files/folders, it creates a temporary zip file
 // it compresses all of the files into the temporary archive
 // once compressed, it encrypts the zip file
 // it erases the temporary archive afterwards, to stop any residual data from remaining
-#[allow(clippy::module_name_repetitions)]
 #[allow(clippy::too_many_lines)]
-pub fn pack(
-    input: &str,
-    output: &str,
-    pack_params: &PackParams,
-    params: &CryptoParams,
-    algorithm: Algorithm,
-) -> Result<()> {
+pub fn execute(req: Request) -> Result<()> {
     let mut logger = Logger::new();
 
+    // 1. Initialize walker
+    let walker = if req.pack_params.dir_mode == DirectoryMode::Recursive {
+        logger.info(format!("Traversing {} recursively", req.input_file));
+        WalkDir::new(req.input_file)
+    } else {
+        logger.info(format!("Traversing {}", req.input_file));
+        WalkDir::new(req.input_file).max_depth(1)
+    };
+
+    // 2. Skip failed dir entries
+    let walker = walker
+        .into_iter()
+        .filter_map(|res| res.ok())
+        .collect::<Vec<walkdir::DirEntry>>();
+    // let item_data = item.context("Unable to get path of item, skipping")?;
+
+    // 3. create temp file
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
-    let tmp_name = format!("{}.{}", output, random_extension); // e.g. "output.kjHSD93l"
+    let tmp_name = format!("{}.{}", req.output_file, random_extension); // e.g. "output.kjHSD93l"
 
     let file = std::io::BufWriter::new(
         File::create(&tmp_name)
-            .with_context(|| format!("Unable to create the output file: {}", output))?,
+            .with_context(|| format!("Unable to create the output file: {}", req.output_file))?,
     );
 
     logger.info(format!("Creating and compressing files into {}", tmp_name));
 
+    // 4. Pipe to zip writer
     let zip_start_time = Instant::now();
 
     let mut zip = zip::ZipWriter::new(file);
 
-    let options = match pack_params.compression {
+    // 5. Add options for zip file
+    let options = match req.pack_params.compression {
         Compression::None => FileOptions::default()
             .compression_method(zip::CompressionMethod::Stored)
             .large_file(true)
@@ -60,32 +80,17 @@ pub fn pack(
             .unix_permissions(0o755),
     };
 
-    let mut item_count = 0;
+    // 6. iterate all entries and zip them
+    let item_count = walker.len();
+    for dir_entry in walker {
+        let entry_path = dir_entry.path();
 
-    if pack_params.dir_mode == DirectoryMode::Recursive {
-        logger.info(format!("Traversing {} recursively", input));
-    } else {
-        logger.info(format!("Traversing {}", input));
-    }
-
-    let walker = if pack_params.dir_mode == DirectoryMode::Recursive {
-        WalkDir::new(input)
-    } else {
-        WalkDir::new(input).max_depth(1)
-    };
-
-    for item in walker {
-        item_count += 1;
-
-        let item_data = item.context("Unable to get path of item, skipping")?;
-        let item = item_data.path();
-
-        let item_str = item
+        let item_str = entry_path
             .to_str()
             .context("Error converting directory path to string")?
             .replace('\\', "/");
 
-        if item.is_dir() {
+        if entry_path.is_dir() {
             zip.add_directory(item_str, options)
                 .context("Unable to add directory to zip")?;
 
@@ -95,16 +100,16 @@ pub fn pack(
         zip.start_file(item_str, options)
             .context("Unable to add file to zip")?;
 
-        if pack_params.print_mode == PrintMode::Verbose {
+        if req.pack_params.print_mode == PrintMode::Verbose {
             logger.info(format!(
                 "Compressing {} into {}",
-                item.to_str().unwrap(),
+                entry_path.to_str().unwrap(),
                 tmp_name
             ));
         }
 
         let zip_writer = zip.by_ref();
-        let mut file_reader = File::open(item)?;
+        let mut file_reader = File::open(entry_path)?;
         // stream read/write here
         let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
@@ -112,7 +117,9 @@ pub fn pack(
             let read_count = file_reader.read(&mut buffer)?;
             zip_writer
                 .write_all(&buffer[..read_count])
-                .with_context(|| format!("Unable to write to the output file: {}", output))?;
+                .with_context(|| {
+                    format!("Unable to write to the output file: {}", req.output_file)
+                })?;
             if read_count != BLOCK_SIZE {
                 break;
             }
@@ -129,15 +136,24 @@ pub fn pack(
         zip_duration.as_secs_f32()
     ));
 
-    super::encrypt::stream_mode(&tmp_name, output, params, algorithm)?;
+    // 7. Encrypt the compressed file
+    // TODO: need to extract getting password from encrypt command.
+    super::encrypt::stream_mode(
+        &tmp_name,
+        req.output_file,
+        &req.crypto_params,
+        req.algorithm,
+    )
+    .or_else(|err| super::erase::secure_erase(&tmp_name, 2).and(Err(err)))?;
 
+    // 8. Erase files
     super::erase::secure_erase(&tmp_name, 2)?; // cleanup our tmp file
 
-    if pack_params.erase_source == EraseSourceDir::Erase {
-        super::erase::secure_erase(input, 2)?;
+    if req.pack_params.erase_source == EraseSourceDir::Erase {
+        super::erase::secure_erase(req.input_file, 2)?;
     }
 
-    logger.success(format!("Your output file is: {}", output));
+    logger.success(format!("Your output file is: {}", req.output_file));
 
     Ok(())
 }

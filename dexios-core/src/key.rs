@@ -157,7 +157,7 @@ pub fn balloon_hash(
 
     let mut key = [0u8; 32];
     let balloon = Balloon::<blake3::Hasher>::new(balloon_hash::Algorithm::Balloon, params, None);
-    let result = balloon.hash_into(&raw_key.expose(), salt, &mut key);
+    let result = balloon.hash_into(raw_key.expose(), salt, &mut key);
     drop(raw_key);
 
     if result.is_err() {

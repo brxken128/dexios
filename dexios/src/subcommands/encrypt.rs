@@ -139,7 +139,7 @@ pub fn stream_mode(
     ));
 
     if params.hash_mode == HashMode::CalculateHash {
-        super::hashing::hash_stream(&vec![output.to_string()])?;
+        super::hashing::hash_stream(&[output.to_string()])?;
     }
 
     if params.erase != EraseMode::IgnoreFile(0) {

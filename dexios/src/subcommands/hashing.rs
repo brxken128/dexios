@@ -7,7 +7,7 @@ use std::io::Read;
 // this hashes the input file
 // it reads it in blocks, updates the hasher, and finalises/displays the hash
 // it's used by hash-standalone mode
-pub fn hash_stream(files: &Vec<String>) -> Result<()> {
+pub fn hash_stream(files: &[String]) -> Result<()> {
     let mut logger = Logger::new();
     for input in files {
         let mut input_file = std::fs::File::open(input)

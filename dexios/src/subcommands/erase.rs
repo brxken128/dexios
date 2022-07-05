@@ -1,15 +1,14 @@
+use crate::domain;
 use anyhow::{Context, Result};
 use paris::Logger;
-use rand::RngCore;
 use std::{
+    cell::RefCell,
     fs::File,
-    io::{BufWriter, Seek, Write},
+    io::{BufWriter, Write},
     time::Instant,
 };
 
 use super::prompt::get_answer;
-
-const BLOCK_SIZE: u64 = 512;
 
 // this function securely erases a file
 // read the docs for some caveats with file-erasure on flash storage
@@ -20,11 +19,11 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
 
     let start_time = Instant::now();
     let file = File::open(input).with_context(|| format!("Unable to open file: {}", input))?;
-    let data = file
+    let file_meta = file
         .metadata()
         .with_context(|| format!("Unable to get input file metadata: {}", input))?;
 
-    if data.is_dir() {
+    if file_meta.is_dir() {
         drop(file);
         if !get_answer(
             "This is a directory, would you like to erase all files within it?",
@@ -51,73 +50,19 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
         return Ok(());
     }
 
-    let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
-    let mut writer = BufWriter::new(file);
-
     logger.loading(format!(
         "Erasing {} with {} passes (this may take a while)",
         input, passes
     ));
 
-    let content_size = data.len();
+    let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
+    let buf_capacity = file_meta.len() as usize;
 
-    for _ in 0..passes {
-        writer
-            .rewind()
-            .with_context(|| format!("Unable to reset cursor position: {}", input))?;
-
-        if content_size < BLOCK_SIZE {
-            // if file is smaller than the 512 byte "block"
-            let mut buf = vec![
-                0;
-                content_size
-                    .try_into()
-                    .context("Unable to get file size as usize")?
-            ];
-            rand::thread_rng().fill_bytes(&mut buf);
-            writer
-                .write_all(&buf)
-                .with_context(|| format!("Unable to overwrite with random bytes: {}", input))?;
-        } else {
-            for _ in 0..content_size / BLOCK_SIZE {
-                // for every 512 byte "block"
-                let mut buf = vec![0; BLOCK_SIZE as usize];
-                rand::thread_rng().fill_bytes(&mut buf);
-                writer
-                    .write_all(&buf)
-                    .with_context(|| format!("Unable to overwrite with random bytes: {}", input))?;
-            }
-            if (content_size % BLOCK_SIZE) != 0 {
-                // if not perfectly divisible by 512
-                let mut buf = vec![
-                    0;
-                    (content_size % BLOCK_SIZE)
-                        .try_into()
-                        .context("Unable to get file size as usize")?
-                ];
-                rand::thread_rng().fill_bytes(&mut buf);
-                writer
-                    .write_all(&buf)
-                    .with_context(|| format!("Unable to overwrite with random bytes: {}", input))?;
-            }
-        }
-
-        writer
-            .flush()
-            .with_context(|| format!("Unable to flush file: {}", input))?;
-    }
-
-    // overwrite with zeros for good measure
-    writer
-        .rewind()
-        .with_context(|| format!("Unable to reset cursor position: {}", input))?;
-    writer
-        .write_all(&[0].repeat(content_size as usize))
-        .with_context(|| format!("Unable to overwrite with zeros: {}", input))?;
-    writer
-        .flush()
-        .with_context(|| format!("Unable to flush file: {}", input))?;
-    drop(writer);
+    domain::erase::execute(domain::erase::Request {
+        writer: RefCell::new(BufWriter::new(file)),
+        buf_capacity,
+        passes,
+    })?;
 
     let mut file = File::create(input).context("Unable to open the input file")?;
     file.set_len(0)

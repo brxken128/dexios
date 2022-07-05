@@ -9,6 +9,8 @@ use std::{
 
 use super::prompt::get_answer;
 
+const BLOCK_SIZE: u64 = 512;
+
 // this function securely erases a file
 // read the docs for some caveats with file-erasure on flash storage
 // it takes the file name/relative path, and the number of times to go over the file's contents with random bytes
@@ -57,12 +59,14 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
         input, passes
     ));
 
+    let content_size = data.len();
+
     for _ in 0..passes {
-        if data.len() < 512 {
+        if content_size < BLOCK_SIZE {
             // if file is smaller than the 512 byte "block"
             let mut buf = vec![
                 0;
-                data.len()
+                content_size
                     .try_into()
                     .context("Unable to get file size as usize")?
             ];
@@ -71,19 +75,19 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
                 .write_all(&buf)
                 .with_context(|| format!("Unable to overwrite with random bytes: {}", input))?;
         } else {
-            for _ in 0..data.len() / 512 {
+            for _ in 0..content_size / BLOCK_SIZE {
                 // for every 512 byte "block"
-                let mut buf = vec![0; 512];
+                let mut buf = vec![0; BLOCK_SIZE as usize];
                 rand::thread_rng().fill_bytes(&mut buf);
                 writer
                     .write_all(&buf)
                     .with_context(|| format!("Unable to overwrite with random bytes: {}", input))?;
             }
-            if (data.len() % 512) != 0 {
+            if (content_size % BLOCK_SIZE) != 0 {
                 // if not perfectly divisible by 512
                 let mut buf = vec![
                     0;
-                    (512 % data.len())
+                    (content_size % BLOCK_SIZE)
                         .try_into()
                         .context("Unable to get file size as usize")?
                 ];
@@ -102,7 +106,7 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     // overwrite with zeros for good measure
     let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
     let mut writer = BufWriter::new(file);
-    for _ in 0..data.len() {
+    for _ in 0..content_size {
         writer
             .write(&[0])
             .with_context(|| format!("Unable to overwrite with zeros: {}", input))?;

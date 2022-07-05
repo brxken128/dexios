@@ -50,7 +50,6 @@ pub fn execute(req: Request) -> Result<()> {
         .into_iter()
         .filter_map(|res| res.ok())
         .collect::<Vec<walkdir::DirEntry>>();
-    // let item_data = item.context("Unable to get path of item, skipping")?;
 
     // 3. create temp file
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);

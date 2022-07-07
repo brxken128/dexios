@@ -29,7 +29,7 @@ pub struct Request<R: Read + Seek> {
     pub reader: RefCell<R>,
 }
 
-pub fn execute<R: Read + Seek>(hasher: impl Hasher, req: Request<R>) -> Result<String, Error> {
+pub fn execute<R: Read + Seek>(mut hasher: impl Hasher, req: Request<R>) -> Result<String, Error> {
     req.reader
         .borrow_mut()
         .rewind()
@@ -94,6 +94,26 @@ mod tests {
             Err(_) => unreachable!(),
             Ok(hash) => {
                 assert_eq!(hash, blake3::hash(&orig_buf).to_hex().to_string());
+            }
+        }
+    }
+
+    #[test]
+    fn should_reset_position_and_make_hash() {
+        let text = "Hello world";
+        let mut bytes = text.as_bytes();
+        let mut reader = Cursor::new(&mut bytes);
+
+        reader.seek(std::io::SeekFrom::End(0)).unwrap();
+
+        let req = Request {
+            reader: RefCell::new(reader),
+        };
+
+        match execute(Blake3Hasher::new(), req) {
+            Err(_) => unreachable!(),
+            Ok(hash) => {
+                assert_eq!(hash, blake3::hash(text.as_bytes()).to_hex().to_string());
             }
         }
     }

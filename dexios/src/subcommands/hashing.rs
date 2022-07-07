@@ -1,8 +1,9 @@
 use anyhow::Context;
 use anyhow::{Ok, Result};
-use dexios_core::primitives::BLOCK_SIZE;
 use paris::Logger;
-use std::io::Read;
+use std::cell::RefCell;
+
+use crate::domain;
 
 // this hashes the input file
 // it reads it in blocks, updates the hasher, and finalises/displays the hash
@@ -13,20 +14,10 @@ pub fn hash_stream(files: &[String]) -> Result<()> {
         let mut input_file = std::fs::File::open(input)
             .with_context(|| format!("Unable to open file: {}", input))?;
 
-        let mut hasher = blake3::Hasher::new();
-        let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
+        let hash = domain::hash::execute(domain::hash::Request {
+            reader: RefCell::new(&mut input_file),
+        })?;
 
-        loop {
-            let read_count = input_file
-                .read(&mut buffer)
-                .with_context(|| format!("Unable to read data from file: {}", input))?;
-            hasher.update(&buffer[..read_count]);
-            if read_count != BLOCK_SIZE {
-                break;
-            }
-        }
-
-        let hash = hasher.finalize().to_hex().to_string();
         logger.success(format!("{}: {}", input, hash));
     }
 

@@ -187,7 +187,9 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
         }
         HeaderVersion::V4 => {
             let hash_start_time = Instant::now();
-            let key = balloon_hash(raw_key, &header.salt, &header.header_type.version)?;
+            let keyslot = header.keyslots.clone().unwrap();
+
+            let key = keyslot[0].hash_algorithm.hash(raw_key.clone(), &keyslot[0].salt)?;
             let hash_duration = hash_start_time.elapsed();
             success!(
                 "Successfully hashed your key [took {:.2}s]",
@@ -195,11 +197,10 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
             );
             let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
 
-            let keyslot = header.keyslots.clone().unwrap()[0];
 
             let master_key_result = cipher.decrypt(
-                &keyslot.nonce,
-                keyslot.encrypted_key.as_slice(),
+                &keyslot[0].nonce,
+                keyslot[0].encrypted_key.as_slice(),
             );
             let mut master_key_decrypted = master_key_result.map_err(|_| {
                 anyhow::anyhow!(
@@ -219,7 +220,7 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
             let mut master_key = [0u8; 32];
             for keyslot in keyslots {
                 let hash_start_time = Instant::now();
-                let key = balloon_hash(raw_key, &header.salt, &header.header_type.version)?;
+                let key = keyslot.hash_algorithm.hash(raw_key.clone(), &keyslot.salt)?;
                 let hash_duration = hash_start_time.elapsed();
                 success!(
                     "Successfully hashed your key [took {:.2}s]",

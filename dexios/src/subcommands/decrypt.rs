@@ -79,7 +79,11 @@ pub fn memory_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
     let mut output_file = File::create(output).context("Unable to create output file")?;
 
     let hash_start_time = Instant::now();
-    let key = argon2id_hash(raw_key, &header.salt.clone().unwrap(), &header.header_type.version)?;
+    let key = argon2id_hash(
+        raw_key,
+        &header.salt.clone().unwrap(),
+        &header.header_type.version,
+    )?;
     let hash_duration = hash_start_time.elapsed();
     success!(
         "Successfully hashed your key [took {:.2}s]",
@@ -176,7 +180,11 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
     let key = match header.header_type.version {
         HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
             let hash_start_time = Instant::now();
-            let key = argon2id_hash(raw_key, &header.salt.clone().unwrap(), &header.header_type.version)?;
+            let key = argon2id_hash(
+                raw_key,
+                &header.salt.clone().unwrap(),
+                &header.header_type.version,
+            )?;
             let hash_duration = hash_start_time.elapsed();
             success!(
                 "Successfully hashed your key [took {:.2}s]",
@@ -188,7 +196,9 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
             let hash_start_time = Instant::now();
             let keyslot = header.keyslots.clone().unwrap();
 
-            let key = keyslot[0].hash_algorithm.hash(raw_key.clone(), &keyslot[0].salt)?;
+            let key = keyslot[0]
+                .hash_algorithm
+                .hash(raw_key.clone(), &keyslot[0].salt)?;
             let hash_duration = hash_start_time.elapsed();
             success!(
                 "Successfully hashed your key [took {:.2}s]",
@@ -196,11 +206,8 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
             );
             let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
 
-
-            let master_key_result = cipher.decrypt(
-                &keyslot[0].nonce,
-                keyslot[0].encrypted_key.as_slice(),
-            );
+            let master_key_result =
+                cipher.decrypt(&keyslot[0].nonce, keyslot[0].encrypted_key.as_slice());
             let mut master_key_decrypted = master_key_result.map_err(|_| {
                 anyhow::anyhow!(
                     "Unable to decrypt your master key (maybe you supplied the wrong key?)"
@@ -219,22 +226,22 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
             let mut master_key = [0u8; 32];
             for keyslot in keyslots {
                 let hash_start_time = Instant::now();
-                let key = keyslot.hash_algorithm.hash(raw_key.clone(), &keyslot.salt)?;
+                let key = keyslot
+                    .hash_algorithm
+                    .hash(raw_key.clone(), &keyslot.salt)?;
                 let hash_duration = hash_start_time.elapsed();
                 success!(
                     "Successfully hashed your key [took {:.2}s]",
                     hash_duration.as_secs_f32()
                 );
                 let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
-        
-                let master_key_result = cipher.decrypt(
-                    &keyslot.nonce,
-                    keyslot.encrypted_key.as_slice(),
-                );
+
+                let master_key_result =
+                    cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
 
                 if master_key_result.is_ok() {
                     let mut master_key_decrypted = master_key_result.unwrap();
-        
+
                     let len = 32.min(master_key_decrypted.len());
                     master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
                     master_key_decrypted.zeroize();
@@ -245,7 +252,7 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
             if master_key != [0u8; 32] {
                 Protected::new(master_key)
             } else {
-                return Err(anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"))
+                return Err(anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"));
             }
         }
     };

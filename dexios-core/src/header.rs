@@ -32,7 +32,10 @@
 //! ```
 //!
 
-use crate::{key::{argon2id_hash, balloon_hash}, protected::Protected};
+use crate::{
+    key::{argon2id_hash, balloon_hash},
+    protected::Protected,
+};
 
 use super::primitives::{Algorithm, Mode, SALT_LEN};
 use anyhow::{Context, Result};
@@ -115,23 +118,31 @@ pub enum HashingAlgorithm {
 }
 
 impl HashingAlgorithm {
-    pub fn hash(&self, raw_key: Protected<Vec<u8>>, salt: &[u8; SALT_LEN]) -> Result<Protected<[u8; 32]>, anyhow::Error> {
+    pub fn hash(
+        &self,
+        raw_key: Protected<Vec<u8>>,
+        salt: &[u8; SALT_LEN],
+    ) -> Result<Protected<[u8; 32]>, anyhow::Error> {
         match self {
-            HashingAlgorithm::Argon2id(i) => {
-                match i {
-                    1 => argon2id_hash(raw_key, salt, &HeaderVersion::V1),
-                    2 => argon2id_hash(raw_key, salt, &HeaderVersion::V2),
-                    3 => argon2id_hash(raw_key, salt, &HeaderVersion::V3),
-                    _ => return Err(anyhow::anyhow!("argon2id is not supported with the parameters provided.")),
+            HashingAlgorithm::Argon2id(i) => match i {
+                1 => argon2id_hash(raw_key, salt, &HeaderVersion::V1),
+                2 => argon2id_hash(raw_key, salt, &HeaderVersion::V2),
+                3 => argon2id_hash(raw_key, salt, &HeaderVersion::V3),
+                _ => {
+                    return Err(anyhow::anyhow!(
+                        "argon2id is not supported with the parameters provided."
+                    ))
                 }
-            }
-            HashingAlgorithm::Blake3Balloon(i) => {
-                match i {
-                    4 => balloon_hash(raw_key, salt, &HeaderVersion::V4),
-                    5 => balloon_hash(raw_key, salt, &HeaderVersion::V5),
-                    _ => return Err(anyhow::anyhow!("Balloon hashing is not supported with the parameters provided.")),
+            },
+            HashingAlgorithm::Blake3Balloon(i) => match i {
+                4 => balloon_hash(raw_key, salt, &HeaderVersion::V4),
+                5 => balloon_hash(raw_key, salt, &HeaderVersion::V5),
+                _ => {
+                    return Err(anyhow::anyhow!(
+                        "Balloon hashing is not supported with the parameters provided."
+                    ))
                 }
-            }
+            },
         }
     }
 }
@@ -147,21 +158,17 @@ pub struct Keyslot {
 impl Keyslot {
     pub fn serialize(&self) -> [u8; 2] {
         match self.hash_algorithm {
-            HashingAlgorithm::Argon2id(i) => {
-                match i {
-                    1 => [0xDF, 0xA1],
-                    2 => [0xDF, 0xA2],
-                    3 => [0xDF, 0xA3],
-                    _ => [0x00, 0x00],
-                }
-            }
-            HashingAlgorithm::Blake3Balloon(i) => {
-                match i {
-                    4 => [0xDF, 0xB4],
-                    5 => [0xDF, 0xB5],
-                    _ => [0x00, 0x00],
-                }
-            }
+            HashingAlgorithm::Argon2id(i) => match i {
+                1 => [0xDF, 0xA1],
+                2 => [0xDF, 0xA2],
+                3 => [0xDF, 0xA3],
+                _ => [0x00, 0x00],
+            },
+            HashingAlgorithm::Blake3Balloon(i) => match i {
+                4 => [0xDF, 0xB4],
+                5 => [0xDF, 0xB5],
+                _ => [0x00, 0x00],
+            },
         }
     }
 }
@@ -303,136 +310,148 @@ impl Header {
         let mut salt = [0u8; 16];
         let mut nonce = vec![0u8; nonce_len];
 
-        let keyslots: Option<Vec<Keyslot>> =
-            match header_type.version {
-                HeaderVersion::V1 | HeaderVersion::V3 => {
-                    cursor
-                        .read_exact(&mut salt)
-                        .context("Unable to read salt from header")?;
-                    cursor
-                        .read_exact(&mut [0; 16])
-                        .context("Unable to read empty bytes from header")?;
-                    cursor
-                        .read_exact(&mut nonce)
-                        .context("Unable to read nonce from header")?;
-                    cursor
-                        .read_exact(&mut vec![0u8; 26 - nonce_len])
-                        .context("Unable to read final padding from header")?;
+        let keyslots: Option<Vec<Keyslot>> = match header_type.version {
+            HeaderVersion::V1 | HeaderVersion::V3 => {
+                cursor
+                    .read_exact(&mut salt)
+                    .context("Unable to read salt from header")?;
+                cursor
+                    .read_exact(&mut [0; 16])
+                    .context("Unable to read empty bytes from header")?;
+                cursor
+                    .read_exact(&mut nonce)
+                    .context("Unable to read nonce from header")?;
+                cursor
+                    .read_exact(&mut vec![0u8; 26 - nonce_len])
+                    .context("Unable to read final padding from header")?;
 
-                    None
+                None
+            }
+            HeaderVersion::V2 => {
+                cursor
+                    .read_exact(&mut salt)
+                    .context("Unable to read salt from header")?;
+                cursor
+                    .read_exact(&mut nonce)
+                    .context("Unable to read nonce from header")?;
+                cursor
+                    .read_exact(&mut vec![0u8; 26 - nonce_len])
+                    .context("Unable to read empty bytes from header")?;
+                cursor
+                    .read_exact(&mut [0u8; 16])
+                    .context("Unable to read final padding from header")?;
+
+                None
+            }
+            HeaderVersion::V4 => {
+                let mut master_key_encrypted = [0u8; 48];
+                let master_key_nonce_len = calc_nonce_len(&HeaderType {
+                    version,
+                    algorithm,
+                    mode: Mode::MemoryMode,
+                });
+                let mut master_key_nonce = vec![0u8; master_key_nonce_len];
+                cursor
+                    .read_exact(&mut salt)
+                    .context("Unable to read salt from header")?;
+                cursor
+                    .read_exact(&mut nonce)
+                    .context("Unable to read nonce from header")?;
+                cursor
+                    .read_exact(&mut vec![0u8; 26 - nonce_len])
+                    .context("Unable to read padding from header")?;
+                cursor
+                    .read_exact(&mut master_key_encrypted)
+                    .context("Unable to read encrypted master key from header")?;
+                cursor
+                    .read_exact(&mut master_key_nonce)
+                    .context("Unable to read master key nonce from header")?;
+                cursor
+                    .read_exact(&mut vec![0u8; 32 - master_key_nonce_len])
+                    .context("Unable to read padding from header")?;
+
+                let keyslot = Keyslot {
+                    encrypted_key: master_key_encrypted,
+                    hash_algorithm: HashingAlgorithm::Blake3Balloon(4),
+                    nonce: master_key_nonce.clone(),
+                    salt,
+                };
+                let keyslots = vec![keyslot];
+                Some(keyslots)
+            }
+            HeaderVersion::V5 => {
+                cursor
+                    .read_exact(&mut nonce)
+                    .context("Unable to read nonce from header")?;
+                cursor
+                    .read_exact(&mut vec![0u8; 26 - nonce_len])
+                    .context("Unable to read padding from header")?; // here we reach the 32 bytes
+
+                let keyslot_nonce_len = calc_nonce_len(&HeaderType {
+                    version: HeaderVersion::V5,
+                    algorithm,
+                    mode: Mode::MemoryMode,
+                });
+
+                let mut keyslots: Vec<Keyslot> = Vec::new();
+                for _ in 0..4 {
+                    let mut identifier = [0u8; 2];
+                    cursor
+                        .read_exact(&mut identifier)
+                        .context("Unable to read keyslot identifier from header")?;
+
+                    if identifier[..1] != [0xDF] {
+                        continue;
                     }
-                HeaderVersion::V2 => {
+
+                    let mut encrypted_key = [0u8; 48];
+                    let mut nonce = vec![0u8; keyslot_nonce_len];
+                    let mut padding = vec![0u8; 24 - keyslot_nonce_len];
+                    let mut salt = [0u8; SALT_LEN];
+                    let mut padding2 = [0u8; 6];
+
                     cursor
-                        .read_exact(&mut salt)
-                        .context("Unable to read salt from header")?;
+                        .read_exact(&mut encrypted_key)
+                        .context("Unable to read keyslot encrypted bytes from header")?;
+
                     cursor
                         .read_exact(&mut nonce)
-                        .context("Unable to read nonce from header")?;
-                    cursor
-                        .read_exact(&mut vec![0u8; 26 - nonce_len])
-                        .context("Unable to read empty bytes from header")?;
-                    cursor
-                        .read_exact(&mut [0u8; 16])
-                        .context("Unable to read final padding from header")?;
+                        .context("Unable to read keyslot nonce from header")?;
 
-                    None
-                    }
-                HeaderVersion::V4 => {
-                    let mut master_key_encrypted = [0u8; 48];
-                    let master_key_nonce_len = calc_nonce_len(&HeaderType {
-                        version,
-                        algorithm,
-                        mode: Mode::MemoryMode,
-                    });
-                    let mut master_key_nonce = vec![0u8; master_key_nonce_len];
+                    cursor
+                        .read_exact(&mut padding)
+                        .context("Unable to read keyslot padding from header")?;
+
                     cursor
                         .read_exact(&mut salt)
-                        .context("Unable to read salt from header")?;
-                    cursor
-                        .read_exact(&mut nonce)
-                        .context("Unable to read nonce from header")?;
-                    cursor
-                        .read_exact(&mut vec![0u8; 26 - nonce_len])
-                        .context("Unable to read padding from header")?;
-                    cursor
-                        .read_exact(&mut master_key_encrypted)
-                        .context("Unable to read encrypted master key from header")?;
-                    cursor
-                        .read_exact(&mut master_key_nonce)
-                        .context("Unable to read master key nonce from header")?;
-                    cursor
-                        .read_exact(&mut vec![0u8; 32 - master_key_nonce_len])
-                        .context("Unable to read padding from header")?;
+                        .context("Unable to read keyslot salt from header")?;
 
-                    let keyslot = Keyslot { encrypted_key: master_key_encrypted, hash_algorithm: HashingAlgorithm::Blake3Balloon(4), nonce: master_key_nonce.clone(), salt };
-                    let keyslots = vec![keyslot];
-                    Some(keyslots)
+                    cursor
+                        .read_exact(&mut padding2)
+                        .context("Unable to read keyslot padding from header")?;
+
+                    let hash_algorithm = match identifier {
+                        [0xDF, 0xA1] => HashingAlgorithm::Argon2id(1),
+                        [0xDF, 0xA2] => HashingAlgorithm::Argon2id(2),
+                        [0xDF, 0xA3] => HashingAlgorithm::Argon2id(3),
+                        [0xDF, 0xB4] => HashingAlgorithm::Blake3Balloon(4),
+                        [0xDF, 0xB5] => HashingAlgorithm::Blake3Balloon(5),
+                        _ => return Err(anyhow::anyhow!("Key hashing algorithm not identified")),
+                    };
+
+                    let keyslot = Keyslot {
+                        hash_algorithm,
+                        encrypted_key,
+                        nonce,
+                        salt,
+                    };
+
+                    keyslots.push(keyslot);
                 }
-                HeaderVersion::V5 => {
-                    cursor
-                        .read_exact(&mut nonce)
-                        .context("Unable to read nonce from header")?;
-                    cursor
-                        .read_exact(&mut vec![0u8; 26 - nonce_len])
-                        .context("Unable to read padding from header")?; // here we reach the 32 bytes
 
-                    let keyslot_nonce_len = calc_nonce_len(&HeaderType { version: HeaderVersion::V5, algorithm, mode: Mode::MemoryMode });
-
-                    let mut keyslots: Vec<Keyslot> = Vec::new();
-                    for _ in 0..4 {
-                        let mut identifier = [0u8; 2];
-                        cursor
-                            .read_exact(&mut identifier)
-                            .context("Unable to read keyslot identifier from header")?;
-                        
-                        if identifier[..1] != [0xDF] {
-                            continue;
-                        }
-
-                        let mut encrypted_key = [0u8; 48];
-                        let mut nonce = vec![0u8; keyslot_nonce_len];
-                        let mut padding = vec![0u8; 24 - keyslot_nonce_len];
-                        let mut salt = [0u8; SALT_LEN];
-                        let mut padding2 = [0u8; 6];
-
-                        cursor
-                            .read_exact(&mut encrypted_key)
-                            .context("Unable to read keyslot encrypted bytes from header")?;
-
-                        cursor
-                            .read_exact(&mut nonce)
-                            .context("Unable to read keyslot nonce from header")?;
-
-                        cursor
-                            .read_exact(&mut padding)
-                            .context("Unable to read keyslot padding from header")?;
-
-                        cursor
-                            .read_exact(&mut salt)
-                            .context("Unable to read keyslot salt from header")?;
-
-                        cursor
-                            .read_exact(&mut padding2)
-                            .context("Unable to read keyslot padding from header")?;
-
-
-                        let hash_algorithm = match identifier {
-                            [0xDF, 0xA1] => HashingAlgorithm::Argon2id(1),
-                            [0xDF, 0xA2] => HashingAlgorithm::Argon2id(2),
-                            [0xDF, 0xA3] => HashingAlgorithm::Argon2id(3),
-                            [0xDF, 0xB4] => HashingAlgorithm::Blake3Balloon(4),
-                            [0xDF, 0xB5] => HashingAlgorithm::Blake3Balloon(5),
-                            _ => return Err(anyhow::anyhow!("Key hashing algorithm not identified"))
-                        };
-
-                        let keyslot = Keyslot { hash_algorithm, encrypted_key, nonce, salt };
-
-                        keyslots.push(keyslot);
-                    }
-
-                    Some(keyslots)
-                }
-            };
+                Some(keyslots)
+            }
+        };
 
         let aad = match header_type.version {
             HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
@@ -563,7 +582,7 @@ impl Header {
         let keyslots = self.keyslots.clone().unwrap();
 
         let mut header_bytes = Vec::<u8>::new();
-        
+
         // start of header static info
         header_bytes.extend_from_slice(&tag.version);
         header_bytes.extend_from_slice(&tag.algorithm);
@@ -571,7 +590,7 @@ impl Header {
         header_bytes.extend_from_slice(&self.nonce);
         header_bytes.extend_from_slice(&padding);
         // end of header static info
-        
+
         for keyslot in &keyslots {
             header_bytes.extend_from_slice(&keyslot.serialize());
             header_bytes.extend_from_slice(&keyslot.encrypted_key);

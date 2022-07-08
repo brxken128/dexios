@@ -20,7 +20,7 @@
 //! assert_eq!(secret, decrypted_data);
 //! ```
 
-use aead::{Aead, NewAead, Payload, AeadInPlace};
+use aead::{Aead, AeadInPlace, NewAead, Payload};
 use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
 use deoxys::DeoxysII256;
@@ -92,7 +92,12 @@ impl Ciphers {
         }
     }
 
-    pub fn encrypt_in_place(&self, nonce: &[u8], aad: &[u8], buffer: &mut dyn aead::Buffer) -> Result<(), aead::Error> {
+    pub fn encrypt_in_place(
+        &self,
+        nonce: &[u8],
+        aad: &[u8],
+        buffer: &mut dyn aead::Buffer,
+    ) -> Result<(), aead::Error> {
         match self {
             Ciphers::Aes256Gcm(c) => c.encrypt_in_place(nonce.as_ref().into(), aad, buffer),
             Ciphers::XChaCha(c) => c.encrypt_in_place(nonce.as_ref().into(), aad, buffer),

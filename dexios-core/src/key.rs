@@ -67,27 +67,18 @@ pub fn argon2id_hash(
     let params = match version {
         HeaderVersion::V1 => {
             // 8MiB of memory, 8 iterations, 4 levels of parallelism
-            let params = Params::new(8192, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN));
-            match params {
-                std::result::Result::Ok(parameters) => parameters,
-                Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
-            }
+            Params::new(8192, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN))
+                .map_err(|_| anyhow::anyhow!("Error initialising argon2id parameters"))?
         }
         HeaderVersion::V2 => {
             // 256MiB of memory, 8 iterations, 4 levels of parallelism
-            let params = Params::new(262_144, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN));
-            match params {
-                std::result::Result::Ok(parameters) => parameters,
-                Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
-            }
+            Params::new(262_144, 8, 4, Some(Params::DEFAULT_OUTPUT_LEN))
+                .map_err(|_| anyhow::anyhow!("Error initialising argon2id parameters"))?
         }
         HeaderVersion::V3 => {
             // 256MiB of memory, 10 iterations, 4 levels of parallelism
-            let params = Params::new(262_144, 10, 4, Some(Params::DEFAULT_OUTPUT_LEN));
-            match params {
-                std::result::Result::Ok(parameters) => parameters,
-                Err(_) => return Err(anyhow::anyhow!("Error initialising argon2id parameters")),
-            }
+            Params::new(262_144, 10, 4, Some(Params::DEFAULT_OUTPUT_LEN))
+                .map_err(|_| anyhow::anyhow!("Error initialising argon2id parameters"))?
         }
         HeaderVersion::V4 => {
             return Err(anyhow::anyhow!(
@@ -140,19 +131,10 @@ pub fn balloon_hash(
         HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
             return Err(anyhow::anyhow!(
                 "Balloon hashing is not supported in header versions below V4."
-            ))
+            ));
         }
-        HeaderVersion::V4 => {
-            let params = balloon_hash::Params::new(262_144, 1, 1);
-            match params {
-                Ok(parameters) => parameters,
-                Err(_) => {
-                    return Err(anyhow::anyhow!(
-                        "Error initialising balloon hashing parameters"
-                    ))
-                }
-            }
-        }
+        HeaderVersion::V4 => balloon_hash::Params::new(262_144, 1, 1)
+            .map_err(|_| anyhow::anyhow!("Error initialising balloon hashing parameters"))?,
     };
 
     let mut key = [0u8; 32];

@@ -14,7 +14,6 @@ use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
 use paris::Logger;
 
-use anyhow::anyhow;
 use dexios_core::cipher::Ciphers;
 use dexios_core::Payload;
 use paris::success;
@@ -97,14 +96,11 @@ pub fn memory_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
         msg: &encrypted_data,
     };
 
-    let decrypted_bytes = match ciphers.decrypt(&header.nonce, payload) {
-        Ok(decrypted_bytes) => decrypted_bytes,
-        Err(_) => {
-            return Err(anyhow!(
+    let decrypted_bytes = ciphers.decrypt(&header.nonce, payload).map_err(|_| {
+        anyhow::anyhow!(
             "Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with."
-        ))
-        }
-    };
+        )
+    })?;
 
     let write_start_time = Instant::now();
     output_file.write_all(&decrypted_bytes)?;
@@ -203,14 +199,11 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
                 &header.master_key_nonce.unwrap(),
                 header.master_key_encrypted.unwrap().as_slice(),
             );
-            let mut master_key_decrypted = match master_key_result {
-                std::result::Result::Ok(bytes) => bytes,
-                Err(_) => {
-                    return Err(anyhow::anyhow!(
-                        "Unable to decrypt your master key (maybe you supplied the wrong key?)"
-                    ))
-                }
-            };
+            let mut master_key_decrypted = master_key_result.map_err(|_| {
+                anyhow::anyhow!(
+                    "Unable to decrypt your master key (maybe you supplied the wrong key?)"
+                )
+            })?;
 
             let mut master_key = [0u8; 32];
 

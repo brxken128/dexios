@@ -5,7 +5,7 @@ use crate::global::states::HeaderLocation;
 use crate::global::states::PasswordState;
 use crate::global::structs::CryptoParams;
 use anyhow::Context;
-use anyhow::{Ok, Result};
+use anyhow::Result;
 use dexios_core::cipher::Ciphers;
 use dexios_core::header::{Header, HeaderType, HEADER_VERSION};
 use dexios_core::key::{balloon_hash, gen_salt};
@@ -82,10 +82,8 @@ pub fn stream_mode(
     let cipher = Ciphers::initialize(key, &header_type.algorithm)?;
     let master_key_result = cipher.encrypt(&master_key_nonce, master_key.expose().as_slice());
 
-    let master_key_encrypted = match master_key_result {
-        std::result::Result::Ok(bytes) => bytes,
-        Err(_) => return Err(anyhow::anyhow!("Unable to encrypt your master key")),
-    };
+    let master_key_encrypted =
+        master_key_result.map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
 
     let nonce = gen_nonce(&header_type.algorithm, &header_type.mode);
     let streams = EncryptionStreams::initialize(master_key, &nonce, &header_type.algorithm)?;

@@ -54,32 +54,20 @@ impl Ciphers {
     pub fn initialize(key: Protected<[u8; 32]>, algorithm: &Algorithm) -> anyhow::Result<Self> {
         let cipher = match algorithm {
             Algorithm::Aes256Gcm => {
-                let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
-                    Ok(cipher) => cipher,
-                    Err(_) => {
-                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
-                    }
-                };
+                let cipher = Aes256Gcm::new_from_slice(key.expose())
+                    .map_err(|_| anyhow::anyhow!("Unable to create cipher with hashed key."))?;
 
                 Ciphers::Aes256Gcm(Box::new(cipher))
             }
             Algorithm::XChaCha20Poly1305 => {
-                let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
-                    Ok(cipher) => cipher,
-                    Err(_) => {
-                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
-                    }
-                };
+                let cipher = XChaCha20Poly1305::new_from_slice(key.expose())
+                    .map_err(|_| anyhow::anyhow!("Unable to create cipher with hashed key."))?;
 
                 Ciphers::XChaCha(Box::new(cipher))
             }
             Algorithm::DeoxysII256 => {
-                let cipher = match DeoxysII256::new_from_slice(key.expose()) {
-                    Ok(cipher) => cipher,
-                    Err(_) => {
-                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
-                    }
-                };
+                let cipher = DeoxysII256::new_from_slice(key.expose())
+                    .map_err(|_| anyhow::anyhow!("Unable to create cipher with hashed key."))?;
 
                 Ciphers::DeoxysII(Box::new(cipher))
             }

@@ -96,12 +96,8 @@ impl EncryptionStreams {
                     return Err(anyhow::anyhow!("Nonce is not the correct length"));
                 }
 
-                let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
-                    Ok(cipher) => cipher,
-                    Err(_) => {
-                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
-                    }
-                };
+                let cipher = Aes256Gcm::new_from_slice(key.expose())
+                    .map_err(|_| anyhow::anyhow!("Unable to create cipher with hashed key."))?;
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce.into());
                 EncryptionStreams::Aes256Gcm(Box::new(stream))
@@ -111,12 +107,8 @@ impl EncryptionStreams {
                     return Err(anyhow::anyhow!("Nonce is not the correct length"));
                 }
 
-                let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
-                    Ok(cipher) => cipher,
-                    Err(_) => {
-                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
-                    }
-                };
+                let cipher = XChaCha20Poly1305::new_from_slice(key.expose())
+                    .map_err(|_| anyhow::anyhow!("Unable to create cipher with hashed key."))?;
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce.into());
                 EncryptionStreams::XChaCha20Poly1305(Box::new(stream))
@@ -126,12 +118,8 @@ impl EncryptionStreams {
                     return Err(anyhow::anyhow!("Nonce is not the correct length"));
                 }
 
-                let cipher = match DeoxysII256::new_from_slice(key.expose()) {
-                    Ok(cipher) => cipher,
-                    Err(_) => {
-                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
-                    }
-                };
+                let cipher = DeoxysII256::new_from_slice(key.expose())
+                    .map_err(|_| anyhow::anyhow!("Unable to create cipher with hashed key."))?;
 
                 let stream = EncryptorLE31::from_aead(cipher, nonce.into());
                 EncryptionStreams::DeoxysII256(Box::new(stream))
@@ -213,10 +201,9 @@ impl EncryptionStreams {
                     msg: read_buffer.as_ref(),
                 };
 
-                let encrypted_data = match self.encrypt_next(payload) {
-                    Ok(bytes) => bytes,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to encrypt the data")),
-                };
+                let encrypted_data = self
+                    .encrypt_next(payload)
+                    .map_err(|_| anyhow::anyhow!("Unable to encrypt the data"))?;
 
                 writer
                     .write_all(&encrypted_data)
@@ -228,10 +215,9 @@ impl EncryptionStreams {
                     msg: &read_buffer[..read_count],
                 };
 
-                let encrypted_data = match self.encrypt_last(payload) {
-                    Ok(bytes) => bytes,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to encrypt the data")),
-                };
+                let encrypted_data = self
+                    .encrypt_last(payload)
+                    .map_err(|_| anyhow::anyhow!("Unable to encrypt the data"))?;
 
                 writer
                     .write_all(&encrypted_data)
@@ -278,34 +264,22 @@ impl DecryptionStreams {
     ) -> anyhow::Result<Self> {
         let streams = match algorithm {
             Algorithm::Aes256Gcm => {
-                let cipher = match Aes256Gcm::new_from_slice(key.expose()) {
-                    Ok(cipher) => cipher,
-                    Err(_) => {
-                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
-                    }
-                };
+                let cipher = Aes256Gcm::new_from_slice(key.expose())
+                    .map_err(|_| anyhow::anyhow!("Unable to create cipher with hashed key."))?;
 
                 let stream = DecryptorLE31::from_aead(cipher, nonce.into());
                 DecryptionStreams::Aes256Gcm(Box::new(stream))
             }
             Algorithm::XChaCha20Poly1305 => {
-                let cipher = match XChaCha20Poly1305::new_from_slice(key.expose()) {
-                    Ok(cipher) => cipher,
-                    Err(_) => {
-                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
-                    }
-                };
+                let cipher = XChaCha20Poly1305::new_from_slice(key.expose())
+                    .map_err(|_| anyhow::anyhow!("Unable to create cipher with hashed key."))?;
 
                 let stream = DecryptorLE31::from_aead(cipher, nonce.into());
                 DecryptionStreams::XChaCha20Poly1305(Box::new(stream))
             }
             Algorithm::DeoxysII256 => {
-                let cipher = match DeoxysII256::new_from_slice(key.expose()) {
-                    Ok(cipher) => cipher,
-                    Err(_) => {
-                        return Err(anyhow::anyhow!("Unable to create cipher with hashed key."))
-                    }
-                };
+                let cipher = DeoxysII256::new_from_slice(key.expose())
+                    .map_err(|_| anyhow::anyhow!("Unable to create cipher with hashed key."))?;
 
                 let stream = DecryptorLE31::from_aead(cipher, nonce.into());
                 DecryptionStreams::DeoxysII256(Box::new(stream))
@@ -384,10 +358,9 @@ impl DecryptionStreams {
                     msg: buffer.as_ref(),
                 };
 
-                let mut decrypted_data = match self.decrypt_next(payload) {
-                    Ok(bytes) => bytes,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
-                };
+                let mut decrypted_data = self.decrypt_next(payload).map_err(|_| {
+                    anyhow::anyhow!("Unable to decrypt the data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")
+                })?;
 
                 writer
                     .write_all(&decrypted_data)
@@ -401,10 +374,9 @@ impl DecryptionStreams {
                     msg: &buffer[..read_count],
                 };
 
-                let mut decrypted_data = match self.decrypt_last(payload) {
-                    Ok(bytes) => bytes,
-                    Err(_) => return Err(anyhow::anyhow!("Unable to decrypt the final block of data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")),
-                };
+                let mut decrypted_data = self.decrypt_last(payload).map_err(|_| {
+                    anyhow::anyhow!("Unable to decrypt the final block of data. This means either: you're using the wrong key, this isn't an encrypted file, or the header has been tampered with.")
+                })?;
 
                 writer
                     .write_all(&decrypted_data)

@@ -2,7 +2,6 @@ use anyhow::Result;
 use global::parameters::get_param;
 use global::parameters::key_update_params;
 use global::parameters::skipmode;
-use std::result::Result::Ok;
 use subcommands::list::show_values;
 
 mod cli;

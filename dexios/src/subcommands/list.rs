@@ -1,4 +1,4 @@
-use anyhow::{Ok, Result};
+use anyhow::Result;
 
 use dexios_core::primitives::ALGORITHMS;
 

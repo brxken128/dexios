@@ -99,23 +99,28 @@ mod tests {
     }
 
     #[test]
-    fn should_erase_empty_content() {
+    fn should_overwrite_empty_content() {
         make_test(0, 1);
     }
 
     #[test]
-    fn should_erase_small_content() {
+    fn should_overwrite_small_content() {
         make_test(100, 1);
     }
 
     #[test]
-    fn should_erase_perfectly_divisible_content() {
+    fn should_overwrite_perfectly_divisible_content() {
         make_test(BLOCK_SIZE, 1);
     }
 
     #[test]
-    fn should_erase_not_perfectly_divisible_content() {
+    fn should_overwrite_not_perfectly_divisible_content() {
         make_test(515, 1);
+    }
+
+    #[test]
+    fn should_overwrite_large_content() {
+        make_test(BLOCK_SIZE * 100, 1);
     }
 
     #[test]

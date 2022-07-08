@@ -80,20 +80,13 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
     let cipher = Ciphers::initialize(key_old, &header.header_type.algorithm)?;
 
     let master_key_result = cipher.decrypt(&master_key_nonce, master_key_encrypted.as_slice());
-    let mut master_key_decrypted = match master_key_result {
-        std::result::Result::Ok(bytes) => bytes,
-        Err(_) => {
-            return Err(anyhow::anyhow!(
-                "Unable to decrypt your master key (maybe you supplied the wrong key?)"
-            ))
-        }
-    };
+    let mut master_key_decrypted = master_key_result.map_err(|_| {
+        anyhow::anyhow!("Unable to decrypt your master key (maybe you supplied the wrong key?)")
+    })?;
 
     let mut master_key = [0u8; 32];
-
-    for (i, byte) in master_key_decrypted.iter().enumerate() {
-        master_key[i] = *byte;
-    }
+    let len = 32.min(master_key_decrypted.len());
+    master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
 
     master_key_decrypted.zeroize();
     let master_key = Protected::new(master_key);
@@ -107,10 +100,8 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
     drop(master_key);
 
-    let master_key_encrypted = match master_key_result {
-        std::result::Result::Ok(bytes) => bytes,
-        Err(_) => return Err(anyhow::anyhow!("Unable to encrypt your master key")),
-    };
+    let master_key_encrypted =
+        master_key_result.map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
 
     let header_new = Header {
         header_type: header.header_type,

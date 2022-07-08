@@ -195,9 +195,11 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
             );
             let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
 
+            let keyslot = header.keyslots.clone().unwrap()[0];
+
             let master_key_result = cipher.decrypt(
-                &header.master_key_nonce.unwrap(),
-                header.master_key_encrypted.unwrap().as_slice(),
+                &keyslot.nonce,
+                keyslot.encrypted_key.as_slice(),
             );
             let mut master_key_decrypted = master_key_result.map_err(|_| {
                 anyhow::anyhow!(

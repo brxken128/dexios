@@ -363,9 +363,7 @@ impl Header {
                         .read_exact(&mut vec![0u8; 32 - master_key_nonce_len])
                         .context("Unable to read padding from header")?;
 
-                    
-                    
-                    let keyslot = Keyslot { encrypted_key: master_key_encrypted, hash_algorithm: HashingAlgorithm::Blake3Balloon(4), nonce: nonce.clone(), salt };
+                    let keyslot = Keyslot { encrypted_key: master_key_encrypted, hash_algorithm: HashingAlgorithm::Blake3Balloon(4), nonce: master_key_nonce.clone(), salt };
                     let keyslots = vec![keyslot];
                     Some(keyslots)
                 }

@@ -41,7 +41,7 @@ use std::io::{Cursor, Read, Seek, Write};
 /// This defines the latest header version, so program's using this can easily stay up to date.
 ///
 /// It's also here to just help users keep track
-pub const HEADER_VERSION: HeaderVersion = HeaderVersion::V4;
+pub const HEADER_VERSION: HeaderVersion = HeaderVersion::V5;
 
 /// This stores all possible versions of the header
 #[allow(clippy::module_name_repetitions)]
@@ -250,6 +250,7 @@ impl Header {
             [0xDE, 0x02] => HeaderVersion::V2,
             [0xDE, 0x03] => HeaderVersion::V3,
             [0xDE, 0x04] => HeaderVersion::V4,
+            [0xDE, 0x05] => HeaderVersion::V5,
             _ => return Err(anyhow::anyhow!("Error getting version from header")),
         };
 

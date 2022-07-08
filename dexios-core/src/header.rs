@@ -385,7 +385,7 @@ impl Header {
                             .read_exact(&mut identifier)
                             .context("Unable to read keyslot identifier from header")?;
                         
-                        if identifier == [0xDF, 0x00] {
+                        if identifier[..1] != [0xDF] {
                             continue;
                         }
 

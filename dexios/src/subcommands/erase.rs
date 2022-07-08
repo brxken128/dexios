@@ -58,7 +58,7 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
     let buf_capacity = file_meta.len() as usize;
 
-    domain::erase::execute(domain::erase::Request {
+    domain::overwrite::execute(domain::overwrite::Request {
         writer: RefCell::new(BufWriter::new(file)),
         buf_capacity,
         passes,

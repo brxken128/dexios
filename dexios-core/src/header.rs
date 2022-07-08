@@ -668,7 +668,7 @@ impl Header {
                 header_bytes.extend_from_slice(&tag.algorithm);
                 header_bytes.extend_from_slice(&tag.mode);
                 header_bytes.extend_from_slice(&self.nonce);
-                header_bytes.extend_from_slice(&vec![0u8; 32 - calc_nonce_len(&self.header_type)]);
+                header_bytes.extend_from_slice(&vec![0u8; 26 - calc_nonce_len(&self.header_type)]);
                 Ok(header_bytes)
             }
         }

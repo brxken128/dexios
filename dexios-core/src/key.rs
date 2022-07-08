@@ -80,7 +80,7 @@ pub fn argon2id_hash(
             Params::new(262_144, 10, 4, Some(Params::DEFAULT_OUTPUT_LEN))
                 .map_err(|_| anyhow::anyhow!("Error initialising argon2id parameters"))?
         }
-        HeaderVersion::V4 => {
+        HeaderVersion::V4 | HeaderVersion::V5 => {
             return Err(anyhow::anyhow!(
                 "argon2id is not supported on header versions above V3."
             ))
@@ -134,6 +134,8 @@ pub fn balloon_hash(
             ));
         }
         HeaderVersion::V4 => balloon_hash::Params::new(262_144, 1, 1)
+            .map_err(|_| anyhow::anyhow!("Error initialising balloon hashing parameters"))?,
+        HeaderVersion::V5 => balloon_hash::Params::new(278_528, 1, 1)
             .map_err(|_| anyhow::anyhow!("Error initialising balloon hashing parameters"))?,
     };
 

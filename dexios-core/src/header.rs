@@ -32,6 +32,8 @@
 //! ```
 //!
 
+use crate::{key::{argon2id_hash, balloon_hash}, protected::Protected};
+
 use super::primitives::{Algorithm, Mode, SALT_LEN};
 use anyhow::{Context, Result};
 use std::io::{Cursor, Read, Seek, Write};
@@ -49,6 +51,7 @@ pub enum HeaderVersion {
     V2,
     V3,
     V4,
+    V5,
 }
 
 /// This is the Header's type - it contains the specific details that are needed to decrypt the data
@@ -102,8 +105,65 @@ pub struct Header {
     pub header_type: HeaderType,
     pub nonce: Vec<u8>,
     pub salt: [u8; SALT_LEN],
-    pub master_key_encrypted: Option<Vec<u8>>,
-    pub master_key_nonce: Option<Vec<u8>>,
+    pub keyslots: Option<Vec<Keyslot>>,
+}
+
+#[derive(Clone)]
+pub enum HashingAlgorithm {
+    Argon2id(i32),
+    Blake3Balloon(i32),
+}
+
+impl HashingAlgorithm {
+    pub fn hash(&self, raw_key: Protected<Vec<u8>>, salt: &[u8; SALT_LEN]) -> Result<Protected<[u8; 32]>, anyhow::Error> {
+        match self {
+            HashingAlgorithm::Argon2id(i) => {
+                match i {
+                    1 => argon2id_hash(raw_key, salt, &HeaderVersion::V1),
+                    2 => argon2id_hash(raw_key, salt, &HeaderVersion::V2),
+                    3 => argon2id_hash(raw_key, salt, &HeaderVersion::V3),
+                    _ => return Err(anyhow::anyhow!("argon2id is not supported with the parameters provided.")),
+                }
+            }
+            HashingAlgorithm::Blake3Balloon(i) => {
+                match i {
+                    4 => balloon_hash(raw_key, salt, &HeaderVersion::V4),
+                    5 => balloon_hash(raw_key, salt, &HeaderVersion::V5),
+                    _ => return Err(anyhow::anyhow!("Balloon hashing is not supported with the parameters provided.")),
+                }
+            }
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct Keyslot {
+    pub hash_algorithm: HashingAlgorithm,
+    pub salt: [u8; SALT_LEN],
+    pub encrypted_key: [u8; 48],
+    pub nonce: Vec<u8>,
+}
+
+impl Keyslot {
+    pub fn serialize(&self) -> [u8; 2] {
+        match self.hash_algorithm {
+            HashingAlgorithm::Argon2id(i) => {
+                match i {
+                    1 => [0xDF, 0xA1],
+                    2 => [0xDF, 0xA2],
+                    3 => [0xDF, 0xA3],
+                    _ => [0x00, 0x00],
+                }
+            }
+            HashingAlgorithm::Blake3Balloon(i) => {
+                match i {
+                    4 => [0xDF, 0xB4],
+                    5 => [0xDF, 0xB5],
+                    _ => [0x00, 0x00],
+                }
+            }
+        }
+    }
 }
 
 impl Header {
@@ -140,6 +200,10 @@ impl Header {
             }
             HeaderVersion::V4 => {
                 let info: [u8; 2] = [0xDE, 0x04];
+                info
+            }
+            HeaderVersion::V5 => {
+                let info: [u8; 2] = [0xDE, 0x05];
                 info
             }
         }
@@ -192,6 +256,7 @@ impl Header {
         let header_length: usize = match version {
             HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => 64,
             HeaderVersion::V4 => 128,
+            HeaderVersion::V5 => 416,
         };
 
         let mut full_header_bytes = vec![0u8; header_length];
@@ -237,7 +302,7 @@ impl Header {
         let mut salt = [0u8; 16];
         let mut nonce = vec![0u8; nonce_len];
 
-        let (master_key_encrypted, master_key_nonce): (Option<Vec<u8>>, Option<Vec<u8>>) =
+        let keyslots: Option<Vec<Keyslot>> =
             match header_type.version {
                 HeaderVersion::V1 | HeaderVersion::V3 => {
                     cursor
@@ -253,8 +318,8 @@ impl Header {
                         .read_exact(&mut vec![0u8; 26 - nonce_len])
                         .context("Unable to read final padding from header")?;
 
-                    (None, None)
-                }
+                    None
+                    }
                 HeaderVersion::V2 => {
                     cursor
                         .read_exact(&mut salt)
@@ -269,10 +334,10 @@ impl Header {
                         .read_exact(&mut [0u8; 16])
                         .context("Unable to read final padding from header")?;
 
-                    (None, None)
-                }
+                    None
+                    }
                 HeaderVersion::V4 => {
-                    let mut master_key_encrypted = vec![0u8; 48];
+                    let mut master_key_encrypted = [0u8; 48];
                     let master_key_nonce_len = calc_nonce_len(&HeaderType {
                         version,
                         algorithm,
@@ -297,7 +362,76 @@ impl Header {
                     cursor
                         .read_exact(&mut vec![0u8; 32 - master_key_nonce_len])
                         .context("Unable to read padding from header")?;
-                    (Some(master_key_encrypted), Some(master_key_nonce))
+
+                    
+                    
+                    let keyslot = Keyslot { encrypted_key: master_key_encrypted, hash_algorithm: HashingAlgorithm::Blake3Balloon(4), nonce: nonce.clone(), salt };
+                    let keyslots = vec![keyslot];
+                    Some(keyslots)
+                }
+                HeaderVersion::V5 => {
+                    cursor
+                        .read_exact(&mut nonce)
+                        .context("Unable to read nonce from header")?;
+                    cursor
+                        .read_exact(&mut vec![0u8; 26 - nonce_len])
+                        .context("Unable to read padding from header")?; // here we reach the 32 bytes
+
+                    let keyslot_nonce_len = calc_nonce_len(&HeaderType { version: HeaderVersion::V5, algorithm, mode: Mode::MemoryMode });
+
+                    let mut keyslots: Vec<Keyslot> = Vec::new();
+                    for _ in 0..4 {
+                        let mut identifier = [0u8; 2];
+                        cursor
+                            .read_exact(&mut identifier)
+                            .context("Unable to read keyslot identifier from header")?;
+                        
+                        if identifier == [0xDF, 0x00] {
+                            continue;
+                        }
+
+                        let mut encrypted_key = [0u8; 48];
+                        let mut nonce = vec![0u8; keyslot_nonce_len];
+                        let mut padding = vec![0u8; 24 - keyslot_nonce_len];
+                        let mut salt = [0u8; SALT_LEN];
+                        let mut padding2 = [0u8; 6];
+
+                        cursor
+                            .read_exact(&mut encrypted_key)
+                            .context("Unable to read keyslot encrypted bytes from header")?;
+
+                        cursor
+                            .read_exact(&mut nonce)
+                            .context("Unable to read keyslot nonce from header")?;
+
+                        cursor
+                            .read_exact(&mut padding)
+                            .context("Unable to read keyslot padding from header")?;
+
+                        cursor
+                            .read_exact(&mut salt)
+                            .context("Unable to read keyslot salt from header")?;
+
+                        cursor
+                            .read_exact(&mut padding2)
+                            .context("Unable to read keyslot padding from header")?;
+
+
+                        let hash_algorithm = match identifier {
+                            [0xDF, 0xA1] => HashingAlgorithm::Argon2id(1),
+                            [0xDF, 0xA2] => HashingAlgorithm::Argon2id(2),
+                            [0xDF, 0xA3] => HashingAlgorithm::Argon2id(3),
+                            [0xDF, 0xB4] => HashingAlgorithm::Blake3Balloon(4),
+                            [0xDF, 0xB5] => HashingAlgorithm::Blake3Balloon(5),
+                            _ => return Err(anyhow::anyhow!("Key hashing algorithm not identified"))
+                        };
+
+                        let keyslot = Keyslot { hash_algorithm, encrypted_key, nonce, salt };
+
+                        keyslots.push(keyslot);
+                    }
+
+                    Some(keyslots)
                 }
             };
 
@@ -322,6 +456,11 @@ impl Header {
                 aad.extend_from_slice(&full_header_bytes[(96 + master_key_nonce_len)..]);
                 aad
             }
+            HeaderVersion::V5 => {
+                let mut aad = Vec::new();
+                aad.extend_from_slice(&full_header_bytes[..32]);
+                aad
+            }
         };
 
         Ok((
@@ -329,8 +468,7 @@ impl Header {
                 header_type,
                 nonce,
                 salt,
-                master_key_encrypted,
-                master_key_nonce,
+                keyslots,
             },
             aad,
         ))
@@ -401,6 +539,9 @@ impl Header {
                 mode: Mode::MemoryMode
             })
         ];
+
+        let keyslot = self.keyslots.clone().unwrap();
+
         let mut header_bytes = Vec::<u8>::new();
         header_bytes.extend_from_slice(&tag.version);
         header_bytes.extend_from_slice(&tag.algorithm);
@@ -408,9 +549,42 @@ impl Header {
         header_bytes.extend_from_slice(&self.salt);
         header_bytes.extend_from_slice(&self.nonce);
         header_bytes.extend_from_slice(&padding);
-        header_bytes.extend_from_slice(&self.master_key_encrypted.clone().unwrap());
-        header_bytes.extend_from_slice(&self.master_key_nonce.clone().unwrap());
+        header_bytes.extend_from_slice(&keyslot[0].encrypted_key);
+        header_bytes.extend_from_slice(&keyslot[0].nonce);
         header_bytes.extend_from_slice(&padding2);
+        header_bytes
+    }
+
+    /// This is a private function (called by `serialize()`)
+    ///
+    /// It serializes V4 headers
+    fn serialize_v5(&self, tag: &HeaderTag) -> Vec<u8> {
+        let padding = vec![0u8; 26 - calc_nonce_len(&self.header_type)];
+
+        let keyslots = self.keyslots.clone().unwrap();
+
+        let mut header_bytes = Vec::<u8>::new();
+        
+        // start of header static info
+        header_bytes.extend_from_slice(&tag.version);
+        header_bytes.extend_from_slice(&tag.algorithm);
+        header_bytes.extend_from_slice(&tag.mode);
+        header_bytes.extend_from_slice(&self.nonce);
+        header_bytes.extend_from_slice(&padding);
+        // end of header static info
+        
+        for keyslot in &keyslots {
+            header_bytes.extend_from_slice(&keyslot.serialize());
+            header_bytes.extend_from_slice(&keyslot.encrypted_key);
+            header_bytes.extend_from_slice(&keyslot.nonce);
+            header_bytes.extend_from_slice(&keyslot.salt);
+            header_bytes.extend_from_slice(&[0u8; 6]);
+        }
+
+        for _ in 0..(4 - keyslots.len()) {
+            header_bytes.extend_from_slice(&[0u8; 96]);
+        }
+
         header_bytes
     }
 
@@ -443,6 +617,7 @@ impl Header {
             )),
             HeaderVersion::V3 => Ok(self.serialize_v3(&tag)),
             HeaderVersion::V4 => Ok(self.serialize_v4(&tag)),
+            HeaderVersion::V5 => Ok(self.serialize_v5(&tag)),
         }
     }
 
@@ -451,6 +626,7 @@ impl Header {
         match self.header_type.version {
             HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => 64,
             HeaderVersion::V4 => 128,
+            HeaderVersion::V5 => 416,
         }
     }
 
@@ -485,6 +661,15 @@ impl Header {
                 header_bytes.extend_from_slice(&self.nonce);
                 header_bytes.extend_from_slice(&padding);
                 header_bytes.extend_from_slice(&padding2);
+                Ok(header_bytes)
+            }
+            HeaderVersion::V5 => {
+                let mut header_bytes = Vec::<u8>::new();
+                header_bytes.extend_from_slice(&tag.version);
+                header_bytes.extend_from_slice(&tag.algorithm);
+                header_bytes.extend_from_slice(&tag.mode);
+                header_bytes.extend_from_slice(&self.nonce);
+                header_bytes.extend_from_slice(&vec![0u8; 32 - calc_nonce_len(&self.header_type)]);
                 Ok(header_bytes)
             }
         }

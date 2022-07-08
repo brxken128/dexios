@@ -7,11 +7,13 @@ use crate::global::structs::CryptoParams;
 use anyhow::Context;
 use anyhow::Result;
 use dexios_core::cipher::Ciphers;
+use dexios_core::header::Keyslot;
 use dexios_core::header::{Header, HeaderType, HEADER_VERSION};
 use dexios_core::key::{balloon_hash, gen_salt};
 use dexios_core::primitives::gen_nonce;
 use dexios_core::primitives::Algorithm;
 use dexios_core::primitives::Mode;
+use dexios_core::header::HashingAlgorithm;
 use dexios_core::protected::Protected;
 use paris::Logger;
 use rand::prelude::StdRng;
@@ -85,6 +87,15 @@ pub fn stream_mode(
     let master_key_encrypted =
         master_key_result.map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
 
+    let mut master_key_encrypted_array = [0u8; 48];
+
+    let len = 48.min(master_key_encrypted.len());
+    master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
+
+    let keyslot = Keyslot { encrypted_key: master_key_encrypted_array, hash_algorithm: HashingAlgorithm::Blake3Balloon(5), nonce: master_key_nonce, salt: salt };
+
+    let keyslots = vec![keyslot];
+
     let nonce = gen_nonce(&header_type.algorithm, &header_type.mode);
     let streams = EncryptionStreams::initialize(master_key, &nonce, &header_type.algorithm)?;
 
@@ -92,8 +103,7 @@ pub fn stream_mode(
         header_type,
         nonce,
         salt,
-        master_key_encrypted: Some(master_key_encrypted),
-        master_key_nonce: Some(master_key_nonce),
+        keyslots: Some(keyslots)
     };
 
     match &params.header_location {

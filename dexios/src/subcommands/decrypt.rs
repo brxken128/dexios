@@ -214,6 +214,40 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
             master_key_decrypted.zeroize();
             Protected::new(master_key)
         }
+        HeaderVersion::V5 => {
+            let keyslots = header.keyslots.clone().unwrap();
+            let mut master_key = [0u8; 32];
+            for keyslot in keyslots {
+                let hash_start_time = Instant::now();
+                let key = balloon_hash(raw_key, &header.salt, &header.header_type.version)?;
+                let hash_duration = hash_start_time.elapsed();
+                success!(
+                    "Successfully hashed your key [took {:.2}s]",
+                    hash_duration.as_secs_f32()
+                );
+                let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
+        
+                let master_key_result = cipher.decrypt(
+                    &keyslot.nonce,
+                    keyslot.encrypted_key.as_slice(),
+                );
+
+                if master_key_result.is_ok() {
+                    let mut master_key_decrypted = master_key_result.unwrap();
+        
+                    let len = 32.min(master_key_decrypted.len());
+                    master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
+                    master_key_decrypted.zeroize();
+                    break;
+                }
+            }
+
+            if master_key != [0u8; 32] {
+                Protected::new(master_key)
+            } else {
+                return Err(anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"))
+            }
+        }
     };
 
     let decrypt_start_time = Instant::now();

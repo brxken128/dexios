@@ -8,7 +8,6 @@ use anyhow::{Context, Result};
 use dexios_core::header;
 use dexios_core::header::HeaderVersion;
 use dexios_core::key::argon2id_hash;
-use dexios_core::key::balloon_hash;
 use dexios_core::primitives::Mode;
 use dexios_core::protected::Protected;
 use dexios_core::Zeroize;

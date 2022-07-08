@@ -104,7 +104,7 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
 pub struct Header {
     pub header_type: HeaderType,
     pub nonce: Vec<u8>,
-    pub salt: [u8; SALT_LEN],
+    pub salt: Option<[u8; SALT_LEN]>, // option as v4+ use the keyslots
     pub keyslots: Option<Vec<Keyslot>>,
 }
 
@@ -466,7 +466,7 @@ impl Header {
             Header {
                 header_type,
                 nonce,
-                salt,
+                salt: Some(salt),
                 keyslots,
             },
             aad,
@@ -518,7 +518,7 @@ impl Header {
         header_bytes.extend_from_slice(&tag.version);
         header_bytes.extend_from_slice(&tag.algorithm);
         header_bytes.extend_from_slice(&tag.mode);
-        header_bytes.extend_from_slice(&self.salt);
+        header_bytes.extend_from_slice(&self.salt.clone().unwrap());
         header_bytes.extend_from_slice(&[0; 16]);
         header_bytes.extend_from_slice(&self.nonce);
         header_bytes.extend_from_slice(&padding);
@@ -545,7 +545,7 @@ impl Header {
         header_bytes.extend_from_slice(&tag.version);
         header_bytes.extend_from_slice(&tag.algorithm);
         header_bytes.extend_from_slice(&tag.mode);
-        header_bytes.extend_from_slice(&self.salt);
+        header_bytes.extend_from_slice(&self.salt.clone().unwrap());
         header_bytes.extend_from_slice(&self.nonce);
         header_bytes.extend_from_slice(&padding);
         header_bytes.extend_from_slice(&keyslot[0].encrypted_key);
@@ -656,7 +656,7 @@ impl Header {
                 header_bytes.extend_from_slice(&tag.version);
                 header_bytes.extend_from_slice(&tag.algorithm);
                 header_bytes.extend_from_slice(&tag.mode);
-                header_bytes.extend_from_slice(&self.salt);
+                header_bytes.extend_from_slice(&self.salt.clone().unwrap());
                 header_bytes.extend_from_slice(&self.nonce);
                 header_bytes.extend_from_slice(&padding);
                 header_bytes.extend_from_slice(&padding2);

@@ -102,7 +102,7 @@ pub fn stream_mode(
     let header = Header {
         header_type,
         nonce,
-        salt,
+        salt: None, // legacy, this is now supplied in keyslots
         keyslots: Some(keyslots)
     };
 

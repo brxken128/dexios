@@ -79,7 +79,7 @@ pub fn memory_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
     let mut output_file = File::create(output).context("Unable to create output file")?;
 
     let hash_start_time = Instant::now();
-    let key = argon2id_hash(raw_key, &header.salt, &header.header_type.version)?;
+    let key = argon2id_hash(raw_key, &header.salt.clone().unwrap(), &header.header_type.version)?;
     let hash_duration = hash_start_time.elapsed();
     success!(
         "Successfully hashed your key [took {:.2}s]",
@@ -176,7 +176,7 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
     let key = match header.header_type.version {
         HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
             let hash_start_time = Instant::now();
-            let key = argon2id_hash(raw_key, &header.salt, &header.header_type.version)?;
+            let key = argon2id_hash(raw_key, &header.salt.clone().unwrap(), &header.header_type.version)?;
             let hash_duration = hash_start_time.elapsed();
             success!(
                 "Successfully hashed your key [took {:.2}s]",

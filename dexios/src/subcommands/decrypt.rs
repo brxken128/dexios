@@ -206,10 +206,8 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
             })?;
 
             let mut master_key = [0u8; 32];
-
-            for (i, byte) in master_key_decrypted.iter().enumerate() {
-                master_key[i] = *byte;
-            }
+            let len = 32.min(master_key_decrypted.len());
+            master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
 
             master_key_decrypted.zeroize();
             Protected::new(master_key)

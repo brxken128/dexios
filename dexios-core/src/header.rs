@@ -129,6 +129,15 @@ pub enum HashingAlgorithm {
     Blake3Balloon(i32),
 }
 
+impl std::fmt::Display for HashingAlgorithm {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            HashingAlgorithm::Argon2id(i) => write!(f, "Argon2id (param v{})", i),
+            HashingAlgorithm::Blake3Balloon(i) => write!(f, "BLAKE3-Balloon (param v{})", i),
+        }
+    }
+}
+
 impl HashingAlgorithm {
     pub fn hash(
         &self,

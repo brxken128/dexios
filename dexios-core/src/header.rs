@@ -177,6 +177,7 @@ pub struct Keyslot {
 }
 
 impl Keyslot {
+    #[must_use]
     pub fn serialize(&self) -> [u8; 2] {
         match self.hash_algorithm {
             HashingAlgorithm::Argon2id(i) => match i {

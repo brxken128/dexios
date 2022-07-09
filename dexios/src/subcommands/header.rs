@@ -61,7 +61,7 @@ pub fn details(input: &str) -> Result<()> {
                 println!("  Hashing Algorithm: {}", keyslot.hash_algorithm);
                 println!("  Salt: {} (hex)", hex::encode(keyslot.salt));
                 println!(
-                    "  Master Key: {} (encrypted)",
+                    "  Master Key: {} (hex, encrypted)",
                     hex::encode(keyslot.encrypted_key)
                 );
                 println!(

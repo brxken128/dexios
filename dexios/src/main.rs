@@ -37,7 +37,6 @@ fn main() -> Result<()> {
             let files: Vec<String> = if sub_matches.is_present("input") {
                 let list: Vec<&str> = sub_matches.values_of("input").unwrap().collect();
                 list.iter().map(std::string::ToString::to_string).collect()
-            // this fixes 'static lifetime issues
             } else {
                 Vec::new()
             };

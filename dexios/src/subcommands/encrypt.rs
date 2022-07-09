@@ -65,8 +65,11 @@ pub fn stream_mode(
     };
 
     let salt = gen_salt();
+
+    let hash_algorithm = HashingAlgorithm::Blake3Balloon(5);
+
     let hash_start_time = Instant::now();
-    let key = balloon_hash(raw_key, &salt, &header_type.version)?;
+    let key = hash_algorithm.hash(raw_key, &salt)?;
     let hash_duration = hash_start_time.elapsed();
     logger.success(format!(
         "Successfully hashed your key [took {:.2}s]",
@@ -94,9 +97,9 @@ pub fn stream_mode(
 
     let keyslot = Keyslot {
         encrypted_key: master_key_encrypted_array,
-        hash_algorithm: HashingAlgorithm::Blake3Balloon(5),
+        hash_algorithm,
         nonce: master_key_nonce,
-        salt: salt,
+        salt,
     };
 
     let keyslots = vec![keyslot];

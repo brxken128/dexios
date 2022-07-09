@@ -33,30 +33,30 @@ pub fn details(input: &str) -> Result<()> {
     println!("Header version: {}", header.header_type.version);
     println!("Encryption algorithm: {}", header.header_type.algorithm);
     println!("Encryption mode: {}", header.header_type.mode);
-    println!("Encryption nonce: {:X?} (hex)", header.nonce);
+    println!("Encryption nonce: {} (hex)", hex::encode(header.nonce));
     
     // could make use of the AAD too
 
     match header.header_type.version {
         HeaderVersion::V1 => {
-            println!("Salt: {:X?} (hex)", header.salt.clone().unwrap());
-            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(1))
+            println!("Salt: {} (hex)", hex::encode(header.salt.clone().unwrap()));
+            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(1));
         }
         HeaderVersion::V2 => {
-            println!("Salt: {:X?} (hex)", header.salt.clone().unwrap());
-            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(2))
+            println!("Salt: {} (hex)", hex::encode(header.salt.clone().unwrap()));
+            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(2));
         }
         HeaderVersion::V3 => {
-            println!("Salt: {:X?} (hex)", header.salt.clone().unwrap());
-            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(3))
+            println!("Salt: {} (hex)", hex::encode(header.salt.clone().unwrap()));
+            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(3));
         }
         HeaderVersion::V4 | HeaderVersion::V5 => {
             for (i, keyslot) in header.keyslots.clone().unwrap().iter().enumerate() {
                 println!("Keyslot {}:", i);
                 println!("  Hashing Algorithm: {}", keyslot.hash_algorithm);
-                println!("  Salt: {:X?} (hex)", keyslot.salt);
-                println!("  Master Key: {:X?} (encrypted)", keyslot.encrypted_key);
-                println!("  Master Key's Nonce: {:X?} (hex)", keyslot.nonce);
+                println!("  Salt: {} (hex)", hex::encode(keyslot.salt));
+                println!("  Master Key: {} (encrypted)", hex::encode(keyslot.encrypted_key));
+                println!("  Master Key's Nonce: {} (hex)", hex::encode(keyslot.nonce.clone()));
             }
         }
     }

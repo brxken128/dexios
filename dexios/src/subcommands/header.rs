@@ -35,6 +35,8 @@ pub fn details(input: &str) -> Result<()> {
     println!("Encryption mode: {}", header.header_type.mode);
     println!("Encryption nonce: {:?}", header.nonce);
     
+    // could make use of the AAD too
+
     match header.header_type.version {
         HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
             println!("Salt: {:?}", header.salt.clone().unwrap());

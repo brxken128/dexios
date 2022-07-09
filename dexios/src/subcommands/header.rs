@@ -18,6 +18,40 @@ use paris::info;
 use paris::{success, Logger};
 use std::time::Instant;
 
+pub fn details(input: &str) -> Result<()> {
+    let mut input_file =
+        File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
+
+    let header_result = Header::deserialize(&mut input_file);
+
+    if header_result.is_err() {
+        return Err(anyhow::anyhow!("This does not seem like a valid Dexios header, exiting"))
+    }
+
+    let (header, _) = header_result.unwrap();
+
+    println!("Header version: {}", header.header_type.version);
+    println!("Encryption algorithm: {}", header.header_type.algorithm);
+    println!("Encryption mode: {}", header.header_type.mode);
+    println!("Encryption nonce: {:?}", header.nonce);
+    
+    match header.header_type.version {
+        HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
+            println!("Salt: {:?}", header.salt.clone().unwrap());
+        }
+        HeaderVersion::V4 => {
+            todo!()
+        }
+        HeaderVersion::V5 => {
+            todo!()
+        }
+    }
+
+
+    Ok(())
+}
+
+
 // this functions take both an old and a new key state
 // these key states can be auto generated (new key only), keyfiles or user provided
 // it hashes both of them, decrypts the master key with the old key, and re-encrypts it with the new key

@@ -8,7 +8,7 @@ use super::prompt::{get_answer, overwrite_check};
 use crate::global::states::PasswordState;
 use crate::global::states::{Key, SkipMode};
 use anyhow::{Context, Result};
-use dexios_core::cipher::Ciphers;
+use dexios_core::{cipher::Ciphers, header::{Keyslot, HashingAlgorithm}};
 use dexios_core::header::{Header, HeaderVersion};
 use dexios_core::primitives::Mode;
 use dexios_core::protected::Protected;
@@ -43,83 +43,94 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
         .try_into()
         .context("Unable to convert header size (u64) to i64")?;
 
-    let master_key_encrypted = header.master_key_encrypted.unwrap();
-    let master_key_nonce = header.master_key_nonce.unwrap();
+    match header.header_type.version {
+        HeaderVersion::V4 => {
+            let keyslot = header.keyslots.clone().unwrap();
 
-    match key_old {
-        Key::User => info!("Please enter your old key below"),
-        Key::Keyfile(_) => info!("Reading your old keyfile"),
+            match key_old {
+                Key::User => info!("Please enter your old key below"),
+                Key::Keyfile(_) => info!("Reading your old keyfile"),
+                _ => (),
+            }
+            let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
+
+            match key_new {
+                Key::Generate => info!("Generating a new key"),
+                Key::User => info!("Please enter your new key below"),
+                Key::Keyfile(_) => info!("Reading your new keyfile"),
+                Key::Env => (),
+            }
+            let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
+
+            let hash_start_time = Instant::now();
+            let key_old = balloon_hash(raw_key_old, &header.salt.clone().unwrap(), &header.header_type.version)?;
+            let hash_duration = hash_start_time.elapsed();
+            success!(
+                "Successfully hashed your old key [took {:.2}s]",
+                hash_duration.as_secs_f32()
+            );
+
+            let hash_start_time = Instant::now();
+            let key_new = balloon_hash(raw_key_new, &header.salt.clone().unwrap(), &header.header_type.version)?;
+            let hash_duration = hash_start_time.elapsed();
+            success!(
+                "Successfully hashed your new key [took {:.2}s]",
+                hash_duration.as_secs_f32()
+            );
+
+            let cipher = Ciphers::initialize(key_old, &header.header_type.algorithm)?;
+
+            let master_key_result = cipher.decrypt(&keyslot[0].nonce, keyslot[0].encrypted_key.as_slice());
+            let mut master_key_decrypted = master_key_result.map_err(|_| {
+                anyhow::anyhow!("Unable to decrypt your master key (maybe you supplied the wrong key?)")
+            })?;
+
+            let mut master_key = [0u8; 32];
+            let len = 32.min(master_key_decrypted.len());
+            master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
+
+            master_key_decrypted.zeroize();
+            let master_key = Protected::new(master_key);
+
+            drop(cipher);
+
+            let cipher = Ciphers::initialize(key_new, &header.header_type.algorithm)?;
+
+            let master_key_nonce_new = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
+            let master_key_result = cipher.encrypt(&master_key_nonce_new, master_key.expose().as_slice());
+
+            drop(master_key);
+
+            let master_key_encrypted =
+                master_key_result.map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
+
+            let mut master_key_encrypted_array = [0u8; 48];
+
+            let len = 48.min(master_key_encrypted.len());
+            master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
+
+            let keyslots = vec![Keyslot { encrypted_key: master_key_encrypted_array, hash_algorithm: HashingAlgorithm::Blake3Balloon(4), nonce: master_key_nonce_new, salt: header.salt.clone().unwrap() }];
+
+            let header_new = Header {
+                header_type: header.header_type,
+                nonce: header.nonce,
+                salt: header.salt,
+                keyslots: Some(keyslots),
+            };
+
+            input_file
+                .seek(std::io::SeekFrom::Current(-header_size))
+                .context("Unable to seek back to the start of your input file")?;
+            header_new.write(&mut input_file)?;
+
+            success!("Key successfully updated for {}", input);
+
+        }
         _ => (),
     }
-    let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
-
-    match key_new {
-        Key::Generate => info!("Generating a new key"),
-        Key::User => info!("Please enter your new key below"),
-        Key::Keyfile(_) => info!("Reading your new keyfile"),
-        Key::Env => (),
-    }
-    let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
-
-    let hash_start_time = Instant::now();
-    let key_old = balloon_hash(raw_key_old, &header.salt, &header.header_type.version)?;
-    let hash_duration = hash_start_time.elapsed();
-    success!(
-        "Successfully hashed your old key [took {:.2}s]",
-        hash_duration.as_secs_f32()
-    );
-
-    let hash_start_time = Instant::now();
-    let key_new = balloon_hash(raw_key_new, &header.salt, &header.header_type.version)?;
-    let hash_duration = hash_start_time.elapsed();
-    success!(
-        "Successfully hashed your new key [took {:.2}s]",
-        hash_duration.as_secs_f32()
-    );
-
-    let cipher = Ciphers::initialize(key_old, &header.header_type.algorithm)?;
-
-    let master_key_result = cipher.decrypt(&master_key_nonce, master_key_encrypted.as_slice());
-    let mut master_key_decrypted = master_key_result.map_err(|_| {
-        anyhow::anyhow!("Unable to decrypt your master key (maybe you supplied the wrong key?)")
-    })?;
-
-    let mut master_key = [0u8; 32];
-    let len = 32.min(master_key_decrypted.len());
-    master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
-
-    master_key_decrypted.zeroize();
-    let master_key = Protected::new(master_key);
-
-    drop(cipher);
-
-    let cipher = Ciphers::initialize(key_new, &header.header_type.algorithm)?;
-
-    let master_key_nonce_new = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
-    let master_key_result = cipher.encrypt(&master_key_nonce_new, master_key.expose().as_slice());
-
-    drop(master_key);
-
-    let master_key_encrypted =
-        master_key_result.map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
-
-    let header_new = Header {
-        header_type: header.header_type,
-        nonce: header.nonce,
-        salt: header.salt,
-        master_key_encrypted: Some(master_key_encrypted),
-        master_key_nonce: Some(master_key_nonce_new),
-    };
-
-    input_file
-        .seek(std::io::SeekFrom::Current(-header_size))
-        .context("Unable to seek back to the start of your input file")?;
-    header_new.write(&mut input_file)?;
-
-    success!("Key successfully updated for {}", input);
-
     Ok(())
 }
+
 
 // this function dumps the first 64/128 bytes of
 // the input file into the output file

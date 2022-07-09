@@ -171,9 +171,9 @@ impl HashingAlgorithm {
 #[derive(Clone)]
 pub struct Keyslot {
     pub hash_algorithm: HashingAlgorithm,
-    pub salt: [u8; SALT_LEN],
     pub encrypted_key: [u8; 48],
     pub nonce: Vec<u8>,
+    pub salt: [u8; SALT_LEN],
 }
 
 impl Keyslot {

@@ -33,16 +33,31 @@ pub fn details(input: &str) -> Result<()> {
     println!("Header version: {}", header.header_type.version);
     println!("Encryption algorithm: {}", header.header_type.algorithm);
     println!("Encryption mode: {}", header.header_type.mode);
-    println!("Encryption nonce: {:?}", header.nonce);
+    println!("Encryption nonce: {:?} (hex)", header.nonce);
     
     // could make use of the AAD too
 
     match header.header_type.version {
-        HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
-            println!("Salt: {:?}", header.salt.clone().unwrap());
+        HeaderVersion::V1 => {
+            println!("Salt: {:X?} (hex)", header.salt.clone().unwrap());
+            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(1))
+        }
+        HeaderVersion::V2 => {
+            println!("Salt: {:X?} (hex)", header.salt.clone().unwrap());
+            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(2))
+        }
+        HeaderVersion::V3 => {
+            println!("Salt: {:X?} (hex)", header.salt.clone().unwrap());
+            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(3))
         }
         HeaderVersion::V4 => {
-            todo!()
+            println!("Salt: {:X?} (hex)", header.salt.clone().unwrap());
+            for (i, keyslot) in header.keyslots.clone().unwrap().iter().enumerate() {
+                println!("Keyslot {}:", i);
+                println!("  Salt: {:X?} (hex)", header.salt.clone().unwrap());
+                println!("  Master Key: {:X?} (encrypted)", keyslot.encrypted_key);
+                println!("  Master Key's Nonce: {:X?} (hex)", keyslot.nonce);
+            }
         }
         HeaderVersion::V5 => {
             todo!()

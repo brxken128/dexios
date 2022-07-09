@@ -50,17 +50,14 @@ pub fn details(input: &str) -> Result<()> {
             println!("Salt: {:X?} (hex)", header.salt.clone().unwrap());
             println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(3))
         }
-        HeaderVersion::V4 => {
-            println!("Salt: {:X?} (hex)", header.salt.clone().unwrap());
+        HeaderVersion::V4 | HeaderVersion::V5 => {
             for (i, keyslot) in header.keyslots.clone().unwrap().iter().enumerate() {
                 println!("Keyslot {}:", i);
+                println!("  Hashing Algorithm: {}", keyslot.hash_algorithm);
                 println!("  Salt: {:X?} (hex)", header.salt.clone().unwrap());
                 println!("  Master Key: {:X?} (encrypted)", keyslot.encrypted_key);
                 println!("  Master Key's Nonce: {:X?} (hex)", keyslot.nonce);
             }
-        }
-        HeaderVersion::V5 => {
-            todo!()
         }
     }
 

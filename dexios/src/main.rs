@@ -84,6 +84,11 @@ fn main() -> Result<()> {
 
                 subcommands::header::strip(&get_param("input", sub_matches_strip)?, skip)?;
             }
+            Some("details") => {
+                let sub_matches_details = sub_matches.subcommand_matches("details").unwrap();
+
+                subcommands::header::details(&get_param("input", sub_matches_details)?,)?;
+            }
             _ => (),
         },
         _ => (),

@@ -44,19 +44,19 @@ pub fn details(input: &str) -> Result<()> {
 
     match header.header_type.version {
         HeaderVersion::V1 => {
-            println!("Salt: {} (hex)", hex::encode(header.salt.clone().unwrap()));
+            println!("Salt: {} (hex)", hex::encode(header.salt.unwrap()));
             println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(1));
         }
         HeaderVersion::V2 => {
-            println!("Salt: {} (hex)", hex::encode(header.salt.clone().unwrap()));
+            println!("Salt: {} (hex)", hex::encode(header.salt.unwrap()));
             println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(2));
         }
         HeaderVersion::V3 => {
-            println!("Salt: {} (hex)", hex::encode(header.salt.clone().unwrap()));
+            println!("Salt: {} (hex)", hex::encode(header.salt.unwrap()));
             println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(3));
         }
         HeaderVersion::V4 | HeaderVersion::V5 => {
-            for (i, keyslot) in header.keyslots.clone().unwrap().iter().enumerate() {
+            for (i, keyslot) in header.keyslots.unwrap().iter().enumerate() {
                 println!("Keyslot {}:", i);
                 println!("  Hashing Algorithm: {}", keyslot.hash_algorithm);
                 println!("  Salt: {} (hex)", hex::encode(keyslot.salt));
@@ -89,18 +89,17 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
     let (header, _) = dexios_core::header::Header::deserialize(&mut input_file)?;
 
-    if header.header_type.version < HeaderVersion::V4 {
-        return Err(anyhow::anyhow!(
-            "Updating a key is not supported in header versions below V4."
-        ));
-    }
-
     let header_size: i64 = header
         .get_size()
         .try_into()
         .context("Unable to convert header size (u64) to i64")?;
 
     match header.header_type.version {
+        HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
+            return Err(anyhow::anyhow!(
+                "Updating a key is not supported in header versions below V4."
+            ));
+        }
         HeaderVersion::V4 => {
             let keyslot = header.keyslots.clone().unwrap();
 
@@ -122,7 +121,7 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let hash_start_time = Instant::now();
             let key_old = balloon_hash(
                 raw_key_old,
-                &header.salt.clone().unwrap(),
+                &header.salt.unwrap(),
                 &header.header_type.version,
             )?;
             let hash_duration = hash_start_time.elapsed();
@@ -134,7 +133,7 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let hash_start_time = Instant::now();
             let key_new = balloon_hash(
                 raw_key_new,
-                &header.salt.clone().unwrap(),
+                &header.salt.unwrap(),
                 &header.header_type.version,
             )?;
             let hash_duration = hash_start_time.elapsed();
@@ -182,7 +181,7 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
                 encrypted_key: master_key_encrypted_array,
                 hash_algorithm: HashingAlgorithm::Blake3Balloon(4),
                 nonce: master_key_nonce_new,
-                salt: header.salt.clone().unwrap(),
+                salt: header.salt.unwrap(),
             }];
 
             let header_new = Header {
@@ -199,7 +198,9 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
             success!("Key successfully updated for {}", input);
         }
-        _ => (),
+        HeaderVersion::V5 => {
+            todo!()
+        }
     }
     Ok(())
 }

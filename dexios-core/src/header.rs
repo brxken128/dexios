@@ -557,7 +557,7 @@ impl Header {
         header_bytes.extend_from_slice(&tag.version);
         header_bytes.extend_from_slice(&tag.algorithm);
         header_bytes.extend_from_slice(&tag.mode);
-        header_bytes.extend_from_slice(&self.salt.clone().unwrap());
+        header_bytes.extend_from_slice(&self.salt.unwrap());
         header_bytes.extend_from_slice(&[0; 16]);
         header_bytes.extend_from_slice(&self.nonce);
         header_bytes.extend_from_slice(&padding);
@@ -584,7 +584,7 @@ impl Header {
         header_bytes.extend_from_slice(&tag.version);
         header_bytes.extend_from_slice(&tag.algorithm);
         header_bytes.extend_from_slice(&tag.mode);
-        header_bytes.extend_from_slice(&self.salt.clone().unwrap());
+        header_bytes.extend_from_slice(&self.salt.unwrap());
         header_bytes.extend_from_slice(&self.nonce);
         header_bytes.extend_from_slice(&padding);
         header_bytes.extend_from_slice(&keyslot[0].encrypted_key);
@@ -702,7 +702,7 @@ impl Header {
                 header_bytes.extend_from_slice(&tag.version);
                 header_bytes.extend_from_slice(&tag.algorithm);
                 header_bytes.extend_from_slice(&tag.mode);
-                header_bytes.extend_from_slice(&self.salt.clone().unwrap());
+                header_bytes.extend_from_slice(&self.salt.unwrap());
                 header_bytes.extend_from_slice(&self.nonce);
                 header_bytes.extend_from_slice(&padding);
                 header_bytes.extend_from_slice(&padding2);

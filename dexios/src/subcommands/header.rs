@@ -54,7 +54,7 @@ pub fn details(input: &str) -> Result<()> {
             for (i, keyslot) in header.keyslots.clone().unwrap().iter().enumerate() {
                 println!("Keyslot {}:", i);
                 println!("  Hashing Algorithm: {}", keyslot.hash_algorithm);
-                println!("  Salt: {:X?} (hex)", header.salt.clone().unwrap());
+                println!("  Salt: {:X?} (hex)", keyslot.salt);
                 println!("  Master Key: {:X?} (encrypted)", keyslot.encrypted_key);
                 println!("  Master Key's Nonce: {:X?} (hex)", keyslot.nonce);
             }

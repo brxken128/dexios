@@ -429,7 +429,6 @@ impl Header {
                     let mut nonce = vec![0u8; keyslot_nonce_len];
                     let mut padding = vec![0u8; 24 - keyslot_nonce_len];
                     let mut salt = [0u8; SALT_LEN];
-                    let mut padding2 = [0u8; 6];
 
                     cursor
                         .read_exact(&mut encrypted_key)
@@ -448,7 +447,7 @@ impl Header {
                         .context("Unable to read keyslot salt from header")?;
 
                     cursor
-                        .read_exact(&mut padding2)
+                        .read_exact(&mut [0u8; 6])
                         .context("Unable to read keyslot padding from header")?;
 
                     let hash_algorithm = match identifier {
@@ -613,9 +612,16 @@ impl Header {
         // end of header static info
 
         for keyslot in &keyslots {
+            let keyslot_nonce_len = calc_nonce_len(&HeaderType {
+                version: HeaderVersion::V5,
+                algorithm: self.header_type.algorithm,
+                mode: Mode::MemoryMode,
+            });
+
             header_bytes.extend_from_slice(&keyslot.serialize());
             header_bytes.extend_from_slice(&keyslot.encrypted_key);
             header_bytes.extend_from_slice(&keyslot.nonce);
+            header_bytes.extend_from_slice(&vec![0u8; 24 - keyslot_nonce_len]);
             header_bytes.extend_from_slice(&keyslot.salt);
             header_bytes.extend_from_slice(&[0u8; 6]);
         }

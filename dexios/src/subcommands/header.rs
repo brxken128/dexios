@@ -33,7 +33,7 @@ pub fn details(input: &str) -> Result<()> {
     println!("Header version: {}", header.header_type.version);
     println!("Encryption algorithm: {}", header.header_type.algorithm);
     println!("Encryption mode: {}", header.header_type.mode);
-    println!("Encryption nonce: {:?} (hex)", header.nonce);
+    println!("Encryption nonce: {:X?} (hex)", header.nonce);
     
     // could make use of the AAD too
 

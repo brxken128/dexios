@@ -57,6 +57,18 @@ pub enum HeaderVersion {
     V5,
 }
 
+impl std::fmt::Display for HeaderVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            HeaderVersion::V1 => write!(f, "V1"),
+            HeaderVersion::V2 => write!(f, "V2"),
+            HeaderVersion::V3 => write!(f, "V3"),
+            HeaderVersion::V4 => write!(f, "V4"),
+            HeaderVersion::V5 => write!(f, "V5"),
+        }
+    }
+}
+
 /// This is the Header's type - it contains the specific details that are needed to decrypt the data
 ///
 /// It contains the header's version, the "mode" that was used to encrypt the data, and the algorithm used.

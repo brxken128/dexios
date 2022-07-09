@@ -10,7 +10,7 @@ use dexios_core::cipher::Ciphers;
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::Keyslot;
 use dexios_core::header::{Header, HeaderType, HEADER_VERSION};
-use dexios_core::key::{balloon_hash, gen_salt};
+use dexios_core::key::gen_salt;
 use dexios_core::primitives::gen_nonce;
 use dexios_core::primitives::Algorithm;
 use dexios_core::primitives::Mode;

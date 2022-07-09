@@ -8,11 +8,14 @@ use super::prompt::{get_answer, overwrite_check};
 use crate::global::states::PasswordState;
 use crate::global::states::{Key, SkipMode};
 use anyhow::{Context, Result};
-use dexios_core::{cipher::Ciphers, header::{Keyslot, HashingAlgorithm}};
 use dexios_core::header::{Header, HeaderVersion};
 use dexios_core::primitives::Mode;
 use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
+use dexios_core::{
+    cipher::Ciphers,
+    header::{HashingAlgorithm, Keyslot},
+};
 use dexios_core::{key::balloon_hash, primitives::gen_nonce};
 use paris::info;
 use paris::{success, Logger};
@@ -25,7 +28,9 @@ pub fn details(input: &str) -> Result<()> {
     let header_result = Header::deserialize(&mut input_file);
 
     if header_result.is_err() {
-        return Err(anyhow::anyhow!("This does not seem like a valid Dexios header, exiting"))
+        return Err(anyhow::anyhow!(
+            "This does not seem like a valid Dexios header, exiting"
+        ));
     }
 
     let (header, _) = header_result.unwrap();
@@ -34,7 +39,7 @@ pub fn details(input: &str) -> Result<()> {
     println!("Encryption algorithm: {}", header.header_type.algorithm);
     println!("Encryption mode: {}", header.header_type.mode);
     println!("Encryption nonce: {} (hex)", hex::encode(header.nonce));
-    
+
     // could make use of the AAD too
 
     match header.header_type.version {
@@ -55,16 +60,20 @@ pub fn details(input: &str) -> Result<()> {
                 println!("Keyslot {}:", i);
                 println!("  Hashing Algorithm: {}", keyslot.hash_algorithm);
                 println!("  Salt: {} (hex)", hex::encode(keyslot.salt));
-                println!("  Master Key: {} (encrypted)", hex::encode(keyslot.encrypted_key));
-                println!("  Master Key's Nonce: {} (hex)", hex::encode(keyslot.nonce.clone()));
+                println!(
+                    "  Master Key: {} (encrypted)",
+                    hex::encode(keyslot.encrypted_key)
+                );
+                println!(
+                    "  Master Key's Nonce: {} (hex)",
+                    hex::encode(keyslot.nonce.clone())
+                );
             }
         }
     }
 
-
     Ok(())
 }
-
 
 // this functions take both an old and a new key state
 // these key states can be auto generated (new key only), keyfiles or user provided
@@ -111,7 +120,11 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
 
             let hash_start_time = Instant::now();
-            let key_old = balloon_hash(raw_key_old, &header.salt.clone().unwrap(), &header.header_type.version)?;
+            let key_old = balloon_hash(
+                raw_key_old,
+                &header.salt.clone().unwrap(),
+                &header.header_type.version,
+            )?;
             let hash_duration = hash_start_time.elapsed();
             success!(
                 "Successfully hashed your old key [took {:.2}s]",
@@ -119,7 +132,11 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             );
 
             let hash_start_time = Instant::now();
-            let key_new = balloon_hash(raw_key_new, &header.salt.clone().unwrap(), &header.header_type.version)?;
+            let key_new = balloon_hash(
+                raw_key_new,
+                &header.salt.clone().unwrap(),
+                &header.header_type.version,
+            )?;
             let hash_duration = hash_start_time.elapsed();
             success!(
                 "Successfully hashed your new key [took {:.2}s]",
@@ -128,9 +145,12 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
             let cipher = Ciphers::initialize(key_old, &header.header_type.algorithm)?;
 
-            let master_key_result = cipher.decrypt(&keyslot[0].nonce, keyslot[0].encrypted_key.as_slice());
+            let master_key_result =
+                cipher.decrypt(&keyslot[0].nonce, keyslot[0].encrypted_key.as_slice());
             let mut master_key_decrypted = master_key_result.map_err(|_| {
-                anyhow::anyhow!("Unable to decrypt your master key (maybe you supplied the wrong key?)")
+                anyhow::anyhow!(
+                    "Unable to decrypt your master key (maybe you supplied the wrong key?)"
+                )
             })?;
 
             let mut master_key = [0u8; 32];
@@ -145,19 +165,25 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let cipher = Ciphers::initialize(key_new, &header.header_type.algorithm)?;
 
             let master_key_nonce_new = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
-            let master_key_result = cipher.encrypt(&master_key_nonce_new, master_key.expose().as_slice());
+            let master_key_result =
+                cipher.encrypt(&master_key_nonce_new, master_key.expose().as_slice());
 
             drop(master_key);
 
-            let master_key_encrypted =
-                master_key_result.map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
+            let master_key_encrypted = master_key_result
+                .map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
 
             let mut master_key_encrypted_array = [0u8; 48];
 
             let len = 48.min(master_key_encrypted.len());
             master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
 
-            let keyslots = vec![Keyslot { encrypted_key: master_key_encrypted_array, hash_algorithm: HashingAlgorithm::Blake3Balloon(4), nonce: master_key_nonce_new, salt: header.salt.clone().unwrap() }];
+            let keyslots = vec![Keyslot {
+                encrypted_key: master_key_encrypted_array,
+                hash_algorithm: HashingAlgorithm::Blake3Balloon(4),
+                nonce: master_key_nonce_new,
+                salt: header.salt.clone().unwrap(),
+            }];
 
             let header_new = Header {
                 header_type: header.header_type,
@@ -172,13 +198,11 @@ pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             header_new.write(&mut input_file)?;
 
             success!("Key successfully updated for {}", input);
-
         }
         _ => (),
     }
     Ok(())
 }
-
 
 // this function dumps the first 64/128 bytes of
 // the input file into the output file

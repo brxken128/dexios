@@ -15,6 +15,7 @@ pub enum Error {
     WriteFile,
     FlushFile,
     FileAccess,
+    FileLen,
 }
 
 impl std::fmt::Display for Error {
@@ -26,6 +27,7 @@ impl std::fmt::Display for Error {
             FlushFile => f.write_str("Unable to flush file"),
             RemoveFile => f.write_str("Unable to remove file"),
             FileAccess => f.write_str("Permission denied"),
+            FileLen => f.write_str("Unable to get file length"),
         }
     }
 }
@@ -38,11 +40,12 @@ where
 {
     fn open_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
     fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
-    fn flush_file(&self, file: File<RW>) -> Result<(), Error>;
-    fn remove_file(&self, file: File<RW>) -> Result<(), Error>;
+    fn flush_file(&self, file: &File<RW>) -> Result<(), Error>;
+    fn remove_file(&self, file: &File<RW>) -> Result<(), Error>;
+    fn file_len(&self, file: &File<RW>) -> Result<usize, Error>;
 }
 
-pub struct FileStorage {}
+pub struct FileStorage;
 
 impl Storage<fs::File> for FileStorage {
     fn open_file<P: AsRef<Path>>(&self, path: P) -> Result<File<fs::File>, Error> {
@@ -61,20 +64,35 @@ impl Storage<fs::File> for FileStorage {
 
         Ok(File::Write(WriteFile {
             path,
+            // TODO: Should we add the BufWriter?
             writer: RefCell::new(file),
         }))
     }
 
-    fn flush_file(&self, file: File<fs::File>) -> Result<(), Error> {
+    fn flush_file(&self, file: &File<fs::File>) -> Result<(), Error> {
         file.try_writer()?
             .borrow_mut()
             .flush()
             .map_err(|_| Error::FlushFile)
     }
 
-    fn remove_file(&self, file: File<fs::File>) -> Result<(), Error> {
-        // TODO: add `file.set_len(0)` before removing
+    fn remove_file(&self, file: &File<fs::File>) -> Result<(), Error> {
+        if let File::Write(WriteFile { writer, .. }) = &file {
+            let mut writer = writer.borrow_mut();
+            writer.set_len(0).map_err(|_| Error::RemoveFile)?;
+            writer.flush().map_err(|_| Error::FlushFile)?;
+        }
+
         fs::remove_file(file.path()).map_err(|_| Error::RemoveFile)
+    }
+
+    fn file_len(&self, file: &File<fs::File>) -> Result<usize, Error> {
+        let file = match file {
+            File::Read(ReadFile { reader, .. }) => &reader.into_inner(),
+            File::Write(WriteFile { writer, .. }) => &writer.into_inner(),
+        };
+        let file_meta = fs::File::metadata(file).map_err(|_| Error::FileLen)?;
+        file_meta.len().try_into().map_err(|_| Error::FileLen)
     }
 }
 
@@ -124,7 +142,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         }))
     }
 
-    fn flush_file(&self, file: File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
+    fn flush_file(&self, file: &File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
         let file_path = file.path();
         let writer = file.try_writer()?;
         writer.borrow_mut().flush().map_err(|_| Error::FlushFile)?;
@@ -138,12 +156,21 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         Ok(())
     }
 
-    fn remove_file(&self, file: File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
+    fn remove_file(&self, file: &File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
         self.files
             .borrow_mut()
             .remove(file.path())
             .ok_or(Error::RemoveFile)?;
         Ok(())
+    }
+
+    fn file_len(&self, file: &File<io::Cursor<Vec<u8>>>) -> Result<usize, Error> {
+        let cur = match file {
+            File::Read(ReadFile { reader, .. }) => reader.into_inner(),
+            File::Write(WriteFile { writer, .. }) => writer.into_inner(),
+        };
+
+        Ok(cur.into_inner().len())
     }
 }
 
@@ -185,8 +212,7 @@ where
 {
     pub fn path(&self) -> &Path {
         match self {
-            File::Read(ReadFile { path, .. }) => path,
-            File::Write(WriteFile { path, .. }) => path,
+            File::Read(ReadFile { path, .. }) | File::Write(WriteFile { path, .. }) => path,
         }
     }
 

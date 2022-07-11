@@ -17,7 +17,7 @@ impl std::fmt::Display for Error {
         match self {
             OpenFile => f.write_str("Unable to open file"),
             Overwrite(inner) => write!(f, "Unable to overwrite file: {}", inner),
-            RemoveFile => f.write_str("Unable to write file"),
+            RemoveFile => f.write_str("Unable to remove file"),
         }
     }
 }

@@ -39,7 +39,7 @@ where
     fn open_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
     fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
     fn flush_file(&self, file: File<RW>) -> Result<(), Error>;
-    fn remove_file<P: AsRef<Path>>(&self, path: P) -> Result<(), Error>;
+    fn remove_file(&self, file: File<RW>) -> Result<(), Error>;
 }
 
 pub struct FileStorage {}
@@ -72,8 +72,9 @@ impl Storage<fs::File> for FileStorage {
             .map_err(|_| Error::FlushFile)
     }
 
-    fn remove_file<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
-        fs::remove_file(path).map_err(|_| Error::RemoveFile)
+    fn remove_file(&self, file: File<fs::File>) -> Result<(), Error> {
+        // TODO: add `file.set_len(0)` before removing
+        fs::remove_file(file.path()).map_err(|_| Error::RemoveFile)
     }
 }
 
@@ -115,31 +116,31 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         };
         let cursor = io::Cursor::new(file.buf.clone());
 
-        self.save_file(file_path, file)?;
+        self.save_file(file_path.clone(), file)?;
 
         Ok(File::Read(ReadFile {
-            path: path.as_ref().to_path_buf(),
+            path: file_path,
             reader: RefCell::new(cursor),
         }))
     }
 
     fn flush_file(&self, file: File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
-        let file_path = file.file_path();
+        let file_path = file.path();
         let writer = file.try_writer()?;
 
         let vec = writer.clone().into_inner().into_inner();
         let len = vec.len();
         let new_file = InMemoryFile { buf: vec, len };
 
-        self.save_file(file_path.to_path_buf(), new_file)?;
+        self.save_file(file_path.to_owned(), new_file)?;
 
         Ok(())
     }
 
-    fn remove_file<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+    fn remove_file(&self, file: File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
         self.files
             .borrow_mut()
-            .remove(path.as_ref())
+            .remove(file.path())
             .ok_or(Error::RemoveFile)?;
         Ok(())
     }
@@ -181,7 +182,7 @@ impl<RW> File<RW>
 where
     RW: Read + Write + Seek,
 {
-    pub fn file_path(&self) -> &Path {
+    pub fn path(&self) -> &Path {
         match self {
             File::Read(ReadFile { path, .. }) => path,
             File::Write(WriteFile { path, .. }) => path,

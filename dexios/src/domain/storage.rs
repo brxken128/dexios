@@ -9,10 +9,16 @@ use std::collections::HashMap;
 use std::io;
 
 #[derive(Debug)]
+pub enum FileMode {
+    Read,
+    Write,
+}
+
+#[derive(Debug)]
 pub enum Error {
-    OpenFile,
+    CreateFile,
+    OpenFile(FileMode),
     RemoveFile,
-    WriteFile,
     FlushFile,
     FileAccess,
     FileLen,
@@ -22,10 +28,10 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use Error::*;
         match self {
-            OpenFile => f.write_str("Unable to read file"),
-            WriteFile => f.write_str("Unable to write file"),
-            FlushFile => f.write_str("Unable to flush file"),
-            RemoveFile => f.write_str("Unable to remove file"),
+            CreateFile => f.write_str("Unable to create a new file"),
+            OpenFile(mode) => write!(f, "Unable to read the file in {:?} mode", mode),
+            FlushFile => f.write_str("Unable to flush the file"),
+            RemoveFile => f.write_str("Unable to remove the file"),
             FileAccess => f.write_str("Permission denied"),
             FileLen => f.write_str("Unable to get file length"),
         }
@@ -38,7 +44,8 @@ pub trait Storage<RW>
 where
     RW: Read + Write + Seek,
 {
-    fn open_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
+    fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
+    fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
     fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
     fn flush_file(&self, file: &File<RW>) -> Result<(), Error>;
     fn remove_file(&self, file: &File<RW>) -> Result<(), Error>;
@@ -48,9 +55,23 @@ where
 pub struct FileStorage;
 
 impl Storage<fs::File> for FileStorage {
-    fn open_file<P: AsRef<Path>>(&self, path: P) -> Result<File<fs::File>, Error> {
+    fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<File<fs::File>, Error> {
         let path = path.as_ref().to_path_buf();
-        let file = fs::File::open(&path).map_err(|_| Error::OpenFile)?;
+        let file = fs::File::options()
+            .create_new(true)
+            .write(true)
+            .open(&path)
+            .map_err(|_| Error::CreateFile)?;
+        Ok(File::Write(WriteFile {
+            path,
+            // TODO: Should we add the BufWriter?
+            writer: RefCell::new(file),
+        }))
+    }
+
+    fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<File<fs::File>, Error> {
+        let path = path.as_ref().to_path_buf();
+        let file = fs::File::open(&path).map_err(|_| Error::OpenFile(FileMode::Read))?;
 
         Ok(File::Read(ReadFile {
             path,
@@ -60,7 +81,10 @@ impl Storage<fs::File> for FileStorage {
 
     fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<File<fs::File>, Error> {
         let path = path.as_ref().to_path_buf();
-        let file = fs::File::create(&path).map_err(|_| Error::WriteFile)?;
+        let file = fs::File::options()
+            .write(true)
+            .open(&path)
+            .map_err(|_| Error::OpenFile(FileMode::Write))?;
 
         Ok(File::Write(WriteFile {
             path,
@@ -113,7 +137,7 @@ impl InMemoryStorage {
     // TEST DATA
     // -------------------------------
 
-    fn add_hello_txt(&self) -> Result<(), Error> {
+    pub(crate) fn add_hello_txt(&self) -> Result<(), Error> {
         let buf = b"hello world".to_vec();
         self.save_file(
             PathBuf::from("hello.txt"),
@@ -127,9 +151,29 @@ impl InMemoryStorage {
 
 #[cfg(test)]
 impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
-    fn open_file<P: AsRef<Path>>(&self, path: P) -> Result<File<io::Cursor<Vec<u8>>>, Error> {
+    fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<File<io::Cursor<Vec<u8>>>, Error> {
+        let file_path = path.as_ref().to_path_buf();
+
+        let file = match self.files.borrow().get(&file_path) {
+            Some(_) => Err(Error::CreateFile),
+            None => Ok(InMemoryFile::default()),
+        }?;
+
+        let cursor = io::Cursor::new(file.buf.clone());
+
+        self.save_file(file_path.clone(), file)?;
+
+        Ok(File::Write(WriteFile {
+            path: file_path,
+            writer: RefCell::new(cursor),
+        }))
+    }
+
+    fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<File<io::Cursor<Vec<u8>>>, Error> {
         let files = self.files.borrow();
-        let file = files.get(path.as_ref()).ok_or(Error::OpenFile)?;
+        let file = files
+            .get(path.as_ref())
+            .ok_or(Error::OpenFile(FileMode::Read))?;
         let cursor = io::Cursor::new(file.buf.clone());
 
         Ok(File::Read(ReadFile {
@@ -146,10 +190,8 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
             .borrow()
             .get(&file_path)
             .cloned()
-            .unwrap_or_default();
-        let cursor = io::Cursor::new(file.buf.clone());
-
-        self.save_file(file_path.clone(), file)?;
+            .ok_or(Error::OpenFile(FileMode::Write))?;
+        let cursor = io::Cursor::new(file.buf);
 
         Ok(File::Write(WriteFile {
             path: file_path,
@@ -254,7 +296,7 @@ mod tests {
     fn should_create_a_new_file() {
         let stor = InMemoryStorage::default();
 
-        match stor.write_file("hello.txt") {
+        match stor.create_file("hello.txt") {
             Ok(file) => {
                 let files = stor.files.borrow();
                 let im_file = files.get(file.path());
@@ -265,11 +307,31 @@ mod tests {
     }
 
     #[test]
+    fn should_not_open_file_to_read() {
+        let stor = InMemoryStorage::default();
+
+        match stor.read_file("hello.txt") {
+            Err(Error::OpenFile(FileMode::Read)) => {}
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_not_open_file_to_write() {
+        let stor = InMemoryStorage::default();
+
+        match stor.write_file("hello.txt") {
+            Err(Error::OpenFile(FileMode::Write)) => {}
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
     fn should_open_exist_file_in_read_mode() {
         let stor = InMemoryStorage::default();
         stor.add_hello_txt().unwrap();
 
-        match stor.open_file("hello.txt") {
+        match stor.read_file("hello.txt") {
             Ok(file) => {
                 let files = stor.files.borrow();
                 if let Some(InMemoryFile { buf, len }) = files.get(file.path()) {
@@ -309,7 +371,7 @@ mod tests {
         let stor = InMemoryStorage::default();
         let content = "hello world";
 
-        let file = stor.write_file("hello.txt").unwrap();
+        let file = stor.create_file("hello.txt").unwrap();
         file.try_writer()
             .unwrap()
             .borrow_mut()
@@ -333,7 +395,24 @@ mod tests {
     }
 
     #[test]
-    fn should_remove_a_file_on_write_mode() {
+    fn should_remove_a_file_in_read_mode() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+
+        let file = stor.write_file("hello.txt").unwrap();
+
+        match stor.remove_file(&file) {
+            Ok(_) => {
+                let files = stor.files.borrow();
+                let im_file = files.get(file.path());
+                assert_eq!(im_file, None);
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_remove_a_file_in_write_mode() {
         let stor = InMemoryStorage::default();
         stor.add_hello_txt().unwrap();
 
@@ -354,7 +433,7 @@ mod tests {
         let stor = InMemoryStorage::default();
         stor.add_hello_txt().unwrap();
 
-        let file = stor.open_file("hello.txt").unwrap();
+        let file = stor.read_file("hello.txt").unwrap();
 
         match stor.file_len(&file) {
             Ok(len) => {

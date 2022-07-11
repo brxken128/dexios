@@ -52,3 +52,41 @@ where
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use crate::domain::storage::InMemoryStorage;
+
+    use super::*;
+
+    #[test]
+    fn should_erase_file() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+
+        let req = Request {
+            path: "hello.txt",
+            passes: 2,
+        };
+        match execute(&stor, req) {
+            Ok(_) => assert_eq!(stor.files.borrow().get(&PathBuf::from("hello.txt")), None),
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_not_open_file() {
+        let stor = InMemoryStorage::default();
+
+        let req = Request {
+            path: "hello.txt",
+            passes: 2,
+        };
+        match execute(&stor, req) {
+            Err(Error::OpenFile) => {}
+            _ => unreachable!(),
+        }
+    }
+}

@@ -104,12 +104,24 @@ pub struct InMemoryStorage {
 
 #[cfg(test)]
 impl InMemoryStorage {
-    fn save_file(&self, path: PathBuf, file: InMemoryFile) -> Result<(), Error> {
-        self.files
-            .borrow_mut()
-            .insert(path, file)
-            .ok_or(Error::WriteFile)?;
+    fn save_file(&self, path: PathBuf, im_file: InMemoryFile) -> Result<(), Error> {
+        self.files.borrow_mut().insert(path, im_file);
         Ok(())
+    }
+
+    // --------------------------------
+    // TEST DATA
+    // -------------------------------
+
+    fn add_hello_txt(&self) -> Result<(), Error> {
+        let buf = b"hello world".to_vec();
+        self.save_file(
+            PathBuf::from("hello.txt"),
+            InMemoryFile {
+                len: buf.len(),
+                buf,
+            },
+        )
     }
 }
 
@@ -128,10 +140,13 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
 
     fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<File<io::Cursor<Vec<u8>>>, Error> {
         let file_path = path.as_ref().to_path_buf();
-        let file = InMemoryFile {
-            buf: vec![],
-            len: 0,
-        };
+
+        let file = self
+            .files
+            .borrow()
+            .get(&file_path)
+            .cloned()
+            .unwrap_or_default();
         let cursor = io::Cursor::new(file.buf.clone());
 
         self.save_file(file_path.clone(), file)?;
@@ -175,7 +190,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
 }
 
 #[cfg(test)]
-#[derive(Clone)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct InMemoryFile {
     pub buf: Vec<u8>,
     pub len: usize,
@@ -233,7 +248,120 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
-    fn should_create_file() {}
+    fn should_create_a_new_file() {
+        let stor = InMemoryStorage::default();
+
+        match stor.write_file("hello.txt") {
+            Ok(file) => {
+                let files = stor.files.borrow();
+                let im_file = files.get(file.path());
+                assert_eq!(im_file, Some(&InMemoryFile::default()));
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_open_exist_file_in_read_mode() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+
+        match stor.open_file("hello.txt") {
+            Ok(file) => {
+                let files = stor.files.borrow();
+                if let Some(InMemoryFile { buf, len }) = files.get(file.path()) {
+                    let content = b"hello world".to_vec();
+                    assert_eq!(len, &content.len());
+                    assert_eq!(buf, &content);
+                } else {
+                    unreachable!();
+                }
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_open_exist_file_in_write_mode() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+
+        match stor.write_file("hello.txt") {
+            Ok(file) => {
+                let files = stor.files.borrow();
+                if let Some(InMemoryFile { buf, len }) = files.get(file.path()) {
+                    let content = b"hello world".to_vec();
+                    assert_eq!(len, &content.len());
+                    assert_eq!(buf, &content);
+                } else {
+                    unreachable!();
+                }
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_write_content_to_file() {
+        let stor = InMemoryStorage::default();
+        let content = "hello world";
+
+        let file = stor.write_file("hello.txt").unwrap();
+        file.try_writer()
+            .unwrap()
+            .borrow_mut()
+            .write_all(content.as_bytes())
+            .unwrap();
+
+        match stor.flush_file(&file) {
+            Ok(_) => {
+                let files = stor.files.borrow();
+                let im_file = files.get(file.path());
+                assert_eq!(
+                    im_file,
+                    Some(&InMemoryFile {
+                        buf: content.as_bytes().to_vec(),
+                        len: content.len()
+                    })
+                );
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_remove_a_file_on_write_mode() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+
+        let file = stor.write_file("hello.txt").unwrap();
+
+        match stor.remove_file(&file) {
+            Ok(_) => {
+                let files = stor.files.borrow();
+                let im_file = files.get(file.path());
+                assert_eq!(im_file, None);
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_get_file_length() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+
+        let file = stor.open_file("hello.txt").unwrap();
+
+        match stor.file_len(&file) {
+            Ok(len) => {
+                let content = b"hello world".to_vec();
+                assert_eq!(len, content.len());
+            }
+            _ => unreachable!(),
+        }
+    }
 }

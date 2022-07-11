@@ -136,9 +136,9 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
 
         self.save_file(file_path.clone(), file)?;
 
-        Ok(File::Read(ReadFile {
+        Ok(File::Write(WriteFile {
             path: file_path,
-            reader: RefCell::new(cursor),
+            writer: RefCell::new(cursor),
         }))
     }
 

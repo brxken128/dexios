@@ -1,12 +1,7 @@
 use crate::domain;
 use anyhow::{Context, Result};
 use paris::Logger;
-use std::{
-    cell::RefCell,
-    fs::File,
-    io::{BufWriter, Write},
-    time::Instant,
-};
+use std::{fs::File, time::Instant};
 
 use super::prompt::get_answer;
 
@@ -55,23 +50,16 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
         input, passes
     ));
 
-    let file = File::create(input).with_context(|| format!("Unable to open file: {}", input))?;
-    let buf_capacity = file_meta.len() as usize;
+    // TODO: It is necessary to raise it to a higher level
+    let stor = domain::storage::FileStorage;
 
-    domain::overwrite::execute(domain::overwrite::Request {
-        writer: RefCell::new(BufWriter::new(file)),
-        buf_capacity,
-        passes,
-    })?;
-
-    let mut file = File::create(input).context("Unable to open the input file")?;
-    file.set_len(0)
-        .with_context(|| format!("Unable to truncate file: {}", input))?;
-    file.flush()
-        .with_context(|| format!("Unable to flush file: {}", input))?;
-    drop(file);
-
-    std::fs::remove_file(input).with_context(|| format!("Unable to remove file: {}", input))?;
+    domain::erase::execute(
+        &stor,
+        domain::erase::Request {
+            path: input,
+            passes,
+        },
+    )?;
 
     let duration = start_time.elapsed();
 

@@ -27,8 +27,8 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-pub struct Request<W: Write + Seek> {
-    pub writer: RefCell<W>,
+pub struct Request<'a, W: Write + Seek> {
+    pub writer: &'a RefCell<W>,
     pub buf_capacity: usize,
     pub passes: i32,
 }
@@ -84,7 +84,7 @@ mod tests {
         let writer = Cursor::new(&mut buf);
 
         let req = Request {
-            writer: RefCell::new(writer),
+            writer: &RefCell::new(writer),
             buf_capacity: capacity,
             passes,
         };

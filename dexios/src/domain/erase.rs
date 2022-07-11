@@ -9,6 +9,7 @@ pub enum Error {
     OpenFile,
     Overwrite(domain::overwrite::Error),
     RemoveFile,
+    ReadDirEntries,
 }
 
 impl std::fmt::Display for Error {
@@ -18,6 +19,7 @@ impl std::fmt::Display for Error {
             OpenFile => f.write_str("Unable to open file"),
             Overwrite(inner) => write!(f, "Unable to overwrite file: {}", inner),
             RemoveFile => f.write_str("Unable to remove file"),
+            ReadDirEntries => f.write_str("Unable to get all dir entries"),
         }
     }
 }
@@ -34,8 +36,6 @@ where
     RW: Read + Write + Seek,
     P: AsRef<Path>,
 {
-    // TODO: add logic for directories
-
     let file = stor.write_file(req.path).map_err(|_| Error::OpenFile)?;
     let buf_capacity = stor.file_len(&file).map_err(|_| Error::OpenFile)?;
 

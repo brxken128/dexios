@@ -7,10 +7,8 @@ use std::{
 use super::prompt::{get_answer, overwrite_check};
 use crate::global::states::SkipMode;
 use anyhow::{Context, Result};
+use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
-use dexios_core::{
-    header::HashingAlgorithm,
-};
 use paris::Logger;
 
 pub fn details(input: &str) -> Result<()> {

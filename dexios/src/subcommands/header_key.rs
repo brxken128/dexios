@@ -1,10 +1,7 @@
-use std::{
-    fs::OpenOptions,
-    io::Seek,
-};
+use std::{fs::OpenOptions, io::Seek};
 
-use crate::global::states::PasswordState;
 use crate::global::states::Key;
+use crate::global::states::PasswordState;
 use anyhow::{Context, Result};
 use dexios_core::header::{Header, HeaderVersion};
 use dexios_core::primitives::Mode;

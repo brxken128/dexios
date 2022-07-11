@@ -307,6 +307,17 @@ mod tests {
     }
 
     #[test]
+    fn should_throw_an_error_if_file_already_exist() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+
+        match stor.create_file("hello.txt") {
+            Err(Error::CreateFile) => {}
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
     fn should_not_open_file_to_read() {
         let stor = InMemoryStorage::default();
 

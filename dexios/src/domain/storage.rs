@@ -127,6 +127,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
     fn flush_file(&self, file: File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
         let file_path = file.path();
         let writer = file.try_writer()?;
+        writer.borrow_mut().flush().map_err(|_| Error::FlushFile)?;
 
         let vec = writer.clone().into_inner().into_inner();
         let len = vec.len();

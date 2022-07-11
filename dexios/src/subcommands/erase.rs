@@ -1,12 +1,7 @@
 use crate::domain;
 use anyhow::{Context, Result};
 use paris::Logger;
-use std::{
-    cell::RefCell,
-    fs::File,
-    io::{BufWriter, Write},
-    time::Instant,
-};
+use std::{fs::File, time::Instant};
 
 use super::prompt::get_answer;
 

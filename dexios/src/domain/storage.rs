@@ -87,11 +87,11 @@ impl Storage<fs::File> for FileStorage {
     }
 
     fn file_len(&self, file: &File<fs::File>) -> Result<usize, Error> {
-        let file = match file {
-            File::Read(ReadFile { reader, .. }) => &reader.into_inner(),
-            File::Write(WriteFile { writer, .. }) => &writer.into_inner(),
+        let fs_file = match file {
+            File::Read(ReadFile { reader, .. }) => reader.borrow(),
+            File::Write(WriteFile { writer, .. }) => writer.borrow(),
         };
-        let file_meta = fs::File::metadata(file).map_err(|_| Error::FileLen)?;
+        let file_meta = fs::File::metadata(&fs_file).map_err(|_| Error::FileLen)?;
         file_meta.len().try_into().map_err(|_| Error::FileLen)
     }
 }
@@ -147,7 +147,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         let writer = file.try_writer()?;
         writer.borrow_mut().flush().map_err(|_| Error::FlushFile)?;
 
-        let vec = writer.clone().into_inner().into_inner();
+        let vec = writer.borrow().get_ref().clone();
         let len = vec.len();
         let new_file = InMemoryFile { buf: vec, len };
 
@@ -166,11 +166,11 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
 
     fn file_len(&self, file: &File<io::Cursor<Vec<u8>>>) -> Result<usize, Error> {
         let cur = match file {
-            File::Read(ReadFile { reader, .. }) => reader.into_inner(),
-            File::Write(WriteFile { writer, .. }) => writer.into_inner(),
+            File::Read(ReadFile { reader, .. }) => reader.borrow(),
+            File::Write(WriteFile { writer, .. }) => writer.borrow(),
         };
 
-        Ok(cur.into_inner().len())
+        Ok(cur.get_ref().len())
     }
 }
 

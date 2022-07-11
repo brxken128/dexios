@@ -25,14 +25,15 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {}
 
 pub struct Request<P: AsRef<Path>> {
-    path: P,
-    passes: i32,
+    pub path: P,
+    pub passes: i32,
 }
 
-pub fn execute<RW: Read + Write + Seek, P: AsRef<Path>>(
-    stor: &impl Storage<RW>,
-    req: Request<P>,
-) -> Result<(), Error> {
+pub fn execute<RW, P>(stor: &impl Storage<RW>, req: Request<P>) -> Result<(), Error>
+where
+    RW: Read + Write + Seek,
+    P: AsRef<Path>,
+{
     // TODO: add logic for directories
 
     let file = stor.write_file(req.path).map_err(|_| Error::OpenFile)?;

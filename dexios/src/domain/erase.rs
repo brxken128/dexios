@@ -1,6 +1,7 @@
 use crate::domain;
 use std::io::{Read, Seek, Write};
 use std::path::Path;
+use std::sync::Arc;
 
 use domain::storage::Storage;
 
@@ -9,7 +10,6 @@ pub enum Error {
     OpenFile,
     Overwrite(domain::overwrite::Error),
     RemoveFile,
-    ReadDirEntries,
 }
 
 impl std::fmt::Display for Error {
@@ -19,7 +19,6 @@ impl std::fmt::Display for Error {
             OpenFile => f.write_str("Unable to open file"),
             Overwrite(inner) => write!(f, "Unable to overwrite file: {}", inner),
             RemoveFile => f.write_str("Unable to remove file"),
-            ReadDirEntries => f.write_str("Unable to get all dir entries"),
         }
     }
 }
@@ -31,7 +30,7 @@ pub struct Request<P: AsRef<Path>> {
     pub passes: i32,
 }
 
-pub fn execute<RW, P>(stor: &impl Storage<RW>, req: Request<P>) -> Result<(), Error>
+pub fn execute<RW, P>(stor: Arc<impl Storage<RW> + 'static>, req: Request<P>) -> Result<(), Error>
 where
     RW: Read + Write + Seek,
     P: AsRef<Path>,
@@ -63,28 +62,28 @@ mod tests {
 
     #[test]
     fn should_erase_file() {
-        let stor = InMemoryStorage::default();
+        let stor = Arc::new(InMemoryStorage::default());
         stor.add_hello_txt().unwrap();
 
         let req = Request {
             path: "hello.txt",
             passes: 2,
         };
-        match execute(&stor, req) {
-            Ok(_) => assert_eq!(stor.files.borrow().get(&PathBuf::from("hello.txt")), None),
+        match execute(stor.clone(), req) {
+            Ok(_) => assert_eq!(stor.files().get(&PathBuf::from("hello.txt")), None),
             _ => unreachable!(),
         }
     }
 
     #[test]
     fn should_not_open_file() {
-        let stor = InMemoryStorage::default();
+        let stor = Arc::new(InMemoryStorage::default());
 
         let req = Request {
             path: "hello.txt",
             passes: 2,
         };
-        match execute(&stor, req) {
+        match execute(stor, req) {
             Err(Error::OpenFile) => {}
             _ => unreachable!(),
         }

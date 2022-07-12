@@ -1,5 +1,6 @@
 use crate::domain;
 use std::io::{Read, Seek, Write};
+use std::sync::Arc;
 
 use domain::storage::Storage;
 
@@ -33,7 +34,7 @@ where
     pub passes: i32,
 }
 
-pub fn execute<RW>(stor: &impl Storage<RW>, req: Request<RW>) -> Result<(), Error>
+pub fn execute<RW>(stor: Arc<impl Storage<RW> + 'static>, req: Request<RW>) -> Result<(), Error>
 where
     RW: Read + Write + Seek,
 {
@@ -54,15 +55,24 @@ where
     )
     .map_err(|_| Error::ReadDirEntries)?;
 
+    let mut handlers = Vec::with_capacity(file_paths.len());
     for file_path in file_paths {
-        domain::erase::execute(
-            stor,
-            domain::erase::Request {
-                path: file_path,
-                passes: req.passes,
-            },
-        )
-        .map_err(Error::EraseFile)?;
+        let stor = stor.clone();
+        handlers.push(std::thread::spawn(move || -> Result<(), Error> {
+            domain::erase::execute(
+                stor,
+                domain::erase::Request {
+                    path: file_path,
+                    passes: req.passes,
+                },
+            )
+            .map_err(Error::EraseFile)?;
+            Ok(())
+        }));
+    }
+
+    for h in handlers {
+        h.join().unwrap()?;
     }
 
     stor.remove_dir_all(req.file).map_err(|_| Error::RemoveDir)

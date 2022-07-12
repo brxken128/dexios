@@ -1,6 +1,7 @@
 use crate::domain::{self, storage::Storage};
 use anyhow::Result;
 use paris::Logger;
+use std::sync::Arc;
 use std::time::Instant;
 
 use super::prompt::get_answer;
@@ -10,7 +11,7 @@ use super::prompt::get_answer;
 // it takes the file name/relative path, and the number of times to go over the file's contents with random bytes
 pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
-    let stor = domain::storage::FileStorage;
+    let stor = Arc::new(domain::storage::FileStorage);
 
     let mut logger = Logger::new();
     let start_time = Instant::now();
@@ -29,12 +30,12 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
             std::process::exit(0);
         }
 
-        domain::erase_dir::execute(&stor, domain::erase_dir::Request { file, passes })?;
+        domain::erase_dir::execute(stor, domain::erase_dir::Request { file, passes })?;
 
         logger.success(format!("Deleted directory: {}", input));
     } else {
         domain::erase::execute(
-            &stor,
+            stor,
             domain::erase::Request {
                 path: input,
                 passes,

@@ -7,6 +7,10 @@ use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 #[cfg(test)]
 use std::io;
+#[cfg(test)]
+use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+#[cfg(test)]
+use std::thread;
 
 #[derive(Debug)]
 pub enum FileMode {
@@ -42,7 +46,7 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-pub trait Storage<RW>
+pub trait Storage<RW>: Send + Sync
 where
     RW: Read + Write + Seek,
 {
@@ -142,13 +146,31 @@ impl Storage<fs::File> for FileStorage {
 #[cfg(test)]
 #[derive(Default)]
 pub struct InMemoryStorage {
-    pub files: RefCell<HashMap<PathBuf, IMFile>>,
+    pub files: RwLock<HashMap<PathBuf, IMFile>>,
 }
 
 #[cfg(test)]
 impl InMemoryStorage {
+    pub(crate) fn files(&self) -> RwLockReadGuard<HashMap<PathBuf, IMFile>> {
+        loop {
+            match self.files.try_read() {
+                Ok(files) => break files,
+                _ => thread::sleep(std::time::Duration::from_millis(50)),
+            }
+        }
+    }
+
+    pub(crate) fn mut_files(&self) -> RwLockWriteGuard<HashMap<PathBuf, IMFile>> {
+        loop {
+            match self.files.try_write() {
+                Ok(files) => break files,
+                _ => thread::sleep(std::time::Duration::from_millis(50)),
+            }
+        }
+    }
+
     fn save_file(&self, path: PathBuf, im_file: IMFile) -> Result<(), Error> {
-        self.files.borrow_mut().insert(path, im_file);
+        self.mut_files().insert(path, im_file);
         Ok(())
     }
 
@@ -173,7 +195,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
     fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<File<io::Cursor<Vec<u8>>>, Error> {
         let file_path = path.as_ref().to_path_buf();
 
-        let im_file = match self.files.borrow().get(&file_path) {
+        let im_file = match self.files().get(&file_path) {
             Some(_) => Err(Error::CreateFile),
             None => Ok(IMFile::File(InMemoryFile::default())),
         }?;
@@ -189,9 +211,10 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
     }
 
     fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<File<io::Cursor<Vec<u8>>>, Error> {
-        let files = self.files.borrow();
-        let in_file = files
+        let in_file = self
+            .files()
             .get(path.as_ref())
+            .cloned()
             .ok_or(Error::OpenFile(FileMode::Read))?;
 
         let file_path = path.as_ref().to_path_buf();
@@ -199,7 +222,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         match in_file {
             IMFile::Dir => Ok(File::Dir(file_path)),
             IMFile::File(f) => {
-                let cursor = io::Cursor::new(f.buf.clone());
+                let cursor = io::Cursor::new(f.buf);
                 Ok(File::Read(ReadFile {
                     path: file_path,
                     reader: RefCell::new(cursor),
@@ -212,8 +235,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         let file_path = path.as_ref().to_path_buf();
 
         let file = self
-            .files
-            .borrow()
+            .files()
             .get(&file_path)
             .cloned()
             .ok_or(Error::OpenFile(FileMode::Write))?;
@@ -221,7 +243,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
             return Err(Error::FileAccess);
         }
 
-        let cursor = io::Cursor::new(file.inner().buf);
+        let cursor = io::Cursor::new(file.inner().buf.clone());
 
         Ok(File::Write(WriteFile {
             path: file_path,
@@ -258,8 +280,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
     }
 
     fn remove_file(&self, file: &File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
-        self.files
-            .borrow_mut()
+        self.mut_files()
             .remove(file.path())
             .ok_or(Error::RemoveFile)?;
         Ok(())
@@ -270,14 +291,17 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
             return Err(Error::FileAccess);
         }
 
-        let files = self.files.borrow_mut();
+        let files = self.files();
 
         let file_path = file.path();
         files
             .keys()
             .filter(|k| k.starts_with(file_path))
             .try_for_each(|k| {
-                files.remove(k).map(|_| ()).ok_or(Error::RemoveDir)?;
+                self.mut_files()
+                    .remove(k)
+                    .map(|_| ())
+                    .ok_or(Error::RemoveDir)?;
                 Ok(())
             })
     }
@@ -301,7 +325,7 @@ pub enum IMFile {
 impl IMFile {
     fn inner(&self) -> &InMemoryFile {
         match self {
-            IMFile::File(inner) => &inner,
+            IMFile::File(inner) => inner,
             IMFile::Dir => unreachable!(),
         }
     }
@@ -374,9 +398,8 @@ mod tests {
 
         match stor.create_file("hello.txt") {
             Ok(file) => {
-                let files = stor.files.borrow();
-                let im_file = files.get(file.path());
-                assert_eq!(im_file, Some(&IMFile::File(InMemoryFile::default())));
+                let im_file = stor.files().get(file.path()).cloned();
+                assert_eq!(im_file, Some(IMFile::File(InMemoryFile::default())));
             }
             _ => unreachable!(),
         }
@@ -420,8 +443,8 @@ mod tests {
 
         match stor.read_file("hello.txt") {
             Ok(file) => {
-                let files = stor.files.borrow();
-                if let Some(IMFile::File(InMemoryFile { buf, len })) = files.get(file.path()) {
+                if let Some(IMFile::File(InMemoryFile { buf, len })) = stor.files().get(file.path())
+                {
                     let content = b"hello world".to_vec();
                     assert_eq!(len, &content.len());
                     assert_eq!(buf, &content);
@@ -440,8 +463,8 @@ mod tests {
 
         match stor.write_file("hello.txt") {
             Ok(file) => {
-                let files = stor.files.borrow();
-                if let Some(IMFile::File(InMemoryFile { buf, len })) = files.get(file.path()) {
+                if let Some(IMFile::File(InMemoryFile { buf, len })) = stor.files().get(file.path())
+                {
                     let content = b"hello world".to_vec();
                     assert_eq!(len, &content.len());
                     assert_eq!(buf, &content);
@@ -467,11 +490,10 @@ mod tests {
 
         match stor.flush_file(&file) {
             Ok(_) => {
-                let files = stor.files.borrow();
-                let im_file = files.get(file.path());
+                let im_file = stor.files().get(file.path()).cloned();
                 assert_eq!(
                     im_file,
-                    Some(&IMFile::File(InMemoryFile {
+                    Some(IMFile::File(InMemoryFile {
                         buf: content.as_bytes().to_vec(),
                         len: content.len()
                     }))
@@ -490,8 +512,7 @@ mod tests {
 
         match stor.remove_file(&file) {
             Ok(_) => {
-                let files = stor.files.borrow();
-                let im_file = files.get(file.path());
+                let im_file = stor.files().get(file.path()).cloned();
                 assert_eq!(im_file, None);
             }
             _ => unreachable!(),
@@ -507,8 +528,7 @@ mod tests {
 
         match stor.remove_file(&file) {
             Ok(_) => {
-                let files = stor.files.borrow();
-                let im_file = files.get(file.path());
+                let im_file = stor.files().get(file.path()).cloned();
                 assert_eq!(im_file, None);
             }
             _ => unreachable!(),

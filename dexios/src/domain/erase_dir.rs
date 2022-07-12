@@ -38,7 +38,7 @@ pub fn execute<RW>(stor: Arc<impl Storage<RW> + 'static>, req: Request<RW>) -> R
 where
     RW: Read + Write + Seek,
 {
-    if req.file.is_dir() {
+    if !req.file.is_dir() {
         return Err(Error::InvalidFileType);
     }
 
@@ -55,25 +55,26 @@ where
     )
     .map_err(|_| Error::ReadDirEntries)?;
 
-    let mut handlers = Vec::with_capacity(file_paths.len());
-    for file_path in file_paths {
-        let stor = stor.clone();
-        handlers.push(std::thread::spawn(move || -> Result<(), Error> {
-            domain::erase::execute(
-                stor,
-                domain::erase::Request {
-                    path: file_path,
-                    passes: req.passes,
-                },
-            )
-            .map_err(Error::EraseFile)?;
-            Ok(())
-        }));
-    }
+    #[allow(clippy::needless_collect)] // because we have to join threads after iterator!
+    let handlers = file_paths
+        .into_iter()
+        .map(|file_path| {
+            let stor = stor.clone();
+            std::thread::spawn(move || -> Result<(), Error> {
+                domain::erase::execute(
+                    stor,
+                    domain::erase::Request {
+                        path: file_path,
+                        passes: req.passes,
+                    },
+                )
+                .map_err(Error::EraseFile)?;
+                Ok(())
+            })
+        })
+        .collect::<Vec<_>>();
 
-    for h in handlers {
-        h.join().unwrap()?;
-    }
+    handlers.into_iter().try_for_each(|h| h.join().unwrap())?;
 
     stor.remove_dir_all(req.file).map_err(|_| Error::RemoveDir)
 }

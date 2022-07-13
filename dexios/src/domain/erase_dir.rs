@@ -79,19 +79,22 @@ mod tests {
 
     #[test]
     fn should_erase_dir_recursively_with_subfiles() {
-        let stor = InMemoryStorage::default();
+        let stor = Arc::new(InMemoryStorage::default());
         stor.add_hello_txt().unwrap();
         stor.add_bar_foo_folder().unwrap();
 
         let file = stor.read_file("bar/").unwrap();
         let file_path = file.path().to_path_buf();
 
-        match stor.remove_dir_all(file) {
+        let req = Request { file, passes: 2 };
+
+        match execute(stor.clone(), req) {
             Ok(()) => {
                 assert_eq!(stor.files().get(&file_path).cloned(), None);
                 let files = stor.files();
-                let keys = files.keys().next();
-                assert_eq!(keys, Some(&PathBuf::from("hello.txt")))
+                let mut keys = files.keys();
+                assert_eq!(keys.next(), Some(&PathBuf::from("hello.txt")));
+                assert_eq!(keys.next(), None);
             }
             _ => unreachable!(),
         }

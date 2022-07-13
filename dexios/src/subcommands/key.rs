@@ -11,7 +11,7 @@ use crate::global::states::PasswordState;
 // this function interacts with stdin and stdout to hide password input
 // it uses termion's `read_passwd` function for terminal manipulation
 #[cfg(target_family = "unix")]
-fn read_password_from_stdin_unix(prompt: &str) -> Result<String> {
+fn read_password_from_stdin(prompt: &str) -> Result<String> {
     use termion::input::TermRead;
 
     let stdout = stdout();
@@ -37,8 +37,8 @@ fn read_password_from_stdin_unix(prompt: &str) -> Result<String> {
     }
 }
 
-#[cfg(target_family = "windows")]
-fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
+#[cfg(not(target_family = "unix"))]
+fn read_password_from_stdin(prompt: &str) -> Result<String> {
     use std::io::BufRead;
     let mut stdout = stdout();
     let stdin = stdin();
@@ -62,22 +62,13 @@ fn read_password_from_stdin_windows(prompt: &str) -> Result<String> {
 // if direct mode is enabled, it just reads the password once and returns it instantly
 pub fn get_password(pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
     Ok(loop {
-        #[cfg(target_family = "unix")]
-        let input =
-            read_password_from_stdin_unix("Password: ").context("Unable to read password")?;
-        #[cfg(target_family = "windows")]
-        let input =
-            read_password_from_stdin_windows("Password: ").context("Unable to read password")?;
+        let input = read_password_from_stdin("Password: ").context("Unable to read password")?;
         if pass_state == &PasswordState::Direct {
             return Ok(Protected::new(input.into_bytes()));
         }
 
-        #[cfg(target_family = "unix")]
-        let mut input_validation = read_password_from_stdin_unix("Password (for validation): ")
-            .context("Unable to read password")?;
-        #[cfg(target_family = "windows")]
-        let mut input_validation = read_password_from_stdin_windows("Password (for validation): ")
-            .context("Unable to read password")?;
+        let mut input_validation =
+            read_password_from_stdin("Confirm password: ").context("Unable to read password")?;
 
         if input == input_validation && !input.is_empty() {
             input_validation.zeroize();
@@ -98,14 +89,20 @@ pub fn get_password(pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
 // this passphrase should provide adequate protection, while not being too hard to remember
 pub fn generate_passphrase() -> Protected<String> {
     let collection = include_str!("wordlist.lst");
-    let words = collection.split('\n').collect::<Vec<&str>>();
+    let words = collection.lines().collect::<Vec<_>>();
 
     let mut passphrase = String::new();
 
     for _ in 0..3 {
         let index = StdRng::from_entropy().gen_range(0..=words.len());
         let word = words[index];
-        let capitalized_word = word[..1].to_uppercase() + &word[1..];
+        let capitalized_word = word
+            .char_indices()
+            .map(|(i, ch)| match i {
+                0 => ch.to_ascii_uppercase(),
+                _ => ch,
+            })
+            .collect::<String>();
         passphrase.push_str(&capitalized_word);
         passphrase.push('-');
     }

@@ -219,7 +219,7 @@ pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {
     }
 }
 
-pub fn key_update_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
+pub fn key_change_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
     let key_old = if sub_matches.is_present("keyfile-old") {
         Key::Keyfile(
             sub_matches

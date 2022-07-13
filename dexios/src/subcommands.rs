@@ -13,6 +13,7 @@ pub mod encrypt;
 pub mod erase;
 pub mod hashing;
 pub mod header;
+pub mod header_key;
 pub mod key;
 pub mod list;
 pub mod pack;

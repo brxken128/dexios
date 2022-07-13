@@ -450,6 +450,18 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(false)
                                 .help("Skip all prompts"),
                         ),
+                )
+                .subcommand(
+                    Command::new("details")
+                        .about("Show details of a header")
+                        .arg_required_else_help(true)
+                        .arg(
+                            Arg::new("input")
+                                .value_name("input")
+                                .takes_value(true)
+                                .required(true)
+                                .help("The encrypted/header file"),
+                        ),
                 ),
         )
         .get_matches()

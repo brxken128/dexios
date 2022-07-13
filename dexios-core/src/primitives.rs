@@ -42,6 +42,15 @@ pub enum Mode {
     StreamMode,
 }
 
+impl std::fmt::Display for Mode {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Mode::MemoryMode => write!(f, "Memory Mode"),
+            Mode::StreamMode => write!(f, "Stream Mode"),
+        }
+    }
+}
+
 /// This can be used to generate a nonce for encryption
 /// It requires both the algorithm and the mode, so it can correctly determine the nonce length
 /// This nonce can be passed directly to `EncryptionStreams::initialize()`

@@ -28,6 +28,7 @@
 use std::fmt::Debug;
 use zeroize::Zeroize;
 
+#[derive(Clone)]
 pub struct Protected<T>
 where
     T: Zeroize,

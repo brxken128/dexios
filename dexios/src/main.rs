@@ -1,6 +1,6 @@
 use anyhow::Result;
 use global::parameters::get_param;
-use global::parameters::key_update_params;
+use global::parameters::key_change_params;
 use global::parameters::skipmode;
 use subcommands::list::show_values;
 
@@ -37,7 +37,6 @@ fn main() -> Result<()> {
             let files: Vec<String> = if sub_matches.is_present("input") {
                 let list: Vec<&str> = sub_matches.values_of("input").unwrap().collect();
                 list.iter().map(std::string::ToString::to_string).collect()
-            // this fixes 'static lifetime issues
             } else {
                 Vec::new()
             };
@@ -48,17 +47,6 @@ fn main() -> Result<()> {
             show_values(&get_param("input", sub_matches)?)?;
         }
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
-            Some("update-key") => {
-                let sub_matches_update_key = sub_matches.subcommand_matches("update-key").unwrap();
-
-                let (keyfile_old, keyfile_new) = key_update_params(sub_matches_update_key)?;
-
-                subcommands::header::update_key(
-                    &get_param("input", sub_matches_update_key)?,
-                    &keyfile_old,
-                    &keyfile_new,
-                )?;
-            }
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
                 let skip = skipmode(sub_matches_dump);
@@ -85,8 +73,27 @@ fn main() -> Result<()> {
 
                 subcommands::header::strip(&get_param("input", sub_matches_strip)?, skip)?;
             }
+            Some("details") => {
+                let sub_matches_details = sub_matches.subcommand_matches("details").unwrap();
+
+                subcommands::header::details(&get_param("input", sub_matches_details)?)?;
+            }
             _ => (),
-        },
+        }
+        Some(("key", sub_matches)) => match sub_matches.subcommand_name() {
+            Some("change") => {
+                let sub_matches_change_key = sub_matches.subcommand_matches("change").unwrap();
+
+                let (keyfile_old, keyfile_new) = key_change_params(sub_matches_change_key)?;
+
+                subcommands::header_key::change_key(
+                    &get_param("input", sub_matches_change_key)?,
+                    &keyfile_old,
+                    &keyfile_new,
+                )?;
+            }
+            _ => (),
+        }
         _ => (),
     }
     Ok(())

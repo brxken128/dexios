@@ -24,12 +24,6 @@ pub enum Compression {
 }
 
 #[derive(PartialEq)]
-pub enum HiddenFilesMode {
-    Include,
-    Exclude,
-}
-
-#[derive(PartialEq)]
 pub enum EraseSourceDir {
     Erase,
     Retain,

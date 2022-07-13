@@ -1,4 +1,5 @@
 pub mod erase;
+pub mod erase_dir;
 pub mod hash;
 pub mod hasher;
 pub mod overwrite;

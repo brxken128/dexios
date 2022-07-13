@@ -9,5 +9,9 @@ COPY ./dexios-core ./dexios-core
 RUN cargo build --bin dexios --release --locked \
   && rm -rf ./dexios* Cargo.*
 
+VOLUME ["/data"]
+
+WORKDIR /data
+
 ENTRYPOINT ["/app/target/release/dexios"]
 

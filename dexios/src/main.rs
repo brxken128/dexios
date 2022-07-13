@@ -81,8 +81,8 @@ fn main() -> Result<()> {
             _ => (),
         }
         Some(("key", sub_matches)) => match sub_matches.subcommand_name() {
-            Some("update-key") => {
-                let sub_matches_update_key = sub_matches.subcommand_matches("update-key").unwrap();
+            Some("change") => {
+                let sub_matches_update_key = sub_matches.subcommand_matches("change").unwrap();
 
                 let (keyfile_old, keyfile_new) = key_update_params(sub_matches_update_key)?;
 

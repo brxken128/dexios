@@ -4,3 +4,8 @@ members = [
     "dexios",
     "dexios-core",
 ]
+
+[patch.crates-io]
+# we should update core version to use features correctly
+dexios-core = { git = "https://github.com/pleshevskiy/dexios", branch = "features" }
+# dexios-core = { git = "https://github.com/brxken128/dexios", branch = "master" }

@@ -300,7 +300,7 @@ dependencies = [
  "anyhow",
  "blake3",
  "clap",
- "dexios-core",
+ "dexios-core 1.1.1 (git+https://github.com/pleshevskiy/dexios?branch=features)",
  "hex",
  "paris",
  "rand",
@@ -312,6 +312,23 @@ dependencies = [
 [[package]]
 name = "dexios-core"
 version = "1.1.1"
+dependencies = [
+ "aead",
+ "aes-gcm",
+ "anyhow",
+ "argon2",
+ "balloon-hash",
+ "blake3",
+ "chacha20poly1305",
+ "deoxys",
+ "rand",
+ "zeroize",
+]
+
+[[package]]
+name = "dexios-core"
+version = "1.1.1"
+source = "git+https://github.com/pleshevskiy/dexios?branch=features#81aaef58fbfa59a2560db0203fe108d15a452a7c"
 dependencies = [
  "aead",
  "aes-gcm",

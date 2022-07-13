@@ -79,7 +79,7 @@ fn main() -> Result<()> {
                 subcommands::header::details(&get_param("input", sub_matches_details)?)?;
             }
             _ => (),
-        }
+        },
         Some(("key", sub_matches)) => match sub_matches.subcommand_name() {
             Some("change") => {
                 let sub_matches_change_key = sub_matches.subcommand_matches("change").unwrap();
@@ -93,7 +93,7 @@ fn main() -> Result<()> {
                 )?;
             }
             _ => (),
-        }
+        },
         _ => (),
     }
     Ok(())

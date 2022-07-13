@@ -35,6 +35,7 @@ use aead::{
 use aes_gcm::Aes256Gcm;
 use anyhow::Context;
 use chacha20poly1305::XChaCha20Poly1305;
+#[cfg(feature = "deoxys_v2_256")]
 use deoxys::DeoxysII256;
 // use rand::{prelude::StdRng, Rng, SeedableRng, RngCore};
 use zeroize::Zeroize;
@@ -48,6 +49,7 @@ use crate::protected::Protected;
 pub enum EncryptionStreams {
     Aes256Gcm(Box<EncryptorLE31<Aes256Gcm>>),
     XChaCha20Poly1305(Box<EncryptorLE31<XChaCha20Poly1305>>),
+    #[cfg(feature = "deoxys_v2_256")]
     DeoxysII256(Box<EncryptorLE31<DeoxysII256>>),
 }
 
@@ -57,6 +59,7 @@ pub enum EncryptionStreams {
 pub enum DecryptionStreams {
     Aes256Gcm(Box<DecryptorLE31<Aes256Gcm>>),
     XChaCha20Poly1305(Box<DecryptorLE31<XChaCha20Poly1305>>),
+    #[cfg(feature = "deoxys_v2_256")]
     DeoxysII256(Box<DecryptorLE31<DeoxysII256>>),
 }
 
@@ -113,6 +116,7 @@ impl EncryptionStreams {
                 let stream = EncryptorLE31::from_aead(cipher, nonce.into());
                 EncryptionStreams::XChaCha20Poly1305(Box::new(stream))
             }
+            #[cfg(feature = "deoxys_v2_256")]
             Algorithm::DeoxysII256 => {
                 if nonce.len() != 11 {
                     return Err(anyhow::anyhow!("Nonce is not the correct length"));
@@ -140,6 +144,7 @@ impl EncryptionStreams {
         match self {
             EncryptionStreams::Aes256Gcm(s) => s.encrypt_next(payload),
             EncryptionStreams::XChaCha20Poly1305(s) => s.encrypt_next(payload),
+            #[cfg(feature = "deoxys_v2_256")]
             EncryptionStreams::DeoxysII256(s) => s.encrypt_next(payload),
         }
     }
@@ -154,6 +159,7 @@ impl EncryptionStreams {
         match self {
             EncryptionStreams::Aes256Gcm(s) => s.encrypt_last(payload),
             EncryptionStreams::XChaCha20Poly1305(s) => s.encrypt_last(payload),
+            #[cfg(feature = "deoxys_v2_256")]
             EncryptionStreams::DeoxysII256(s) => s.encrypt_last(payload),
         }
     }
@@ -277,6 +283,7 @@ impl DecryptionStreams {
                 let stream = DecryptorLE31::from_aead(cipher, nonce.into());
                 DecryptionStreams::XChaCha20Poly1305(Box::new(stream))
             }
+            #[cfg(feature = "deoxys_v2_256")]
             Algorithm::DeoxysII256 => {
                 let cipher = DeoxysII256::new_from_slice(key.expose())
                     .map_err(|_| anyhow::anyhow!("Unable to create cipher with hashed key."))?;
@@ -302,6 +309,7 @@ impl DecryptionStreams {
         match self {
             DecryptionStreams::Aes256Gcm(s) => s.decrypt_next(payload),
             DecryptionStreams::XChaCha20Poly1305(s) => s.decrypt_next(payload),
+            #[cfg(feature = "deoxys_v2_256")]
             DecryptionStreams::DeoxysII256(s) => s.decrypt_next(payload),
         }
     }
@@ -318,6 +326,7 @@ impl DecryptionStreams {
         match self {
             DecryptionStreams::Aes256Gcm(s) => s.decrypt_last(payload),
             DecryptionStreams::XChaCha20Poly1305(s) => s.decrypt_last(payload),
+            #[cfg(feature = "deoxys_v2_256")]
             DecryptionStreams::DeoxysII256(s) => s.decrypt_last(payload),
         }
     }

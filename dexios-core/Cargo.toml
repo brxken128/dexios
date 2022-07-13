@@ -17,6 +17,10 @@ license = "BSD-2-Clause"
 [badges]
 maintenance = { status = "actively-developed" }
 
+[features]
+default = ["deoxys_v2_256"]
+deoxys_v2_256 = ["deoxys"]
+
 [dependencies]
 # for errors, only temporary
 anyhow = "1.0.58"
@@ -24,7 +28,7 @@ anyhow = "1.0.58"
 # AEADS
 aes-gcm = "0.9.4"
 chacha20poly1305 = "0.9.1"
-deoxys = "0.0.2"
+deoxys = { version = "0.0.2", optional = true }
 aead = { version = "0.4.3", features = ["stream"] }
 
 # for wiping sensitive information from memory

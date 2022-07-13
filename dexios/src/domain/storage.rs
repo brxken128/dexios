@@ -177,7 +177,7 @@ impl Storage<fs::File> for FileStorage {
             file.path().to_owned(),
             ReadDirOpts {
                 recursive: true,
-                exclude_hidden: true,
+                exclude_hidden: false,
             },
         )
     }
@@ -253,6 +253,16 @@ impl InMemoryStorage {
         self.save_file("bar/foo/", IMFile::Dir)?;
         self.save_text_file("bar/foo/hello.txt", "hello")?;
         self.save_text_file("bar/foo/world.txt", "world")?;
+        Ok(())
+    }
+
+    pub(crate) fn add_bar_foo_folder_with_hidden(&self) -> Result<(), Error> {
+        self.save_file("bar/", IMFile::Dir)?;
+        self.save_text_file("bar/.hello.txt", "hello")?;
+        self.save_text_file("bar/world.txt", "world")?;
+        self.save_file("bar/foo/", IMFile::Dir)?;
+        self.save_text_file("bar/.foo/hello.txt", "hello")?;
+        self.save_text_file("bar/.foo/world.txt", "world")?;
         Ok(())
     }
 }
@@ -713,6 +723,30 @@ mod tests {
                         "bar/foo/hello.txt",
                         "bar/foo/world.txt",
                         "bar/hello.txt",
+                        "bar/world.txt",
+                    ]
+                )
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_include_hidden_files_names() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+        stor.add_bar_foo_folder_with_hidden().unwrap();
+
+        let file = stor.read_file("bar/").unwrap();
+
+        match stor.read_dir(&file) {
+            Ok(file_names) => {
+                assert_eq!(
+                    sorted_file_names(file_names.iter().collect()),
+                    vec![
+                        "bar/.foo/hello.txt",
+                        "bar/.foo/world.txt",
+                        "bar/.hello.txt",
                         "bar/world.txt",
                     ]
                 )

@@ -21,7 +21,7 @@
 //!
 //! If you like my work, and want to help support Dexios, or Dexios-Core, feel free to donate! This is not necessary by any means, so please don't feel obliged to do so.
 //!
-//! ```
+//! ```text
 //! XMR: 84zSGS18aHtT3CZjZUnnWpCsz1wmA5f65G6BXisbrvAiH7PxZpP8GorbdjAQYRtfeiANZywwUPjZcHu8eXJeWdafJQFK46G
 //! BTC: bc1q8x0r7khrfj40qd0zr5xv3t9nl92rz2387pu48u
 //! ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD

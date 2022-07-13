@@ -57,7 +57,7 @@ impl std::fmt::Display for Mode {
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust,ignore
 /// let nonce = gen_nonce(&Algorithm::XChaCha20Poly1305, &Mode::StreamMode);
 /// ```
 ///

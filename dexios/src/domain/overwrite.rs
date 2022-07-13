@@ -27,18 +27,16 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-pub struct Request<W: Write + Seek> {
-    pub writer: RefCell<W>,
+pub struct Request<'a, W: Write + Seek> {
+    pub writer: &'a RefCell<W>,
     pub buf_capacity: usize,
     pub passes: i32,
 }
 
 pub fn execute<W: Write + Seek>(req: Request<W>) -> Result<(), Error> {
+    let mut writer = req.writer.borrow_mut();
     for _ in 0..req.passes {
-        req.writer
-            .borrow_mut()
-            .rewind()
-            .map_err(|_| Error::ResetCursorPosition)?;
+        writer.rewind().map_err(|_| Error::ResetCursorPosition)?;
 
         let mut blocks = vec![BLOCK_SIZE].repeat(req.buf_capacity / BLOCK_SIZE);
         blocks.push(req.buf_capacity % BLOCK_SIZE);
@@ -46,30 +44,19 @@ pub fn execute<W: Write + Seek>(req: Request<W>) -> Result<(), Error> {
         for block_size in blocks.into_iter().take_while(|bs| *bs > 0) {
             let mut block_buf = Vec::with_capacity(block_size);
             rand::thread_rng().fill_bytes(&mut block_buf);
-            req.writer
-                .borrow_mut()
+            writer
                 .write_all(&block_buf)
                 .map_err(|_| Error::OverwriteWithRandomBytes)?
         }
 
-        req.writer
-            .borrow_mut()
-            .flush()
-            .map_err(|_| Error::FlushFile)?
+        writer.flush().map_err(|_| Error::FlushFile)?
     }
 
-    req.writer
-        .borrow_mut()
-        .rewind()
-        .map_err(|_| Error::ResetCursorPosition)?;
-    req.writer
-        .borrow_mut()
+    writer.rewind().map_err(|_| Error::ResetCursorPosition)?;
+    writer
         .write_all(&[0].repeat(req.buf_capacity))
         .map_err(|_| Error::OverwriteWithZeros)?;
-    req.writer
-        .borrow_mut()
-        .flush()
-        .map_err(|_| Error::FlushFile)
+    writer.flush().map_err(|_| Error::FlushFile)
 }
 
 #[cfg(test)]
@@ -84,7 +71,7 @@ mod tests {
         let writer = Cursor::new(&mut buf);
 
         let req = Request {
-            writer: RefCell::new(writer),
+            writer: &RefCell::new(writer),
             buf_capacity: capacity,
             passes,
         };

@@ -3,7 +3,7 @@
 //! The data is fully loaded into memory before encryption/decryption, and it is processed within the same "block"
 //!
 //! # Examples
-//! ```
+//! ```rust,ignore
 //! // obviously the key should contain data, not be an empty vec
 //! let raw_key = Protected::new(vec![0u8; 128]);
 //! let salt = gen_salt();
@@ -43,7 +43,7 @@ impl Ciphers {
     /// You just need to provide the `argon2id`/`balloon` hashed key, and the algorithm to use
     ///
     /// # Examples
-    /// ```
+    /// ```rust,ignore
     /// // obviously the key should contain data, not be an empty vec
     /// let raw_key = Protected::new(vec![0u8; 128]);
     /// let salt = gen_salt();

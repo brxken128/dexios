@@ -4,7 +4,7 @@
 //!
 //! # Examples
 //!
-//! ```
+//! ```rust,ignore
 //! let salt = gen_salt();
 //! let secret_data = "secure key".as_bytes().to_vec();
 //! let raw_key = Protected::new(secret_data);
@@ -26,7 +26,7 @@ use rand::SeedableRng;
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust,ignore
 /// let salt = gen_salt();
 /// ```
 ///
@@ -49,7 +49,7 @@ pub fn gen_salt() -> [u8; SALT_LEN] {
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust,ignore
 /// let salt = gen_salt();
 /// let secret_data = "secure key".as_bytes().to_vec();
 /// let raw_key = Protected::new(secret_data);
@@ -113,7 +113,7 @@ pub fn argon2id_hash(
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust,ignore
 /// let salt = gen_salt();
 /// let secret_data = "secure key".as_bytes().to_vec();
 /// let raw_key = Protected::new(secret_data);

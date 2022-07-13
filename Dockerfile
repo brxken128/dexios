@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY Cargo.* ./
 COPY ./dexios ./dexios
-COPY ./dexios-core ./dexios-core
+# COPY ./dexios-core ./dexios-core
 
 RUN cargo build --bin dexios --release --locked ${features:+--features=${features}} \
   && rm -rf ./dexios* Cargo.*

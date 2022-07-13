@@ -100,18 +100,12 @@ pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Result<Algorithm> 
     let algorithm = if provided_aead < 1 || provided_aead > ALGORITHMS.len() {
         return Err(anyhow::anyhow!(
             "Invalid AEAD selected! Use \"dexios list aead\" to see all possible values."
-        ))
+        ));
     } else {
         ALGORITHMS[provided_aead - 1] // -1 to account for indexing starting at 0
     };
 
-    if algorithm == Algorithm::DeoxysII256 { // explicitly disallow deoxys
-        return Err(anyhow::anyhow!(
-            "Invalid AEAD selected! Use \"dexios list aead\" to see all possible values."
-        ))
-    } else {
-        Ok(algorithm)
-    }
+    Ok(algorithm)
 }
 
 pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {

@@ -24,7 +24,7 @@ dexios-core = { path = "../dexios-core", version = "1.1.1" }
 
 walkdir = "2.3.2"
 
-clap = { version = "3.2.8", features = ["cargo"] }
+clap = { version = "3.2.10", features = ["cargo"] }
 anyhow = "1.0.57"
 paris = { version = "1.5.13", features = ["macros"] }
 

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use global::parameters::get_param;
-use global::parameters::key_update_params;
+use global::parameters::key_change_params;
 use global::parameters::skipmode;
 use subcommands::list::show_values;
 
@@ -84,7 +84,7 @@ fn main() -> Result<()> {
             Some("change") => {
                 let sub_matches_update_key = sub_matches.subcommand_matches("change").unwrap();
 
-                let (keyfile_old, keyfile_new) = key_update_params(sub_matches_update_key)?;
+                let (keyfile_old, keyfile_new) = key_change_params(sub_matches_update_key)?;
 
                 subcommands::header_key::change_key(
                     &get_param("input", sub_matches_update_key)?,

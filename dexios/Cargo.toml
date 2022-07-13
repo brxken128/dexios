@@ -40,3 +40,8 @@ zip = { version = "0.6.2", default-features = false, features = ["zstd"] }
 
 [target.'cfg(unix)'.dependencies]
 termion = "1.5.6"
+
+# Note: this section uses to build docker
+[patch.crates-io]
+dexios-core = { git = "https://github.com/pleshevskiy/dexios", branch = "features" }
+# dexios-core = { git = "https://github.com/brxken128/dexios", branch = "master" }

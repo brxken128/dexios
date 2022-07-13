@@ -4,9 +4,8 @@ ARG features=""
 
 WORKDIR /app
 
-COPY Cargo.* ./
-COPY ./dexios ./dexios
-# COPY ./dexios-core ./dexios-core
+COPY Cargo.lock ./
+COPY ./dexios ./
 
 RUN cargo build --bin dexios --release --locked ${features:+--features=${features}} \
   && rm -rf ./dexios* Cargo.*

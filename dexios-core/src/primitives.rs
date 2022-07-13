@@ -9,7 +9,7 @@ pub const BLOCK_SIZE: usize = 1_048_576; // 1024*1024 bytes
 pub const SALT_LEN: usize = 16; // bytes
 
 /// This is an `enum` containing all AEADs supported by `dexios-core`
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum Algorithm {
     Aes256Gcm,
     XChaCha20Poly1305,

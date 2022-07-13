@@ -24,6 +24,7 @@ pub enum Error {
     OpenFile(FileMode),
     RemoveFile,
     RemoveDir,
+    DirEntries,
     FlushFile,
     FileAccess,
     FileLen,
@@ -38,6 +39,7 @@ impl std::fmt::Display for Error {
             FlushFile => f.write_str("Unable to flush the file"),
             RemoveFile => f.write_str("Unable to remove the file"),
             RemoveDir => f.write_str("Unable to remove dir"),
+            DirEntries => f.write_str("Unable to read directory"),
             FileAccess => f.write_str("Permission denied"),
             FileLen => f.write_str("Unable to get file length"),
         }
@@ -55,8 +57,9 @@ where
     fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
     fn flush_file(&self, file: &File<RW>) -> Result<(), Error>;
     fn file_len(&self, file: &File<RW>) -> Result<usize, Error>;
-    fn remove_file(&self, file: &File<RW>) -> Result<(), Error>;
+    fn remove_file(&self, file: File<RW>) -> Result<(), Error>;
     fn remove_dir_all(&self, file: File<RW>) -> Result<(), Error>;
+    fn read_dir(&self, file: &File<RW>) -> Result<Vec<PathBuf>, Error>;
 }
 
 pub struct FileStorage;
@@ -124,7 +127,7 @@ impl Storage<fs::File> for FileStorage {
         file_meta.len().try_into().map_err(|_| Error::FileLen)
     }
 
-    fn remove_file(&self, file: &File<fs::File>) -> Result<(), Error> {
+    fn remove_file(&self, file: File<fs::File>) -> Result<(), Error> {
         if let File::Write(WriteFile { writer, .. }) = &file {
             let mut writer = writer.borrow_mut();
             writer.set_len(0).map_err(|_| Error::RemoveFile)?;
@@ -141,6 +144,56 @@ impl Storage<fs::File> for FileStorage {
 
         fs::remove_dir_all(file.path()).map_err(|_| Error::RemoveDir)
     }
+
+    fn read_dir(&self, file: &File<fs::File>) -> Result<Vec<PathBuf>, Error> {
+        if !file.is_dir() {
+            return Err(Error::RemoveDir);
+        }
+
+        // TODO: move to a separate method
+        fn read_dir_opt(dir_path: PathBuf, opts: ReadDirOpts) -> Result<Vec<PathBuf>, Error> {
+            let paths = fs::read_dir(dir_path)
+                .map_err(|_| Error::DirEntries)?
+                .map(|entry| entry.map(|e| e.path()).map_err(|_| Error::DirEntries))
+                .collect::<Result<Vec<_>, _>>()?;
+
+            let mut file_paths = Vec::new();
+            for path in paths {
+                if opts.exclude_hidden && is_hidden_path(&path) {
+                    continue;
+                }
+
+                if path.is_file() {
+                    file_paths.push(path);
+                } else if path.is_dir() && opts.recursive {
+                    file_paths.extend(read_dir_opt(path, opts)?);
+                }
+            }
+
+            Ok(file_paths)
+        }
+
+        read_dir_opt(
+            file.path().to_owned(),
+            ReadDirOpts {
+                recursive: true,
+                exclude_hidden: true,
+            },
+        )
+    }
+}
+
+#[derive(Default, Clone, Copy)]
+struct ReadDirOpts {
+    recursive: bool,
+    exclude_hidden: bool,
+}
+
+fn is_hidden_path<P: AsRef<Path>>(path: P) -> bool {
+    match path.as_ref().file_name().and_then(|f| f.to_str()) {
+        Some(s) => s.starts_with('.'),
+        None => false,
+    }
 }
 
 #[cfg(test)]
@@ -151,11 +204,27 @@ pub struct InMemoryStorage {
 
 #[cfg(test)]
 impl InMemoryStorage {
+    fn save_text_file<P: AsRef<Path>>(&self, path: P, content: &str) -> Result<(), Error> {
+        let buf = content.bytes().collect::<Vec<_>>();
+        self.save_file(
+            path,
+            IMFile::File(InMemoryFile {
+                len: buf.len(),
+                buf,
+            }),
+        )
+    }
+
+    fn save_file<P: AsRef<Path>>(&self, path: P, im_file: IMFile) -> Result<(), Error> {
+        self.mut_files().insert(path.as_ref().to_owned(), im_file);
+        Ok(())
+    }
+
     pub(crate) fn files(&self) -> RwLockReadGuard<HashMap<PathBuf, IMFile>> {
         loop {
             match self.files.try_read() {
                 Ok(files) => break files,
-                _ => thread::sleep(std::time::Duration::from_millis(50)),
+                _ => thread::sleep(std::time::Duration::from_micros(100)),
             }
         }
     }
@@ -164,14 +233,9 @@ impl InMemoryStorage {
         loop {
             match self.files.try_write() {
                 Ok(files) => break files,
-                _ => thread::sleep(std::time::Duration::from_millis(50)),
+                _ => thread::sleep(std::time::Duration::from_micros(100)),
             }
         }
-    }
-
-    fn save_file(&self, path: PathBuf, im_file: IMFile) -> Result<(), Error> {
-        self.mut_files().insert(path, im_file);
-        Ok(())
     }
 
     // --------------------------------
@@ -179,14 +243,17 @@ impl InMemoryStorage {
     // -------------------------------
 
     pub(crate) fn add_hello_txt(&self) -> Result<(), Error> {
-        let buf = b"hello world".to_vec();
-        self.save_file(
-            PathBuf::from("hello.txt"),
-            IMFile::File(InMemoryFile {
-                len: buf.len(),
-                buf,
-            }),
-        )
+        self.save_text_file("hello.txt", "hello world")
+    }
+
+    pub(crate) fn add_bar_foo_folder(&self) -> Result<(), Error> {
+        self.save_file("bar/", IMFile::Dir)?;
+        self.save_text_file("bar/hello.txt", "hello")?;
+        self.save_text_file("bar/world.txt", "world")?;
+        self.save_file("bar/foo/", IMFile::Dir)?;
+        self.save_text_file("bar/foo/hello.txt", "hello")?;
+        self.save_text_file("bar/foo/world.txt", "world")?;
+        Ok(())
     }
 }
 
@@ -279,7 +346,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         Ok(cur.get_ref().len())
     }
 
-    fn remove_file(&self, file: &File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
+    fn remove_file(&self, file: File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
         self.mut_files()
             .remove(file.path())
             .ok_or(Error::RemoveFile)?;
@@ -291,19 +358,40 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
             return Err(Error::FileAccess);
         }
 
-        let files = self.files();
-
         let file_path = file.path();
-        files
+
+        #[allow(clippy::needless_collect)] // 🚫 we have to collect to close read lock guard!
+        let file_paths = self
+            .files()
             .keys()
             .filter(|k| k.starts_with(file_path))
-            .try_for_each(|k| {
-                self.mut_files()
-                    .remove(k)
-                    .map(|_| ())
-                    .ok_or(Error::RemoveDir)?;
-                Ok(())
-            })
+            .cloned()
+            .collect::<Vec<_>>();
+
+        file_paths.into_iter().try_for_each(|k| {
+            self.mut_files()
+                .remove(&k)
+                .map(|_| ())
+                .ok_or(Error::RemoveDir)?;
+            Ok(())
+        })
+    }
+
+    fn read_dir(&self, file: &File<io::Cursor<Vec<u8>>>) -> Result<Vec<PathBuf>, Error> {
+        if !file.is_dir() {
+            return Err(Error::FileAccess);
+        }
+
+        let file_path = file.path();
+
+        let file_paths = self
+            .files()
+            .iter()
+            .filter(|(k, v)| k.starts_with(file_path) && matches!(v, IMFile::File(_)))
+            .map(|(k, _)| k)
+            .cloned()
+            .collect();
+        Ok(file_paths)
     }
 }
 
@@ -373,13 +461,6 @@ where
         matches!(self, File::Dir(_))
     }
 
-    pub fn try_reader(&self) -> Result<&RefCell<RW>, Error> {
-        match self {
-            File::Read(file) => Ok(&file.reader),
-            _ => Err(Error::FileAccess),
-        }
-    }
-
     pub fn try_writer(&self) -> Result<&RefCell<RW>, Error> {
         match self {
             File::Write(file) => Ok(&file.writer),
@@ -391,6 +472,15 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn sorted_file_names(file_names: Vec<&PathBuf>) -> Vec<&str> {
+        let mut keys = file_names
+            .iter()
+            .map(|k| k.to_str().unwrap())
+            .collect::<Vec<_>>();
+        keys.sort_unstable();
+        keys
+    }
 
     #[test]
     fn should_create_a_new_file() {
@@ -509,10 +599,11 @@ mod tests {
         stor.add_hello_txt().unwrap();
 
         let file = stor.write_file("hello.txt").unwrap();
+        let file_path = file.path().to_path_buf();
 
-        match stor.remove_file(&file) {
+        match stor.remove_file(file) {
             Ok(_) => {
-                let im_file = stor.files().get(file.path()).cloned();
+                let im_file = stor.files().get(&file_path).cloned();
                 assert_eq!(im_file, None);
             }
             _ => unreachable!(),
@@ -525,10 +616,11 @@ mod tests {
         stor.add_hello_txt().unwrap();
 
         let file = stor.write_file("hello.txt").unwrap();
+        let file_path = file.path().to_path_buf();
 
-        match stor.remove_file(&file) {
+        match stor.remove_file(file) {
             Ok(_) => {
-                let im_file = stor.files().get(file.path()).cloned();
+                let im_file = stor.files().get(&file_path).cloned();
                 assert_eq!(im_file, None);
             }
             _ => unreachable!(),
@@ -548,6 +640,100 @@ mod tests {
                 assert_eq!(len, content.len());
             }
             _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_open_dir() {
+        let stor = InMemoryStorage::default();
+        stor.add_bar_foo_folder().unwrap();
+
+        match stor.read_file("bar/foo/") {
+            Ok(File::Dir(path)) => assert_eq!(path, PathBuf::from("bar/foo/")),
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_remove_dir_with_subfiles() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+        stor.add_bar_foo_folder().unwrap();
+
+        let file = stor.read_file("bar/foo/").unwrap();
+        let file_path = file.path().to_path_buf();
+
+        match stor.remove_dir_all(file) {
+            Ok(()) => {
+                assert_eq!(stor.files().get(&file_path).cloned(), None);
+                let files = stor.files();
+                let keys = files.keys().collect::<Vec<_>>();
+                assert_eq!(
+                    sorted_file_names(keys),
+                    vec!["bar/", "bar/hello.txt", "bar/world.txt", "hello.txt"]
+                )
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_remove_dir_recursively_with_subfiles() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+        stor.add_bar_foo_folder().unwrap();
+
+        let file = stor.read_file("bar/").unwrap();
+        let file_path = file.path().to_path_buf();
+
+        match stor.remove_dir_all(file) {
+            Ok(()) => {
+                assert_eq!(stor.files().get(&file_path).cloned(), None);
+                let files = stor.files();
+                let keys = files.keys().collect();
+                assert_eq!(sorted_file_names(keys), vec!["hello.txt"])
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_return_file_names_of_dir_subfiles() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+        stor.add_bar_foo_folder().unwrap();
+
+        let file = stor.read_file("bar/").unwrap();
+
+        match stor.read_dir(&file) {
+            Ok(file_names) => {
+                assert_eq!(
+                    sorted_file_names(file_names.iter().collect()),
+                    vec![
+                        "bar/foo/hello.txt",
+                        "bar/foo/world.txt",
+                        "bar/hello.txt",
+                        "bar/world.txt",
+                    ]
+                )
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_true_if_file_name_starts_with_dot() {
+        let cases = vec![
+            ("bar/foo/", false),
+            ("bar/.foo/", true),
+            (".bar/foo/", false),
+            (".bar/foo/hello.txt", false),
+            ("bar/.foo/hello.txt", false),
+            ("bar/foo/.hello.txt", true),
+        ];
+
+        for (path, expected) in cases {
+            assert_eq!(is_hidden_path(path), expected);
         }
     }
 }

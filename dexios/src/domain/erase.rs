@@ -47,7 +47,7 @@ where
     })
     .map_err(Error::Overwrite)?;
 
-    stor.remove_file(&file).map_err(|_| Error::RemoveFile)?;
+    stor.remove_file(file).map_err(|_| Error::RemoveFile)?;
 
     Ok(())
 }

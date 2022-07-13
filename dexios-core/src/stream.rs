@@ -6,7 +6,7 @@
 //!
 //! # Examples
 //!
-//! ```
+//! ```rust,ignore
 //! // obviously the key should contain data, not be an empty vec
 //! let raw_key = Protected::new(vec![0u8; 128]);
 //! let salt = gen_salt();
@@ -75,7 +75,7 @@ impl EncryptionStreams {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// // obviously the key should contain data, not be an empty vec
     /// let raw_key = Protected::new(vec![0u8; 128]);
     /// let salt = gen_salt();
@@ -170,7 +170,7 @@ impl EncryptionStreams {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// let mut input_file = File::open("input").unwrap();
     /// let mut output_file = File::create("output.encrypted").unwrap();
     ///
@@ -245,7 +245,7 @@ impl DecryptionStreams {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// // obviously the key should contain data, not be an empty vec
     /// let raw_key = Protected::new(vec![0u8; 128]);
     /// let salt = gen_salt();
@@ -332,7 +332,7 @@ impl DecryptionStreams {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust,ignore
     /// let mut input_file = File::open("input.encrypted").unwrap();
     /// let mut output_file = File::create("output").unwrap();
     ///

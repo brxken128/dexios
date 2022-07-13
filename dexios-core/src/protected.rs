@@ -15,7 +15,7 @@
 //!
 //! # Examples
 //!
-//! ```
+//! ```rust,ignore
 //! let secret_data = "this is classified information".to_string();
 //! let protected_data = Protected::new(secret_data);
 //!

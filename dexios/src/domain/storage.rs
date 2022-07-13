@@ -100,6 +100,7 @@ impl Storage<fs::File> for FileStorage {
         let path = path.as_ref().to_path_buf();
         let file = fs::File::options()
             .write(true)
+            .truncate(true)
             .open(&path)
             .map_err(|_| Error::OpenFile(FileMode::Write))?;
 
@@ -469,6 +470,13 @@ where
 
     pub fn is_dir(&self) -> bool {
         matches!(self, File::Dir(_))
+    }
+
+    pub fn try_reader(&self) -> Result<&RefCell<RW>, Error> {
+        match self {
+            File::Read(file) => Ok(&file.reader),
+            _ => Err(Error::FileAccess),
+        }
     }
 
     pub fn try_writer(&self) -> Result<&RefCell<RW>, Error> {

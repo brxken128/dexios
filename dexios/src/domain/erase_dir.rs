@@ -42,20 +42,11 @@ where
         return Err(Error::InvalidFileType);
     }
 
-    // TODO: move the directory reading to the domain because we cannot test it :(
-    let (file_paths, _) = crate::file::get_paths_in_dir(
-        req.file
-            .path()
-            .to_str()
-            .expect("We sure that it's valid unicode"),
-        crate::global::states::DirectoryMode::Recursive,
-        &Vec::<String>::new(),
-        &crate::global::states::HiddenFilesMode::Include,
-        &crate::global::states::PrintMode::Quiet,
-    )
-    .map_err(|_| Error::ReadDirEntries)?;
+    let file_paths = stor
+        .read_dir(&req.file)
+        .map_err(|_| Error::ReadDirEntries)?;
 
-    #[allow(clippy::needless_collect)] // because we have to join threads after iterator!
+    #[allow(clippy::needless_collect)] // 🚫 we have to collect in order to propertly join threads!
     let handlers = file_paths
         .into_iter()
         .map(|file_path| {
@@ -77,4 +68,32 @@ where
     handlers.into_iter().try_for_each(|h| h.join().unwrap())?;
 
     stor.remove_dir_all(req.file).map_err(|_| Error::RemoveDir)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain::storage::InMemoryStorage;
+
+    use std::path::PathBuf;
+
+    #[test]
+    fn should_erase_dir_recursively_with_subfiles() {
+        let stor = InMemoryStorage::default();
+        stor.add_hello_txt().unwrap();
+        stor.add_bar_foo_folder().unwrap();
+
+        let file = stor.read_file("bar/").unwrap();
+        let file_path = file.path().to_path_buf();
+
+        match stor.remove_dir_all(file) {
+            Ok(()) => {
+                assert_eq!(stor.files().get(&file_path).cloned(), None);
+                let files = stor.files();
+                let keys = files.keys().next();
+                assert_eq!(keys, Some(&PathBuf::from("hello.txt")))
+            }
+            _ => unreachable!(),
+        }
+    }
 }

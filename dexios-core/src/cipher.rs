@@ -23,7 +23,7 @@
 use aead::{Aead, AeadInPlace, NewAead, Payload};
 use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
-#[cfg(feature = "deoxys_v2_256")]
+#[cfg(feature = "deoxys-ii-256")]
 use deoxys::DeoxysII256;
 
 use crate::primitives::Algorithm;
@@ -33,7 +33,7 @@ use crate::protected::Protected;
 pub enum Ciphers {
     Aes256Gcm(Box<Aes256Gcm>),
     XChaCha(Box<XChaCha20Poly1305>),
-    #[cfg(feature = "deoxys_v2_256")]
+    #[cfg(feature = "deoxys-ii-256")]
     DeoxysII(Box<DeoxysII256>),
 }
 
@@ -67,7 +67,7 @@ impl Ciphers {
 
                 Ciphers::XChaCha(Box::new(cipher))
             }
-            #[cfg(feature = "deoxys_v2_256")]
+            #[cfg(feature = "deoxys-ii-256")]
             Algorithm::DeoxysII256 => {
                 let cipher = DeoxysII256::new_from_slice(key.expose())
                     .map_err(|_| anyhow::anyhow!("Unable to create cipher with hashed key."))?;
@@ -91,7 +91,7 @@ impl Ciphers {
         match self {
             Ciphers::Aes256Gcm(c) => c.encrypt(nonce.as_ref().into(), plaintext),
             Ciphers::XChaCha(c) => c.encrypt(nonce.as_ref().into(), plaintext),
-            #[cfg(feature = "deoxys_v2_256")]
+            #[cfg(feature = "deoxys-ii-256")]
             Ciphers::DeoxysII(c) => c.encrypt(nonce.as_ref().into(), plaintext),
         }
     }
@@ -105,7 +105,7 @@ impl Ciphers {
         match self {
             Ciphers::Aes256Gcm(c) => c.encrypt_in_place(nonce.as_ref().into(), aad, buffer),
             Ciphers::XChaCha(c) => c.encrypt_in_place(nonce.as_ref().into(), aad, buffer),
-            #[cfg(feature = "deoxys_v2_256")]
+            #[cfg(feature = "deoxys-ii-256")]
             Ciphers::DeoxysII(c) => c.encrypt_in_place(nonce.as_ref().into(), aad, buffer),
         }
     }
@@ -123,7 +123,7 @@ impl Ciphers {
         match self {
             Ciphers::Aes256Gcm(c) => c.decrypt(nonce.as_ref().into(), ciphertext),
             Ciphers::XChaCha(c) => c.decrypt(nonce.as_ref().into(), ciphertext),
-            #[cfg(feature = "deoxys_v2_256")]
+            #[cfg(feature = "deoxys-ii-256")]
             Ciphers::DeoxysII(c) => c.decrypt(nonce.as_ref().into(), ciphertext),
         }
     }

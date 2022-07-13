@@ -101,7 +101,7 @@ fn calc_nonce_len(header_info: &HeaderType) -> usize {
     let mut nonce_len = match header_info.algorithm {
         Algorithm::XChaCha20Poly1305 => 24,
         Algorithm::Aes256Gcm => 12,
-        #[cfg(feature = "deoxys_v2_256")]
+        #[cfg(feature = "deoxys-ii-256")]
         Algorithm::DeoxysII256 => 15,
     };
 
@@ -308,7 +308,7 @@ impl Header {
         let algorithm = match algorithm_bytes {
             [0x0E, 0x01] => Algorithm::XChaCha20Poly1305,
             [0x0E, 0x02] => Algorithm::Aes256Gcm,
-            #[cfg(feature = "deoxys_v2_256")]
+            #[cfg(feature = "deoxys-ii-256")]
             [0x0E, 0x03] => Algorithm::DeoxysII256,
             _ => return Err(anyhow::anyhow!("Error getting encryption mode from header")),
         };
@@ -528,7 +528,7 @@ impl Header {
                 let info: [u8; 2] = [0x0E, 0x02];
                 info
             }
-            #[cfg(feature = "deoxys_v2_256")]
+            #[cfg(feature = "deoxys-ii-256")]
             Algorithm::DeoxysII256 => {
                 let info: [u8; 2] = [0x0E, 0x03];
                 info

@@ -18,8 +18,8 @@ license = "BSD-2-Clause"
 maintenance = { status = "actively-developed" }
 
 [features]
-default = ["deoxys_v2_256"]
-deoxys_v2_256 = ["deoxys"]
+default = ["deoxys-ii-256"]
+deoxys-ii-256 = ["deoxys"]
 
 [dependencies]
 # for errors, only temporary

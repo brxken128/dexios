@@ -13,13 +13,13 @@ pub const SALT_LEN: usize = 16; // bytes
 pub enum Algorithm {
     Aes256Gcm,
     XChaCha20Poly1305,
-    #[cfg(feature = "deoxys_v2_256")]
+    #[cfg(feature = "deoxys-ii-256")]
     DeoxysII256,
 }
 
-#[cfg(feature = "deoxys_v2_256")]
+#[cfg(feature = "deoxys-ii-256")]
 const ALGORITHMS_LEN: usize = 3;
-#[cfg(not(feature = "deoxys_v2_256"))]
+#[cfg(not(feature = "deoxys-ii-256"))]
 const ALGORITHMS_LEN: usize = 2;
 
 /// This is an array containing all AEADs supported by `dexios-core`.
@@ -28,7 +28,7 @@ const ALGORITHMS_LEN: usize = 2;
 pub static ALGORITHMS: [Algorithm; ALGORITHMS_LEN] = [
     Algorithm::XChaCha20Poly1305,
     Algorithm::Aes256Gcm,
-    #[cfg(feature = "deoxys_v2_256")]
+    #[cfg(feature = "deoxys-ii-256")]
     Algorithm::DeoxysII256,
 ];
 
@@ -37,7 +37,7 @@ impl std::fmt::Display for Algorithm {
         match self {
             Algorithm::Aes256Gcm => write!(f, "AES-256-GCM"),
             Algorithm::XChaCha20Poly1305 => write!(f, "XChaCha20-Poly1305"),
-            #[cfg(feature = "deoxys_v2_256")]
+            #[cfg(feature = "deoxys-ii-256")]
             Algorithm::DeoxysII256 => write!(f, "Deoxys-II-256"),
         }
     }
@@ -76,7 +76,7 @@ pub fn gen_nonce(algorithm: &Algorithm, mode: &Mode) -> Vec<u8> {
     let mut nonce_len = match algorithm {
         Algorithm::Aes256Gcm => 12,
         Algorithm::XChaCha20Poly1305 => 24,
-        #[cfg(feature = "deoxys_v2_256")]
+        #[cfg(feature = "deoxys-ii-256")]
         Algorithm::DeoxysII256 => 15,
     };
 

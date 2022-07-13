@@ -13,32 +13,29 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
     let stor = Arc::new(domain::storage::FileStorage);
 
-    let mut logger = Logger::new();
-    let start_time = Instant::now();
-
     let file = stor.read_file(input)?;
-    if file.is_dir() {
-        if !get_answer(
+    if file.is_dir()
+        && !get_answer(
             "This is a directory, would you like to erase all files within it?",
             false,
             false,
-        )? {
-            std::process::exit(0);
-        }
+        )?
+    {
+        std::process::exit(0);
+    }
 
-        logger.loading(format!(
-            "Erasing {} with {} passes (this may take a while)",
-            input, passes
-        ));
+    let mut logger = Logger::new();
+    let start_time = Instant::now();
+    logger.loading(format!(
+        "Erasing {} with {} passes (this may take a while)",
+        input, passes
+    ));
 
+    if file.is_dir() {
         domain::erase_dir::execute(stor, domain::erase_dir::Request { file, passes })?;
 
         logger.success(format!("Deleted directory: {}", input));
     } else {
-        logger.loading(format!(
-            "Erasing {} with {} passes (this may take a while)",
-            input, passes
-        ));
         domain::erase::execute(
             stor,
             domain::erase::Request {

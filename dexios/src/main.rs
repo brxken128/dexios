@@ -47,17 +47,6 @@ fn main() -> Result<()> {
             show_values(&get_param("input", sub_matches)?)?;
         }
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
-            Some("update-key") => {
-                let sub_matches_update_key = sub_matches.subcommand_matches("update-key").unwrap();
-
-                let (keyfile_old, keyfile_new) = key_update_params(sub_matches_update_key)?;
-
-                subcommands::header_key::update_key(
-                    &get_param("input", sub_matches_update_key)?,
-                    &keyfile_old,
-                    &keyfile_new,
-                )?;
-            }
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
                 let skip = skipmode(sub_matches_dump);
@@ -90,7 +79,21 @@ fn main() -> Result<()> {
                 subcommands::header::details(&get_param("input", sub_matches_details)?)?;
             }
             _ => (),
-        },
+        }
+        Some(("key", sub_matches)) => match sub_matches.subcommand_name() {
+            Some("update-key") => {
+                let sub_matches_update_key = sub_matches.subcommand_matches("update-key").unwrap();
+
+                let (keyfile_old, keyfile_new) = key_update_params(sub_matches_update_key)?;
+
+                subcommands::header_key::change_key(
+                    &get_param("input", sub_matches_update_key)?,
+                    &keyfile_old,
+                    &keyfile_new,
+                )?;
+            }
+            _ => (),
+        }
         _ => (),
     }
     Ok(())

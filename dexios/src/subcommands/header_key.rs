@@ -21,7 +21,7 @@ use std::time::Instant;
 // it hashes both of them, decrypts the master key with the old key, and re-encrypts it with the new key
 // it then writes the updated header to the file
 // the AAD remains the same as V4+ AAD does not contain the master key or the nonce
-pub fn update_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
+pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
     let mut input_file = OpenOptions::new()
         .read(true)
         .write(true)

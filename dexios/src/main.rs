@@ -82,12 +82,12 @@ fn main() -> Result<()> {
         }
         Some(("key", sub_matches)) => match sub_matches.subcommand_name() {
             Some("change") => {
-                let sub_matches_update_key = sub_matches.subcommand_matches("change").unwrap();
+                let sub_matches_change_key = sub_matches.subcommand_matches("change").unwrap();
 
-                let (keyfile_old, keyfile_new) = key_change_params(sub_matches_update_key)?;
+                let (keyfile_old, keyfile_new) = key_change_params(sub_matches_change_key)?;
 
                 subcommands::header_key::change_key(
-                    &get_param("input", sub_matches_update_key)?,
+                    &get_param("input", sub_matches_change_key)?,
                     &keyfile_old,
                     &keyfile_new,
                 )?;

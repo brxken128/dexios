@@ -61,7 +61,7 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         };
         EraseMode::EraseFile(passes)
     } else {
-        EraseMode::IgnoreFile(0)
+        EraseMode::IgnoreFile
     };
 
     let header_location = if sub_matches.is_present("header") {
@@ -154,7 +154,7 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
 
     let skip = skipmode(sub_matches);
 
-    let erase = EraseMode::IgnoreFile(0);
+    let erase = EraseMode::IgnoreFile;
 
     let header_location = if sub_matches.is_present("header") {
         HeaderLocation::Detached(

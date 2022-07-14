@@ -43,7 +43,7 @@ pub enum HeaderLocation {
 #[derive(PartialEq, Clone, Copy)]
 pub enum EraseMode {
     EraseFile(i32),
-    IgnoreFile(i32),
+    IgnoreFile,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -98,15 +98,6 @@ impl Key {
             Err(anyhow::anyhow!("The specified key is empty!"))
         } else {
             Ok(secret)
-        }
-    }
-}
-
-impl EraseMode {
-    pub fn get_passes(self) -> i32 {
-        match self {
-            EraseMode::EraseFile(passes) => passes,
-            EraseMode::IgnoreFile(_) => 0,
         }
     }
 }

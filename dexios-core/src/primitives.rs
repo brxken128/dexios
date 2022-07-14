@@ -17,15 +17,19 @@ pub enum Algorithm {
     DeoxysII256,
 }
 
-#[cfg(feature = "deoxys-ii-256")]
-const ALGORITHMS_LEN: usize = 3;
-#[cfg(not(feature = "deoxys-ii-256"))]
-const ALGORITHMS_LEN: usize = 2;
+const fn algorithm_len() -> usize {
+    #[allow(unused_mut)]
+    let mut len: usize = 2;
+    if cfg!(feature = "deoxys-ii-256") {
+        len += 1
+    };
+    len
+}
 
 /// This is an array containing all AEADs supported by `dexios-core`.
 ///
 /// It can be used by and end-user application to show a list of AEADs that they may use
-pub static ALGORITHMS: [Algorithm; ALGORITHMS_LEN] = [
+pub static ALGORITHMS: [Algorithm; algorithm_len()] = [
     Algorithm::XChaCha20Poly1305,
     Algorithm::Aes256Gcm,
     #[cfg(feature = "deoxys-ii-256")]

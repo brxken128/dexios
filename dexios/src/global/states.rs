@@ -78,7 +78,23 @@ impl Key {
     // it has a check for if the keyfile is empty or not
     pub fn get_secret(&self, pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
         let secret = match self {
-            Key::Keyfile(path) => get_bytes(path)?,
+            Key::Keyfile(path) if path == "-" => {
+                let mut reader = std::io::stdin();
+                let secret = get_bytes(&mut reader)?;
+                if secret.is_empty() {
+                    return Err(anyhow::anyhow!("STDIN is empty"));
+                }
+                secret
+            }
+            Key::Keyfile(path) => {
+                let mut reader = std::fs::File::open(path)
+                    .with_context(|| format!("Unable to read file: {}", path))?;
+                let secret = get_bytes(&mut reader)?;
+                if secret.is_empty() {
+                    return Err(anyhow::anyhow!(format!("Keyfile '{}' is empty", path)));
+                }
+                secret
+            }
             Key::Env => Protected::new(
                 std::env::var("DEXIOS_KEY")
                     .context("Unable to read DEXIOS_KEY from environment variable")?

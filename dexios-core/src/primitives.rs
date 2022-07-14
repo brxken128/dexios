@@ -17,12 +17,10 @@ pub enum Algorithm {
     DeoxysII256,
 }
 
-#[allow(clippy::unnecessary_operation)] // 🚫 we cannot use cfg(feature) with expressions yet
 const fn algorithm_len() -> usize {
     #[allow(unused_mut)]
     let mut len: usize = 2;
-    #[cfg(feature = "deoxys-ii-256")]
-    {
+    if cfg!(feature = "deoxys-ii-256") {
         len += 1
     };
     len

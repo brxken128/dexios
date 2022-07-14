@@ -158,8 +158,8 @@ pub fn stream_mode(
         super::hashing::hash_stream(&[output.to_string()])?;
     }
 
-    if params.erase != EraseMode::IgnoreFile(0) {
-        super::erase::secure_erase(input, params.erase.get_passes())?;
+    if let EraseMode::EraseFile(passes) = params.erase {
+        super::erase::secure_erase(input, passes)?;
     }
 
     Ok(())

@@ -115,7 +115,7 @@ Dexios will receive frequent updates, and they are always tested before being
 released.
 
 Version 8.0.0 did make some breaking changes, and we'd like to apologise for
-this. The previous headers (containing salt, nonce, etc) we not standardised,
+this. The previous headers (containing salt, nonce, etc) were not standardised,
 and varied in size from 24 bytes to 40 bytes. With v8.0.0, this has been changed
 completely - now each header is the first 64 bytes of the file, and it contains
 information such as what mode the file was encrypted in, and which AEAD

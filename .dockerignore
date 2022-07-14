@@ -1,0 +1,6 @@
+/target
+/assets
+/.git*
+
+*.md
+*.nix

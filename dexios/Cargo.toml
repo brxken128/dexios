@@ -30,7 +30,7 @@ walkdir = "2.3.2"
 
 hex = "0.4.3"
 
-clap = { version = "3.2.11", features = ["cargo"] }
+clap = { version = "3.2.12", features = ["cargo"] }
 anyhow = "1.0.57"
 paris = { version = "1.5.13", features = ["macros"] }
 

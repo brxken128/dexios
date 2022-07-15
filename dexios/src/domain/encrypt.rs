@@ -6,7 +6,6 @@ use dexios_core::header::{HashingAlgorithm, Header, HeaderType, Keyslot};
 use dexios_core::primitives::{Mode, ENCRYPTED_MASTER_KEY_LEN};
 use dexios_core::protected::Protected;
 use dexios_core::stream::EncryptionStreams;
-use rand::{prelude::StdRng, RngCore, SeedableRng};
 
 use crate::utils::{gen_master_key, gen_nonce, gen_salt};
 
@@ -40,18 +39,18 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-pub struct Request<R, W>
+pub struct Request<'a, R, W>
 where
     R: Read + Seek,
     W: Write + Seek,
 {
-    reader: RefCell<R>,
-    writer: RefCell<W>,
-    header_writer: Option<RefCell<W>>,
-    raw_key: Protected<Vec<u8>>,
+    pub reader: &'a RefCell<R>,
+    pub writer: &'a RefCell<W>,
+    pub header_writer: Option<&'a RefCell<W>>,
+    pub raw_key: Protected<Vec<u8>>,
     // TODO: don't use external types in logic
-    header_type: HeaderType,
-    hashing_algorithm: HashingAlgorithm,
+    pub header_type: HeaderType,
+    pub hashing_algorithm: HashingAlgorithm,
 }
 
 pub fn execute<R, W>(req: Request<R, W>) -> Result<(), Error>
@@ -163,14 +162,14 @@ mod tests {
     #[test]
     fn should_encrypt_content_with_v4_version() {
         let mut input_content = b"Hello world";
-        let input_cur = Cursor::new(&mut input_content);
+        let input_cur = RefCell::new(Cursor::new(&mut input_content));
 
         let mut output_content = vec![];
-        let output_cur = Cursor::new(&mut output_content);
+        let output_cur = RefCell::new(Cursor::new(&mut output_content));
 
         let req = Request {
-            reader: RefCell::new(input_cur),
-            writer: RefCell::new(output_cur),
+            reader: &input_cur,
+            writer: &output_cur,
             header_writer: None,
             raw_key: Protected::new(PASSWORD.as_bytes().to_vec()),
             header_type: HeaderType {
@@ -209,14 +208,14 @@ mod tests {
     #[test]
     fn should_encrypt_content_with_v5_version() {
         let mut input_content = b"Hello world";
-        let input_cur = Cursor::new(&mut input_content);
+        let input_cur = RefCell::new(Cursor::new(&mut input_content));
 
         let mut output_content = vec![];
-        let output_cur = Cursor::new(&mut output_content);
+        let output_cur = RefCell::new(Cursor::new(&mut output_content));
 
         let req = Request {
-            reader: RefCell::new(input_cur),
-            writer: RefCell::new(output_cur),
+            reader: &input_cur,
+            writer: &output_cur,
             header_writer: None,
             raw_key: Protected::new(PASSWORD.as_bytes().to_vec()),
             header_type: HeaderType {
@@ -266,18 +265,18 @@ mod tests {
     #[test]
     fn should_save_header_separately() {
         let mut input_content = b"Hello world";
-        let input_cur = Cursor::new(&mut input_content);
+        let input_cur = RefCell::new(Cursor::new(&mut input_content));
 
         let mut output_content = vec![];
-        let output_cur = Cursor::new(&mut output_content);
+        let output_cur = RefCell::new(Cursor::new(&mut output_content));
 
         let mut output_header = vec![];
-        let output_header_cur = Cursor::new(&mut output_header);
+        let output_header_cur = RefCell::new(Cursor::new(&mut output_header));
 
         let req = Request {
-            reader: RefCell::new(input_cur),
-            writer: RefCell::new(output_cur),
-            header_writer: Some(RefCell::new(output_header_cur)),
+            reader: &input_cur,
+            writer: &output_cur,
+            header_writer: Some(&output_header_cur),
             raw_key: Protected::new(PASSWORD.as_bytes().to_vec()),
             header_type: HeaderType {
                 version: HeaderVersion::V5,

@@ -9,6 +9,7 @@ mod domain;
 mod file;
 mod global;
 mod subcommands;
+pub(crate) mod utils;
 
 // this is where subcommand function calling is handled
 // it goes hand-in-hand with `subcommands.rs`

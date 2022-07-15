@@ -8,6 +8,8 @@ pub const BLOCK_SIZE: usize = 1_048_576; // 1024*1024 bytes
 /// This is the length of the salt used for password hashing
 pub const SALT_LEN: usize = 16; // bytes
 
+pub const ENCRYPTED_MASTER_KEY_LEN: usize = 48;
+
 /// This is an `enum` containing all AEADs supported by `dexios-core`
 #[derive(Copy, Clone, PartialEq)]
 pub enum Algorithm {
@@ -76,7 +78,13 @@ impl std::fmt::Display for Mode {
 #[must_use]
 pub fn gen_nonce(algorithm: &Algorithm, mode: &Mode) -> Vec<u8> {
     use rand::{prelude::StdRng, RngCore, SeedableRng};
+    let nonce_len = get_nonce_len(algorithm, mode);
+    let mut nonce = vec![0u8; nonce_len];
+    StdRng::from_entropy().fill_bytes(&mut nonce);
+    nonce
+}
 
+pub fn get_nonce_len(algorithm: &Algorithm, mode: &Mode) -> usize {
     let mut nonce_len = match algorithm {
         Algorithm::Aes256Gcm => 12,
         Algorithm::XChaCha20Poly1305 => 24,
@@ -88,7 +96,5 @@ pub fn gen_nonce(algorithm: &Algorithm, mode: &Mode) -> Vec<u8> {
         nonce_len -= 4;
     }
 
-    let mut nonce = vec![0u8; nonce_len];
-    StdRng::from_entropy().fill_bytes(&mut nonce);
-    nonce
+    nonce_len
 }

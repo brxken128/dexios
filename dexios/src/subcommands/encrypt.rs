@@ -76,6 +76,8 @@ pub fn stream_mode(
         hash_duration.as_secs_f32()
     ));
 
+    let cipher = Ciphers::initialize(key, &header_type.algorithm)?;
+
     let encrypt_start_time = Instant::now();
 
     let mut master_key = [0u8; 32];
@@ -84,14 +86,11 @@ pub fn stream_mode(
     let master_key = Protected::new(master_key);
 
     let master_key_nonce = gen_nonce(&header_type.algorithm, &Mode::MemoryMode);
-    let cipher = Ciphers::initialize(key, &header_type.algorithm)?;
     let master_key_result = cipher.encrypt(&master_key_nonce, master_key.expose().as_slice());
-
     let master_key_encrypted =
         master_key_result.map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
 
     let mut master_key_encrypted_array = [0u8; 48];
-
     let len = 48.min(master_key_encrypted.len());
     master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
 

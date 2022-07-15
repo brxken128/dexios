@@ -37,7 +37,7 @@ use crate::{
     protected::Protected,
 };
 
-use super::primitives::{Algorithm, Mode, SALT_LEN};
+use super::primitives::{Algorithm, Mode, ENCRYPTED_MASTER_KEY_LEN, SALT_LEN};
 use anyhow::{Context, Result};
 use std::io::{Cursor, Read, Seek, Write};
 
@@ -172,7 +172,7 @@ impl HashingAlgorithm {
 #[derive(Clone)]
 pub struct Keyslot {
     pub hash_algorithm: HashingAlgorithm,
-    pub encrypted_key: [u8; 48],
+    pub encrypted_key: [u8; ENCRYPTED_MASTER_KEY_LEN],
     pub nonce: Vec<u8>,
     pub salt: [u8; SALT_LEN],
 }
@@ -588,7 +588,7 @@ impl Header {
         header_bytes.extend_from_slice(&tag.version);
         header_bytes.extend_from_slice(&tag.algorithm);
         header_bytes.extend_from_slice(&tag.mode);
-        header_bytes.extend_from_slice(&self.salt.unwrap());
+        header_bytes.extend_from_slice(&self.salt.unwrap_or(keyslot[0].salt));
         header_bytes.extend_from_slice(&self.nonce);
         header_bytes.extend_from_slice(&padding);
         header_bytes.extend_from_slice(&keyslot[0].encrypted_key);
@@ -707,9 +707,7 @@ impl Header {
                 header_bytes.extend_from_slice(&tag.algorithm);
                 header_bytes.extend_from_slice(&tag.mode);
                 header_bytes.extend_from_slice(
-                    &self
-                        .salt
-                        .context("Error while unwrapping the header's salt")?,
+                    &self.salt.unwrap_or(self.keyslots.as_ref().unwrap()[0].salt),
                 );
                 header_bytes.extend_from_slice(&self.nonce);
                 header_bytes.extend_from_slice(&padding);

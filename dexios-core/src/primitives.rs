@@ -8,6 +8,7 @@ pub const BLOCK_SIZE: usize = 1_048_576; // 1024*1024 bytes
 /// This is the length of the salt used for password hashing
 pub const SALT_LEN: usize = 16; // bytes
 
+pub const MASTER_KEY_LEN: usize = 32;
 pub const ENCRYPTED_MASTER_KEY_LEN: usize = 48;
 
 /// This is an `enum` containing all AEADs supported by `dexios-core`

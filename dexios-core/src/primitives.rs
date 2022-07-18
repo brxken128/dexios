@@ -1,7 +1,5 @@
 //! This module contains all cryptographic primitives used by `dexios-core`
 
-use rand::prelude::ThreadRng;
-
 /// This is the streaming block size
 ///
 /// NOTE: Stream mode can be used to encrypt files less than this size, provided the implementation is correct
@@ -80,7 +78,7 @@ impl std::fmt::Display for Mode {
 ///
 #[must_use]
 pub fn gen_nonce(algorithm: &Algorithm, mode: &Mode) -> Vec<u8> {
-    use rand::RngCore;
+    use rand::{RngCore, prelude::ThreadRng};
     let nonce_len = get_nonce_len(algorithm, mode);
     let mut nonce = vec![0u8; nonce_len];
     ThreadRng::default().fill_bytes(&mut nonce);

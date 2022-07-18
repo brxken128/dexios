@@ -16,9 +16,8 @@ use super::primitives::SALT_LEN;
 use super::header::HeaderVersion;
 use super::protected::Protected;
 use anyhow::Result;
-use rand::prelude::StdRng;
+use rand::prelude::ThreadRng;
 use rand::RngCore;
-use rand::SeedableRng;
 
 /// This generates a salt, of the specified `SALT_LEN`
 ///
@@ -33,7 +32,7 @@ use rand::SeedableRng;
 #[must_use]
 pub fn gen_salt() -> [u8; SALT_LEN] {
     let mut salt = [0u8; SALT_LEN];
-    StdRng::from_entropy().fill_bytes(&mut salt);
+    ThreadRng::default().fill_bytes(&mut salt);
     salt
 }
 

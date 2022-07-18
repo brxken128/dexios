@@ -38,17 +38,8 @@ pub use test::gen_nonce;
 pub use test::gen_salt;
 
 #[cfg(not(test))]
-pub use dexios_core::key::gen_salt;
+pub use dexios_core::primitives::gen_salt;
 #[cfg(not(test))]
 pub use dexios_core::primitives::gen_nonce;
-
 #[cfg(not(test))]
-use dexios_core::protected::Protected;
-#[cfg(not(test))]
-use rand::{prelude::StdRng, RngCore, SeedableRng};
-#[cfg(not(test))]
-pub fn gen_master_key() -> Protected<[u8; 32]> {
-    let mut master_key = [0u8; 32];
-    StdRng::from_entropy().fill_bytes(&mut master_key);
-    Protected::new(master_key)
-}
+pub use dexios_core::primitives::gen_master_key;

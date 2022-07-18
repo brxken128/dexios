@@ -5,6 +5,8 @@
 /// NOTE: Stream mode can be used to encrypt files less than this size, provided the implementation is correct
 pub const BLOCK_SIZE: usize = 1_048_576; // 1024*1024 bytes
 
+use crate::protected::Protected;
+
 /// This is the length of the salt used for password hashing
 pub const SALT_LEN: usize = 16; // bytes
 
@@ -66,6 +68,8 @@ impl std::fmt::Display for Mode {
     }
 }
 
+use rand::{RngCore, prelude::ThreadRng};
+
 /// This can be used to generate a nonce for encryption
 /// It requires both the algorithm and the mode, so it can correctly determine the nonce length
 /// This nonce can be passed directly to `EncryptionStreams::initialize()`
@@ -78,10 +82,9 @@ impl std::fmt::Display for Mode {
 ///
 #[must_use]
 pub fn gen_nonce(algorithm: &Algorithm, mode: &Mode) -> Vec<u8> {
-    use rand::{prelude::StdRng, RngCore, SeedableRng};
     let nonce_len = get_nonce_len(algorithm, mode);
     let mut nonce = vec![0u8; nonce_len];
-    StdRng::from_entropy().fill_bytes(&mut nonce);
+    ThreadRng::default().fill_bytes(&mut nonce);
     nonce
 }
 
@@ -98,4 +101,37 @@ pub fn get_nonce_len(algorithm: &Algorithm, mode: &Mode) -> usize {
     }
 
     nonce_len
+}
+
+/// This can be used to generate a master key for encryption
+/// It uses `ThreadRng` to securely generate 32 completely random bytes, with extra protection from some side-channel attacks
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// let master_key = gen_master_key();
+/// ```
+///
+pub fn gen_master_key() -> Protected<[u8; 32]> {
+    let mut master_key = [0u8; 32];
+    ThreadRng::default().fill_bytes(&mut master_key);
+    Protected::new(master_key)
+}
+
+
+/// This generates a salt, of the specified `SALT_LEN`
+///
+/// This salt can be directly passed to `argon2id_hash()` or `balloon_hash()`
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// let salt = gen_salt();
+/// ```
+///
+#[must_use]
+pub fn gen_salt() -> [u8; SALT_LEN] {
+    let mut salt = [0u8; SALT_LEN];
+    ThreadRng::default().fill_bytes(&mut salt);
+    salt
 }

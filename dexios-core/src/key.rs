@@ -16,25 +16,6 @@ use super::primitives::SALT_LEN;
 use super::header::HeaderVersion;
 use super::protected::Protected;
 use anyhow::Result;
-use rand::prelude::ThreadRng;
-use rand::RngCore;
-
-/// This generates a salt, of the specified `SALT_LEN`
-///
-/// This salt can be directly passed to `argon2id_hash()` or `balloon_hash()`
-///
-/// # Examples
-///
-/// ```rust,ignore
-/// let salt = gen_salt();
-/// ```
-///
-#[must_use]
-pub fn gen_salt() -> [u8; SALT_LEN] {
-    let mut salt = [0u8; SALT_LEN];
-    ThreadRng::default().fill_bytes(&mut salt);
-    salt
-}
 
 /// This handles `argon2id` hashing of a raw key
 ///

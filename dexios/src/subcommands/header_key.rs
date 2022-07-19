@@ -2,6 +2,7 @@ use std::{fs::OpenOptions, io::Seek};
 
 use crate::global::states::Key;
 use crate::global::states::PasswordState;
+use crate::utils::gen_salt;
 use anyhow::{Context, Result};
 use dexios_core::header::{Header, HeaderVersion};
 use dexios_core::primitives::MASTER_KEY_LEN;
@@ -141,7 +142,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             success!("Key successfully updated for {}", input);
         }
         HeaderVersion::V5 => {
-            let keyslots = header.keyslots.clone().unwrap();
+            let mut keyslots = header.keyslots.clone().unwrap();
 
             match key_old {
                 Key::User => info!("Please enter your old key below"),
@@ -158,16 +159,13 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             }
             let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
 
+            let mut index = 0;
             let mut master_key = [0u8; MASTER_KEY_LEN];
 
             // TODO(brxken128): convert this to the `decrypt_master_key` contained in #140
-            for keyslot in keyslots {
+            for (i, keyslot) in keyslots.iter().enumerate() {
                 let hash_start_time = Instant::now();
-                let key_old = balloon_hash(
-                    raw_key_old.clone(),
-                    &header.salt.unwrap(),
-                    &header.header_type.version,
-                )?;
+                let key_old = keyslot.hash_algorithm.hash(raw_key_old.clone(), &keyslot.salt)?;
                 let hash_duration = hash_start_time.elapsed();
                 success!(
                     "Successfully hashed your old key [took {:.2}s]",
@@ -187,6 +185,8 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
                 let len = 32.min(master_key_decrypted.len());
                 master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
                 master_key_decrypted.zeroize();
+
+                index = i;
     
                 drop(cipher);
                 break;
@@ -198,12 +198,11 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
             let master_key = Protected::new(master_key);
 
+            let salt_new = gen_salt();
+
             let hash_start_time = Instant::now();
-            let key_new = balloon_hash(
-                raw_key_new,
-                &header.salt.unwrap(),
-                &header.header_type.version,
-            )?;
+            // TODO(brxken128): allow using argon2id/balloon/inherit
+            let key_new = keyslots[index].hash_algorithm.hash(raw_key_new, &salt_new)?;
             let hash_duration = hash_start_time.elapsed();
             success!(
                 "Successfully hashed your new key [took {:.2}s]",
@@ -226,12 +225,8 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let len = 48.min(master_key_encrypted.len());
             master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
 
-            let keyslots = vec![Keyslot {
-                encrypted_key: master_key_encrypted_array,
-                hash_algorithm: HashingAlgorithm::Blake3Balloon(4),
-                nonce: master_key_nonce_new,
-                salt: header.salt.unwrap(),
-            }];
+            // TODO(brxken128): allow using argon2id/balloon/inherit
+            keyslots[index] = Keyslot { encrypted_key: master_key_encrypted_array, hash_algorithm: keyslots[index].hash_algorithm.clone(), nonce: master_key_nonce_new, salt: salt_new };
 
             let header_new = Header {
                 header_type: header.header_type,

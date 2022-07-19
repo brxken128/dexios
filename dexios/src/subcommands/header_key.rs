@@ -151,14 +151,6 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             }
             let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
 
-            match key_new {
-                Key::Generate => info!("Generating a new key"),
-                Key::User => info!("Please enter your new key below"),
-                Key::Keyfile(_) => info!("Reading your new keyfile"),
-                Key::Env => (),
-            }
-            let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
-
             let mut index = 0;
             let mut master_key = [0u8; MASTER_KEY_LEN];
 
@@ -200,8 +192,14 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
             let master_key = Protected::new(master_key);
 
+            match key_new {
+                Key::Generate => info!("Generating a new key"),
+                Key::User => info!("Please enter your new key below"),
+                Key::Keyfile(_) => info!("Reading your new keyfile"),
+                Key::Env => (),
+            }
+            let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
             let salt_new = gen_salt();
-
             let hash_start_time = Instant::now();
             // TODO(brxken128): allow using argon2id/balloon/inherit
             let key_new = keyslots[index]

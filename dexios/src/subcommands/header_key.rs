@@ -95,8 +95,8 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
                 )
             })?;
 
-            let mut master_key = [0u8; 32];
-            let len = 32.min(master_key_decrypted.len());
+            let mut master_key = [0u8; MASTER_KEY_LEN];
+            let len = MASTER_KEY_LEN.min(master_key_decrypted.len());
             master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
 
             master_key_decrypted.zeroize();
@@ -176,7 +176,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
                 }
 
                 let mut master_key_decrypted = master_key_result.unwrap();
-                let len = 32.min(master_key_decrypted.len());
+                let len = MASTER_KEY_LEN.min(master_key_decrypted.len());
                 master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
                 master_key_decrypted.zeroize();
 
@@ -186,7 +186,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
                 break;
             }
 
-            if master_key == [0u8; 32] {
+            if master_key == [0u8; MASTER_KEY_LEN] {
                 return Err(anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"));
             }
 

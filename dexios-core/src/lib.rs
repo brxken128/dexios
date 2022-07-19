@@ -43,3 +43,6 @@ pub mod protected;
 pub mod stream;
 pub use aead::Payload;
 pub use zeroize::Zeroize;
+
+#[cfg(feature = "visual")]
+pub mod visual;

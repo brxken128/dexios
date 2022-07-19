@@ -193,6 +193,9 @@ impl EncryptionStreams {
         writer: &mut impl Write,
         aad: &[u8],
     ) -> anyhow::Result<()> {
+        #[cfg(feature = "visual")]
+        let pb = crate::visual::create_spinner();
+
         let mut read_buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
         loop {
             let read_count = reader
@@ -233,6 +236,9 @@ impl EncryptionStreams {
         }
         read_buffer.zeroize();
         writer.flush().context("Unable to flush the output")?;
+
+        #[cfg(feature = "visual")]
+        pb.finish_and_clear();
 
         Ok(())
     }
@@ -358,6 +364,9 @@ impl DecryptionStreams {
         writer: &mut impl Write,
         aad: &[u8],
     ) -> anyhow::Result<()> {
+        #[cfg(feature = "visual")]
+        let pb = crate::visual::create_spinner();
+
         let mut buffer = vec![0u8; BLOCK_SIZE + 16].into_boxed_slice();
         loop {
             let read_count = reader.read(&mut buffer)?;
@@ -397,6 +406,9 @@ impl DecryptionStreams {
         }
 
         writer.flush().context("Unable to flush the output")?;
+
+        #[cfg(feature = "visual")]
+        pb.finish_and_clear();
 
         Ok(())
     }

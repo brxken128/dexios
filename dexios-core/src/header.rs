@@ -37,7 +37,7 @@ use crate::{
     protected::Protected,
 };
 
-use super::primitives::{Algorithm, Mode, get_nonce_len, ENCRYPTED_MASTER_KEY_LEN, SALT_LEN};
+use super::primitives::{get_nonce_len, Algorithm, Mode, ENCRYPTED_MASTER_KEY_LEN, SALT_LEN};
 use anyhow::{Context, Result};
 use std::io::{Cursor, Read, Seek, Write};
 
@@ -347,10 +347,7 @@ impl Header {
             }
             HeaderVersion::V4 => {
                 let mut master_key_encrypted = [0u8; 48];
-                let master_key_nonce_len = get_nonce_len(&
-                    algorithm,
-                    &Mode::MemoryMode,
-                );
+                let master_key_nonce_len = get_nonce_len(&algorithm, &Mode::MemoryMode);
                 let mut master_key_nonce = vec![0u8; master_key_nonce_len];
                 cursor
                     .read_exact(&mut salt)
@@ -388,10 +385,7 @@ impl Header {
                     .read_exact(&mut vec![0u8; 26 - nonce_len])
                     .context("Unable to read padding from header")?; // here we reach the 32 bytes
 
-                let keyslot_nonce_len = get_nonce_len(&
-                    algorithm,
-                    &Mode::MemoryMode,
-                );
+                let keyslot_nonce_len = get_nonce_len(&algorithm, &Mode::MemoryMode);
 
                 let mut keyslots: Vec<Keyslot> = Vec::new();
                 for _ in 0..4 {
@@ -456,10 +450,7 @@ impl Header {
             HeaderVersion::V1 | HeaderVersion::V2 => Vec::<u8>::new(),
             HeaderVersion::V3 => full_header_bytes.clone(),
             HeaderVersion::V4 => {
-                let master_key_nonce_len = get_nonce_len(&
-                    algorithm,
-                    &Mode::MemoryMode,
-                );
+                let master_key_nonce_len = get_nonce_len(&algorithm, &Mode::MemoryMode);
                 let mut aad = Vec::new();
 
                 // this is for the version/algorithm/mode/salt/nonce
@@ -531,7 +522,8 @@ impl Header {
     ///
     /// It serializes V3 headers
     fn serialize_v3(&self, tag: &HeaderTag) -> Vec<u8> {
-        let padding = vec![0u8; 26 - get_nonce_len(&self.header_type.algorithm, &self.header_type.mode)];
+        let padding =
+            vec![0u8; 26 - get_nonce_len(&self.header_type.algorithm, &self.header_type.mode)];
         let mut header_bytes = Vec::<u8>::new();
         header_bytes.extend_from_slice(&tag.version);
         header_bytes.extend_from_slice(&tag.algorithm);
@@ -547,14 +539,10 @@ impl Header {
     ///
     /// It serializes V4 headers
     fn serialize_v4(&self, tag: &HeaderTag) -> Vec<u8> {
-        let padding = vec![0u8; 26 - get_nonce_len(&self.header_type.algorithm, &self.header_type.mode)];
-        let padding2 = vec![
-            0u8;
-            32 - get_nonce_len(&
-                self.header_type.algorithm,
-                &Mode::MemoryMode
-            )
-        ];
+        let padding =
+            vec![0u8; 26 - get_nonce_len(&self.header_type.algorithm, &self.header_type.mode)];
+        let padding2 =
+            vec![0u8; 32 - get_nonce_len(&self.header_type.algorithm, &Mode::MemoryMode)];
 
         let keyslot = self.keyslots.clone().unwrap();
 
@@ -575,7 +563,8 @@ impl Header {
     ///
     /// It serializes V4 headers
     fn serialize_v5(&self, tag: &HeaderTag) -> Vec<u8> {
-        let padding = vec![0u8; 26 - get_nonce_len(&self.header_type.algorithm, &self.header_type.mode)];
+        let padding =
+            vec![0u8; 26 - get_nonce_len(&self.header_type.algorithm, &self.header_type.mode)];
 
         let keyslots = self.keyslots.clone().unwrap();
 
@@ -590,10 +579,7 @@ impl Header {
         // end of header static info
 
         for keyslot in &keyslots {
-            let keyslot_nonce_len = get_nonce_len(&
-                self.header_type.algorithm,
-                &Mode::MemoryMode,
-            );
+            let keyslot_nonce_len = get_nonce_len(&self.header_type.algorithm, &Mode::MemoryMode);
 
             header_bytes.extend_from_slice(&keyslot.serialize());
             header_bytes.extend_from_slice(&keyslot.encrypted_key);
@@ -668,11 +654,13 @@ impl Header {
             )),
             HeaderVersion::V3 => Ok(self.serialize_v3(&tag)),
             HeaderVersion::V4 => {
-                let padding = vec![0u8; 26 - get_nonce_len(&self.header_type.algorithm, &self.header_type.mode)];
-                let master_key_nonce_len = get_nonce_len(
-                    &self.header_type.algorithm,
-                    &Mode::MemoryMode,
-                );
+                let padding =
+                    vec![
+                        0u8;
+                        26 - get_nonce_len(&self.header_type.algorithm, &self.header_type.mode)
+                    ];
+                let master_key_nonce_len =
+                    get_nonce_len(&self.header_type.algorithm, &Mode::MemoryMode);
                 let padding2 = vec![0u8; 32 - master_key_nonce_len];
                 let mut header_bytes = Vec::<u8>::new();
                 header_bytes.extend_from_slice(&tag.version);
@@ -692,7 +680,13 @@ impl Header {
                 header_bytes.extend_from_slice(&tag.algorithm);
                 header_bytes.extend_from_slice(&tag.mode);
                 header_bytes.extend_from_slice(&self.nonce);
-                header_bytes.extend_from_slice(&vec![0u8; 26 - get_nonce_len(&self.header_type.algorithm, &self.header_type.mode)]);
+                header_bytes.extend_from_slice(&vec![
+                    0u8;
+                    26 - get_nonce_len(
+                        &self.header_type.algorithm,
+                        &self.header_type.mode
+                    )
+                ]);
                 Ok(header_bytes)
             }
         }

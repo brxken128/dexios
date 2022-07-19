@@ -5,4 +5,5 @@ pub mod erase_dir;
 pub mod hash;
 pub mod hasher;
 pub mod overwrite;
+pub mod pack;
 pub mod storage;

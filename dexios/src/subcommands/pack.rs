@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::{
     fs::File,
     io::{Read, Write},
@@ -10,6 +11,8 @@ use paris::Logger;
 use rand::distributions::{Alphanumeric, DistString};
 use walkdir::WalkDir;
 use zip::write::FileOptions;
+
+use crate::domain::{self, storage::Storage};
 
 use crate::{
     global::states::{DirectoryMode, EraseSourceDir, PrintMode},
@@ -34,7 +37,27 @@ pub struct Request<'a> {
 // it erases the temporary archive afterwards, to stop any residual data from remaining
 #[allow(clippy::too_many_lines)]
 pub fn execute(req: Request) -> Result<()> {
+    // TODO: It is necessary to raise it to a higher level
+    let stor = Arc::new(domain::storage::FileStorage);
+
     let mut logger = Logger::new();
+
+    let input_file = stor.read_file(req.input_file)?;
+
+    let compress_files = if input_file.is_dir() {
+        // TODO(pleshevskiy): use iterator instead of vec!
+        stor.read_dir(&input_file)?
+            .into_iter()
+            .map(|pb| stor.read_file(pb))
+            .collect::<Result<Vec<_>, _>>()?
+    } else {
+        vec![input_file]
+    };
+
+    domain::pack::execute(domain::pack::Request {
+        compress_files,
+        compression_method: zip::CompressionMethod::Stored,
+    })?;
 
     // 1. Initialize walker
     let walker = if req.pack_params.dir_mode == DirectoryMode::Recursive {

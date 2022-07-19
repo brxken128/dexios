@@ -122,7 +122,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
             let keyslots = vec![Keyslot {
                 encrypted_key: master_key_encrypted_array,
-                hash_algorithm: HashingAlgorithm::Blake3Balloon(4),
+                hash_algorithm: HashingAlgorithm::Blake3Balloon(4), // this is the only supported hashing algorithm for V4 headers
                 nonce: master_key_nonce_new,
                 salt: header.salt.unwrap(),
             }];
@@ -238,7 +238,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let header_new = Header {
                 header_type: header.header_type,
                 nonce: header.nonce,
-                salt: header.salt,
+                salt: None,
                 keyslots: Some(keyslots),
             };
 

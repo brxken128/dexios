@@ -36,13 +36,7 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
     let input_file = stor.read_file(input)?;
     let header_file = match &params.header_location {
         HeaderLocation::Embedded => None,
-        HeaderLocation::Detached(path) => {
-            if !overwrite_check(path, params.skip)? {
-                exit(0);
-            }
-
-            Some(stor.read_file(path)?)
-        }
+        HeaderLocation::Detached(path) => Some(stor.read_file(path)?),
     };
 
     let raw_key = params.key.get_secret(&PasswordState::Direct)?;

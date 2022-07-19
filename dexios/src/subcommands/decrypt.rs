@@ -6,11 +6,9 @@ use crate::global::states::PasswordState;
 use crate::global::structs::CryptoParams;
 use anyhow::{Context, Result};
 use dexios_core::header;
-use dexios_core::header::HeaderVersion;
 use dexios_core::key::argon2id_hash;
+use dexios_core::key::decrypt_master_key;
 use dexios_core::primitives::Mode;
-use dexios_core::protected::Protected;
-use dexios_core::Zeroize;
 use paris::Logger;
 
 use dexios_core::cipher::Ciphers;
@@ -173,81 +171,12 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
 
     logger.info(format!("Decrypting {} (this may take a while)", input));
 
-    let key = match header.header_type.version {
-        HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
-            let hash_start_time = Instant::now();
-            let key = argon2id_hash(raw_key, &header.salt.unwrap(), &header.header_type.version)?;
-            let hash_duration = hash_start_time.elapsed();
-            success!(
-                "Successfully hashed your key [took {:.2}s]",
-                hash_duration.as_secs_f32()
-            );
-            key
-        }
-        HeaderVersion::V4 => {
-            let hash_start_time = Instant::now();
-            let keyslot = header.keyslots.unwrap();
-
-            let key = keyslot[0].hash_algorithm.hash(raw_key, &keyslot[0].salt)?;
-            let hash_duration = hash_start_time.elapsed();
-            success!(
-                "Successfully hashed your key [took {:.2}s]",
-                hash_duration.as_secs_f32()
-            );
-            let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
-
-            let master_key_result =
-                cipher.decrypt(&keyslot[0].nonce, keyslot[0].encrypted_key.as_slice());
-            let mut master_key_decrypted = master_key_result.map_err(|_| {
-                anyhow::anyhow!(
-                    "Unable to decrypt your master key (maybe you supplied the wrong key?)"
-                )
-            })?;
-
-            let mut master_key = [0u8; 32];
-            let len = 32.min(master_key_decrypted.len());
-            master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
-
-            master_key_decrypted.zeroize();
-            Protected::new(master_key)
-        }
-        HeaderVersion::V5 => {
-            let keyslots = header.keyslots.clone().unwrap();
-            let mut master_key = [0u8; 32];
-            for keyslot in keyslots {
-                let hash_start_time = Instant::now();
-                let key = keyslot
-                    .hash_algorithm
-                    .hash(raw_key.clone(), &keyslot.salt)?;
-                let hash_duration = hash_start_time.elapsed();
-                success!(
-                    "Successfully hashed your key [took {:.2}s]",
-                    hash_duration.as_secs_f32()
-                );
-                let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
-
-                let master_key_result =
-                    cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
-
-                if let Ok(mut master_key_decrypted) = master_key_result {
-                    let len = 32.min(master_key_decrypted.len());
-                    master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
-                    master_key_decrypted.zeroize();
-                    break;
-                }
-            }
-
-            if master_key != [0u8; 32] {
-                Protected::new(master_key)
-            } else {
-                return Err(anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"));
-            }
-        }
-    };
+    let master_key = decrypt_master_key(raw_key, &header)?;
 
     let decrypt_start_time = Instant::now();
 
-    let streams = DecryptionStreams::initialize(key, &header.nonce, &header.header_type.algorithm)?;
+    let streams =
+        DecryptionStreams::initialize(master_key, &header.nonce, &header.header_type.algorithm)?;
 
     streams.decrypt_file(&mut input_file, &mut output_file, &aad)?;
 

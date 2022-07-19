@@ -1,3 +1,4 @@
+pub mod decrypt;
 pub mod encrypt;
 pub mod erase;
 pub mod erase_dir;

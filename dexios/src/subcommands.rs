@@ -69,10 +69,8 @@ pub fn unpack(sub_matches: &ArgMatches) -> Result<()> {
     let crypto_params = parameter_handler(sub_matches)?;
 
     let print_mode = if sub_matches.is_present("verbose") {
-        //specify to emit hash after operation
         PrintMode::Verbose
     } else {
-        // default
         PrintMode::Quiet
     };
 

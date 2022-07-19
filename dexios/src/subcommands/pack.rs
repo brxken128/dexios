@@ -1,26 +1,23 @@
+use std::process::exit;
 use std::sync::Arc;
-use std::{
-    fs::File,
-    io::{Read, Write},
-    time::Instant,
-};
+use std::time::Instant;
 
-use anyhow::{Context, Result};
-use dexios_core::primitives::{Algorithm, BLOCK_SIZE};
+use anyhow::Result;
+use dexios_core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
+use dexios_core::primitives::{Algorithm, Mode};
 use paris::Logger;
-use rand::distributions::{Alphanumeric, DistString};
-use walkdir::WalkDir;
-use zip::write::FileOptions;
 
 use crate::domain::{self, storage::Storage};
-
+use crate::global::states::{HeaderLocation, PasswordState};
 use crate::{
-    global::states::{DirectoryMode, EraseSourceDir, PrintMode},
+    global::states::EraseSourceDir,
     global::{
         states::Compression,
         structs::{CryptoParams, PackParams},
     },
 };
+
+use super::prompt::overwrite_check;
 
 pub struct Request<'a> {
     pub input_file: &'a str,
@@ -35,14 +32,39 @@ pub struct Request<'a> {
 // it compresses all of the files into the temporary archive
 // once compressed, it encrypts the zip file
 // it erases the temporary archive afterwards, to stop any residual data from remaining
-#[allow(clippy::too_many_lines)]
 pub fn execute(req: Request) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
     let stor = Arc::new(domain::storage::FileStorage);
 
     let mut logger = Logger::new();
 
+    // 1. validate and prepare options
+    if req.input_file == req.output_file {
+        return Err(anyhow::anyhow!(
+            "Input and output files cannot have the same name."
+        ));
+    }
+
+    if !overwrite_check(req.output_file, req.crypto_params.skip)? {
+        exit(0);
+    }
+
     let input_file = stor.read_file(req.input_file)?;
+    let raw_key = req.crypto_params.key.get_secret(&PasswordState::Validate)?;
+    let output_file = stor
+        .create_file(req.output_file)
+        .or_else(|_| stor.write_file(req.output_file))?;
+
+    let header_file = match &req.crypto_params.header_location {
+        HeaderLocation::Embedded => None,
+        HeaderLocation::Detached(path) => {
+            if !overwrite_check(path, req.crypto_params.skip)? {
+                exit(0);
+            }
+
+            Some(stor.create_file(path).or_else(|_| stor.write_file(path))?)
+        }
+    };
 
     let compress_files = if input_file.is_dir() {
         // TODO(pleshevskiy): use iterator instead of vec!
@@ -54,122 +76,45 @@ pub fn execute(req: Request) -> Result<()> {
         vec![input_file]
     };
 
-    domain::pack::execute(domain::pack::Request {
-        compress_files,
-        compression_method: zip::CompressionMethod::Stored,
-    })?;
-
-    // 1. Initialize walker
-    let walker = if req.pack_params.dir_mode == DirectoryMode::Recursive {
-        logger.info(format!("Traversing {} recursively", req.input_file));
-        WalkDir::new(req.input_file)
-    } else {
-        logger.info(format!("Traversing {}", req.input_file));
-        WalkDir::new(req.input_file).max_depth(1)
+    let compression_method = match req.pack_params.compression {
+        Compression::None => zip::CompressionMethod::Stored,
+        Compression::Zstd => zip::CompressionMethod::Zstd,
     };
 
-    // 2. Skip failed dir entries
-    let walker = walker
-        .into_iter()
-        .filter_map(|res| res.ok())
-        .collect::<Vec<walkdir::DirEntry>>();
-
-    // 3. create temp file
-    let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
-    let tmp_name = format!("{}.{}", req.output_file, random_extension); // e.g. "output.kjHSD93l"
-
-    let file = std::io::BufWriter::new(
-        File::create(&tmp_name)
-            .with_context(|| format!("Unable to create the output file: {}", req.output_file))?,
-    );
-
-    logger.info(format!("Creating and compressing files into {}", tmp_name));
-
-    // 4. Pipe to zip writer
-    let zip_start_time = Instant::now();
-
-    let mut zip = zip::ZipWriter::new(file);
-
-    // 5. Add options for zip file
-    let options = match req.pack_params.compression {
-        Compression::None => FileOptions::default()
-            .compression_method(zip::CompressionMethod::Stored)
-            .large_file(true)
-            .unix_permissions(0o755),
-        Compression::Zstd => FileOptions::default()
-            .compression_method(zip::CompressionMethod::Zstd)
-            .large_file(true)
-            .unix_permissions(0o755),
-    };
-
-    // 6. iterate all entries and zip them
-    let item_count = walker.len();
-    for dir_entry in walker {
-        let entry_path = dir_entry.path();
-
-        let item_str = entry_path
-            .to_str()
-            .context("Error converting directory path to string")?
-            .replace('\\', "/");
-
-        if entry_path.is_dir() {
-            zip.add_directory(item_str, options)
-                .context("Unable to add directory to zip")?;
-
-            continue;
-        }
-
-        zip.start_file(item_str, options)
-            .context("Unable to add file to zip")?;
-
-        if req.pack_params.print_mode == PrintMode::Verbose {
-            logger.info(format!(
-                "Compressing {} into {}",
-                entry_path.to_str().unwrap(),
-                tmp_name
-            ));
-        }
-
-        let zip_writer = zip.by_ref();
-        let mut file_reader = File::open(entry_path)?;
-        // stream read/write here
-        let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
-
-        loop {
-            let read_count = file_reader.read(&mut buffer)?;
-            zip_writer
-                .write_all(&buffer[..read_count])
-                .with_context(|| {
-                    format!("Unable to write to the output file: {}", req.output_file)
-                })?;
-            if read_count != BLOCK_SIZE {
-                break;
-            }
-        }
-    }
-    zip.finish()?;
-    drop(zip);
-
-    let zip_duration = zip_start_time.elapsed();
-    logger.success(format!(
-        "Compressed {} files into {}! [took {:.2}s]",
-        item_count,
-        tmp_name,
-        zip_duration.as_secs_f32()
+    logger.info(format!("Using {} for encryption", req.algorithm));
+    logger.info(format!(
+        "Encrypting {} (this may take a while)",
+        req.input_file
     ));
 
-    // 7. Encrypt the compressed file
-    // TODO: need to extract getting password from encrypt command.
-    super::encrypt::stream_mode(
-        &tmp_name,
-        req.output_file,
-        &req.crypto_params,
-        req.algorithm,
-    )
-    .or_else(|err| super::erase::secure_erase(&tmp_name, 2).and(Err(err)))?;
+    let start_time = Instant::now();
+    // 2. compress and encrypt files
+    domain::pack::execute(domain::pack::Request {
+        compress_files,
+        compression_method,
+        writer: output_file.try_writer()?,
+        header_writer: header_file.as_ref().and_then(|f| f.try_writer().ok()),
+        raw_key,
+        header_type: HeaderType {
+            version: HEADER_VERSION,
+            mode: Mode::StreamMode,
+            algorithm: req.algorithm,
+        },
+        hashing_algorithm: HashingAlgorithm::Blake3Balloon(5),
+    })?;
 
-    // 8. Erase files
-    super::erase::secure_erase(&tmp_name, 2)?; // cleanup our tmp file
+    // 3. flush result
+    if let Some(header_file) = header_file {
+        stor.flush_file(&header_file)?;
+    }
+    stor.flush_file(&output_file)?;
+
+    let encrypt_duration = start_time.elapsed();
+    logger.success(format!(
+        "Encryption successful! File saved as {} [took {:.2}s]",
+        req.output_file,
+        encrypt_duration.as_secs_f32(),
+    ));
 
     if req.pack_params.erase_source == EraseSourceDir::Erase {
         super::erase::secure_erase(req.input_file, 2)?;

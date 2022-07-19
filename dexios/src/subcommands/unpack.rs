@@ -53,6 +53,7 @@ pub fn unpack(
             .context("Unable to create a PathBuf from your output directory")?;
 
         let item = archive.by_index(i).context("Unable to index the archive")?;
+
         match item.enclosed_name() {
             Some(path) => full_path.push(path),
             None => continue,
@@ -71,6 +72,12 @@ pub fn unpack(
         if item.is_dir() {
             // if it's a directory, recreate the structure
             std::fs::create_dir_all(full_path).context("Unable to create an output directory")?;
+        } else if item.is_file() {
+            // TODO(pleshevskiy): don't forget to remove this
+            if let Some(dir_path) = full_path.parent() {
+                std::fs::create_dir_all(dir_path)
+                    .context("Unable to create an output directory")?;
+            }
         }
     }
 
@@ -117,6 +124,7 @@ pub fn unpack(
             if print_mode == &PrintMode::Verbose {
                 logger.info(format!("Extracting {}", file_name));
             }
+
             let mut output_file =
                 File::create(full_path).context("Error creating an output file")?;
             std::io::copy(&mut file, &mut output_file)

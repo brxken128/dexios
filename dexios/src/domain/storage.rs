@@ -146,6 +146,7 @@ impl Storage<fs::File> for FileStorage {
         fs::remove_dir_all(file.path()).map_err(|_| Error::RemoveDir)
     }
 
+    // TODO: return File instead of PathBuf
     fn read_dir(&self, file: &File<fs::File>) -> Result<Vec<PathBuf>, Error> {
         if !file.is_dir() {
             return Err(Error::RemoveDir);
@@ -153,25 +154,25 @@ impl Storage<fs::File> for FileStorage {
 
         // TODO: move to a separate method
         fn read_dir_opt(dir_path: PathBuf, opts: ReadDirOpts) -> Result<Vec<PathBuf>, Error> {
-            let paths = fs::read_dir(dir_path)
+            fs::read_dir(dir_path)
                 .map_err(|_| Error::DirEntries)?
                 .map(|entry| entry.map(|e| e.path()).map_err(|_| Error::DirEntries))
-                .collect::<Result<Vec<_>, _>>()?;
-
-            let mut file_paths = Vec::new();
-            for path in paths {
-                if opts.exclude_hidden && is_hidden_path(&path) {
-                    continue;
-                }
-
-                if path.is_file() {
-                    file_paths.push(path);
-                } else if path.is_dir() && opts.recursive {
-                    file_paths.extend(read_dir_opt(path, opts)?);
-                }
-            }
-
-            Ok(file_paths)
+                .collect::<Result<Vec<_>, _>>()?
+                .into_iter()
+                .filter(|path| !(opts.exclude_hidden && is_hidden_path(&path)))
+                .flat_map(|path| {
+                    if path.is_file() {
+                        vec![Ok(path)]
+                    } else if path.is_dir() && opts.recursive {
+                        match read_dir_opt(path, opts) {
+                            Ok(paths) => paths.into_iter().map(Result::Ok).collect(),
+                            Err(err) => vec![Err(err)],
+                        }
+                    } else {
+                        vec![]
+                    }
+                })
+                .collect::<Result<Vec<_>, _>>()
         }
 
         read_dir_opt(

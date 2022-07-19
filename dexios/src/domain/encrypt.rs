@@ -11,6 +11,7 @@ use crate::utils::{gen_master_key, gen_nonce, gen_salt};
 
 #[derive(Debug)]
 pub enum Error {
+    ResetCursorPosition,
     HashKey,
     EncryptMasterKey,
     EncryptFile,
@@ -24,6 +25,7 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use Error::*;
         match self {
+            ResetCursorPosition => f.write_str("Unable to reset cursor position"),
             HashKey => f.write_str("Cannot hash raw key"),
             EncryptMasterKey => f.write_str("Cannot encrypt master key"),
             EncryptFile => f.write_str("Cannot encrypt file"),
@@ -108,6 +110,11 @@ where
         keyslots: Some(keyslots),
     };
 
+    req.writer
+        .borrow_mut()
+        .rewind()
+        .map_err(|_| Error::ResetCursorPosition)?;
+
     match req.header_writer {
         None => {
             req.writer
@@ -118,6 +125,11 @@ where
         Some(header_writer) => {
             header_writer
                 .borrow_mut()
+                .rewind()
+                .map_err(|_| Error::ResetCursorPosition)?;
+
+            header_writer
+                .borrow_mut()
                 .write(&header.serialize().map_err(|_| Error::WriteHeader)?)
                 .map_err(|_| Error::WriteHeader)?;
         }
@@ -126,10 +138,15 @@ where
     let aad = header.create_aad().map_err(|_| Error::CreateAad)?;
 
     let mut reader = req.reader.borrow_mut();
+    reader.rewind().map_err(|_| Error::ResetCursorPosition)?;
+
     let mut writer = req.writer.borrow_mut();
     streams
         .encrypt_file(&mut *reader, &mut *writer, &aad)
-        .map_err(|_| Error::EncryptFile)?;
+        .map_err(|e| {
+            dbg!(e);
+            Error::EncryptFile
+        })?;
 
     Ok(())
 }

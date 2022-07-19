@@ -10,12 +10,12 @@
 //! let raw_key = Protected::new(secret_data);
 //! let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
 //! ```
-
-use super::primitives::SALT_LEN;
-
-use super::header::HeaderVersion;
-use super::protected::Protected;
 use anyhow::Result;
+
+use crate::cipher::Ciphers;
+use crate::header::{Header, HeaderVersion};
+use crate::primitives::{MASTER_KEY_LEN, SALT_LEN};
+use crate::protected::Protected;
 
 /// This handles `argon2id` hashing of a raw key
 ///
@@ -129,4 +129,52 @@ pub fn balloon_hash(
     }
 
     Ok(Protected::new(key))
+}
+
+pub fn decrypt_master_key(
+    raw_key: Protected<Vec<u8>>,
+    header: &Header,
+    // TODO: use custom error instead of anyhow
+) -> Result<Protected<[u8; MASTER_KEY_LEN]>> {
+    // TODO: choose better place for this util
+    fn vec_to_arr(master_key_vec: Vec<u8>) -> Protected<[u8; MASTER_KEY_LEN]> {
+        let mut master_key = [0u8; MASTER_KEY_LEN];
+        let len = MASTER_KEY_LEN.min(master_key_vec.len());
+        master_key[..len].copy_from_slice(&master_key_vec[..len]);
+        Protected::new(master_key)
+    }
+
+    match header.header_type.version {
+        HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
+            argon2id_hash(raw_key, &header.salt.unwrap(), &header.header_type.version)
+        }
+        HeaderVersion::V4 => {
+            let keyslots = header.keyslots.as_ref().unwrap();
+            let keyslot = keyslots.first().ok_or_else(|| anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"))?;
+            let key = keyslot.hash_algorithm.hash(raw_key, &keyslot.salt)?;
+
+            let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
+            cipher
+                .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
+                .map(vec_to_arr)
+                .map_err(|_| anyhow::anyhow!("Cannot decrypt master key"))
+        }
+        HeaderVersion::V5 => {
+            header
+                .keyslots
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("Invalid header format"))?
+                .iter()
+                .find_map(|keyslot| {
+                    let key = keyslot.hash_algorithm.hash(raw_key.clone(), &keyslot.salt).ok()?;
+
+                    let cipher = Ciphers::initialize(key, &header.header_type.algorithm).ok()?;
+                    cipher
+                        .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
+                        .map(vec_to_arr)
+                        .ok()
+                })
+                .ok_or_else(|| anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"))
+        }
+    }
 }

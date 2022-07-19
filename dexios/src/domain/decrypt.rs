@@ -122,3 +122,89 @@ where
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    use crate::domain::encrypt::tests::{
+        PASSWORD, V4_ENCRYPTED_CONTENT, V5_ENCRYPTED_CONTENT, V5_ENCRYPTED_DETACHED_CONTENT,
+        V5_ENCRYPTED_DETACHED_HEADER,
+    };
+
+    #[test]
+    fn should_decrypt_encrypted_content_with_v4_version() {
+        let mut input_content = V4_ENCRYPTED_CONTENT.to_vec();
+        let input_cur = RefCell::new(Cursor::new(&mut input_content));
+
+        let mut output_content = vec![];
+        let output_cur = RefCell::new(Cursor::new(&mut output_content));
+
+        let req = Request {
+            header_reader: None,
+            reader: &input_cur,
+            writer: &output_cur,
+            raw_key: Protected::new(PASSWORD.to_vec()),
+            on_decrypted_header: None,
+        };
+
+        match execute(req) {
+            Ok(_) => {
+                assert_eq!(output_content, "Hello world".as_bytes().to_vec());
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_decrypt_encrypted_content_with_v5_version() {
+        let mut input_content = V5_ENCRYPTED_CONTENT.to_vec();
+        let input_cur = RefCell::new(Cursor::new(&mut input_content));
+
+        let mut output_content = vec![];
+        let output_cur = RefCell::new(Cursor::new(&mut output_content));
+
+        let req = Request {
+            header_reader: None,
+            reader: &input_cur,
+            writer: &output_cur,
+            raw_key: Protected::new(PASSWORD.to_vec()),
+            on_decrypted_header: None,
+        };
+
+        match execute(req) {
+            Ok(_) => {
+                assert_eq!(output_content, "Hello world".as_bytes().to_vec());
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn should_decrypt_encrypted_detached_header_and_content_with_v5_version() {
+        let mut input_content = V5_ENCRYPTED_DETACHED_CONTENT.to_vec();
+        let input_cur = RefCell::new(Cursor::new(&mut input_content));
+
+        let mut input_header = V5_ENCRYPTED_DETACHED_HEADER.to_vec();
+        let header_cur = RefCell::new(Cursor::new(&mut input_header));
+
+        let mut output_content = vec![];
+        let output_cur = RefCell::new(Cursor::new(&mut output_content));
+
+        let req = Request {
+            header_reader: Some(&header_cur),
+            reader: &input_cur,
+            writer: &output_cur,
+            raw_key: Protected::new(PASSWORD.to_vec()),
+            on_decrypted_header: None,
+        };
+
+        match execute(req) {
+            Ok(_) => {
+                assert_eq!(output_content, "Hello world".as_bytes().to_vec());
+            }
+            _ => unreachable!(),
+        }
+    }
+}

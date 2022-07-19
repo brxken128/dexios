@@ -2,14 +2,16 @@ use std::cell::RefCell;
 use std::io::{Read, Seek, Write};
 
 use dexios_core::cipher::Ciphers;
-use dexios_core::header::Header;
+use dexios_core::header::{Header, HeaderType};
 use dexios_core::key::decrypt_master_key;
 use dexios_core::primitives::Mode;
 use dexios_core::protected::Protected;
+use dexios_core::stream::DecryptionStreams;
 
 #[derive(Debug)]
 pub enum Error {
     InitializeChiphers,
+    InitializeStreams,
     DeserializeHeader,
     ReadEncryptedData,
     DecryptMasterKey,
@@ -22,6 +24,7 @@ impl std::fmt::Display for Error {
         use Error::*;
         match self {
             InitializeChiphers => f.write_str("Cannot initialize chiphers"),
+            InitializeStreams => f.write_str("Cannot initialize streams"),
             DeserializeHeader => f.write_str("Cannot deserialize header"),
             ReadEncryptedData => f.write_str("Unable to read encrypted data"),
             DecryptMasterKey => f.write_str("Cannot decrypt master key"),
@@ -42,6 +45,7 @@ where
     pub reader: &'a RefCell<R>,
     pub writer: &'a RefCell<W>,
     pub raw_key: Protected<Vec<u8>>,
+    pub on_decrypted_header: Option<Box<dyn FnOnce(&HeaderType)>>,
 }
 
 pub fn execute<R, W>(req: Request<R, W>) -> Result<(), Error>
@@ -63,6 +67,10 @@ where
             .map_err(|_| Error::DeserializeHeader)?,
     };
 
+    if let Some(cb) = req.on_decrypted_header {
+        cb(&header.header_type);
+    }
+
     match header.header_type.mode {
         Mode::MemoryMode => {
             let mut encrypted_data = Vec::new();
@@ -71,10 +79,10 @@ where
                 .read_to_end(&mut encrypted_data)
                 .map_err(|_| Error::ReadEncryptedData)?;
 
-            let key =
+            let master_key =
                 decrypt_master_key(req.raw_key, &header).map_err(|_| Error::DecryptMasterKey)?;
 
-            let ciphers = Ciphers::initialize(key, &header.header_type.algorithm)
+            let ciphers = Ciphers::initialize(master_key, &header.header_type.algorithm)
                 .map_err(|_| Error::InitializeChiphers)?;
 
             let payload = dexios_core::Payload {
@@ -91,7 +99,25 @@ where
                 .write_all(&decrypted_bytes)
                 .map_err(|_| Error::WriteData)?;
         }
-        _ => unimplemented!(),
+        Mode::StreamMode => {
+            let master_key =
+                decrypt_master_key(req.raw_key, &header).map_err(|_| Error::DecryptMasterKey)?;
+
+            let streams = DecryptionStreams::initialize(
+                master_key,
+                &header.nonce,
+                &header.header_type.algorithm,
+            )
+            .map_err(|_| Error::InitializeStreams)?;
+
+            streams
+                .decrypt_file(
+                    &mut *req.reader.borrow_mut(),
+                    &mut *req.writer.borrow_mut(),
+                    &aad,
+                )
+                .map_err(|_| Error::DecryptData)?;
+        }
     }
 
     Ok(())

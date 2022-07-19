@@ -38,8 +38,8 @@ pub use test::gen_nonce;
 pub use test::gen_salt;
 
 #[cfg(not(test))]
-pub use dexios_core::primitives::gen_salt;
+pub use dexios_core::primitives::gen_master_key;
 #[cfg(not(test))]
 pub use dexios_core::primitives::gen_nonce;
 #[cfg(not(test))]
-pub use dexios_core::primitives::gen_master_key;
+pub use dexios_core::primitives::gen_salt;

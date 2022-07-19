@@ -27,7 +27,7 @@ const fn algorithm_len() -> usize {
     #[allow(unused_mut)]
     let mut len: usize = 2;
     if cfg!(feature = "deoxys-ii-256") {
-        len += 1
+        len += 1;
     };
     len
 }

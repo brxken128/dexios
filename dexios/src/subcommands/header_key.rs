@@ -4,6 +4,7 @@ use crate::global::states::Key;
 use crate::global::states::PasswordState;
 use anyhow::{Context, Result};
 use dexios_core::header::{Header, HeaderVersion};
+use dexios_core::primitives::MASTER_KEY_LEN;
 use dexios_core::primitives::Mode;
 use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
@@ -140,7 +141,111 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             success!("Key successfully updated for {}", input);
         }
         HeaderVersion::V5 => {
-            todo!()
+            let keyslots = header.keyslots.clone().unwrap();
+
+            match key_old {
+                Key::User => info!("Please enter your old key below"),
+                Key::Keyfile(_) => info!("Reading your old keyfile"),
+                _ => (),
+            }
+            let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
+
+            match key_new {
+                Key::Generate => info!("Generating a new key"),
+                Key::User => info!("Please enter your new key below"),
+                Key::Keyfile(_) => info!("Reading your new keyfile"),
+                Key::Env => (),
+            }
+            let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
+
+            let mut master_key = [0u8; MASTER_KEY_LEN];
+
+            // TODO(brxken128): convert this to the `decrypt_master_key` contained in #140
+            for keyslot in keyslots {
+                let hash_start_time = Instant::now();
+                let key_old = balloon_hash(
+                    raw_key_old.clone(),
+                    &header.salt.unwrap(),
+                    &header.header_type.version,
+                )?;
+                let hash_duration = hash_start_time.elapsed();
+                success!(
+                    "Successfully hashed your old key [took {:.2}s]",
+                    hash_duration.as_secs_f32()
+                );
+    
+                let cipher = Ciphers::initialize(key_old, &header.header_type.algorithm)?;
+
+                let master_key_result =
+                    cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
+                
+                if master_key_result.is_err() {
+                    continue;
+                }
+
+                let mut master_key_decrypted = master_key_result.unwrap();
+                let len = 32.min(master_key_decrypted.len());
+                master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
+                master_key_decrypted.zeroize();
+    
+                drop(cipher);
+                break;
+            }
+
+            if master_key == [0u8; 32] {
+                return Err(anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"));
+            }
+
+            let master_key = Protected::new(master_key);
+
+            let hash_start_time = Instant::now();
+            let key_new = balloon_hash(
+                raw_key_new,
+                &header.salt.unwrap(),
+                &header.header_type.version,
+            )?;
+            let hash_duration = hash_start_time.elapsed();
+            success!(
+                "Successfully hashed your new key [took {:.2}s]",
+                hash_duration.as_secs_f32()
+            );
+
+            let cipher = Ciphers::initialize(key_new, &header.header_type.algorithm)?;
+
+            let master_key_nonce_new = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
+            let master_key_result =
+                cipher.encrypt(&master_key_nonce_new, master_key.expose().as_slice());
+
+            drop(master_key);
+
+            let master_key_encrypted = master_key_result
+                .map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
+
+            let mut master_key_encrypted_array = [0u8; 48];
+
+            let len = 48.min(master_key_encrypted.len());
+            master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
+
+            let keyslots = vec![Keyslot {
+                encrypted_key: master_key_encrypted_array,
+                hash_algorithm: HashingAlgorithm::Blake3Balloon(4),
+                nonce: master_key_nonce_new,
+                salt: header.salt.unwrap(),
+            }];
+
+            let header_new = Header {
+                header_type: header.header_type,
+                nonce: header.nonce,
+                salt: header.salt,
+                keyslots: Some(keyslots),
+            };
+
+            input_file
+                .seek(std::io::SeekFrom::Current(-header_size))
+                .context("Unable to seek back to the start of your input file")?;
+            header_new.write(&mut input_file)?;
+
+            success!("Key successfully updated for {}", input);
         }
     }
     Ok(())

@@ -214,6 +214,8 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
         HeaderVersion::V5 => {
             let keyslots = header.keyslots.clone().unwrap();
             let mut master_key = [0u8; 32];
+
+            // TODO(brxken128): convert this to the in-progress `decrypt_master_key` function
             for keyslot in keyslots {
                 let hash_start_time = Instant::now();
                 let key = keyslot

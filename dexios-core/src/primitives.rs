@@ -88,6 +88,12 @@ pub fn gen_nonce(algorithm: &Algorithm, mode: &Mode) -> Vec<u8> {
     nonce
 }
 
+/// This function calculates the length of the nonce, depending on the data provided
+///
+/// Stream mode nonces are 4 bytes less than their "memory" mode counterparts, due to `aead::StreamLE31`
+///
+/// `StreamLE31` contains a 31-bit little endian counter, and a 1-bit "last block" flag, stored as the last 4 bytes of the nonce, this is done to prevent nonce-reuse
+#[must_use]
 pub fn get_nonce_len(algorithm: &Algorithm, mode: &Mode) -> usize {
     let mut nonce_len = match algorithm {
         Algorithm::Aes256Gcm => 12,

@@ -341,13 +341,12 @@ pub fn get_matches() -> clap::ArgMatches {
                         .help("Skip all prompts"),
                 )
         )
-        .subcommand(
-            Command::new("header")
-                .about("Manipulate encrypted headers (for advanced users)")
+        .subcommand(Command::new("key")
+                .about("Manipulate keys within the header (for advanced users")
                 .subcommand_required(true)
                 .subcommand(
-                    Command::new("update-key")
-                        .about("Update an encrypted file's key (Password only)")
+                    Command::new("change")
+                        .about("Change an encrypted file's key")
                         .arg_required_else_help(true)
                         .arg(
                             Arg::new("input")
@@ -380,6 +379,11 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .help("Use a keyfile as the new key"),
                         ),
                 )
+            )
+        .subcommand(
+            Command::new("header")
+                .about("Manipulate encrypted headers (for advanced users)")
+                .subcommand_required(true)
                 .subcommand(
                     Command::new("dump")
                         .about("Dump a header")

@@ -5,8 +5,8 @@ use crate::global::states::PasswordState;
 use crate::utils::gen_salt;
 use anyhow::{Context, Result};
 use dexios_core::header::{Header, HeaderVersion};
-use dexios_core::primitives::MASTER_KEY_LEN;
 use dexios_core::primitives::Mode;
+use dexios_core::primitives::MASTER_KEY_LEN;
 use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
 use dexios_core::{
@@ -165,18 +165,20 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             // TODO(brxken128): convert this to the `decrypt_master_key` contained in #140
             for (i, keyslot) in keyslots.iter().enumerate() {
                 let hash_start_time = Instant::now();
-                let key_old = keyslot.hash_algorithm.hash(raw_key_old.clone(), &keyslot.salt)?;
+                let key_old = keyslot
+                    .hash_algorithm
+                    .hash(raw_key_old.clone(), &keyslot.salt)?;
                 let hash_duration = hash_start_time.elapsed();
                 success!(
                     "Successfully hashed your old key [took {:.2}s]",
                     hash_duration.as_secs_f32()
                 );
-    
+
                 let cipher = Ciphers::initialize(key_old, &header.header_type.algorithm)?;
 
                 let master_key_result =
                     cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
-                
+
                 if master_key_result.is_err() {
                     continue;
                 }
@@ -187,7 +189,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
                 master_key_decrypted.zeroize();
 
                 index = i;
-    
+
                 drop(cipher);
                 break;
             }
@@ -202,7 +204,9 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
             let hash_start_time = Instant::now();
             // TODO(brxken128): allow using argon2id/balloon/inherit
-            let key_new = keyslots[index].hash_algorithm.hash(raw_key_new, &salt_new)?;
+            let key_new = keyslots[index]
+                .hash_algorithm
+                .hash(raw_key_new, &salt_new)?;
             let hash_duration = hash_start_time.elapsed();
             success!(
                 "Successfully hashed your new key [took {:.2}s]",
@@ -226,7 +230,12 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
 
             // TODO(brxken128): allow using argon2id/balloon/inherit
-            keyslots[index] = Keyslot { encrypted_key: master_key_encrypted_array, hash_algorithm: keyslots[index].hash_algorithm.clone(), nonce: master_key_nonce_new, salt: salt_new };
+            keyslots[index] = Keyslot {
+                encrypted_key: master_key_encrypted_array,
+                hash_algorithm: keyslots[index].hash_algorithm.clone(),
+                nonce: master_key_nonce_new,
+                salt: salt_new,
+            };
 
             let header_new = Header {
                 header_type: header.header_type,

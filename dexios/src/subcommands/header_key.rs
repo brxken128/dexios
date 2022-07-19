@@ -5,6 +5,7 @@ use crate::global::states::PasswordState;
 use crate::utils::gen_salt;
 use anyhow::{Context, Result};
 use dexios_core::header::{Header, HeaderVersion};
+use dexios_core::primitives::ENCRYPTED_MASTER_KEY_LEN;
 use dexios_core::primitives::Mode;
 use dexios_core::primitives::MASTER_KEY_LEN;
 use dexios_core::protected::Protected;
@@ -115,9 +116,9 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let master_key_encrypted = master_key_result
                 .map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
 
-            let mut master_key_encrypted_array = [0u8; 48];
+            let mut master_key_encrypted_array = [0u8; ENCRYPTED_MASTER_KEY_LEN];
 
-            let len = 48.min(master_key_encrypted.len());
+            let len = ENCRYPTED_MASTER_KEY_LEN.min(master_key_encrypted.len());
             master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
 
             let keyslots = vec![Keyslot {
@@ -222,9 +223,9 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let master_key_encrypted = master_key_result
                 .map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
 
-            let mut master_key_encrypted_array = [0u8; 48];
+            let mut master_key_encrypted_array = [0u8; ENCRYPTED_MASTER_KEY_LEN];
 
-            let len = 48.min(master_key_encrypted.len());
+            let len = ENCRYPTED_MASTER_KEY_LEN.min(master_key_encrypted.len());
             master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
 
             // TODO(brxken128): allow using argon2id/balloon/inherit

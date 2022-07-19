@@ -116,6 +116,7 @@ pub fn get_nonce_len(algorithm: &Algorithm, mode: &Mode) -> usize {
 /// let master_key = gen_master_key();
 /// ```
 ///
+#[must_use]
 pub fn gen_master_key() -> Protected<[u8; MASTER_KEY_LEN]> {
     let mut master_key = [0u8; MASTER_KEY_LEN];
     ThreadRng::default().fill_bytes(&mut master_key);

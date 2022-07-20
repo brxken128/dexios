@@ -86,19 +86,22 @@ pub fn execute(req: Request) -> Result<()> {
 
     let start_time = Instant::now();
     // 2. compress and encrypt files
-    domain::pack::execute(domain::pack::Request {
-        compress_files,
-        compression_method,
-        writer: output_file.try_writer()?,
-        header_writer: header_file.as_ref().and_then(|f| f.try_writer().ok()),
-        raw_key,
-        header_type: HeaderType {
-            version: HEADER_VERSION,
-            mode: Mode::StreamMode,
-            algorithm: req.algorithm,
+    domain::pack::execute(
+        stor.clone(),
+        domain::pack::Request {
+            compress_files,
+            compression_method,
+            writer: output_file.try_writer()?,
+            header_writer: header_file.as_ref().and_then(|f| f.try_writer().ok()),
+            raw_key,
+            header_type: HeaderType {
+                version: HEADER_VERSION,
+                mode: Mode::StreamMode,
+                algorithm: req.algorithm,
+            },
+            hashing_algorithm: HashingAlgorithm::Blake3Balloon(5),
         },
-        hashing_algorithm: HashingAlgorithm::Blake3Balloon(5),
-    })?;
+    )?;
 
     // 3. flush result
     if let Some(header_file) = header_file {

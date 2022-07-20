@@ -1,35 +1,36 @@
 use std::cell::RefCell;
-use std::io::{BufReader, BufWriter, Cursor, Read, Seek, Write};
+use std::io::{BufWriter, Read, Seek, Write};
+use std::sync::Arc;
 
 use dexios_core::header::{HashingAlgorithm, HeaderType};
 use dexios_core::primitives::BLOCK_SIZE;
 use dexios_core::protected::Protected;
 use zip::write::FileOptions;
 
-use crate::domain;
+use crate::domain::{self, storage::Storage};
 
 #[derive(Debug)]
 pub enum Error {
+    CreateArchive,
     AddDirToArchive,
     AddFileToArchive,
     FinishArchive,
     ReadData,
     WriteData,
     Encrypt(domain::encrypt::Error),
-    Overwrite(domain::overwrite::Error),
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use Error::*;
         match self {
+            CreateArchive => f.write_str("Unable to create archive"),
             AddDirToArchive => f.write_str("Unable to add directory to archive"),
             AddFileToArchive => f.write_str("Unable to add file to archive"),
             FinishArchive => f.write_str("Unable to finish archive"),
             ReadData => f.write_str("Unable to read data"),
             WriteData => f.write_str("Unable to write data"),
             Encrypt(inner) => write!(f, "Unable to encrypt archive: {}", inner),
-            Overwrite(inner) => write!(f, "Unable to overwrite archive: {}", inner),
         }
     }
 }
@@ -41,7 +42,7 @@ where
     RW: Read + Write + Seek,
 {
     pub writer: &'a RefCell<RW>,
-    pub compress_files: Vec<domain::storage::File<RW>>,
+    pub compress_files: Vec<domain::storage::Entry<RW>>,
     pub compression_method: zip::CompressionMethod,
     pub header_writer: Option<&'a RefCell<RW>>,
     pub raw_key: Protected<Vec<u8>>,
@@ -50,59 +51,61 @@ where
     pub hashing_algorithm: HashingAlgorithm,
 }
 
-pub fn execute<RW>(req: Request<RW>) -> Result<(), Error>
+pub fn execute<RW>(stor: Arc<impl Storage<RW>>, req: Request<RW>) -> Result<(), Error>
 where
     RW: Read + Write + Seek,
 {
-    // 1. Create in memory zip archive.
-    let mut zip_content = vec![];
-    let file = Cursor::new(&mut zip_content);
-    let mut zip_writer = zip::ZipWriter::new(BufWriter::new(file));
+    // 1. Create zip archive.
+    let tmp_file = stor.create_temp_file().map_err(|_| Error::CreateArchive)?;
+    {
+        let mut tmp_writer = tmp_file
+            .try_writer()
+            .map_err(|_| Error::CreateArchive)?
+            .borrow_mut();
+        let mut zip_writer = zip::ZipWriter::new(BufWriter::new(&mut *tmp_writer));
 
-    let options = FileOptions::default()
-        .compression_method(req.compression_method)
-        .large_file(true)
-        .unix_permissions(0o755);
+        let options = FileOptions::default()
+            .compression_method(req.compression_method)
+            .large_file(true)
+            .unix_permissions(0o755);
 
-    // 2. Add files to the archive.
-    req.compress_files.into_iter().try_for_each(|f| {
-        let file_path = f.path().to_str().ok_or(Error::ReadData)?;
-        if f.is_dir() {
-            zip_writer
-                .add_directory(file_path, options)
-                .map_err(|_| Error::AddDirToArchive)?;
-        } else {
-            zip_writer
-                .start_file(file_path, options)
-                .map_err(|_| Error::AddFileToArchive)?;
-
-            let mut reader = f.try_reader().map_err(|_| Error::ReadData)?.borrow_mut();
-            let mut buffer = [0u8; BLOCK_SIZE];
-            loop {
-                let read_count = reader.read(&mut buffer).map_err(|_| Error::ReadData)?;
+        // 2. Add files to the archive.
+        req.compress_files.into_iter().try_for_each(|f| {
+            let file_path = f.path().to_str().ok_or(Error::ReadData)?;
+            if f.is_dir() {
                 zip_writer
-                    .write_all(&buffer[..read_count])
-                    .map_err(|_| Error::WriteData)?;
-                if read_count != BLOCK_SIZE {
-                    break;
+                    .add_directory(file_path, options)
+                    .map_err(|_| Error::AddDirToArchive)?;
+            } else {
+                zip_writer
+                    .start_file(file_path, options)
+                    .map_err(|_| Error::AddFileToArchive)?;
+
+                let mut reader = f.try_reader().map_err(|_| Error::ReadData)?.borrow_mut();
+                let mut buffer = [0u8; BLOCK_SIZE];
+                loop {
+                    let read_count = reader.read(&mut buffer).map_err(|_| Error::ReadData)?;
+                    zip_writer
+                        .write_all(&buffer[..read_count])
+                        .map_err(|_| Error::WriteData)?;
+                    if read_count != BLOCK_SIZE {
+                        break;
+                    }
                 }
             }
-        }
 
-        Ok(())
-    })?;
+            Ok(())
+        })?;
 
-    // 3. Close archive and switch writer to reader.
-    let (zip_reader_capacity, zip_reader) = zip_writer
-        .finish()
-        .map_err(|_| Error::FinishArchive)?
-        .into_inner()
-        .map(|r| (r.get_ref().capacity(), RefCell::new(BufReader::new(r))))
-        .map_err(|_| Error::FinishArchive)?;
+        // 3. Close archive and switch writer to reader.
+        zip_writer.finish().map_err(|_| Error::FinishArchive)?;
+    }
+
+    let buf_capacity = stor.file_len(&tmp_file).map_err(|_| Error::FinishArchive)?;
 
     // 4. Encrypt zip archive
     let encrypt_res = domain::encrypt::execute(domain::encrypt::Request {
-        reader: &zip_reader,
+        reader: tmp_file.try_reader().map_err(|_| Error::FinishArchive)?,
         writer: req.writer,
         header_writer: req.header_writer,
         raw_key: req.raw_key,
@@ -111,13 +114,15 @@ where
     })
     .map_err(Error::Encrypt);
 
-    // 5. Finally overwrite zip archive with zeros.
+    // 5. Finally eraze zip archive with zeros.
     domain::overwrite::execute(domain::overwrite::Request {
-        buf_capacity: zip_reader_capacity,
-        writer: &RefCell::new(zip_reader.into_inner().into_inner()),
+        buf_capacity,
+        writer: tmp_file.try_writer().map_err(|_| Error::FinishArchive)?,
         passes: 2,
     })
-    .map_err(Error::Overwrite)?;
+    .ok();
+
+    stor.remove_file(tmp_file).ok();
 
     encrypt_res
 }
@@ -135,7 +140,7 @@ mod tests {
 
     #[test]
     fn should_pack_bar_directory() {
-        let stor = InMemoryStorage::default();
+        let stor = Arc::new(InMemoryStorage::default());
         stor.add_hello_txt().unwrap();
         stor.add_bar_foo_folder_with_hidden().unwrap();
 
@@ -159,7 +164,7 @@ mod tests {
             hashing_algorithm: HashingAlgorithm::Blake3Balloon(5),
         };
 
-        match execute(req) {
+        match execute(stor, req) {
             Ok(()) => {
                 let reader = &mut *output_file.try_writer().unwrap().borrow_mut();
                 reader.rewind().unwrap();

@@ -177,7 +177,7 @@ fn should_open_dir() {
     add_bar_foo_folder(&stor).unwrap();
 
     match stor.read_file("bar_11/foo/") {
-        Ok(File::Dir(path)) => assert_eq!(path, PathBuf::from("bar_11/foo/")),
+        Ok(Entry::Dir(path)) => assert_eq!(path, PathBuf::from("bar_11/foo/")),
         _ => unreachable!(),
     }
 }

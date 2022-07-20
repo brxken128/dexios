@@ -1,3 +1,4 @@
+use rand::distributions::{Alphanumeric, DistString};
 use std::cell::RefCell;
 use std::fs;
 use std::io::{Read, Seek, Write};
@@ -52,35 +53,43 @@ pub trait Storage<RW>: Send + Sync
 where
     RW: Read + Write + Seek,
 {
-    fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
-    fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
-    fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<File<RW>, Error>;
-    fn flush_file(&self, file: &File<RW>) -> Result<(), Error>;
-    fn file_len(&self, file: &File<RW>) -> Result<usize, Error>;
-    fn remove_file(&self, file: File<RW>) -> Result<(), Error>;
-    fn remove_dir_all(&self, file: File<RW>) -> Result<(), Error>;
+    fn create_temp_file(&self) -> Result<Entry<RW>, Error> {
+        let mut path = std::env::temp_dir();
+        let file_name = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
+        path.push(file_name);
+
+        self.create_file(path)
+    }
+
+    fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<RW>, Error>;
+    fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<RW>, Error>;
+    fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<RW>, Error>;
+    fn flush_file(&self, file: &Entry<RW>) -> Result<(), Error>;
+    fn file_len(&self, file: &Entry<RW>) -> Result<usize, Error>;
+    fn remove_file(&self, file: Entry<RW>) -> Result<(), Error>;
+    fn remove_dir_all(&self, file: Entry<RW>) -> Result<(), Error>;
     // TODO(pleshevskiy): return iterator instead of Vector
-    fn read_dir(&self, file: &File<RW>) -> Result<Vec<File<RW>>, Error>;
+    fn read_dir(&self, file: &Entry<RW>) -> Result<Vec<Entry<RW>>, Error>;
 }
 
 pub struct FileStorage;
 
 impl Storage<fs::File> for FileStorage {
-    fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<File<fs::File>, Error> {
+    fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<fs::File>, Error> {
         let path = path.as_ref().to_path_buf();
         let file = fs::File::options()
             .create_new(true)
+            .read(true)
             .write(true)
             .open(&path)
             .map_err(|_| Error::CreateFile)?;
-        Ok(File::Write(WriteFile {
+        Ok(Entry::File(FileData {
             path,
-            // TODO: Should we add the BufWriter?
-            writer: RefCell::new(file),
+            stream: RefCell::new(file),
         }))
     }
 
-    fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<File<fs::File>, Error> {
+    fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<fs::File>, Error> {
         let path = path.as_ref().to_path_buf();
         let file = fs::File::open(&path).map_err(|_| Error::OpenFile(FileMode::Read))?;
         let file_meta = file
@@ -88,58 +97,57 @@ impl Storage<fs::File> for FileStorage {
             .map_err(|_| Error::OpenFile(FileMode::Read))?;
 
         if file_meta.is_dir() {
-            Ok(File::Dir(path))
+            Ok(Entry::Dir(path))
         } else {
-            Ok(File::Read(ReadFile {
+            Ok(Entry::File(FileData {
                 path,
-                reader: RefCell::new(file),
+                stream: RefCell::new(file),
             }))
         }
     }
 
-    fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<File<fs::File>, Error> {
+    fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<fs::File>, Error> {
         let path = path.as_ref().to_path_buf();
         let file = fs::File::options()
             .write(true)
+            .read(true)
             .truncate(true)
             .open(&path)
             .map_err(|_| Error::OpenFile(FileMode::Write))?;
 
-        Ok(File::Write(WriteFile {
+        Ok(Entry::File(FileData {
             path,
-            // TODO: Should we add the BufWriter?
-            writer: RefCell::new(file),
+            stream: RefCell::new(file),
         }))
     }
 
-    fn flush_file(&self, file: &File<fs::File>) -> Result<(), Error> {
+    fn flush_file(&self, file: &Entry<fs::File>) -> Result<(), Error> {
         file.try_writer()?
             .borrow_mut()
             .flush()
             .map_err(|_| Error::FlushFile)
     }
 
-    fn file_len(&self, file: &File<fs::File>) -> Result<usize, Error> {
+    fn file_len(&self, file: &Entry<fs::File>) -> Result<usize, Error> {
         let fs_file = match file {
-            File::Read(ReadFile { reader, .. }) => reader.borrow(),
-            File::Write(WriteFile { writer, .. }) => writer.borrow(),
+            Entry::File(FileData { stream, .. }) => stream.borrow(),
             _ => return Err(Error::FileAccess),
         };
         let file_meta = fs::File::metadata(&fs_file).map_err(|_| Error::FileLen)?;
         file_meta.len().try_into().map_err(|_| Error::FileLen)
     }
 
-    fn remove_file(&self, file: File<fs::File>) -> Result<(), Error> {
-        if let File::Write(WriteFile { writer, .. }) = &file {
-            let mut writer = writer.borrow_mut();
-            writer.set_len(0).map_err(|_| Error::RemoveFile)?;
-            writer.flush().map_err(|_| Error::FlushFile)?;
+    fn remove_file(&self, file: Entry<fs::File>) -> Result<(), Error> {
+        if let Entry::File(FileData { stream, .. }) = &file {
+            let mut stream = stream.borrow_mut();
+            stream.set_len(0).map_err(|_| Error::RemoveFile)?;
+            stream.flush().map_err(|_| Error::FlushFile)?;
         }
 
         fs::remove_file(file.path()).map_err(|_| Error::RemoveFile)
     }
 
-    fn remove_dir_all(&self, file: File<fs::File>) -> Result<(), Error> {
+    fn remove_dir_all(&self, file: Entry<fs::File>) -> Result<(), Error> {
         if !file.is_dir() {
             return Err(Error::RemoveDir);
         }
@@ -147,7 +155,7 @@ impl Storage<fs::File> for FileStorage {
         fs::remove_dir_all(file.path()).map_err(|_| Error::RemoveDir)
     }
 
-    fn read_dir(&self, file: &File<fs::File>) -> Result<Vec<File<fs::File>>, Error> {
+    fn read_dir(&self, file: &Entry<fs::File>) -> Result<Vec<Entry<fs::File>>, Error> {
         if !file.is_dir() {
             return Err(Error::FileAccess);
         }
@@ -236,7 +244,7 @@ impl InMemoryStorage {
 
 #[cfg(test)]
 impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
-    fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<File<io::Cursor<Vec<u8>>>, Error> {
+    fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<io::Cursor<Vec<u8>>>, Error> {
         let file_path = path.as_ref().to_path_buf();
 
         let im_file = match self.files().get(&file_path) {
@@ -248,13 +256,13 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
 
         self.save_file(file_path.clone(), im_file)?;
 
-        Ok(File::Write(WriteFile {
+        Ok(Entry::File(FileData {
             path: file_path,
-            writer: RefCell::new(cursor),
+            stream: RefCell::new(cursor),
         }))
     }
 
-    fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<File<io::Cursor<Vec<u8>>>, Error> {
+    fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<io::Cursor<Vec<u8>>>, Error> {
         let in_file = self
             .files()
             .get(path.as_ref())
@@ -264,18 +272,18 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         let file_path = path.as_ref().to_path_buf();
 
         match dbg!(in_file) {
-            IMFile::Dir => Ok(File::Dir(file_path)),
+            IMFile::Dir => Ok(Entry::Dir(file_path)),
             IMFile::File(f) => {
                 let cursor = io::Cursor::new(f.buf);
-                Ok(File::Read(ReadFile {
+                Ok(Entry::File(FileData {
                     path: file_path,
-                    reader: RefCell::new(cursor),
+                    stream: RefCell::new(cursor),
                 }))
             }
         }
     }
 
-    fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<File<io::Cursor<Vec<u8>>>, Error> {
+    fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<io::Cursor<Vec<u8>>>, Error> {
         let file_path = path.as_ref().to_path_buf();
 
         let file = self
@@ -289,13 +297,13 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
 
         let cursor = io::Cursor::new(file.inner().buf.clone());
 
-        Ok(File::Write(WriteFile {
+        Ok(Entry::File(FileData {
             path: file_path,
-            writer: RefCell::new(cursor),
+            stream: RefCell::new(cursor),
         }))
     }
 
-    fn flush_file(&self, file: &File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
+    fn flush_file(&self, file: &Entry<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
         if file.is_dir() {
             return Err(Error::FileAccess);
         }
@@ -313,24 +321,23 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         Ok(())
     }
 
-    fn file_len(&self, file: &File<io::Cursor<Vec<u8>>>) -> Result<usize, Error> {
+    fn file_len(&self, file: &Entry<io::Cursor<Vec<u8>>>) -> Result<usize, Error> {
         let cur = match file {
-            File::Read(ReadFile { reader, .. }) => reader.borrow(),
-            File::Write(WriteFile { writer, .. }) => writer.borrow(),
+            Entry::File(FileData { stream, .. }) => stream.borrow(),
             _ => return Err(Error::FileAccess),
         };
 
         Ok(cur.get_ref().len())
     }
 
-    fn remove_file(&self, file: File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
+    fn remove_file(&self, file: Entry<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
         self.mut_files()
             .remove(file.path())
             .ok_or(Error::RemoveFile)?;
         Ok(())
     }
 
-    fn remove_dir_all(&self, file: File<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
+    fn remove_dir_all(&self, file: Entry<io::Cursor<Vec<u8>>>) -> Result<(), Error> {
         if !file.is_dir() {
             return Err(Error::FileAccess);
         }
@@ -356,8 +363,8 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
 
     fn read_dir(
         &self,
-        file: &File<io::Cursor<Vec<u8>>>,
-    ) -> Result<Vec<File<io::Cursor<Vec<u8>>>>, Error> {
+        file: &Entry<io::Cursor<Vec<u8>>>,
+    ) -> Result<Vec<Entry<io::Cursor<Vec<u8>>>>, Error> {
         if !file.is_dir() {
             return Err(Error::FileAccess);
         }
@@ -396,58 +403,46 @@ impl IMFile {
     }
 }
 
-pub struct ReadFile<R>
-where
-    R: Read + Seek,
-{
-    path: PathBuf,
-    reader: RefCell<R>,
-}
-
-pub struct WriteFile<W>
-where
-    W: Write + Seek,
-{
-    path: PathBuf,
-    writer: RefCell<W>,
-}
-
-pub enum File<RW>
+pub struct FileData<RW>
 where
     RW: Read + Write + Seek,
 {
-    Read(ReadFile<RW>),
-    Write(WriteFile<RW>),
-    Dir(PathBuf),
-    // TODO: Dir and Symlink?
+    path: PathBuf,
+    stream: RefCell<RW>,
 }
 
-impl<RW> File<RW>
+pub enum Entry<RW>
+where
+    RW: Read + Write + Seek,
+{
+    File(FileData<RW>),
+    Dir(PathBuf),
+}
+
+impl<RW> Entry<RW>
 where
     RW: Read + Write + Seek,
 {
     pub fn path(&self) -> &Path {
         match self {
-            File::Read(ReadFile { path, .. })
-            | File::Write(WriteFile { path, .. })
-            | File::Dir(path) => path,
+            Entry::File(FileData { path, .. }) | Entry::Dir(path) => path,
         }
     }
 
     pub fn is_dir(&self) -> bool {
-        matches!(self, File::Dir(_))
+        matches!(self, Entry::Dir(_))
     }
 
     pub fn try_reader(&self) -> Result<&RefCell<RW>, Error> {
         match self {
-            File::Read(file) => Ok(&file.reader),
+            Entry::File(file) => Ok(&file.stream),
             _ => Err(Error::FileAccess),
         }
     }
 
     pub fn try_writer(&self) -> Result<&RefCell<RW>, Error> {
         match self {
-            File::Write(file) => Ok(&file.writer),
+            Entry::File(file) => Ok(&file.stream),
             _ => Err(Error::FileAccess),
         }
     }
@@ -633,7 +628,7 @@ mod tests {
         stor.add_bar_foo_folder().unwrap();
 
         match stor.read_file("bar/foo/") {
-            Ok(File::Dir(path)) => assert_eq!(path, PathBuf::from("bar/foo/")),
+            Ok(Entry::Dir(path)) => assert_eq!(path, PathBuf::from("bar/foo/")),
             _ => unreachable!(),
         }
     }

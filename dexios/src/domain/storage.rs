@@ -53,6 +53,7 @@ pub trait Storage<RW>: Send + Sync
 where
     RW: Read + Write + Seek,
 {
+    // TODO(pleshevskiy): return a new struct that will be removed on drop.
     fn create_temp_file(&self) -> Result<Entry<RW>, Error> {
         let mut path = std::env::temp_dir();
         let file_name = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
@@ -271,7 +272,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
 
         let file_path = path.as_ref().to_path_buf();
 
-        match dbg!(in_file) {
+        match in_file {
             IMFile::Dir => Ok(Entry::Dir(file_path)),
             IMFile::File(f) => {
                 let cursor = io::Cursor::new(f.buf);

@@ -143,10 +143,7 @@ where
     let mut writer = req.writer.borrow_mut();
     streams
         .encrypt_file(&mut *reader, &mut *writer, &aad)
-        .map_err(|e| {
-            dbg!(e);
-            Error::EncryptFile
-        })?;
+        .map_err(|_| Error::EncryptFile)?;
 
     Ok(())
 }

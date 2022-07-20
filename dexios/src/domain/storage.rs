@@ -263,7 +263,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
 
         let file_path = path.as_ref().to_path_buf();
 
-        match in_file {
+        match dbg!(in_file) {
             IMFile::Dir => Ok(File::Dir(file_path)),
             IMFile::File(f) => {
                 let cursor = io::Cursor::new(f.buf);

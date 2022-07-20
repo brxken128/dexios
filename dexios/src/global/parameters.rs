@@ -13,6 +13,16 @@ use dexios_core::primitives::ALGORITHMS;
 
 use super::states::{Compression, DirectoryMode, Key, PrintMode};
 
+pub fn get_params(name: &str, sub_matches: &ArgMatches) -> Result<Vec<String>> {
+    let values = sub_matches
+        .get_many::<String>(name)
+        .with_context(|| format!("No {} provided", name))?
+        .into_iter()
+        .map(String::from)
+        .collect();
+    Ok(values)
+}
+
 pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     let value = sub_matches
         .value_of(name)

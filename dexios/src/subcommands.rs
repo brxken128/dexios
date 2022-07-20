@@ -5,7 +5,7 @@ use clap::ArgMatches;
 // it gets params and sends them to the appropriate functions
 
 use crate::global::parameters::{
-    encrypt_additional_params, erase_params, get_param, pack_params, parameter_handler,
+    encrypt_additional_params, erase_params, get_param, get_params, pack_params, parameter_handler,
 };
 
 pub mod decrypt;
@@ -55,7 +55,7 @@ pub fn pack(sub_matches: &ArgMatches) -> Result<()> {
     let algorithm = encrypt_additional_params(sub_matches)?;
 
     pack::execute(pack::Request {
-        input_file: &get_param("input", sub_matches)?,
+        input_file: &get_params("input", sub_matches)?,
         output_file: &get_param("output", sub_matches)?,
         pack_params,
         crypto_params,

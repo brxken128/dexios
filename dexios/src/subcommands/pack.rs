@@ -69,9 +69,6 @@ pub fn execute(req: Request) -> Result<()> {
     let compress_files = if input_file.is_dir() {
         // TODO(pleshevskiy): use iterator instead of vec!
         stor.read_dir(&input_file)?
-            .into_iter()
-            .map(|pb| stor.read_file(pb))
-            .collect::<Result<Vec<_>, _>>()?
     } else {
         vec![input_file]
     };

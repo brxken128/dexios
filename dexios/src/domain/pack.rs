@@ -10,6 +10,7 @@ use crate::domain;
 
 #[derive(Debug)]
 pub enum Error {
+    AddDirToArchive,
     AddFileToArchive,
     FinishArchive,
     ReadData,
@@ -22,6 +23,7 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use Error::*;
         match self {
+            AddDirToArchive => f.write_str("Unable to add directory to archive"),
             AddFileToArchive => f.write_str("Unable to add file to archive"),
             FinishArchive => f.write_str("Unable to finish archive"),
             ReadData => f.write_str("Unable to read data"),
@@ -64,20 +66,26 @@ where
 
     // 2. Add files to the archive.
     req.compress_files.into_iter().try_for_each(|f| {
-        // TODO(pleshevskiy): handle directories and add to the archive
-        zip_writer
-            .start_file(f.path().to_str().ok_or(Error::ReadData)?, options)
-            .map_err(|_| Error::AddFileToArchive)?;
-
-        let mut reader = f.try_reader().map_err(|_| Error::ReadData)?.borrow_mut();
-        let mut buffer = [0u8; BLOCK_SIZE];
-        loop {
-            let read_count = reader.read(&mut buffer).map_err(|_| Error::ReadData)?;
+        let file_path = f.path().to_str().ok_or(Error::ReadData)?;
+        if f.is_dir() {
             zip_writer
-                .write_all(&buffer[..read_count])
-                .map_err(|_| Error::WriteData)?;
-            if read_count != BLOCK_SIZE {
-                break;
+                .add_directory(file_path, options)
+                .map_err(|_| Error::AddDirToArchive)?;
+        } else {
+            zip_writer
+                .start_file(file_path, options)
+                .map_err(|_| Error::AddFileToArchive)?;
+
+            let mut reader = f.try_reader().map_err(|_| Error::ReadData)?.borrow_mut();
+            let mut buffer = [0u8; BLOCK_SIZE];
+            loop {
+                let read_count = reader.read(&mut buffer).map_err(|_| Error::ReadData)?;
+                zip_writer
+                    .write_all(&buffer[..read_count])
+                    .map_err(|_| Error::WriteData)?;
+                if read_count != BLOCK_SIZE {
+                    break;
+                }
             }
         }
 

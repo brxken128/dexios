@@ -225,10 +225,16 @@ fn should_return_file_names_of_dir_subfiles() {
     let file = stor.read_file("bar_14/").unwrap();
 
     match stor.read_dir(&file) {
-        Ok(file_names) => {
+        Ok(files) => {
+            let file_names = files
+                .iter()
+                .map(|f| f.path().to_path_buf())
+                .collect::<Vec<_>>();
             assert_eq!(
                 sorted_file_names(file_names.iter().collect()),
                 vec![
+                    "bar_14/",
+                    "bar_14/foo",
                     "bar_14/foo/hello.txt",
                     "bar_14/foo/world.txt",
                     "bar_14/hello.txt",
@@ -249,10 +255,16 @@ fn should_include_hidden_files_names() {
     let file = stor.read_file("bar_15/").unwrap();
 
     match stor.read_dir(&file) {
-        Ok(file_names) => {
+        Ok(files) => {
+            let file_names = files
+                .iter()
+                .map(|f| f.path().to_path_buf())
+                .collect::<Vec<_>>();
             assert_eq!(
                 sorted_file_names(file_names.iter().collect()),
                 vec![
+                    "bar_15/",
+                    "bar_15/.foo",
                     "bar_15/.foo/hello.txt",
                     "bar_15/.foo/world.txt",
                     "bar_15/.hello.txt",

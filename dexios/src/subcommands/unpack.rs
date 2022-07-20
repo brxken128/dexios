@@ -72,12 +72,6 @@ pub fn unpack(
         if item.is_dir() {
             // if it's a directory, recreate the structure
             std::fs::create_dir_all(full_path).context("Unable to create an output directory")?;
-        } else if item.is_file() {
-            // TODO(pleshevskiy): don't forget to remove this
-            if let Some(dir_path) = full_path.parent() {
-                std::fs::create_dir_all(dir_path)
-                    .context("Unable to create an output directory")?;
-            }
         }
     }
 

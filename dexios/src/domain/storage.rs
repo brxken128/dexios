@@ -59,7 +59,8 @@ where
     fn file_len(&self, file: &File<RW>) -> Result<usize, Error>;
     fn remove_file(&self, file: File<RW>) -> Result<(), Error>;
     fn remove_dir_all(&self, file: File<RW>) -> Result<(), Error>;
-    fn read_dir(&self, file: &File<RW>) -> Result<Vec<PathBuf>, Error>;
+    // TODO(pleshevskiy): return iterator instead of Vector
+    fn read_dir(&self, file: &File<RW>) -> Result<Vec<File<RW>>, Error>;
 }
 
 pub struct FileStorage;
@@ -146,55 +147,19 @@ impl Storage<fs::File> for FileStorage {
         fs::remove_dir_all(file.path()).map_err(|_| Error::RemoveDir)
     }
 
-    // TODO: return File instead of PathBuf
-    fn read_dir(&self, file: &File<fs::File>) -> Result<Vec<PathBuf>, Error> {
+    fn read_dir(&self, file: &File<fs::File>) -> Result<Vec<File<fs::File>>, Error> {
         if !file.is_dir() {
-            return Err(Error::RemoveDir);
+            return Err(Error::FileAccess);
         }
 
-        // TODO: move to a separate method
-        fn read_dir_opt(dir_path: PathBuf, opts: ReadDirOpts) -> Result<Vec<PathBuf>, Error> {
-            fs::read_dir(dir_path)
-                .map_err(|_| Error::DirEntries)?
-                .map(|entry| entry.map(|e| e.path()).map_err(|_| Error::DirEntries))
-                .collect::<Result<Vec<_>, _>>()?
-                .into_iter()
-                .filter(|path| !(opts.exclude_hidden && is_hidden_path(&path)))
-                .flat_map(|path| {
-                    if path.is_file() {
-                        vec![Ok(path)]
-                    } else if path.is_dir() && opts.recursive {
-                        match read_dir_opt(path, opts) {
-                            Ok(paths) => paths.into_iter().map(Result::Ok).collect(),
-                            Err(err) => vec![Err(err)],
-                        }
-                    } else {
-                        vec![]
-                    }
-                })
-                .collect::<Result<Vec<_>, _>>()
-        }
-
-        read_dir_opt(
-            file.path().to_owned(),
-            ReadDirOpts {
-                recursive: true,
-                exclude_hidden: false,
-            },
-        )
-    }
-}
-
-#[derive(Default, Clone, Copy)]
-struct ReadDirOpts {
-    recursive: bool,
-    exclude_hidden: bool,
-}
-
-fn is_hidden_path<P: AsRef<Path>>(path: P) -> bool {
-    match path.as_ref().file_name().and_then(|f| f.to_str()) {
-        Some(s) => s.starts_with('.'),
-        None => false,
+        walkdir::WalkDir::new(file.path().to_owned())
+            .into_iter()
+            .map(|res| {
+                res.map(|e| e.path().to_owned())
+                    .map_err(|_| Error::DirEntries)
+            })
+            .map(|path| path.and_then(|path| self.read_file(path)))
+            .collect()
     }
 }
 
@@ -262,7 +227,7 @@ impl InMemoryStorage {
         self.save_file("bar/", IMFile::Dir)?;
         self.save_text_file("bar/.hello.txt", "hello")?;
         self.save_text_file("bar/world.txt", "world")?;
-        self.save_file("bar/foo/", IMFile::Dir)?;
+        self.save_file("bar/.foo/", IMFile::Dir)?;
         self.save_text_file("bar/.foo/hello.txt", "hello")?;
         self.save_text_file("bar/.foo/world.txt", "world")?;
         Ok(())
@@ -389,21 +354,21 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         })
     }
 
-    fn read_dir(&self, file: &File<io::Cursor<Vec<u8>>>) -> Result<Vec<PathBuf>, Error> {
+    fn read_dir(
+        &self,
+        file: &File<io::Cursor<Vec<u8>>>,
+    ) -> Result<Vec<File<io::Cursor<Vec<u8>>>>, Error> {
         if !file.is_dir() {
             return Err(Error::FileAccess);
         }
 
         let file_path = file.path();
 
-        let file_paths = self
-            .files()
+        self.files()
             .iter()
-            .filter(|(k, v)| k.starts_with(file_path) && matches!(v, IMFile::File(_)))
-            .map(|(k, _)| k)
-            .cloned()
-            .collect();
-        Ok(file_paths)
+            .filter(|(k, _)| k.starts_with(file_path))
+            .map(|(k, _)| self.read_file(k))
+            .collect()
     }
 }
 
@@ -725,10 +690,16 @@ mod tests {
         let file = stor.read_file("bar/").unwrap();
 
         match stor.read_dir(&file) {
-            Ok(file_names) => {
+            Ok(files) => {
+                let file_names = files
+                    .iter()
+                    .map(|f| f.path().to_path_buf())
+                    .collect::<Vec<_>>();
                 assert_eq!(
                     sorted_file_names(file_names.iter().collect()),
                     vec![
+                        "bar/",
+                        "bar/foo/",
                         "bar/foo/hello.txt",
                         "bar/foo/world.txt",
                         "bar/hello.txt",
@@ -749,10 +720,16 @@ mod tests {
         let file = stor.read_file("bar/").unwrap();
 
         match stor.read_dir(&file) {
-            Ok(file_names) => {
+            Ok(files) => {
+                let file_names = files
+                    .iter()
+                    .map(|f| f.path().to_path_buf())
+                    .collect::<Vec<_>>();
                 assert_eq!(
                     sorted_file_names(file_names.iter().collect()),
                     vec![
+                        "bar/",
+                        "bar/.foo/",
                         "bar/.foo/hello.txt",
                         "bar/.foo/world.txt",
                         "bar/.hello.txt",
@@ -761,22 +738,6 @@ mod tests {
                 )
             }
             _ => unreachable!(),
-        }
-    }
-
-    #[test]
-    fn should_true_if_file_name_starts_with_dot() {
-        let cases = vec![
-            ("bar/foo/", false),
-            ("bar/.foo/", true),
-            (".bar/foo/", false),
-            (".bar/foo/hello.txt", false),
-            ("bar/.foo/hello.txt", false),
-            ("bar/foo/.hello.txt", true),
-        ];
-
-        for (path, expected) in cases {
-            assert_eq!(is_hidden_path(path), expected);
         }
     }
 }

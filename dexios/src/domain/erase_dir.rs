@@ -42,14 +42,16 @@ where
         return Err(Error::InvalidFileType);
     }
 
-    let file_paths = stor
+    let files = stor
         .read_dir(&req.file)
         .map_err(|_| Error::ReadDirEntries)?;
 
     #[allow(clippy::needless_collect)] // 🚫 we have to collect in order to propertly join threads!
-    let handlers = file_paths
+    let handlers = files
         .into_iter()
-        .map(|file_path| {
+        .filter(|f| !f.is_dir())
+        .map(|f| {
+            let file_path = f.path().to_path_buf();
             let stor = stor.clone();
             std::thread::spawn(move || -> Result<(), Error> {
                 domain::erase::execute(

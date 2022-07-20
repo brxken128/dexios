@@ -191,19 +191,19 @@ pub fn get_matches() -> clap::ArgMatches {
             .about("Pack and encrypt an entire directory")
             .short_flag('p')
             .arg(
+                Arg::new("output")
+                    .value_name("output")
+                    .takes_value(true)
+                    .required(true)
+                    .help("The output file"),
+            )
+            .arg(
                 Arg::new("input")
                     .value_name("input")
                     .takes_value(true)
                     .multiple_values(true)
                     .required(true)
                     .help("The directory to encrypt"),
-            )
-            .arg(
-                Arg::new("output")
-                    .value_name("output")
-                    .takes_value(true)
-                    .required(true)
-                    .help("The output file"),
             )
             .arg(
                 Arg::new("erase")

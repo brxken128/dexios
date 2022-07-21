@@ -66,6 +66,7 @@ jobs:
 
   test:
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
@@ -95,17 +96,11 @@ jobs:
             target
           key: ${{ matrix.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('Cargo.lock') }}
 
-      - continue-on-error: ${{ matrix.rust != 'stable' || matrix.os != 'ubuntu-latest' }}
-        name: Run tests
+      - name: Run tests
         uses: actions-rs/cargo@v1
         with:
           command: test
           args: --all-features --release --verbose
-
-      - if: ${{ failure() }}
-        name: Send warning
-        run: echo "::warning title=Warning::Tests on OS:${{ matrix.rust }},RUST:${{ matrix.rust }} didn't pass"
-    
 
   build:
     strategy:

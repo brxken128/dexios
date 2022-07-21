@@ -35,6 +35,4 @@ anyhow = "1.0.57"
 paris = { version = "1.5.13", features = ["macros"] }
 
 zip = { version = "0.6.2", default-features = false, features = ["zstd"] }
-
-[target.'cfg(unix)'.dependencies]
-termion = "1.5.6"
+rpassword = "7.0"

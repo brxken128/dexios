@@ -95,11 +95,12 @@ jobs:
             target
           key: ${{ matrix.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('Cargo.lock') }}
 
-      - name: Run tests
+      - continue-on-error: ${{ matrix.rust != 'stable' || matrix.os != 'ubuntu-latest' }}
+        name: Run tests
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all-features --verbose
+          args: --all-features --release --verbose
 
   build:
     strategy:

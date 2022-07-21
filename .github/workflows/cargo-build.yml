@@ -66,6 +66,7 @@ jobs:
 
   test:
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
@@ -100,10 +101,6 @@ jobs:
         with:
           command: test
           args: --all-features --release --verbose
-
-      - if: ${{ (matrix.rust != 'stable' || matrix.os != 'ubuntu-latest') && failure() }}
-        name: Send warning
-        run: echo "::warning title=Tests (${{ matrix.os }},${{ matrix.rust }}) didn't passed"
 
   build:
     strategy:

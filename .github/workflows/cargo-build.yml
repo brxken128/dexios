@@ -132,35 +132,35 @@ jobs:
             target
           key: ${{ matrix.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('Cargo.lock') }}
 
-    - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --release
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
 
-    - if: matrix.os != 'windows-latest'
-      name: Strip
-      run: strip target/release/dexios
+      - if: matrix.os != 'windows-latest'
+        name: Strip
+        run: strip target/release/dexios
 
-    - if: matrix.os == 'ubuntu-latest'
-      name: Hash the Binary
-      run: sha256sum target/release/dexios
+      - if: matrix.os == 'ubuntu-latest'
+        name: Hash the Binary
+        run: sha256sum target/release/dexios
 
-    - if: matrix.os == 'ubuntu-latest'
-      name: Upload Binary as artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: dexios-linux-amd64
-        path: target/release/dexios
-    - if: matrix.os == 'macos-latest'
-      name: Upload Binary as artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: dexios-macos-amd64
-        path: target/release/dexios
-    - if: matrix.os == 'windows-latest'
-      name: Upload Binary as artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: dexios-windows-amd64
-        path: target/release/dexios.exe
+      - if: matrix.os == 'ubuntu-latest'
+        name: Upload Binary as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dexios-linux-amd64
+          path: target/release/dexios
+      - if: matrix.os == 'macos-latest'
+        name: Upload Binary as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dexios-macos-amd64
+          path: target/release/dexios
+      - if: matrix.os == 'windows-latest'
+        name: Upload Binary as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dexios-windows-amd64
+          path: target/release/dexios.exe

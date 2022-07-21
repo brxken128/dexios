@@ -20,7 +20,7 @@ use crate::{
 use super::prompt::overwrite_check;
 
 pub struct Request<'a> {
-    pub input_file: &'a str,
+    pub input_file: &'a Vec<String>,
     pub output_file: &'a str,
     pub pack_params: PackParams,
     pub crypto_params: CryptoParams,
@@ -39,7 +39,7 @@ pub fn execute(req: Request) -> Result<()> {
     let mut logger = Logger::new();
 
     // 1. validate and prepare options
-    if req.input_file == req.output_file {
+    if req.input_file.iter().any(|f| f == req.output_file) {
         return Err(anyhow::anyhow!(
             "Input and output files cannot have the same name."
         ));
@@ -49,7 +49,11 @@ pub fn execute(req: Request) -> Result<()> {
         exit(0);
     }
 
-    let input_file = stor.read_file(req.input_file)?;
+    let input_files = req
+        .input_file
+        .iter()
+        .map(|file_name| stor.read_file(file_name))
+        .collect::<Result<Vec<_>, _>>()?;
     let raw_key = req.crypto_params.key.get_secret(&PasswordState::Validate)?;
     let output_file = stor
         .create_file(req.output_file)
@@ -66,12 +70,20 @@ pub fn execute(req: Request) -> Result<()> {
         }
     };
 
-    let compress_files = if input_file.is_dir() {
-        // TODO(pleshevskiy): use iterator instead of vec!
-        stor.read_dir(&input_file)?
-    } else {
-        vec![input_file]
-    };
+    let compress_files = input_files
+        .into_iter()
+        .flat_map(|file| {
+            if file.is_dir() {
+                // TODO(pleshevskiy): use iterator instead of vec!
+                match stor.read_dir(&file) {
+                    Ok(files) => files.into_iter().map(Ok).collect(),
+                    Err(err) => vec![Err(err)],
+                }
+            } else {
+                vec![Ok(file)]
+            }
+        })
+        .collect::<Result<Vec<_>, _>>()?;
 
     let compression_method = match req.pack_params.compression {
         Compression::None => zip::CompressionMethod::Stored,
@@ -80,7 +92,7 @@ pub fn execute(req: Request) -> Result<()> {
 
     logger.info(format!("Using {} for encryption", req.algorithm));
     logger.info(format!(
-        "Encrypting {} (this may take a while)",
+        "Encrypting {:?} (this may take a while)",
         req.input_file
     ));
 
@@ -117,7 +129,9 @@ pub fn execute(req: Request) -> Result<()> {
     ));
 
     if req.pack_params.erase_source == EraseSourceDir::Erase {
-        super::erase::secure_erase(req.input_file, 2)?;
+        req.input_file
+            .iter()
+            .try_for_each(|file_name| super::erase::secure_erase(&file_name, 2))?;
     }
 
     logger.success(format!("Your output file is: {}", req.output_file));

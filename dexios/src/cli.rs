@@ -194,6 +194,7 @@ pub fn get_matches() -> clap::ArgMatches {
                 Arg::new("input")
                     .value_name("input")
                     .takes_value(true)
+                    .multiple_values(true)
                     .required(true)
                     .help("The directory to encrypt"),
             )

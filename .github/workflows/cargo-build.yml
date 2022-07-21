@@ -10,18 +10,6 @@ on:
 env:
   CARGO_TERM_COLOR: always
 jobs:
-  audit:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions-rs/toolchain@v1
-      with:
-          toolchain: stable
-    - name: Audit
-      uses: actions-rs/cargo@v1
-      with:
-        command: audit
-
   clippy:
     runs-on: ubuntu-latest
     steps:

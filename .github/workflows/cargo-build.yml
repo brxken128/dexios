@@ -104,7 +104,7 @@ jobs:
 
       - if: ${{ failure() }}
         name: Send warning
-        run: echo "::warning title=Warning::Tests on OS:${{ matrix.rust }},RUST:${{ matrix.rust }} didn't passed"
+        run: echo "::warning title=Warning::Tests on OS:${{ matrix.rust }},RUST:${{ matrix.rust }} didn't pass"
     
 
   build:

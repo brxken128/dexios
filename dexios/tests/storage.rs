@@ -176,8 +176,10 @@ fn should_open_dir() {
     let stor = TestFileStorage::new(11);
     add_bar_foo_folder(&stor).unwrap();
 
-    match stor.read_file("bar_11/foo/") {
-        Ok(Entry::Dir(path)) => assert_eq!(path, PathBuf::from("bar_11/foo/")),
+    let foo_bar = ["bar_11", "foo"].iter().collect::<PathBuf>();
+
+    match stor.read_file(&foo_bar) {
+        Ok(Entry::Dir(path)) => assert_eq!(path, foo_bar),
         _ => unreachable!(),
     }
 }
@@ -188,10 +190,12 @@ fn should_remove_dir_with_subfiles() {
     add_hello_txt(&stor).unwrap();
     add_bar_foo_folder(&stor).unwrap();
 
-    let file = stor.read_file("bar_12/foo/").unwrap();
+    let bar = PathBuf::from("bar_12");
+    let foo_bar = ["bar_12", "foo"].iter().collect::<PathBuf>();
+    let file = stor.read_file(&foo_bar).unwrap();
 
     match stor.remove_dir_all(file) {
-        Ok(()) => match (fs::read_dir("bar_12/"), fs::read_dir("bar_12/foo/")) {
+        Ok(()) => match (fs::read_dir(&bar), fs::read_dir(&foo_bar)) {
             (Ok(_), Err(_)) => {}
             _ => unreachable!(),
         },
@@ -205,10 +209,12 @@ fn should_remove_dir_recursively_with_subfiles() {
     add_hello_txt(&stor).unwrap();
     add_bar_foo_folder(&stor).unwrap();
 
-    let file = stor.read_file("bar_13/").unwrap();
+    let bar = PathBuf::from("bar_13");
+    let foo_bar = ["bar_13", "foo"].iter().collect::<PathBuf>();
+    let file = stor.read_file(&bar).unwrap();
 
     match stor.remove_dir_all(file) {
-        Ok(()) => match (fs::read_dir("bar_13/"), fs::read_dir("bar_13/foo/")) {
+        Ok(()) => match (fs::read_dir(&bar), fs::read_dir(&foo_bar)) {
             (Err(_), Err(_)) => {}
             _ => unreachable!(),
         },
@@ -222,7 +228,7 @@ fn should_return_file_names_of_dir_subfiles() {
     add_hello_txt(&stor).unwrap();
     add_bar_foo_folder(&stor).unwrap();
 
-    let file = stor.read_file("bar_14/").unwrap();
+    let file = stor.read_file(PathBuf::from("bar_14")).unwrap();
 
     match stor.read_dir(&file) {
         Ok(files) => {
@@ -233,12 +239,12 @@ fn should_return_file_names_of_dir_subfiles() {
             assert_eq!(
                 sorted_file_names(file_names.iter().collect()),
                 vec![
-                    "bar_14/",
-                    "bar_14/foo",
-                    "bar_14/foo/hello.txt",
-                    "bar_14/foo/world.txt",
-                    "bar_14/hello.txt",
-                    "bar_14/world.txt",
+                    &PathBuf::from("bar_14"),
+                    &["bar_14", "foo"].iter().collect(),
+                    &["bar_14", "foo", "hello.txt"].iter().collect(),
+                    &["bar_14", "foo", "world.txt"].iter().collect(),
+                    &["bar_14", "hello.txt"].iter().collect(),
+                    &["bar_14", "world.txt"].iter().collect(),
                 ]
             )
         }
@@ -252,7 +258,7 @@ fn should_include_hidden_files_names() {
     add_hello_txt(&stor).unwrap();
     add_bar_foo_folder_with_hidden(&stor).unwrap();
 
-    let file = stor.read_file("bar_15/").unwrap();
+    let file = stor.read_file(PathBuf::from("bar_15")).unwrap();
 
     match stor.read_dir(&file) {
         Ok(files) => {
@@ -263,12 +269,12 @@ fn should_include_hidden_files_names() {
             assert_eq!(
                 sorted_file_names(file_names.iter().collect()),
                 vec![
-                    "bar_15/",
-                    "bar_15/.foo",
-                    "bar_15/.foo/hello.txt",
-                    "bar_15/.foo/world.txt",
-                    "bar_15/.hello.txt",
-                    "bar_15/world.txt",
+                    &PathBuf::from("bar_15"),
+                    &["bar_15", ".foo"].iter().collect(),
+                    &["bar_15", ".foo", "hello.txt"].iter().collect(),
+                    &["bar_15", ".foo", "world.txt"].iter().collect(),
+                    &["bar_15", ".hello.txt"].iter().collect(),
+                    &["bar_15", "world.txt"].iter().collect(),
                 ]
             )
         }

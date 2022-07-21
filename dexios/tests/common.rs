@@ -29,7 +29,7 @@ impl Deref for TestFileStorage {
 impl Drop for TestFileStorage {
     fn drop(&mut self) {
         fs::remove_file(format!("hello_{}.txt", self.test_case_n)).ok();
-        fs::remove_dir_all(format!("bar_{}/", self.test_case_n)).ok();
+        fs::remove_dir_all(format!("bar_{}", self.test_case_n)).ok();
     }
 }
 
@@ -58,32 +58,49 @@ pub fn add_hello_txt(stor: &TestFileStorage) -> Result<(), Error> {
 }
 
 pub fn add_bar_foo_folder(stor: &TestFileStorage) -> Result<(), Error> {
-    let bar_dir = format!("bar_{}", stor.test_case_n);
-    fs::create_dir(&bar_dir).map_err(|_| Error::CreateFile)?;
-    save_text_file(stor, format!("{}/hello.txt", &bar_dir), "hello")?;
-    save_text_file(stor, format!("{}/world.txt", &bar_dir), "world")?;
-    fs::create_dir(format!("{}/foo/", &bar_dir)).map_err(|_| Error::CreateFile)?;
-    save_text_file(stor, format!("{}/foo/hello.txt", &bar_dir), "hello")?;
-    save_text_file(stor, format!("{}/foo/world.txt", &bar_dir), "world")?;
+    let bar = PathBuf::from(format!("bar_{}", stor.test_case_n));
+    let mut foo_bar = bar.clone();
+    foo_bar.push("foo");
+
+    for folder in [bar, foo_bar] {
+        fs::create_dir(&folder).map_err(|_| Error::CreateFile)?;
+
+        for file in ["hello", "world"] {
+            let mut file_path = folder.clone();
+            file_path.push(format!("{}.txt", file));
+
+            save_text_file(stor, file_path, file)?;
+        }
+    }
+
     Ok(())
 }
 
 pub fn add_bar_foo_folder_with_hidden(stor: &TestFileStorage) -> Result<(), Error> {
-    let bar_dir = format!("bar_{}", stor.test_case_n);
-    fs::create_dir(&bar_dir).map_err(|_| Error::CreateFile)?;
-    save_text_file(stor, format!("{}/.hello.txt", &bar_dir), "hello")?;
-    save_text_file(stor, format!("{}/world.txt", &bar_dir), "world")?;
-    fs::create_dir(format!("{}/.foo/", &bar_dir)).map_err(|_| Error::CreateFile)?;
-    save_text_file(stor, format!("{}/.foo/hello.txt", &bar_dir), "hello")?;
-    save_text_file(stor, format!("{}/.foo/world.txt", &bar_dir), "world")?;
+    let bar = PathBuf::from(format!("bar_{}", stor.test_case_n));
+    let mut foo_bar = bar.clone();
+    foo_bar.push(".foo");
+
+    for (i, folder) in [bar, foo_bar].into_iter().enumerate() {
+        fs::create_dir(&folder).map_err(|_| Error::CreateFile)?;
+
+        for (j, file) in ["hello", "world"].into_iter().enumerate() {
+            let mut file_path = folder.clone();
+            file_path.push(format!(
+                "{}{}.txt",
+                if i == 0 && j == 0 { "." } else { "" },
+                file
+            ));
+
+            save_text_file(stor, file_path, file)?;
+        }
+    }
+
     Ok(())
 }
 
-pub fn sorted_file_names(file_names: Vec<&PathBuf>) -> Vec<&str> {
-    let mut keys = file_names
-        .iter()
-        .map(|k| k.to_str().unwrap())
-        .collect::<Vec<_>>();
+pub fn sorted_file_names(file_names: Vec<&PathBuf>) -> Vec<&PathBuf> {
+    let mut keys = file_names;
     keys.sort_unstable();
     keys
 }

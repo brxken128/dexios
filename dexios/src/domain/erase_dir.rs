@@ -85,7 +85,7 @@ mod tests {
         stor.add_hello_txt().unwrap();
         stor.add_bar_foo_folder().unwrap();
 
-        let file = stor.read_file("bar/").unwrap();
+        let file = stor.read_file("bar").unwrap();
         let file_path = file.path().to_path_buf();
 
         let req = Request {

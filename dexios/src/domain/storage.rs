@@ -223,22 +223,44 @@ impl InMemoryStorage {
     }
 
     pub(crate) fn add_bar_foo_folder(&self) -> Result<(), Error> {
-        self.save_file("bar/", IMFile::Dir)?;
-        self.save_text_file("bar/hello.txt", "hello")?;
-        self.save_text_file("bar/world.txt", "world")?;
-        self.save_file("bar/foo/", IMFile::Dir)?;
-        self.save_text_file("bar/foo/hello.txt", "hello")?;
-        self.save_text_file("bar/foo/world.txt", "world")?;
+        let bar = PathBuf::from("bar");
+        let mut foo_bar = bar.clone();
+        foo_bar.push("foo");
+
+        for folder in [bar, foo_bar] {
+            self.save_file(&folder, IMFile::Dir)?;
+
+            for file in ["hello", "world"] {
+                let mut file_path = folder.clone();
+                file_path.push(format!("{}.txt", file));
+
+                self.save_text_file(file_path, file)?;
+            }
+        }
+
         Ok(())
     }
 
     pub(crate) fn add_bar_foo_folder_with_hidden(&self) -> Result<(), Error> {
-        self.save_file("bar/", IMFile::Dir)?;
-        self.save_text_file("bar/.hello.txt", "hello")?;
-        self.save_text_file("bar/world.txt", "world")?;
-        self.save_file("bar/.foo/", IMFile::Dir)?;
-        self.save_text_file("bar/.foo/hello.txt", "hello")?;
-        self.save_text_file("bar/.foo/world.txt", "world")?;
+        let bar = PathBuf::from("bar");
+        let mut foo_bar = bar.clone();
+        foo_bar.push(".foo");
+
+        for (i, folder) in [bar, foo_bar].into_iter().enumerate() {
+            self.save_file(&folder, IMFile::Dir)?;
+
+            for (j, file) in ["hello", "world"].into_iter().enumerate() {
+                let mut file_path = folder.clone();
+                file_path.push(format!(
+                    "{}{}.txt",
+                    if i == 0 && j == 0 { "." } else { "" },
+                    file
+                ));
+
+                self.save_text_file(file_path, file)?;
+            }
+        }
+
         Ok(())
     }
 }
@@ -453,11 +475,8 @@ where
 mod tests {
     use super::*;
 
-    fn sorted_file_names(file_names: Vec<&PathBuf>) -> Vec<&str> {
-        let mut keys = file_names
-            .iter()
-            .map(|k| k.to_str().unwrap())
-            .collect::<Vec<_>>();
+    fn sorted_file_names(file_names: Vec<&PathBuf>) -> Vec<&PathBuf> {
+        let mut keys = file_names;
         keys.sort_unstable();
         keys
     }
@@ -628,8 +647,9 @@ mod tests {
         let stor = InMemoryStorage::default();
         stor.add_bar_foo_folder().unwrap();
 
-        match stor.read_file("bar/foo/") {
-            Ok(Entry::Dir(path)) => assert_eq!(path, PathBuf::from("bar/foo/")),
+        let file_path: PathBuf = ["bar", "foo"].iter().collect();
+        match stor.read_file(&file_path) {
+            Ok(Entry::Dir(path)) => assert_eq!(path, file_path),
             _ => unreachable!(),
         }
     }
@@ -640,7 +660,9 @@ mod tests {
         stor.add_hello_txt().unwrap();
         stor.add_bar_foo_folder().unwrap();
 
-        let file = stor.read_file("bar/foo/").unwrap();
+        let path: PathBuf = ["bar", "foo"].iter().collect();
+
+        let file = stor.read_file(path).unwrap();
         let file_path = file.path().to_path_buf();
 
         match stor.remove_dir_all(file) {
@@ -650,7 +672,12 @@ mod tests {
                 let keys = files.keys().collect::<Vec<_>>();
                 assert_eq!(
                     sorted_file_names(keys),
-                    vec!["bar/", "bar/hello.txt", "bar/world.txt", "hello.txt"]
+                    vec![
+                        &PathBuf::from("bar"),
+                        &["bar", "hello.txt"].iter().collect(),
+                        &["bar", "world.txt"].iter().collect(),
+                        &PathBuf::from("hello.txt")
+                    ]
                 )
             }
             _ => unreachable!(),
@@ -671,7 +698,7 @@ mod tests {
                 assert_eq!(stor.files().get(&file_path).cloned(), None);
                 let files = stor.files();
                 let keys = files.keys().collect();
-                assert_eq!(sorted_file_names(keys), vec!["hello.txt"])
+                assert_eq!(sorted_file_names(keys), vec![&PathBuf::from("hello.txt")])
             }
             _ => unreachable!(),
         }
@@ -683,7 +710,7 @@ mod tests {
         stor.add_hello_txt().unwrap();
         stor.add_bar_foo_folder().unwrap();
 
-        let file = stor.read_file("bar/").unwrap();
+        let file = stor.read_file(PathBuf::from("bar")).unwrap();
 
         match stor.read_dir(&file) {
             Ok(files) => {
@@ -694,12 +721,12 @@ mod tests {
                 assert_eq!(
                     sorted_file_names(file_names.iter().collect()),
                     vec![
-                        "bar/",
-                        "bar/foo/",
-                        "bar/foo/hello.txt",
-                        "bar/foo/world.txt",
-                        "bar/hello.txt",
-                        "bar/world.txt",
+                        &PathBuf::from("bar"),
+                        &["bar", "foo"].iter().collect(),
+                        &["bar", "foo", "hello.txt"].iter().collect(),
+                        &["bar", "foo", "world.txt"].iter().collect(),
+                        &["bar", "hello.txt"].iter().collect(),
+                        &["bar", "world.txt"].iter().collect(),
                     ]
                 )
             }
@@ -713,7 +740,7 @@ mod tests {
         stor.add_hello_txt().unwrap();
         stor.add_bar_foo_folder_with_hidden().unwrap();
 
-        let file = stor.read_file("bar/").unwrap();
+        let file = stor.read_file(PathBuf::from("bar")).unwrap();
 
         match stor.read_dir(&file) {
             Ok(files) => {
@@ -724,12 +751,12 @@ mod tests {
                 assert_eq!(
                     sorted_file_names(file_names.iter().collect()),
                     vec![
-                        "bar/",
-                        "bar/.foo/",
-                        "bar/.foo/hello.txt",
-                        "bar/.foo/world.txt",
-                        "bar/.hello.txt",
-                        "bar/world.txt",
+                        &PathBuf::from("bar"),
+                        &["bar", ".foo"].iter().collect(),
+                        &["bar", ".foo", "hello.txt"].iter().collect(),
+                        &["bar", ".foo", "world.txt"].iter().collect(),
+                        &["bar", ".hello.txt"].iter().collect(),
+                        &["bar", "world.txt"].iter().collect(),
                     ]
                 )
             }

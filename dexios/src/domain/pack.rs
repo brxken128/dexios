@@ -144,7 +144,7 @@ mod tests {
         stor.add_hello_txt().unwrap();
         stor.add_bar_foo_folder_with_hidden().unwrap();
 
-        let file = stor.read_file("bar/").unwrap();
+        let file = stor.read_file("bar").unwrap();
         let mut compress_files = stor.read_dir(&file).unwrap();
         compress_files.sort_by(|a, b| a.path().cmp(b.path()));
 

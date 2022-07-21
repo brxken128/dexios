@@ -102,6 +102,11 @@ jobs:
           command: test
           args: --all-features --release --verbose
 
+      - if: ${{ failure() }}
+        name: Send warning
+        run: echo "::warning title=Warning::Tests on OS:${{ matrix.rust }},RUST:${{ matrix.rust }} didn't passed"
+    
+
   build:
     strategy:
       matrix:

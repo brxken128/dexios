@@ -7,28 +7,32 @@ on:
     branches: [ master ]
   workflow_dispatch:
     branches: [ master ]
+
 env:
   CARGO_TERM_COLOR: always
-jobs:
-  audit:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions-rs/toolchain@v1
-      with:
-          toolchain: stable
-    - name: Audit
-      uses: actions-rs/cargo@v1
-      with:
-        command: audit
 
+jobs:
   clippy:
+    name: clippy (ubuntu-latest, stable)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
     - uses: actions-rs/toolchain@v1
       with:
-          toolchain: stable
+        toolchain: stable
+        override: true
+        components: clippy
+
+    - name: Restore cargo cache
+      uses: actions/cache@v2.1.7
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-stable-${{ hashFiles('Cargo.lock') }}
+
     - name: Clippy
       uses: actions-rs/cargo@v1
       with:
@@ -36,12 +40,24 @@ jobs:
         args: --no-deps
 
   check:
+    name: check (ubuntu-latest, stable)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
     - uses: actions-rs/toolchain@v1
       with:
-          toolchain: stable
+        toolchain: stable
+
+    - name: Restore cargo cache
+      uses: actions/cache@v2.1.7
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-stable-${{ hashFiles('Cargo.lock') }}
+
     - name: Check
       uses: actions-rs/cargo@v1
       with:
@@ -49,72 +65,102 @@ jobs:
         args: --release
 
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+        rust:
+          - stable
+          - beta
+          - nightly
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions-rs/toolchain@v1
-      with:
-          toolchain: stable
-    - name: Test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --release
+      - uses: actions/checkout@v3
 
-  build-linux:
-    runs-on: ubuntu-latest
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+
+      - name: Restore cargo cache
+        uses: actions/cache@v2.1.7
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ matrix.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('Cargo.lock') }}
+
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --verbose
+
+  build:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+        rust:
+          - stable
+
+    runs-on: ${{ matrix.os }}
+
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions-rs/toolchain@v1
-      with:
-          toolchain: stable
+      - uses: actions/checkout@v3
+
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+
+      - name: Restore cargo cache
+        uses: actions/cache@v2.1.7
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('Cargo.lock') }}
+
     - name: Build
       uses: actions-rs/cargo@v1
       with:
         command: build
         args: --release
-    - name: Strip
+
+    - if: matrix.os != 'windows-latest'
+      name: Strip
       run: strip target/release/dexios
-    - name: Hash the Binary
+
+    - if: matrix.os == 'ubuntu-latest'
+      name: Hash the Binary
       run: sha256sum target/release/dexios
-    - name: Upload Binary as artifact
+
+    - if: matrix.os == 'ubuntu-latest'
+      name: Upload Binary as artifact
       uses: actions/upload-artifact@v3
       with:
         name: dexios-linux-amd64
         path: target/release/dexios
-  build-windows:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions-rs/toolchain@v1
-      with:
-          toolchain: stable
-    - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --release
-    - name: Upload Binary as artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: dexios-windows-amd64
-        path: target/release/dexios.exe
-  build-macos:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions-rs/toolchain@v1
-      with:
-          toolchain: stable
-    - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --release
-    - name: Strip
-      run: strip target/release/dexios
-    - name: Upload Binary as artifact
+    - if: matrix.os == 'macos-latest'
+      name: Upload Binary as artifact
       uses: actions/upload-artifact@v3
       with:
         name: dexios-macos-amd64
         path: target/release/dexios
+    - if: matrix.os == 'windows-latest'
+      name: Upload Binary as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: dexios-windows-amd64
+        path: target/release/dexios.exe

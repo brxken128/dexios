@@ -104,7 +104,6 @@ jobs:
       - if: ${{ (matrix.rust != 'stable' || matrix.os != 'ubuntu-latest') && failure() }}
         name: Send warning
         run: echo "::warning title=Tests (${{ matrix.os }},${{ matrix.rust }}) didn't passed"
-    
 
   build:
     strategy:

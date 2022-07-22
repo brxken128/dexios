@@ -46,6 +46,10 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
         HeaderVersion::V4 => {
             let keyslot = header.keyslots.clone().unwrap();
 
+            if keyslots.len() < 1 {
+                return Err(anyhow::anyhow!("No keyslots found, so we cannot continue."));
+            }
+
             match key_old {
                 Key::User => info!("Please enter your old key below"),
                 Key::Keyfile(_) => info!("Reading your old keyfile"),
@@ -139,6 +143,10 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
         }
         HeaderVersion::V5 => {
             let mut keyslots = header.keyslots.clone().unwrap();
+
+            if keyslots.len() < 1 {
+                return Err(anyhow::anyhow!("No keyslots found, so we cannot continue."));
+            }
 
             match key_old {
                 Key::User => info!("Please enter your old key below"),
@@ -272,6 +280,10 @@ pub fn add_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
         HeaderVersion::V5 => {
             let mut keyslots = header.keyslots.clone().unwrap();
 
+            if keyslots.len() < 1 {
+                return Err(anyhow::anyhow!("No keyslots found, so we cannot continue."));
+            }
+
             if keyslots.len() >= 4 {
                 return Err(anyhow::anyhow!("You have reached the maximum limit of keyslots (4) for this file! Please consider removing a keyslot or changing a key instead."));
             }
@@ -376,6 +388,8 @@ pub fn del_key(input: &str, key: &Key) -> Result<()> {
                 return Err(anyhow::anyhow!(
                     "Only 1 keyslot detected! Removing this key will make this file un-decryptable. Please consider stripping the header instead."
                 ));
+            } else if keyslots.len() < 1 {
+                return Err(anyhow::anyhow!("No keyslots found, so we cannot continue."));
             }
 
             let raw_key = key.get_secret(&PasswordState::Direct)?;

@@ -122,8 +122,6 @@ fn main() -> Result<()> {
                     Key::Env
                 } else if let Ok(true) = sub_matches_del_key.try_contains_id("autogenerate") {
                     Key::Generate
-                } else if std::env::var("DEXIOS_KEY").is_ok() {
-                    Key::Env
                 } else {
                     Key::User
                 };

@@ -250,8 +250,10 @@ pub fn key_manipulation_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
                 .context("No keyfile/invalid text provided")?
                 .to_string(),
         )
-    } else if sub_matches.is_present("autogenerate") {
+    } else if let Ok(true) = sub_matches.try_contains_id("autogenerate") {
         Key::Generate
+    } else if std::env::var("DEXIOS_KEY").is_ok() {
+        Key::Env
     } else {
         Key::User
     };

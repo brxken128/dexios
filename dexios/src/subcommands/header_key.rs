@@ -4,6 +4,7 @@ use crate::global::states::Key;
 use crate::global::states::PasswordState;
 use crate::utils::gen_salt;
 use anyhow::{Context, Result};
+use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
 use dexios_core::primitives::Mode;
 use dexios_core::primitives::ENCRYPTED_MASTER_KEY_LEN;
@@ -280,45 +281,7 @@ pub fn add_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             }
             let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
 
-            let mut index = 0;
-            let mut master_key = [0u8; MASTER_KEY_LEN];
-
-            for (i, keyslot) in keyslots.iter().enumerate() {
-                let hash_start_time = Instant::now();
-                let key_old = keyslot
-                    .hash_algorithm
-                    .hash(raw_key_old.clone(), &keyslot.salt)?;
-                let hash_duration = hash_start_time.elapsed();
-                success!(
-                    "Successfully hashed your old key [took {:.2}s]",
-                    hash_duration.as_secs_f32()
-                );
-
-                let cipher = Ciphers::initialize(key_old, &header.header_type.algorithm)?;
-
-                let master_key_result =
-                    cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
-
-                if master_key_result.is_err() {
-                    continue;
-                }
-
-                let mut master_key_decrypted = master_key_result.unwrap();
-                let len = MASTER_KEY_LEN.min(master_key_decrypted.len());
-                master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
-                master_key_decrypted.zeroize();
-
-                index = i;
-
-                drop(cipher);
-                break;
-            }
-
-            if master_key == [0u8; MASTER_KEY_LEN] {
-                return Err(anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"));
-            }
-
-            let master_key = Protected::new(master_key);
+            let master_key = dexios_core::key::decrypt_master_key(raw_key_old, &header)?;
 
             match key_new {
                 Key::Generate => info!("Generating a new key"),
@@ -326,13 +289,13 @@ pub fn add_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
                 Key::Keyfile(_) => info!("Reading your new keyfile"),
                 Key::Env => (),
             }
+
             let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
             let salt_new = gen_salt();
             let hash_start_time = Instant::now();
+
             // TODO(brxken128): allow using argon2id/balloon/inherit
-            let key_new = keyslots[index]
-                .hash_algorithm
-                .hash(raw_key_new, &salt_new)?;
+            let key_new = HashingAlgorithm::Blake3Balloon(5).hash(raw_key_new, &salt_new)?;
             let hash_duration = hash_start_time.elapsed();
             success!(
                 "Successfully hashed your new key [took {:.2}s]",
@@ -356,12 +319,14 @@ pub fn add_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
 
             // TODO(brxken128): allow using argon2id/balloon/inherit
-            keyslots[index] = Keyslot {
+            let keyslot_new = Keyslot {
                 encrypted_key: master_key_encrypted_array,
-                hash_algorithm: keyslots[index].hash_algorithm.clone(),
+                hash_algorithm: HashingAlgorithm::Blake3Balloon(5),
                 nonce: master_key_nonce_new,
                 salt: salt_new,
             };
+
+            keyslots.push(keyslot_new);
 
             let header_new = Header {
                 header_type: header.header_type,
@@ -375,7 +340,7 @@ pub fn add_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
                 .context("Unable to seek back to the start of your input file")?;
             header_new.write(&mut input_file)?;
 
-            success!("Key successfully updated for {}", input);
+            success!("Key successfully added for {}", input);
         }
     }
     Ok(())

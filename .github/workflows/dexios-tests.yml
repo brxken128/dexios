@@ -267,4 +267,31 @@ jobs:
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile-new 100MB.enc 100MB.bin
     - name: Show header details
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header details 100MB.enc
+  key-change:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Retrieve Dexios
+      uses: actions/download-artifact@v3
+      with:
+        name: dexios
+        path: target/release/dexios
+    - name: Make Binary Executable
+      run: chmod +x /home/runner/work/dexios/dexios/target/release/dexios/dexios
+    - name: Generate test file
+      run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
+    - name: Generate keyfile
+      run: dd if=/dev/urandom of=keyfile bs=1 count=4096
+    - name: Generate keyfile for test
+      run: dd if=/dev/urandom of=keyfile-new bs=1 count=4096
+    - name: Encrypt in stream mode (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 100MB.bin 100MB.enc
+    - name: Change the key (from new keyfile)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios key change -k keyfile -n keyfile-new 100MB.enc
+    - name: Decrypt in stream mode with changed key (XChaCha20-Poly1305)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile-new 100MB.enc 100MB.bin
+    - name: Show header details
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header details 100MB.enc
+      
       

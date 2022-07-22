@@ -7,6 +7,7 @@ use crate::utils::gen_salt;
 use anyhow::{Context, Result};
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
+use dexios_core::key::vec_to_arr;
 use dexios_core::primitives::Mode;
 use dexios_core::primitives::ENCRYPTED_MASTER_KEY_LEN;
 use dexios_core::primitives::MASTER_KEY_LEN;
@@ -91,18 +92,14 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
             let master_key_result =
                 cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
-            let mut master_key_decrypted = master_key_result.map_err(|_| {
+            let master_key_decrypted = master_key_result.map_err(|_| {
                 anyhow::anyhow!(
                     "Unable to decrypt your master key (maybe you supplied the wrong key?)"
                 )
             })?;
 
-            let mut master_key = [0u8; MASTER_KEY_LEN];
-            let len = MASTER_KEY_LEN.min(master_key_decrypted.len());
-            master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
-
-            master_key_decrypted.zeroize();
-            let master_key = Protected::new(master_key);
+            let master_key =
+                Protected::<[u8; MASTER_KEY_LEN]>::new(vec_to_arr(master_key_decrypted));
 
             drop(cipher);
 
@@ -228,10 +225,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let master_key_encrypted = master_key_result
                 .map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
 
-            let mut master_key_encrypted_array = [0u8; ENCRYPTED_MASTER_KEY_LEN];
-
-            let len = ENCRYPTED_MASTER_KEY_LEN.min(master_key_encrypted.len());
-            master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
+            let master_key_encrypted_array = vec_to_arr(master_key_encrypted);
 
             // TODO(brxken128): allow using argon2id/balloon/inherit
             keyslots[index] = Keyslot {
@@ -327,10 +321,7 @@ pub fn add_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let master_key_encrypted = master_key_result
                 .map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
 
-            let mut master_key_encrypted_array = [0u8; ENCRYPTED_MASTER_KEY_LEN];
-
-            let len = ENCRYPTED_MASTER_KEY_LEN.min(master_key_encrypted.len());
-            master_key_encrypted_array[..len].copy_from_slice(&master_key_encrypted[..len]);
+            let master_key_encrypted_array = vec_to_arr(master_key_encrypted);
 
             // TODO(brxken128): allow using argon2id/balloon/inherit
             let keyslot_new = Keyslot {

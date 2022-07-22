@@ -136,14 +136,6 @@ pub fn decrypt_master_key(
     header: &Header,
     // TODO: use custom error instead of anyhow
 ) -> Result<Protected<[u8; MASTER_KEY_LEN]>> {
-    // TODO: choose better place for this util
-    fn vec_to_arr(master_key_vec: Vec<u8>) -> Protected<[u8; MASTER_KEY_LEN]> {
-        let mut master_key = [0u8; MASTER_KEY_LEN];
-        let len = MASTER_KEY_LEN.min(master_key_vec.len());
-        master_key[..len].copy_from_slice(&master_key_vec[..len]);
-        Protected::new(master_key)
-    }
-
     match header.header_type.version {
         HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
             argon2id_hash(raw_key, &header.salt.unwrap(), &header.header_type.version)
@@ -157,6 +149,7 @@ pub fn decrypt_master_key(
             cipher
                 .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
                 .map(vec_to_arr)
+                .map(Protected::new)
                 .map_err(|_| anyhow::anyhow!("Cannot decrypt master key"))
         }
         HeaderVersion::V5 => {
@@ -172,9 +165,18 @@ pub fn decrypt_master_key(
                     cipher
                         .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
                         .map(vec_to_arr)
+                        .map(Protected::new)
                         .ok()
                 })
                 .ok_or_else(|| anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"))
         }
     }
+}
+
+// TODO: choose better place for this util
+pub fn vec_to_arr<const N: usize>(master_key_vec: Vec<u8>) -> [u8; N] {
+    let mut master_key = [0u8; N];
+    let len = N.min(master_key_vec.len());
+    master_key[..len].copy_from_slice(&master_key_vec[..len]);
+    master_key
 }

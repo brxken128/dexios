@@ -231,7 +231,9 @@ jobs:
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in stream mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 100MB.bin 100MB.enc
-    - name: Add new key
-      run: DEXIOS_KEY=test /home/runner/work/dexios/dexios/target/release/dexios/dexios key add -k keyfile 100MB.enc
+    - name: Export DEXIOS_KEY environment variable
+      run: export DEXIOS_KEY=test
+    - name: Add new key (from environment variable)
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios key add -k keyfile 100MB.enc
     - name: Decrypt in stream mode with added key (XChaCha20-Poly1305)
-      run: DEXIOS_KEY=test /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHy 100MB.enc 100MB.bin
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHy 100MB.enc 100MB.bin

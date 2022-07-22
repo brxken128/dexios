@@ -46,9 +46,10 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
         HeaderVersion::V4 => {
             let keyslots = header.keyslots.clone().unwrap();
 
-            if keyslots.len() < 1 {
-                return Err(anyhow::anyhow!("No keyslots found, so we cannot continue."));
-            }
+            let keyslot = keyslots
+                .iter()
+                .next()
+                .ok_or_else(|| anyhow::anyhow!("No keyslots found, so we cannot continue."))?;
 
             match key_old {
                 Key::User => info!("Please enter your old key below"),
@@ -89,7 +90,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let cipher = Ciphers::initialize(key_old, &header.header_type.algorithm)?;
 
             let master_key_result =
-                cipher.decrypt(&keyslots[0].nonce, keyslots[0].encrypted_key.as_slice());
+                cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
             let mut master_key_decrypted = master_key_result.map_err(|_| {
                 anyhow::anyhow!(
                     "Unable to decrypt your master key (maybe you supplied the wrong key?)"
@@ -123,9 +124,9 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
             let keyslots = vec![Keyslot {
                 encrypted_key: master_key_encrypted_array,
-                hash_algorithm: keyslots[0].hash_algorithm.clone(),
+                hash_algorithm: keyslot.hash_algorithm.clone(),
                 nonce: master_key_nonce_new,
-                salt: keyslots[0].salt, // we need to re-use/inherit the old salt as it's included with AAD
+                salt: keyslot.salt, // we need to re-use/inherit the old salt as it's included with AAD
             }];
 
             let header_new = Header {
@@ -283,9 +284,7 @@ pub fn add_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
             if keyslots.len() < 1 {
                 return Err(anyhow::anyhow!("No keyslots found, so we cannot continue."));
-            }
-
-            if keyslots.len() >= 4 {
+            } else if keyslots.len() >= 4 {
                 return Err(anyhow::anyhow!("You have reached the maximum limit of keyslots (4) for this file! Please consider removing a keyslot or changing a key instead."));
             }
 

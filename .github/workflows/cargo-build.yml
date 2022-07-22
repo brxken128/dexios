@@ -64,44 +64,6 @@ jobs:
         command: check
         args: --release
 
-  test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
-        rust:
-          - stable
-          - beta
-          - nightly
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust }}
-          override: true
-
-      - name: Restore cargo cache
-        uses: actions/cache@v2.1.7
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ matrix.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('Cargo.lock') }}
-
-      - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features --release --verbose
-
   build:
     strategy:
       matrix:

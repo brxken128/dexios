@@ -150,6 +150,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let mut index = 0;
             let mut master_key = [0u8; MASTER_KEY_LEN];
 
+            // we need the index, so we can't use `decrypt_master_key()`
             for (i, keyslot) in keyslots.iter().enumerate() {
                 let hash_start_time = Instant::now();
                 let key_old = keyslot
@@ -342,6 +343,97 @@ pub fn add_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             header_new.write(&mut input_file)?;
 
             success!("Key successfully added for {}", input);
+        }
+    }
+    Ok(())
+}
+
+pub fn del_key(input: &str, key: &Key) -> Result<()> {
+    let mut input_file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(input)
+        .with_context(|| format!("Unable to open input file: {}", input))?;
+
+    let (header, _) = dexios_core::header::Header::deserialize(&mut input_file)?;
+
+    let header_size: i64 = header
+        .get_size()
+        .try_into()
+        .context("Unable to convert header size (u64) to i64")?;
+
+    match header.header_type.version {
+        HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 | HeaderVersion::V4 => {
+            return Err(anyhow::anyhow!(
+                "Deleting a key is not supported in header versions below V5."
+            ));
+        }
+        HeaderVersion::V5 => {
+            let mut keyslots = header.keyslots.clone().unwrap();
+
+            if keyslots.len() == 1 {
+                // TODO(brxken128): add a prompt to the user to see if they'd like to continue
+                return Err(anyhow::anyhow!(
+                    "Only 1 keyslot detected! Removing this key will make this file un-decryptable. Please consider stripping the header instead."
+                ));
+            }
+
+            let raw_key = key.get_secret(&PasswordState::Direct)?;
+
+            let mut index = 0;
+            let mut master_key = [0u8; MASTER_KEY_LEN];
+
+            // we need the index, so we can't use `decrypt_master_key()`
+            for (i, keyslot) in keyslots.iter().enumerate() {
+                let hash_start_time = Instant::now();
+                let key_old = keyslot
+                    .hash_algorithm
+                    .hash(raw_key.clone(), &keyslot.salt)?;
+                let hash_duration = hash_start_time.elapsed();
+                success!(
+                    "Successfully hashed your old key [took {:.2}s]",
+                    hash_duration.as_secs_f32()
+                );
+
+                let cipher = Ciphers::initialize(key_old, &header.header_type.algorithm)?;
+
+                let master_key_result =
+                    cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
+
+                if master_key_result.is_err() {
+                    continue;
+                }
+
+                let mut master_key_decrypted = master_key_result.unwrap();
+                let len = MASTER_KEY_LEN.min(master_key_decrypted.len());
+                master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
+                master_key_decrypted.zeroize();
+
+                index = i;
+
+                drop(cipher);
+                break;
+            }
+
+            if master_key == [0u8; MASTER_KEY_LEN] {
+                return Err(anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"));
+            }
+
+            keyslots.remove(index);
+
+            let header_new = Header {
+                header_type: header.header_type,
+                nonce: header.nonce,
+                salt: None,
+                keyslots: Some(keyslots),
+            };
+
+            input_file
+                .seek(std::io::SeekFrom::Current(-header_size))
+                .context("Unable to seek back to the start of your input file")?;
+            header_new.write(&mut input_file)?;
+
+            success!("Key successfully updated for {}", input);
         }
     }
     Ok(())

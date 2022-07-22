@@ -82,27 +82,26 @@ fn main() -> Result<()> {
             _ => (),
         },
         Some(("key", sub_matches)) => match sub_matches.subcommand_name() {
-            // TODO(brxken128): change keyfile references to `key`
             Some("change") => {
                 let sub_matches_change_key = sub_matches.subcommand_matches("change").unwrap();
 
-                let (keyfile_old, keyfile_new) = key_manipulation_params(sub_matches_change_key)?;
+                let (key_old, key_new) = key_manipulation_params(sub_matches_change_key)?;
 
                 subcommands::header_key::change_key(
                     &get_param("input", sub_matches_change_key)?,
-                    &keyfile_old,
-                    &keyfile_new,
+                    &key_old,
+                    &key_new,
                 )?;
             }
             Some("add") => {
                 let sub_matches_add_key = sub_matches.subcommand_matches("add").unwrap();
 
-                let (keyfile_old, keyfile_new) = key_manipulation_params(sub_matches_add_key)?;
+                let (key_old, key_new) = key_manipulation_params(sub_matches_add_key)?;
 
                 subcommands::header_key::add_key(
                     &get_param("input", sub_matches_add_key)?,
-                    &keyfile_old,
-                    &keyfile_new,
+                    &key_old,
+                    &key_new,
                 )?;
             }
             Some("del") => {

@@ -44,7 +44,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             ));
         }
         HeaderVersion::V4 => {
-            let keyslot = header.keyslots.clone().unwrap();
+            let keyslots = header.keyslots.clone().unwrap();
 
             if keyslots.len() < 1 {
                 return Err(anyhow::anyhow!("No keyslots found, so we cannot continue."));
@@ -66,7 +66,8 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
 
             let hash_start_time = Instant::now();
-            let key_old = balloon_hash(raw_key_old, &keyslot[0].salt, &header.header_type.version)?;
+            let key_old =
+                balloon_hash(raw_key_old, &keyslots[0].salt, &header.header_type.version)?;
             let hash_duration = hash_start_time.elapsed();
             success!(
                 "Successfully hashed your old key [took {:.2}s]",
@@ -88,7 +89,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let cipher = Ciphers::initialize(key_old, &header.header_type.algorithm)?;
 
             let master_key_result =
-                cipher.decrypt(&keyslot[0].nonce, keyslot[0].encrypted_key.as_slice());
+                cipher.decrypt(&keyslots[0].nonce, keyslots[0].encrypted_key.as_slice());
             let mut master_key_decrypted = master_key_result.map_err(|_| {
                 anyhow::anyhow!(
                     "Unable to decrypt your master key (maybe you supplied the wrong key?)"
@@ -122,9 +123,9 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
             let keyslots = vec![Keyslot {
                 encrypted_key: master_key_encrypted_array,
-                hash_algorithm: keyslot[0].hash_algorithm.clone(),
+                hash_algorithm: keyslots[0].hash_algorithm.clone(),
                 nonce: master_key_nonce_new,
-                salt: keyslot[0].salt,
+                salt: keyslots[0].salt, // we need to re-use/inherit the old salt as it's included with AAD
             }];
 
             let header_new = Header {

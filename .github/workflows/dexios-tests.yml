@@ -232,6 +232,6 @@ jobs:
     - name: Encrypt in stream mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHyk keyfile 100MB.bin 100MB.enc
     - name: Add new key
-      run: DEXIOS_KEY=test /home/runner/work/dexios/dexios/target/release/dexios/dexios key add 100MB.enc
+      run: DEXIOS_KEY=test /home/runner/work/dexios/dexios/target/release/dexios/dexios key add -k keyfile 100MB.enc
     - name: Decrypt in stream mode with added key (XChaCha20-Poly1305)
-      run: DEXIOS_KEY=test /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHyk keyfile 100MB.enc 100MB.bin
+      run: DEXIOS_KEY=test /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHy 100MB.enc 100MB.bin

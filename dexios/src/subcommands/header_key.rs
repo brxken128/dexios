@@ -12,7 +12,7 @@ use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
 use dexios_core::{
     cipher::Ciphers,
-    header::{HashingAlgorithm, Keyslot},
+    header::Keyslot,
 };
 use dexios_core::{key::balloon_hash, primitives::gen_nonce};
 use paris::info;
@@ -65,7 +65,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let hash_start_time = Instant::now();
             let key_old = balloon_hash(
                 raw_key_old,
-                &header.salt.unwrap(),
+                &keyslot[0].salt,
                 &header.header_type.version,
             )?;
             let hash_duration = hash_start_time.elapsed();
@@ -123,9 +123,9 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
 
             let keyslots = vec![Keyslot {
                 encrypted_key: master_key_encrypted_array,
-                hash_algorithm: HashingAlgorithm::Blake3Balloon(4), // this is the only supported hashing algorithm for V4 headers
+                hash_algorithm: keyslot[0].hash_algorithm.clone(),
                 nonce: master_key_nonce_new,
-                salt: header.salt.unwrap(),
+                salt: keyslot[0].salt,
             }];
 
             let header_new = Header {

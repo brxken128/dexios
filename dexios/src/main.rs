@@ -82,6 +82,7 @@ fn main() -> Result<()> {
             _ => (),
         },
         Some(("key", sub_matches)) => match sub_matches.subcommand_name() {
+            // TODO(brxken128): change keyfile references to `key`
             Some("change") => {
                 let sub_matches_change_key = sub_matches.subcommand_matches("change").unwrap();
 
@@ -103,6 +104,30 @@ fn main() -> Result<()> {
                     &keyfile_old,
                     &keyfile_new,
                 )?;
+            }
+            Some("del") => {
+                // TODO(brxken128): unify `Key` creation with one function
+                use crate::global::states::Key;
+                use anyhow::Context;
+
+                let sub_matches_del_key = sub_matches.subcommand_matches("del").unwrap();
+
+                let key = if sub_matches_del_key.is_present("keyfile") {
+                    Key::Keyfile(
+                        sub_matches_del_key
+                            .value_of("keyfile")
+                            .context("No keyfile/invalid text provided")?
+                            .to_string(),
+                    )
+                } else if std::env::var("DEXIOS_KEY").is_ok() {
+                    Key::Env
+                } else if let Ok(true) = sub_matches_del_key.try_contains_id("autogenerate") {
+                    Key::Generate
+                } else {
+                    Key::User
+                };
+
+                subcommands::header_key::del_key(&get_param("input", sub_matches_del_key)?, &key)?;
             }
             _ => (),
         },

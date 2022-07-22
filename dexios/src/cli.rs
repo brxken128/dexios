@@ -415,7 +415,27 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .help("Use a keyfile as the new key"),
                         ),
                 )
-            )
+                .subcommand(
+                    Command::new("del")
+                        .about("Delete a key from an encrypted file (for advanced users)")
+                        .arg_required_else_help(true)
+                        .arg(
+                            Arg::new("input")
+                                .value_name("input")
+                                .takes_value(true)
+                                .required(true)
+                                .help("The encrypted file"),
+                        )
+                        .arg(
+                            Arg::new("keyfile")
+                                .short('k')
+                                .long("keyfile-old")
+                                .value_name("file")
+                                .takes_value(true)
+                                .help("Use an old keyfile to decrypt the master key"),
+                        ),
+                )       
+         )
         .subcommand(
             Command::new("header")
                 .about("Manipulate encrypted headers (for advanced users)")

@@ -53,6 +53,7 @@ pub fn unpack(
             .context("Unable to create a PathBuf from your output directory")?;
 
         let item = archive.by_index(i).context("Unable to index the archive")?;
+
         match item.enclosed_name() {
             Some(path) => full_path.push(path),
             None => continue,
@@ -117,6 +118,7 @@ pub fn unpack(
             if print_mode == &PrintMode::Verbose {
                 logger.info(format!("Extracting {}", file_name));
             }
+
             let mut output_file =
                 File::create(full_path).context("Error creating an output file")?;
             std::io::copy(&mut file, &mut output_file)

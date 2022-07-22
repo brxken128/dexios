@@ -32,7 +32,13 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
     ));
 
     if file.is_dir() {
-        domain::erase_dir::execute(stor, domain::erase_dir::Request { file, passes })?;
+        domain::erase_dir::execute(
+            stor,
+            domain::erase_dir::Request {
+                entry: file,
+                passes,
+            },
+        )?;
 
         logger.success(format!("Deleted directory: {}", input));
     } else {

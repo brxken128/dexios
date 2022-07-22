@@ -1,0 +1,16 @@
+# A routine check to see if there are any Rust-specific security vulnerabilities 
+# in the repo we should be aware of.
+
+name: audit
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 1" # every Monday
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/audit-check@v1.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

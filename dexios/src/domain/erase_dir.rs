@@ -30,7 +30,7 @@ pub struct Request<RW>
 where
     RW: Read + Write + Seek,
 {
-    pub file: domain::storage::File<RW>,
+    pub entry: domain::storage::Entry<RW>,
     pub passes: i32,
 }
 
@@ -38,18 +38,20 @@ pub fn execute<RW>(stor: Arc<impl Storage<RW> + 'static>, req: Request<RW>) -> R
 where
     RW: Read + Write + Seek,
 {
-    if !req.file.is_dir() {
+    if !req.entry.is_dir() {
         return Err(Error::InvalidFileType);
     }
 
-    let file_paths = stor
-        .read_dir(&req.file)
+    let files = stor
+        .read_dir(&req.entry)
         .map_err(|_| Error::ReadDirEntries)?;
 
     #[allow(clippy::needless_collect)] // 🚫 we have to collect in order to propertly join threads!
-    let handlers = file_paths
+    let handlers = files
         .into_iter()
-        .map(|file_path| {
+        .filter(|f| !f.is_dir())
+        .map(|f| {
+            let file_path = f.path().to_path_buf();
             let stor = stor.clone();
             std::thread::spawn(move || -> Result<(), Error> {
                 domain::erase::execute(
@@ -67,7 +69,7 @@ where
 
     handlers.into_iter().try_for_each(|h| h.join().unwrap())?;
 
-    stor.remove_dir_all(req.file).map_err(|_| Error::RemoveDir)
+    stor.remove_dir_all(req.entry).map_err(|_| Error::RemoveDir)
 }
 
 #[cfg(test)]
@@ -86,7 +88,10 @@ mod tests {
         let file = stor.read_file("bar/").unwrap();
         let file_path = file.path().to_path_buf();
 
-        let req = Request { file, passes: 2 };
+        let req = Request {
+            entry: file,
+            passes: 2,
+        };
 
         match execute(stor.clone(), req) {
             Ok(()) => {

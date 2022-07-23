@@ -342,13 +342,12 @@ pub fn get_matches() -> clap::ArgMatches {
                         .help("Skip all prompts"),
                 )
         )
-        .subcommand(
-            Command::new("header")
-                .about("Manipulate encrypted headers (for advanced users)")
+        .subcommand(Command::new("key")
+                .about("Manipulate keys within the header (for advanced users")
                 .subcommand_required(true)
                 .subcommand(
-                    Command::new("update-key")
-                        .about("Update an encrypted file's key (Password only)")
+                    Command::new("change")
+                        .about("Change an encrypted file's key")
                         .arg_required_else_help(true)
                         .arg(
                             Arg::new("input")
@@ -370,7 +369,7 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .long("keyfile-old")
                                 .value_name("file")
                                 .takes_value(true)
-                                .help("Use your old keyfile for decryption"),
+                                .help("Use an old keyfile to decrypt the master key"),
                         )
                         .arg(
                             Arg::new("keyfile-new")
@@ -381,6 +380,66 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .help("Use a keyfile as the new key"),
                         ),
                 )
+                .subcommand(
+                    Command::new("add")
+                        .about("Add a key to an encrypted file (for advanced users)")
+                        .arg_required_else_help(true)
+                        .arg(
+                            Arg::new("input")
+                                .value_name("input")
+                                .takes_value(true)
+                                .required(true)
+                                .help("The encrypted file"),
+                        )
+                        .arg(
+                            Arg::new("autogenerate")
+                                .long("auto")
+                                .takes_value(false)
+                                .help("Autogenerate a passphrase (this will be your new key)")
+                                .conflicts_with("keyfile-new"),
+                        )
+                        .arg(
+                            Arg::new("keyfile-old")
+                                .short('k')
+                                .long("keyfile-old")
+                                .value_name("file")
+                                .takes_value(true)
+                                .help("Use an old keyfile to decrypt the master key"),
+                        )
+                        .arg(
+                            Arg::new("keyfile-new")
+                                .short('n')
+                                .long("keyfile-new")
+                                .value_name("file")
+                                .takes_value(true)
+                                .help("Use a keyfile as the new key"),
+                        ),
+                )
+                .subcommand(
+                    Command::new("del")
+                        .about("Delete a key from an encrypted file (for advanced users)")
+                        .arg_required_else_help(true)
+                        .arg(
+                            Arg::new("input")
+                                .value_name("input")
+                                .takes_value(true)
+                                .required(true)
+                                .help("The encrypted file"),
+                        )
+                        .arg(
+                            Arg::new("keyfile")
+                                .short('k')
+                                .long("keyfile-old")
+                                .value_name("file")
+                                .takes_value(true)
+                                .help("Use an old keyfile to decrypt the master key"),
+                        ),
+                )       
+         )
+        .subcommand(
+            Command::new("header")
+                .about("Manipulate encrypted headers (for advanced users)")
+                .subcommand_required(true)
                 .subcommand(
                     Command::new("dump")
                         .about("Dump a header")

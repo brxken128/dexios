@@ -153,8 +153,10 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
             .context("Unable to seek back to start of file")?;
 
         if expected_empty_space.is_empty() {
+            // this happens if the header was stripped
             header.write(&mut output_file)?;
         } else {
+            // this happens if the file was encrypted in detached mode
             return Err(anyhow::anyhow!("No empty space found at the start of {}! It's either not an encrypted file, or it was encrypted in detached mode (and the header can't be restored)", output));
         }
     }

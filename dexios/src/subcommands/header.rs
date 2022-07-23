@@ -135,7 +135,10 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         .with_context(|| format!("Unable to open output file: {}", output))?;
 
     let mut header_bytes = vec![0u8; header.get_size() as usize];
-    output_file.read_exact(&mut header_bytes).ok();
+    output_file
+        .read(&mut header_bytes)
+        .context("Unable to check for empty bytes at the start of the file")?;
+
     if !header_bytes.into_iter().all(|b| b == 0) {
         return Err(anyhow::anyhow!("No empty space found at the start of {}! It's either: not an encrypted file, it already contains a header, or it was encrypted in detached mode (and the header can't be restored)", output));
     }

@@ -65,8 +65,7 @@ pub fn details(input: &str) -> Result<()> {
     Ok(())
 }
 
-// this function dumps the first 64/128 bytes of
-// the input file into the output file
+// this function reads the header fromthe input file and writes it to the output file
 // it's used for extracting an encrypted file's header for backups and such
 // it implements a check to ensure the header is valid
 pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
@@ -99,9 +98,10 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     Ok(())
 }
 
-// this function reads the first 64/128 bytes (header) from the input file
-// and then overwrites the first 64/128 bytes of the output file with it
+// this function reads the header from the input file
+// it then writes the header to the start of the ouput file
 // this can be used for restoring a dumped header to a file that had it's header stripped
+// this does not work for files encrypted *with* a detached header
 // it implements a check to ensure the header is valid before restoring to a file
 pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     let mut logger = Logger::new();

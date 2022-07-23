@@ -134,13 +134,16 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         .open(output)
         .with_context(|| format!("Unable to open output file: {}", output))?;
 
-    let mut expected_empty_space = vec![
+    let empty_space = vec![
         0u8;
         header
             .get_size()
             .try_into()
             .context("Unable to get header's size as usize")?
     ];
+
+    let mut expected_empty_space = empty_space.clone();
+
     output_file
         .read_exact(&mut expected_empty_space)
         .context("Unable to read the start of the file")?;
@@ -150,8 +153,14 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         ))
         .context("Unable to seek back to start of file")?;
 
-    if !expected_empty_space.is_empty() {
-        return Err(anyhow::anyhow!("No empty space found at the start of {}! It's either not an encrypted file, or it was encrypted in detached mode (and the header can't be restored)", output));
+    let matching = empty_space
+        .iter()
+        .zip(&expected_empty_space)
+        .filter(|(a, b)| a == b)
+        .count();
+
+    if matching != empty_space.len() {
+        return Err(anyhow::anyhow!("No empty space found at the start of {}! It's either: not an encrypted file, it already contains a header, or it was encrypted in detached mode (and the header can't be restored)", output));
     }
 
     header.write(&mut output_file)?;

@@ -98,8 +98,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
                 )
             })?;
 
-            let master_key =
-                Protected::<[u8; MASTER_KEY_LEN]>::new(vec_to_arr(master_key_decrypted));
+            let master_key = Protected::new(vec_to_arr::<MASTER_KEY_LEN>(master_key_decrypted));
 
             drop(cipher);
 

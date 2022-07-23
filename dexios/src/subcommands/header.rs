@@ -134,31 +134,24 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         .open(output)
         .with_context(|| format!("Unable to open output file: {}", output))?;
 
-    // TODO(brxken128): convert this to a match statement, (V4 and below write directly, V5 and above check for empty space beforehand)
-    if header.header_type.version >= HeaderVersion::V5 {
-        let mut expected_empty_space = vec![
-            0u8;
-            header
-                .get_size()
-                .try_into()
-                .context("Unable to get header's size as usize")?
-        ];
-        output_file
-            .read_exact(&mut expected_empty_space)
-            .context("Unable to read the start of the file")?;
-        output_file
-            .seek(std::io::SeekFrom::Current(
-                -i64::try_from(header.get_size()).context("Unable to get header's size as i64")?,
-            ))
-            .context("Unable to seek back to start of file")?;
+    let mut expected_empty_space = vec![
+        0u8;
+        header
+            .get_size()
+            .try_into()
+            .context("Unable to get header's size as usize")?
+    ];
+    output_file
+        .read_exact(&mut expected_empty_space)
+        .context("Unable to read the start of the file")?;
+    output_file
+        .seek(std::io::SeekFrom::Current(
+            -i64::try_from(header.get_size()).context("Unable to get header's size as i64")?,
+        ))
+        .context("Unable to seek back to start of file")?;
 
-        if expected_empty_space.is_empty() {
-            // this happens if the header was stripped
-            header.write(&mut output_file)?;
-        } else {
-            // this happens if the file was encrypted in detached mode
-            return Err(anyhow::anyhow!("No empty space found at the start of {}! It's either not an encrypted file, or it was encrypted in detached mode (and the header can't be restored)", output));
-        }
+    if !expected_empty_space.is_empty() {
+        return Err(anyhow::anyhow!("No empty space found at the start of {}! It's either not an encrypted file, or it was encrypted in detached mode (and the header can't be restored)", output));
     }
 
     header.write(&mut output_file)?;
@@ -170,7 +163,8 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     Ok(())
 }
 
-// this wipes the first 64/128 bytes (header) from the provided file
+// this wipes the length of the header from the provided file
+// the header must be intact for this to work, as the length varies between the versions
 // it can be useful for storing the header separate from the file, to make an attacker's life that little bit harder
 // it implements a check to ensure the header is valid before stripping
 pub fn strip(input: &str, skip: SkipMode) -> Result<()> {

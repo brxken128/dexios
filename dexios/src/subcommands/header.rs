@@ -1,6 +1,6 @@
 use std::{
     fs::{File, OpenOptions},
-    io::{Seek, Write},
+    io::{Read, Seek, Write},
     process::exit,
 };
 
@@ -126,12 +126,38 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         exit(1);
     }
 
-    let (header, _) = header_result.context("Error unwrapping the header's result")?; // this should never happen
+    let (header, _) = header_result.context("Error unwrapping the header's result")?;
 
     let mut output_file = OpenOptions::new()
+        .read(true)
         .write(true)
         .open(output)
         .with_context(|| format!("Unable to open output file: {}", output))?;
+
+    // TODO(brxken128): convert this to a match statement, (V4 and below write directly, V5 and above check for empty space beforehand)
+    if header.header_type.version >= HeaderVersion::V5 {
+        let mut expected_empty_space = vec![
+            0u8;
+            header
+                .get_size()
+                .try_into()
+                .context("Unable to get header's size as usize")?
+        ];
+        output_file
+            .read_exact(&mut expected_empty_space)
+            .context("Unable to read the start of the file")?;
+        output_file
+            .seek(std::io::SeekFrom::Current(
+                -i64::try_from(header.get_size()).context("Unable to get header's size as i64")?,
+            ))
+            .context("Unable to seek back to start of file")?;
+
+        if expected_empty_space.is_empty() {
+            header.write(&mut output_file)?;
+        } else {
+            return Err(anyhow::anyhow!("No empty space found at the start of {}! It's either not an encrypted file, or it was encrypted in detached mode (and the header can't be restored)", output));
+        }
+    }
 
     header.write(&mut output_file)?;
 

@@ -153,13 +153,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         ))
         .context("Unable to seek back to start of file")?;
 
-    let matching = empty_space
-        .iter()
-        .zip(&expected_empty_space)
-        .filter(|(a, b)| a == b)
-        .count();
-
-    if matching != empty_space.len() {
+    if empty_space != expected_empty_space {
         return Err(anyhow::anyhow!("No empty space found at the start of {}! It's either: not an encrypted file, it already contains a header, or it was encrypted in detached mode (and the header can't be restored)", output));
     }
 

@@ -64,10 +64,9 @@ where
 
             // Try reading an empty header from the content.
             let mut header_bytes = vec![0u8; header.get_size() as usize];
-            req.reader
-                .borrow_mut()
-                .read(&mut header_bytes)
-                .map_err(|_| Error::DetermineStartPos)?;
+
+            // TODO(pleshevskiy): add error handling here instead of calling `.ok()`
+            req.reader.borrow_mut().read_exact(&mut header_bytes).ok();
 
             if !header_bytes.into_iter().all(|b| b == 0) {
                 // And return the cursor position to the start if it wasn't found

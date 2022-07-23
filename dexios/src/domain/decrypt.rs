@@ -17,6 +17,8 @@ pub enum Error {
     DecryptMasterKey,
     DecryptData,
     WriteData,
+    DetermineStartPos,
+    RewindDataReader,
 }
 
 impl std::fmt::Display for Error {
@@ -30,6 +32,8 @@ impl std::fmt::Display for Error {
             DecryptMasterKey => f.write_str("Cannot decrypt master key"),
             DecryptData => f.write_str("Unable to decrypt data"),
             WriteData => f.write_str("Unable to write data"),
+            DetermineStartPos => f.write_str("Unable to determine the data's start position"),
+            RewindDataReader => f.write_str("Unable to rewind the reader"),
         }
     }
 }
@@ -60,13 +64,17 @@ where
 
             // Try reading an empty header from the content.
             let mut header_bytes = vec![0u8; header.get_size() as usize];
-            req.reader.borrow_mut().read_exact(&mut header_bytes).ok();
+            req.reader
+                .borrow_mut()
+                .read(&mut header_bytes)
+                .map_err(|_| Error::DetermineStartPos)?;
+
             if !header_bytes.into_iter().all(|b| b == 0) {
                 // And return the cursor position to the start if it wasn't found
                 req.reader
                     .borrow_mut()
                     .rewind()
-                    .map_err(|_| Error::DeserializeHeader)?;
+                    .map_err(|_| Error::RewindDataReader)?;
             }
 
             (header, aad)

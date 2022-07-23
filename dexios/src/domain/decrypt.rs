@@ -17,7 +17,6 @@ pub enum Error {
     DecryptMasterKey,
     DecryptData,
     WriteData,
-    DetermineStartPos,
     RewindDataReader,
 }
 
@@ -32,7 +31,6 @@ impl std::fmt::Display for Error {
             DecryptMasterKey => f.write_str("Cannot decrypt master key"),
             DecryptData => f.write_str("Unable to decrypt data"),
             WriteData => f.write_str("Unable to write data"),
-            DetermineStartPos => f.write_str("Unable to determine the data's start position"),
             RewindDataReader => f.write_str("Unable to rewind the reader"),
         }
     }

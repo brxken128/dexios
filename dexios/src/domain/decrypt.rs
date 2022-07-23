@@ -14,7 +14,6 @@ pub enum Error {
     InitializeStreams,
     DeserializeHeader,
     ReadEncryptedData,
-    DetermineDataPosition,
     DecryptMasterKey,
     DecryptData,
     WriteData,
@@ -28,9 +27,6 @@ impl std::fmt::Display for Error {
             InitializeStreams => f.write_str("Cannot initialize streams"),
             DeserializeHeader => f.write_str("Cannot deserialize header"),
             ReadEncryptedData => f.write_str("Unable to read encrypted data"),
-            DetermineDataPosition => {
-                f.write_str("Unable to determine where the encrypted data starts")
-            }
             DecryptMasterKey => f.write_str("Cannot decrypt master key"),
             DecryptData => f.write_str("Unable to decrypt data"),
             WriteData => f.write_str("Unable to write data"),
@@ -64,11 +60,7 @@ where
 
             // Try reading an empty header from the content.
             let mut header_bytes = vec![0u8; header.get_size() as usize];
-            req.reader
-                .borrow_mut()
-                .read_exact(&mut header_bytes)
-                .map_err(|_| Error::DetermineDataPosition)?;
-
+            req.reader.borrow_mut().read_exact(&mut header_bytes).ok();
             if !header_bytes.into_iter().all(|b| b == 0) {
                 // And return the cursor position to the start if it wasn't found
                 req.reader

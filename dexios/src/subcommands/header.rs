@@ -143,6 +143,10 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         return Err(anyhow::anyhow!("No empty space found at the start of {}! It's either: not an encrypted file, it already contains a header, or it was encrypted in detached mode (and the header can't be restored)", output));
     }
 
+    output_file
+        .rewind()
+        .context("Unable to rewind the output file!")?;
+
     header.write(&mut output_file)?;
 
     logger.success(format!(

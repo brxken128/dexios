@@ -2,6 +2,7 @@
 use indicatif::{ProgressBar, ProgressStyle};
 
 #[cfg(feature = "visual")]
+#[must_use]
 pub fn create_spinner() -> ProgressBar {
     let pb = ProgressBar::new_spinner();
     pb.enable_steady_tick(120);

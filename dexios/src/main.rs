@@ -1,6 +1,6 @@
 use anyhow::Result;
 use global::parameters::get_param;
-use global::parameters::key_change_params;
+use global::parameters::key_manipulation_params;
 use global::parameters::skipmode;
 use subcommands::list::show_values;
 
@@ -85,13 +85,48 @@ fn main() -> Result<()> {
             Some("change") => {
                 let sub_matches_change_key = sub_matches.subcommand_matches("change").unwrap();
 
-                let (keyfile_old, keyfile_new) = key_change_params(sub_matches_change_key)?;
+                let (key_old, key_new) = key_manipulation_params(sub_matches_change_key)?;
 
                 subcommands::header_key::change_key(
                     &get_param("input", sub_matches_change_key)?,
-                    &keyfile_old,
-                    &keyfile_new,
+                    &key_old,
+                    &key_new,
                 )?;
+            }
+            Some("add") => {
+                let sub_matches_add_key = sub_matches.subcommand_matches("add").unwrap();
+
+                let (key_old, key_new) = key_manipulation_params(sub_matches_add_key)?;
+
+                subcommands::header_key::add_key(
+                    &get_param("input", sub_matches_add_key)?,
+                    &key_old,
+                    &key_new,
+                )?;
+            }
+            Some("del") => {
+                // TODO(brxken128): unify `Key` creation with one function
+                use crate::global::states::Key;
+                use anyhow::Context;
+
+                let sub_matches_del_key = sub_matches.subcommand_matches("del").unwrap();
+
+                let key = if sub_matches_del_key.is_present("keyfile") {
+                    Key::Keyfile(
+                        sub_matches_del_key
+                            .value_of("keyfile")
+                            .context("No keyfile/invalid text provided")?
+                            .to_string(),
+                    )
+                } else if std::env::var("DEXIOS_KEY").is_ok() {
+                    Key::Env
+                } else if let Ok(true) = sub_matches_del_key.try_contains_id("autogenerate") {
+                    Key::Generate
+                } else {
+                    Key::User
+                };
+
+                subcommands::header_key::del_key(&get_param("input", sub_matches_del_key)?, &key)?;
             }
             _ => (),
         },

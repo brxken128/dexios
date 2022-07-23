@@ -134,27 +134,13 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
         .open(output)
         .with_context(|| format!("Unable to open output file: {}", output))?;
 
-    let empty_space = vec![
-        0u8;
-        header
-            .get_size()
-            .try_into()
-            .context("Unable to get header's size as usize")?
-    ];
-
-    let mut expected_empty_space = empty_space.clone();
-
-    output_file
-        .read_exact(&mut expected_empty_space)
-        .context("Unable to read the start of the file")?;
-    output_file
-        .seek(std::io::SeekFrom::Current(
-            -i64::try_from(header.get_size()).context("Unable to get header's size as i64")?,
-        ))
-        .context("Unable to seek back to start of file")?;
-
-    if empty_space != expected_empty_space {
-        return Err(anyhow::anyhow!("No empty space found at the start of {}! It's either: not an encrypted file, it already contains a header, or it was encrypted in detached mode (and the header can't be restored)", output));
+    let mut header_bytes = vec![0u8; header.get_size() as usize];
+    output_file.read_exact(&mut header_bytes).ok();
+    if !header_bytes.into_iter().all(|b| b == 0) {
+        // And return the cursor position to the start if it wasn't found
+        output_file
+                .rewind()
+                .map_err(|_| anyhow::anyhow!("No empty space found at the start of {}! It's either: not an encrypted file, it already contains a header, or it was encrypted in detached mode (and the header can't be restored)", output))?;
     }
 
     header.write(&mut output_file)?;

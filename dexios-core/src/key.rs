@@ -148,7 +148,7 @@ pub fn decrypt_master_key(
             let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
             cipher
                 .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
-                .map(vec_to_arr)
+                .map(|master_key| vec_to_arr(&master_key))
                 .map(Protected::new)
                 .map_err(|_| anyhow::anyhow!("Cannot decrypt master key"))
         }
@@ -164,7 +164,7 @@ pub fn decrypt_master_key(
                     let cipher = Ciphers::initialize(key, &header.header_type.algorithm).ok()?;
                     cipher
                         .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
-                        .map(vec_to_arr)
+                        .map(|master_key| vec_to_arr(&master_key))
                         .map(Protected::new)
                         .ok()
                 })
@@ -174,7 +174,7 @@ pub fn decrypt_master_key(
 }
 
 // TODO: choose better place for this util
-pub fn vec_to_arr<const N: usize>(master_key_vec: Vec<u8>) -> [u8; N] {
+pub fn vec_to_arr<const N: usize>(master_key_vec: &[u8]) -> [u8; N] {
     let mut master_key = [0u8; N];
     let len = N.min(master_key_vec.len());
     master_key[..len].copy_from_slice(&master_key_vec[..len]);

@@ -174,6 +174,7 @@ pub fn decrypt_master_key(
 }
 
 // TODO: choose better place for this util
+#[must_use]
 pub fn vec_to_arr<const N: usize>(master_key_vec: &[u8]) -> [u8; N] {
     let mut master_key = [0u8; N];
     let len = N.min(master_key_vec.len());

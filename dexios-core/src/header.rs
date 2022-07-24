@@ -663,7 +663,12 @@ impl Header {
                 header_bytes.extend_from_slice(&tag.algorithm);
                 header_bytes.extend_from_slice(&tag.mode);
                 header_bytes.extend_from_slice(
-                    &self.salt.unwrap_or(self.keyslots.as_ref().unwrap()[0].salt),
+                    &self.salt.unwrap_or(
+                        self.keyslots.as_ref().ok_or_else(|| {
+                            anyhow::anyhow!("Cannot find a salt within the keyslot/header.")
+                        })?[0]
+                            .salt,
+                    ),
                 );
                 header_bytes.extend_from_slice(&self.nonce);
                 header_bytes.extend_from_slice(&padding);

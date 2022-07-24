@@ -131,6 +131,7 @@ pub fn balloon_hash(
     Ok(Protected::new(key))
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub fn decrypt_master_key(
     raw_key: Protected<Vec<u8>>,
     header: &Header,
@@ -138,17 +139,17 @@ pub fn decrypt_master_key(
 ) -> Result<Protected<[u8; MASTER_KEY_LEN]>> {
     match header.header_type.version {
         HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
-            argon2id_hash(raw_key, &header.salt.unwrap(), &header.header_type.version)
+            argon2id_hash(raw_key, &header.salt.ok_or_else(|| anyhow::anyhow!("Missing salt within the header!"))?, &header.header_type.version)
         }
         HeaderVersion::V4 => {
-            let keyslots = header.keyslots.as_ref().unwrap();
+            let keyslots = header.keyslots.as_ref().ok_or_else(|| anyhow::anyhow!("Unable to find a keyslot!"))?;
             let keyslot = keyslots.first().ok_or_else(|| anyhow::anyhow!("Unable to find a match with the key you provided (maybe you supplied the wrong key?)"))?;
             let key = keyslot.hash_algorithm.hash(raw_key, &keyslot.salt)?;
 
             let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
             cipher
                 .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
-                .map(vec_to_arr)
+                .map(|master_key| vec_to_arr(&master_key))
                 .map(Protected::new)
                 .map_err(|_| anyhow::anyhow!("Cannot decrypt master key"))
         }
@@ -156,7 +157,7 @@ pub fn decrypt_master_key(
             header
                 .keyslots
                 .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("Invalid header format"))?
+                .ok_or_else(|| anyhow::anyhow!("Unable to find a keyslot!"))?
                 .iter()
                 .find_map(|keyslot| {
                     let key = keyslot.hash_algorithm.hash(raw_key.clone(), &keyslot.salt).ok()?;
@@ -164,7 +165,7 @@ pub fn decrypt_master_key(
                     let cipher = Ciphers::initialize(key, &header.header_type.algorithm).ok()?;
                     cipher
                         .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
-                        .map(vec_to_arr)
+                        .map(|master_key| vec_to_arr(&master_key))
                         .map(Protected::new)
                         .ok()
                 })
@@ -174,7 +175,8 @@ pub fn decrypt_master_key(
 }
 
 // TODO: choose better place for this util
-pub fn vec_to_arr<const N: usize>(master_key_vec: Vec<u8>) -> [u8; N] {
+#[must_use]
+pub fn vec_to_arr<const N: usize>(master_key_vec: &[u8]) -> [u8; N] {
     let mut master_key = [0u8; N];
     let len = N.min(master_key_vec.len());
     master_key[..len].copy_from_slice(&master_key_vec[..len]);

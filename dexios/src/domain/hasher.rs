@@ -7,8 +7,8 @@ pub struct Blake3Hasher {
     inner: blake3::Hasher,
 }
 
-impl Blake3Hasher {
-    pub fn new() -> Self {
+impl Default for Blake3Hasher {
+    fn default() -> Self {
         Self {
             inner: blake3::Hasher::new(),
         }

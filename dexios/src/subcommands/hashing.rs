@@ -15,7 +15,7 @@ pub fn hash_stream(files: &[String]) -> Result<()> {
             .with_context(|| format!("Unable to open file: {}", input))?;
 
         let hash = domain::hash::execute(
-            domain::hasher::Blake3Hasher::new(),
+            domain::hasher::Blake3Hasher::default(),
             domain::hash::Request {
                 reader: RefCell::new(&mut input_file),
             },

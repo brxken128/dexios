@@ -15,7 +15,7 @@ pub const MASTER_KEY_LEN: usize = 32;
 pub const ENCRYPTED_MASTER_KEY_LEN: usize = 48;
 
 /// This is an `enum` containing all AEADs supported by `dexios-core`
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Algorithm {
     Aes256Gcm,
     XChaCha20Poly1305,

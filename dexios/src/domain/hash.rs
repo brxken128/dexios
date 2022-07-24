@@ -69,7 +69,7 @@ mod tests {
             reader: RefCell::new(reader),
         };
 
-        match execute(Blake3Hasher::new(), req) {
+        match execute(Blake3Hasher::default(), req) {
             Err(_) => unreachable!(),
             Ok(hash) => {
                 assert_eq!(hash, blake3::hash(text.as_bytes()).to_hex().to_string());
@@ -90,7 +90,7 @@ mod tests {
             reader: RefCell::new(reader),
         };
 
-        match execute(Blake3Hasher::new(), req) {
+        match execute(Blake3Hasher::default(), req) {
             Err(_) => unreachable!(),
             Ok(hash) => {
                 assert_eq!(hash, blake3::hash(&orig_buf).to_hex().to_string());
@@ -110,7 +110,7 @@ mod tests {
             reader: RefCell::new(reader),
         };
 
-        match execute(Blake3Hasher::new(), req) {
+        match execute(Blake3Hasher::default(), req) {
             Err(_) => unreachable!(),
             Ok(hash) => {
                 assert_eq!(hash, blake3::hash(text.as_bytes()).to_hex().to_string());

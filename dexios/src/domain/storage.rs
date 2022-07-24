@@ -161,7 +161,7 @@ impl Storage<fs::File> for FileStorage {
             return Err(Error::FileAccess);
         }
 
-        walkdir::WalkDir::new(file.path().to_owned())
+        walkdir::WalkDir::new(file.path())
             .into_iter()
             .map(|res| {
                 res.map(|e| e.path().to_owned())
@@ -248,7 +248,9 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
     fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<io::Cursor<Vec<u8>>>, Error> {
         let file_path = path.as_ref().to_path_buf();
 
-        let im_file = match self.files().get(&file_path) {
+        let files = self.files();
+        let im_file = files.get(&file_path);
+        let im_file = match im_file {
             Some(_) => Err(Error::CreateFile),
             None => Ok(IMFile::File(InMemoryFile::default())),
         }?;
@@ -317,7 +319,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         let len = vec.len();
         let new_file = IMFile::File(InMemoryFile { buf: vec, len });
 
-        self.save_file(file_path.to_owned(), new_file)?;
+        self.save_file(file_path, new_file)?;
 
         Ok(())
     }

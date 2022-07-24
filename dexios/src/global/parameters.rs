@@ -11,7 +11,7 @@ use paris::warn;
 
 use dexios_core::primitives::ALGORITHMS;
 
-use super::states::{Compression, DirectoryMode, Key, PrintMode};
+use super::states::{Compression, DirectoryMode, Key, KeyParams, PrintMode};
 
 pub fn get_params(name: &str, sub_matches: &ArgMatches) -> Result<Vec<String>> {
     let values = sub_matches
@@ -32,20 +32,7 @@ pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
 }
 
 pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
-    let key = if sub_matches.is_present("keyfile") {
-        Key::Keyfile(
-            sub_matches
-                .value_of("keyfile")
-                .context("No keyfile/invalid text provided")?
-                .to_string(),
-        )
-    } else if std::env::var("DEXIOS_KEY").is_ok() {
-        Key::Env
-    } else if let Ok(true) = sub_matches.try_contains_id("autogenerate") {
-        Key::Generate
-    } else {
-        Key::User
-    };
+    let key = Key::init(sub_matches, KeyParams::default(), "keyfile")?;
 
     let hash_mode = if sub_matches.is_present("hash") {
         //specify to emit hash after operation
@@ -139,20 +126,7 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
 }
 
 pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams)> {
-    let key = if sub_matches.is_present("keyfile") {
-        Key::Keyfile(
-            sub_matches
-                .value_of("keyfile")
-                .context("No keyfile/invalid text provided")?
-                .to_string(),
-        )
-    } else if std::env::var("DEXIOS_KEY").is_ok() {
-        Key::Env
-    } else if sub_matches.is_present("autogenerate") {
-        Key::Generate
-    } else {
-        Key::User
-    };
+    let key = Key::init(sub_matches, KeyParams::default(), "keyfile")?;
 
     let hash_mode = if sub_matches.is_present("hash") {
         //specify to emit hash after operation
@@ -232,29 +206,27 @@ pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {
 }
 
 pub fn key_manipulation_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
-    let key_old = if sub_matches.is_present("keyfile-old") {
-        Key::Keyfile(
-            sub_matches
-                .value_of("keyfile-old")
-                .context("No keyfile/invalid text provided")?
-                .to_string(),
-        )
-    } else {
-        Key::User
-    };
+    let key_old = Key::init(
+        sub_matches,
+        KeyParams {
+            user: true,
+            env: false,
+            autogenerate: false,
+            keyfile: true,
+        },
+        "keyfile-old",
+    )?;
 
-    let key_new = if sub_matches.is_present("keyfile-new") {
-        Key::Keyfile(
-            sub_matches
-                .value_of("keyfile-new")
-                .context("No keyfile/invalid text provided")?
-                .to_string(),
-        )
-    } else if sub_matches.is_present("autogenerate") {
-        Key::Generate
-    } else {
-        Key::User
-    };
+    let key_new = Key::init(
+        sub_matches,
+        KeyParams {
+            user: true,
+            env: false,
+            autogenerate: true,
+            keyfile: true,
+        },
+        "keyfile-new",
+    )?;
 
     Ok((key_old, key_new))
 }

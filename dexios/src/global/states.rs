@@ -23,13 +23,13 @@ pub enum Compression {
     Zstd,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum EraseSourceDir {
     Erase,
     Retain,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum PrintMode {
     Verbose,
     Quiet,
@@ -40,19 +40,19 @@ pub enum HeaderLocation {
     Detached(String),
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum EraseMode {
     EraseFile(i32),
     IgnoreFile,
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum HashMode {
     CalculateHash,
     NoHash,
 }
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum SkipMode {
     ShowPrompts,
     HidePrompts,
@@ -65,7 +65,7 @@ pub enum Key {
     User,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum PasswordState {
     Validate,
     Direct, // maybe not the best name

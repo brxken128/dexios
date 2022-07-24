@@ -48,7 +48,7 @@ pub const HEADER_VERSION: HeaderVersion = HeaderVersion::V5;
 
 /// This stores all possible versions of the header
 #[allow(clippy::module_name_repetitions)]
-#[derive(PartialEq, Clone, Copy, PartialOrd)]
+#[derive(PartialEq, Eq, Clone, Copy, PartialOrd)]
 pub enum HeaderVersion {
     V1,
     V2,
@@ -128,20 +128,16 @@ impl HashingAlgorithm {
                 1 => argon2id_hash(raw_key, salt, &HeaderVersion::V1),
                 2 => argon2id_hash(raw_key, salt, &HeaderVersion::V2),
                 3 => argon2id_hash(raw_key, salt, &HeaderVersion::V3),
-                _ => {
-                    return Err(anyhow::anyhow!(
-                        "argon2id is not supported with the parameters provided."
-                    ))
-                }
+                _ => Err(anyhow::anyhow!(
+                    "argon2id is not supported with the parameters provided."
+                )),
             },
             HashingAlgorithm::Blake3Balloon(i) => match i {
                 4 => balloon_hash(raw_key, salt, &HeaderVersion::V4),
                 5 => balloon_hash(raw_key, salt, &HeaderVersion::V5),
-                _ => {
-                    return Err(anyhow::anyhow!(
-                        "Balloon hashing is not supported with the parameters provided."
-                    ))
-                }
+                _ => Err(anyhow::anyhow!(
+                    "Balloon hashing is not supported with the parameters provided."
+                )),
             },
         }
     }

@@ -38,6 +38,8 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
+type OnDecryptedHeaderFn = Box<dyn FnOnce(&HeaderType)>;
+
 pub struct Request<'a, R, W>
 where
     R: Read + Seek,
@@ -47,7 +49,7 @@ where
     pub reader: &'a RefCell<R>,
     pub writer: &'a RefCell<W>,
     pub raw_key: Protected<Vec<u8>>,
-    pub on_decrypted_header: Option<Box<dyn FnOnce(&HeaderType)>>,
+    pub on_decrypted_header: Option<OnDecryptedHeaderFn>,
 }
 
 pub fn execute<R, W>(req: Request<R, W>) -> Result<(), Error>
@@ -63,8 +65,17 @@ where
             // Try reading an empty header from the content.
             let mut header_bytes = vec![0u8; header.get_size() as usize];
 
-            // TODO(pleshevskiy): add error handling here instead of calling `.ok()`
-            req.reader.borrow_mut().read_exact(&mut header_bytes).ok();
+            req.reader
+                .borrow_mut()
+                .read_exact(&mut header_bytes)
+                .or_else(|e| {
+                    if e.kind() == std::io::ErrorKind::UnexpectedEof {
+                        Ok(())
+                    } else {
+                        Err(e)
+                    }
+                })
+                .map_err(|_| Error::ReadEncryptedData)?;
 
             if !header_bytes.into_iter().all(|b| b == 0) {
                 // And return the cursor position to the start if it wasn't found

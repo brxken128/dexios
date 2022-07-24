@@ -131,6 +131,7 @@ pub fn balloon_hash(
     Ok(Protected::new(key))
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub fn decrypt_master_key(
     raw_key: Protected<Vec<u8>>,
     header: &Header,

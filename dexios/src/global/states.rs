@@ -118,24 +118,45 @@ impl Key {
         }
     }
 
-    pub fn init(arg_matches: &ArgMatches, params: &KeyParams) -> Self {
-        todo!()
+    pub fn init(sub_matches: &ArgMatches, params: KeyParams) -> Result<Self> {
+        let key = if sub_matches.is_present("keyfile") && params.keyfile {
+            Key::Keyfile(
+                sub_matches
+                    .value_of("keyfile")
+                    .context("No keyfile/invalid text provided")?
+                    .to_string(),
+            )
+        } else if std::env::var("DEXIOS_KEY").is_ok() && params.env {
+            Key::Env
+        } else if let (Ok(true), true) =
+            (sub_matches.try_contains_id("autogenerate"), params.generate)
+        {
+            Key::Generate
+        } else if params.password {
+            Key::User
+        } else {
+            return Err(anyhow::anyhow!(
+                "No key sources found with the parameters/arguments provided"
+            ));
+        };
+
+        Ok(key)
     }
 }
 
 pub struct KeyParams {
     pub password: bool,
     pub env: bool,
-    pub auto: bool,
+    pub generate: bool,
     pub keyfile: bool,
 }
 
 impl KeyParams {
-    pub fn default_validate() -> Self {
+    pub fn default() -> Self {
         KeyParams {
             password: true,
             env: true,
-            auto: true,
+            generate: true,
             keyfile: true,
         }
     }

@@ -4,6 +4,8 @@ use global::parameters::key_manipulation_params;
 use global::parameters::skipmode;
 use subcommands::list::show_values;
 
+use crate::global::states::KeyParams;
+
 mod cli;
 mod domain;
 mod file;
@@ -105,26 +107,10 @@ fn main() -> Result<()> {
                 )?;
             }
             Some("del") => {
-                // TODO(brxken128): unify `Key` creation with one function
                 use crate::global::states::Key;
-                use anyhow::Context;
 
                 let sub_matches_del_key = sub_matches.subcommand_matches("del").unwrap();
-
-                let key = if sub_matches_del_key.is_present("keyfile") {
-                    Key::Keyfile(
-                        sub_matches_del_key
-                            .value_of("keyfile")
-                            .context("No keyfile/invalid text provided")?
-                            .to_string(),
-                    )
-                } else if std::env::var("DEXIOS_KEY").is_ok() {
-                    Key::Env
-                } else if let Ok(true) = sub_matches_del_key.try_contains_id("autogenerate") {
-                    Key::Generate
-                } else {
-                    Key::User
-                };
+                let key = Key::init(sub_matches_del_key, KeyParams::default(), "keyfile")?;
 
                 subcommands::header_key::del_key(&get_param("input", sub_matches_del_key)?, &key)?;
             }

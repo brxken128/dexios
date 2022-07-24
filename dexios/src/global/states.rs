@@ -4,6 +4,7 @@
 // some enums are used purely by dexios to handle things (e.g. detached header files)
 
 use anyhow::{Context, Result};
+use clap::ArgMatches;
 use dexios_core::protected::Protected;
 use paris::warn;
 
@@ -114,6 +115,28 @@ impl Key {
             Err(anyhow::anyhow!("The specified key is empty!"))
         } else {
             Ok(secret)
+        }
+    }
+
+    pub fn init(arg_matches: &ArgMatches, params: &KeyParams) -> Self {
+        todo!()
+    }
+}
+
+pub struct KeyParams {
+    pub password: bool,
+    pub env: bool,
+    pub auto: bool,
+    pub keyfile: bool,
+}
+
+impl KeyParams {
+    pub fn default_validate() -> Self {
+        KeyParams {
+            password: true,
+            env: true,
+            auto: true,
+            keyfile: true,
         }
     }
 }

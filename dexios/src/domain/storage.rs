@@ -248,9 +248,8 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
     fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<io::Cursor<Vec<u8>>>, Error> {
         let file_path = path.as_ref().to_path_buf();
 
-        let files = self.files();
-        let im_file = files.get(&file_path);
-        let im_file = match im_file {
+        #[allow(clippy::significant_drop_in_scrutinee)]
+        let im_file = match self.files().get(&file_path) {
             Some(_) => Err(Error::CreateFile),
             None => Ok(IMFile::File(InMemoryFile::default())),
         }?;

@@ -97,7 +97,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
                 )
             })?;
 
-            let master_key = Protected::new(vec_to_arr::<MASTER_KEY_LEN>(&master_key_decrypted));
+            let master_key = Protected::new(vec_to_arr::<MASTER_KEY_LEN>(master_key_decrypted));
 
             drop(cipher);
 
@@ -223,7 +223,7 @@ pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let master_key_encrypted = master_key_result
                 .map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
 
-            let master_key_encrypted_array = vec_to_arr(&master_key_encrypted);
+            let master_key_encrypted_array = vec_to_arr(master_key_encrypted);
 
             // TODO(brxken128): allow using argon2id/balloon/inherit
             keyslots[index] = Keyslot {
@@ -319,7 +319,7 @@ pub fn add_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
             let master_key_encrypted = master_key_result
                 .map_err(|_| anyhow::anyhow!("Unable to encrypt your master key"))?;
 
-            let master_key_encrypted_array = vec_to_arr(&master_key_encrypted);
+            let master_key_encrypted_array = vec_to_arr(master_key_encrypted);
 
             // TODO(brxken128): allow using argon2id/balloon/inherit
             let keyslot_new = Keyslot {

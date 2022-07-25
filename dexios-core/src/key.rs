@@ -11,6 +11,7 @@
 //! let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
 //! ```
 use anyhow::Result;
+use zeroize::Zeroize;
 
 use crate::cipher::Ciphers;
 use crate::header::{Header, HeaderVersion};
@@ -149,7 +150,7 @@ pub fn decrypt_master_key(
             let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
             cipher
                 .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
-                .map(|master_key| vec_to_arr(&master_key))
+                .map(vec_to_arr)
                 .map(Protected::new)
                 .map_err(|_| anyhow::anyhow!("Cannot decrypt master key"))
         }
@@ -165,7 +166,7 @@ pub fn decrypt_master_key(
                     let cipher = Ciphers::initialize(key, &header.header_type.algorithm).ok()?;
                     cipher
                         .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
-                        .map(|master_key| vec_to_arr(&master_key))
+                        .map(vec_to_arr)
                         .map(Protected::new)
                         .ok()
                 })
@@ -176,9 +177,10 @@ pub fn decrypt_master_key(
 
 // TODO: choose better place for this util
 #[must_use]
-pub fn vec_to_arr<const N: usize>(master_key_vec: &[u8]) -> [u8; N] {
+pub fn vec_to_arr<const N: usize>(mut master_key_vec: Vec<u8>) -> [u8; N] {
     let mut master_key = [0u8; N];
     let len = N.min(master_key_vec.len());
     master_key[..len].copy_from_slice(&master_key_vec[..len]);
+    master_key_vec.zeroize();
     master_key
 }

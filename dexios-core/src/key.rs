@@ -150,7 +150,7 @@ pub fn decrypt_master_key(
             let cipher = Ciphers::initialize(key, &header.header_type.algorithm)?;
             cipher
                 .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
-                .map(|master_key| vec_to_arr(master_key))
+                .map(vec_to_arr)
                 .map(Protected::new)
                 .map_err(|_| anyhow::anyhow!("Cannot decrypt master key"))
         }
@@ -166,7 +166,7 @@ pub fn decrypt_master_key(
                     let cipher = Ciphers::initialize(key, &header.header_type.algorithm).ok()?;
                     cipher
                         .decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice())
-                        .map(|master_key| vec_to_arr(master_key))
+                        .map(vec_to_arr)
                         .map(Protected::new)
                         .ok()
                 })

@@ -3,4 +3,5 @@
 members = [
     "dexios",
     "dexios-core",
+    "dexios-domain",
 ]

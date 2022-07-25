@@ -1,0 +1,17 @@
+[package]
+name = "dexios-domain"
+description = "A library that contains the inner-workings of Dexios."
+version = "0.0.0"
+edition = "2021"
+license = "BSD-2-Clause"
+keywords = ["encryption", "secure"]
+categories = ["cryptography", "encoding", "data-structures"]
+repository = "https://github.com/brxken128/dexios/tree/master/dexios-domain"
+homepage = "https://github.com/brxken128/dexios"
+documentation = "https://docs.rs/dexios-domain/latest/dexios_domain/"
+readme = "README.md"
+authors = ["brxken128 <brxken128@tutanota.com"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

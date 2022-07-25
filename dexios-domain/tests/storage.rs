@@ -1,6 +1,6 @@
 mod common;
 use common::*;
-use dexios::storage::*;
+use dexios_domain::storage::*;
 use std::fs;
 use std::io::{Read, Write};
 use std::path::PathBuf;

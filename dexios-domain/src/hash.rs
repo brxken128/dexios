@@ -5,7 +5,7 @@ use std::{
     io::{Read, Seek},
 };
 
-use crate::domain::hasher::Hasher;
+use crate::hasher::Hasher;
 
 #[derive(Debug)]
 pub enum Error {
@@ -55,7 +55,7 @@ pub fn execute<R: Read + Seek>(mut hasher: impl Hasher, req: Request<R>) -> Resu
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::hasher::Blake3Hasher;
+    use crate::hasher::Blake3Hasher;
     use rand::RngCore;
     use std::io::Cursor;
 

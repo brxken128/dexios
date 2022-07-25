@@ -1,13 +1,12 @@
-use crate::domain;
 use std::io::{Read, Seek, Write};
 use std::sync::Arc;
 
-use domain::storage::Storage;
+use crate::storage::Storage;
 
 #[derive(Debug)]
 pub enum Error {
     InvalidFileType,
-    EraseFile(domain::erase::Error),
+    EraseFile(crate::erase::Error),
     ReadDirEntries,
     RemoveDir,
 }
@@ -30,7 +29,7 @@ pub struct Request<RW>
 where
     RW: Read + Write + Seek,
 {
-    pub entry: domain::storage::Entry<RW>,
+    pub entry: crate::storage::Entry<RW>,
     pub passes: i32,
 }
 
@@ -54,9 +53,9 @@ where
             let file_path = f.path().to_path_buf();
             let stor = stor.clone();
             std::thread::spawn(move || -> Result<(), Error> {
-                domain::erase::execute(
+                crate::erase::execute(
                     stor,
-                    domain::erase::Request {
+                    crate::erase::Request {
                         path: file_path,
                         passes: req.passes,
                     },
@@ -75,7 +74,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::storage::InMemoryStorage;
+    use crate::storage::InMemoryStorage;
 
     use std::path::PathBuf;
 

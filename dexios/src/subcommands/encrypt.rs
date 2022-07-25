@@ -9,7 +9,7 @@ use std::process::exit;
 use std::sync::Arc;
 use std::time::Instant;
 
-use crate::domain::{self, storage::Storage};
+use domain::storage::Storage;
 
 // this function is for encrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files

@@ -152,7 +152,7 @@ mod tests {
     use super::*;
     use std::io::Cursor;
 
-    use crate::domain::encrypt::tests::{
+    use crate::encrypt::tests::{
         PASSWORD, V4_ENCRYPTED_CONTENT, V5_ENCRYPTED_CONTENT, V5_ENCRYPTED_DETACHED_CONTENT,
         V5_ENCRYPTED_DETACHED_HEADER, V5_ENCRYPTED_FULL_DETACHED_CONTENT,
     };

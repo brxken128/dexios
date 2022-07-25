@@ -1,3 +1,5 @@
+#![deny(clippy::all)]
+
 use anyhow::Result;
 use global::parameters::get_param;
 use global::parameters::key_manipulation_params;
@@ -7,11 +9,9 @@ use subcommands::list::show_values;
 use crate::global::states::KeyParams;
 
 mod cli;
-mod domain;
 mod file;
 mod global;
 mod subcommands;
-pub(crate) mod utils;
 
 // this is where subcommand function calling is handled
 // it goes hand-in-hand with `subcommands.rs`

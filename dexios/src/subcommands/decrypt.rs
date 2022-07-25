@@ -9,7 +9,7 @@ use crate::global::structs::CryptoParams;
 use anyhow::Result;
 use paris::Logger;
 
-use crate::domain::{self, storage::Storage};
+use domain::storage::Storage;
 
 // this function is for decrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if

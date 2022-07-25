@@ -1,4 +1,4 @@
-use dexios::storage::{Error, FileStorage, Storage};
+use dexios_domain::storage::{Error, FileStorage, Storage};
 use std::fs;
 use std::io::Write;
 use std::ops::Deref;

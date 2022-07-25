@@ -3,8 +3,6 @@ use anyhow::Result;
 use paris::Logger;
 use std::cell::RefCell;
 
-use crate::domain;
-
 // this hashes the input file
 // it reads it in blocks, updates the hasher, and finalises/displays the hash
 // it's used by hash-standalone mode

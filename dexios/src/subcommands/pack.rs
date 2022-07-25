@@ -7,7 +7,6 @@ use dexios_core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
 use dexios_core::primitives::{Algorithm, Mode};
 use paris::Logger;
 
-use crate::domain::{self, storage::Storage};
 use crate::global::states::{HeaderLocation, PasswordState};
 use crate::{
     global::states::EraseSourceDir,
@@ -16,6 +15,7 @@ use crate::{
         structs::{CryptoParams, PackParams},
     },
 };
+use domain::storage::Storage;
 
 use super::prompt::overwrite_check;
 

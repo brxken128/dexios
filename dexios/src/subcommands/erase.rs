@@ -1,5 +1,5 @@
-use crate::domain::{self, storage::Storage};
 use anyhow::Result;
+use domain::storage::Storage;
 use paris::Logger;
 use std::sync::Arc;
 use std::time::Instant;

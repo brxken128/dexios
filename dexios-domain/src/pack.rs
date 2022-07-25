@@ -7,7 +7,7 @@ use dexios_core::primitives::BLOCK_SIZE;
 use dexios_core::protected::Protected;
 use zip::write::FileOptions;
 
-use crate::domain::{self, storage::Storage};
+use crate::storage::Storage;
 
 #[derive(Debug)]
 pub enum Error {
@@ -17,7 +17,7 @@ pub enum Error {
     FinishArchive,
     ReadData,
     WriteData,
-    Encrypt(domain::encrypt::Error),
+    Encrypt(crate::encrypt::Error),
 }
 
 impl std::fmt::Display for Error {
@@ -42,7 +42,7 @@ where
     RW: Read + Write + Seek,
 {
     pub writer: &'a RefCell<RW>,
-    pub compress_files: Vec<domain::storage::Entry<RW>>,
+    pub compress_files: Vec<crate::storage::Entry<RW>>,
     pub compression_method: zip::CompressionMethod,
     pub header_writer: Option<&'a RefCell<RW>>,
     pub raw_key: Protected<Vec<u8>>,
@@ -104,7 +104,7 @@ where
     let buf_capacity = stor.file_len(&tmp_file).map_err(|_| Error::FinishArchive)?;
 
     // 4. Encrypt zip archive
-    let encrypt_res = domain::encrypt::execute(domain::encrypt::Request {
+    let encrypt_res = crate::encrypt::execute(crate::encrypt::Request {
         reader: tmp_file.try_reader().map_err(|_| Error::FinishArchive)?,
         writer: req.writer,
         header_writer: req.header_writer,
@@ -115,7 +115,7 @@ where
     .map_err(Error::Encrypt);
 
     // 5. Finally eraze zip archive with zeros.
-    domain::overwrite::execute(domain::overwrite::Request {
+    crate::overwrite::execute(crate::overwrite::Request {
         buf_capacity,
         writer: tmp_file.try_writer().map_err(|_| Error::FinishArchive)?,
         passes: 2,
@@ -135,8 +135,8 @@ mod tests {
     use dexios_core::header::{HeaderType, HeaderVersion};
     use dexios_core::primitives::{Algorithm, Mode};
 
-    use crate::domain::encrypt::tests::PASSWORD;
-    use crate::domain::storage::{InMemoryStorage, Storage};
+    use crate::encrypt::tests::PASSWORD;
+    use crate::storage::{InMemoryStorage, Storage};
 
     #[test]
     fn should_pack_bar_directory() {

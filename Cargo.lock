@@ -314,11 +314,11 @@ dependencies = [
  "blake3",
  "clap",
  "dexios-core",
+ "dexios-domain",
  "hex",
  "paris",
  "rand",
  "rpassword",
- "walkdir",
  "zip",
 ]
 
@@ -337,6 +337,17 @@ dependencies = [
  "indicatif",
  "rand",
  "zeroize",
+]
+
+[[package]]
+name = "dexios-domain"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "dexios-core",
+ "rand",
+ "walkdir",
+ "zip",
 ]
 
 [[package]]

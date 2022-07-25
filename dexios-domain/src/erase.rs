@@ -1,14 +1,13 @@
-use crate::domain;
 use std::io::{Read, Seek, Write};
 use std::path::Path;
 use std::sync::Arc;
 
-use domain::storage::Storage;
+use crate::storage::Storage;
 
 #[derive(Debug)]
 pub enum Error {
     OpenFile,
-    Overwrite(domain::overwrite::Error),
+    Overwrite(crate::overwrite::Error),
     RemoveFile,
 }
 
@@ -38,7 +37,7 @@ where
     let file = stor.write_file(req.path).map_err(|_| Error::OpenFile)?;
     let buf_capacity = stor.file_len(&file).map_err(|_| Error::OpenFile)?;
 
-    domain::overwrite::execute(domain::overwrite::Request {
+    crate::overwrite::execute(crate::overwrite::Request {
         writer: file
             .try_writer()
             .expect("We're confident that we're in writing mode"),
@@ -56,7 +55,7 @@ where
 mod tests {
     use std::path::PathBuf;
 
-    use crate::domain::storage::InMemoryStorage;
+    use crate::storage::InMemoryStorage;
 
     use super::*;
 

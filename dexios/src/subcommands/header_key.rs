@@ -3,7 +3,6 @@ use std::{fs::OpenOptions, io::Seek};
 
 use crate::global::states::Key;
 use crate::global::states::PasswordState;
-use crate::utils::gen_salt;
 use anyhow::{Context, Result};
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
@@ -15,6 +14,7 @@ use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
 use dexios_core::{cipher::Ciphers, header::Keyslot};
 use dexios_core::{key::balloon_hash, primitives::gen_nonce};
+use domain::utils::gen_salt;
 use paris::info;
 use paris::success;
 use std::time::Instant;

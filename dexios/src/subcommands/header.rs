@@ -5,7 +5,7 @@ use std::{
 };
 
 use super::prompt::{get_answer, overwrite_check};
-use crate::{global::states::SkipMode, error, success, warn};
+use crate::{error, global::states::SkipMode, success, warn};
 use anyhow::{Context, Result};
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
@@ -149,10 +149,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
     header.write(&mut output_file)?;
 
-    success!(
-        "Header restored to {} from {} successfully.",
-        output, input
-    );
+    success!("Header restored to {} from {} successfully.", output, input);
     Ok(())
 }
 

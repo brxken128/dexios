@@ -52,7 +52,7 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
         writer: output_file.try_writer()?,
         raw_key,
         on_decrypted_header: Some(Box::new(move |header_type| {
-                info!("Using {} for decryption", header_type.algorithm);
+            info!("Using {} for decryption", header_type.algorithm);
         })),
     })?;
 
@@ -60,11 +60,11 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
     stor.flush_file(&output_file)?;
 
     let decrypt_duration = start_time.elapsed();
-        success!(
-            "Decryption successful! File saved as {} [took {:.2}s]",
-            output,
-            decrypt_duration.as_secs_f32(),
-        );
+    success!(
+        "Decryption successful! File saved as {} [took {:.2}s]",
+        output,
+        decrypt_duration.as_secs_f32(),
+    );
 
     if params.hash_mode == HashMode::CalculateHash {
         super::hashing::hash_stream(&[input.to_string()])?;

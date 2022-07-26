@@ -1,10 +1,13 @@
 use anyhow::{Context, Result};
 use rand::distributions::{Alphanumeric, DistString};
 
-use crate::{global::{
-    states::{PrintMode, SkipMode},
-    structs::CryptoParams,
-}, info, warn, success};
+use crate::{
+    global::{
+        states::{PrintMode, SkipMode},
+        structs::CryptoParams,
+    },
+    info, success, warn,
+};
 use std::fs::File;
 use std::path::PathBuf;
 use std::{str::FromStr, time::Instant};
@@ -40,10 +43,7 @@ pub fn unpack(
 
     let file_count = archive.len();
 
-    info!(
-        "Decompressing {} items into {}",
-        file_count, output
-    );
+    info!("Decompressing {} items into {}", file_count, output);
 
     for i in 0..file_count {
         // recreate the directory structure first

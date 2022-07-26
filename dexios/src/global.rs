@@ -34,6 +34,6 @@ macro_rules! warn {
 macro_rules! question {
     ($($arg:tt)*) => {
         print!("[?] {}", format!($($arg)*));
-        
+
     }
 }

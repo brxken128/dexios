@@ -434,7 +434,7 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(true)
                                 .help("Use an old keyfile to decrypt the master key"),
                         ),
-                )       
+                )
          )
         .subcommand(
             Command::new("header")

@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use std::io::{self, stdin, Write};
 
-use crate::{global::states::SkipMode, warn, question};
+use crate::{global::states::SkipMode, question, warn};
 
 // this handles user-interactivity, specifically getting a "yes" or "no" answer from the user
 // it requires the question itself, if the default is true/false

@@ -9,7 +9,8 @@ use dexios_core::protected::Protected;
 
 use crate::{
     file::get_bytes,
-    subcommands::key::{generate_passphrase, get_password}, warn,
+    subcommands::key::{generate_passphrase, get_password},
+    warn,
 };
 
 #[derive(PartialEq, Eq, Clone, Copy)]

@@ -7,7 +7,6 @@ use dexios_core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
 use dexios_core::primitives::{Algorithm, Mode};
 
 use crate::global::states::{HeaderLocation, PasswordState};
-use crate::{info, success};
 use crate::{
     global::states::EraseSourceDir,
     global::{
@@ -15,6 +14,7 @@ use crate::{
         structs::{CryptoParams, PackParams},
     },
 };
+use crate::{info, success};
 use domain::storage::Storage;
 
 use super::prompt::overwrite_check;
@@ -35,7 +35,6 @@ pub struct Request<'a> {
 pub fn execute(req: Request) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
     let stor = Arc::new(domain::storage::FileStorage);
-
 
     // 1. validate and prepare options
     if req.input_file.iter().any(|f| f == req.output_file) {
@@ -90,10 +89,7 @@ pub fn execute(req: Request) -> Result<()> {
     };
 
     info!("Using {} for encryption", req.algorithm);
-    info!(
-        "Encrypting {:?} (this may take a while)",
-        req.input_file
-    );
+    info!("Encrypting {:?} (this may take a while)", req.input_file);
 
     let start_time = Instant::now();
     // 2. compress and encrypt files

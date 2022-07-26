@@ -11,7 +11,7 @@ use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
 use paris::Logger;
 
-pub fn hex_encode(bytes: &[u8]) -> String {
+fn hex_encode(bytes: &[u8]) -> String {
     bytes
         .iter()
         .map(|b| format!("{:02x}", b))

@@ -11,6 +11,13 @@ use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
 use paris::Logger;
 
+pub fn hex_encode(bytes: &[u8]) -> String {
+    bytes
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect::<String>()
+}
+
 pub fn details(input: &str) -> Result<()> {
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
@@ -23,41 +30,37 @@ pub fn details(input: &str) -> Result<()> {
         ));
     }
 
-    let (header, _) = header_result.unwrap();
+    let (header, aad) = header_result.unwrap();
 
     println!("Header version: {}", header.header_type.version);
     println!("Encryption algorithm: {}", header.header_type.algorithm);
     println!("Encryption mode: {}", header.header_type.mode);
-    println!("Encryption nonce: {} (hex)", hex::encode(header.nonce));
-
-    // could make use of the AAD too
+    println!("Encryption nonce: {} (hex)", hex_encode(&header.nonce));
+    println!("AAD: {} (hex)", hex_encode(&aad));
 
     match header.header_type.version {
         HeaderVersion::V1 => {
-            println!("Salt: {} (hex)", hex::encode(header.salt.unwrap()));
+            println!("Salt: {} (hex)", hex_encode(&header.salt.unwrap()));
             println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(1));
         }
         HeaderVersion::V2 => {
-            println!("Salt: {} (hex)", hex::encode(header.salt.unwrap()));
+            println!("Salt: {} (hex)", hex_encode(&header.salt.unwrap()));
             println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(2));
         }
         HeaderVersion::V3 => {
-            println!("Salt: {} (hex)", hex::encode(header.salt.unwrap()));
+            println!("Salt: {} (hex)", hex_encode(&header.salt.unwrap()));
             println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(3));
         }
         HeaderVersion::V4 | HeaderVersion::V5 => {
             for (i, keyslot) in header.keyslots.unwrap().iter().enumerate() {
                 println!("Keyslot {}:", i);
                 println!("  Hashing Algorithm: {}", keyslot.hash_algorithm);
-                println!("  Salt: {} (hex)", hex::encode(keyslot.salt));
+                println!("  Salt: {} (hex)", hex_encode(&keyslot.salt));
                 println!(
                     "  Master Key: {} (hex, encrypted)",
-                    hex::encode(keyslot.encrypted_key)
+                    hex_encode(&keyslot.encrypted_key)
                 );
-                println!(
-                    "  Master Key's Nonce: {} (hex)",
-                    hex::encode(keyslot.nonce.clone())
-                );
+                println!("  Master Key Nonce: {} (hex)", hex_encode(&keyslot.nonce));
             }
         }
     }

@@ -19,6 +19,7 @@ jobs:
           # - windows-latest
           - macos-latest
         rust:
+          - 1.60.0 # The MSRV
           - stable
           - beta
           - nightly

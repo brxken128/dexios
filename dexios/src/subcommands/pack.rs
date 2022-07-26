@@ -5,7 +5,6 @@ use std::time::Instant;
 use anyhow::Result;
 use dexios_core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
 use dexios_core::primitives::{Algorithm, Mode};
-use paris::Logger;
 
 use crate::global::states::{HeaderLocation, PasswordState};
 use crate::{
@@ -15,6 +14,7 @@ use crate::{
         structs::{CryptoParams, PackParams},
     },
 };
+use crate::{info, success};
 use domain::storage::Storage;
 
 use super::prompt::overwrite_check;
@@ -35,8 +35,6 @@ pub struct Request<'a> {
 pub fn execute(req: Request) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
     let stor = Arc::new(domain::storage::FileStorage);
-
-    let mut logger = Logger::new();
 
     // 1. validate and prepare options
     if req.input_file.iter().any(|f| f == req.output_file) {
@@ -90,11 +88,8 @@ pub fn execute(req: Request) -> Result<()> {
         Compression::Zstd => zip::CompressionMethod::Zstd,
     };
 
-    logger.info(format!("Using {} for encryption", req.algorithm));
-    logger.info(format!(
-        "Encrypting {:?} (this may take a while)",
-        req.input_file
-    ));
+    info!("Using {} for encryption", req.algorithm);
+    info!("Encrypting {:?} (this may take a while)", req.input_file);
 
     let start_time = Instant::now();
     // 2. compress and encrypt files
@@ -122,11 +117,11 @@ pub fn execute(req: Request) -> Result<()> {
     stor.flush_file(&output_file)?;
 
     let encrypt_duration = start_time.elapsed();
-    logger.success(format!(
+    success!(
         "Encryption successful! File saved as {} [took {:.2}s]",
         req.output_file,
         encrypt_duration.as_secs_f32(),
-    ));
+    );
 
     if req.pack_params.erase_source == EraseSourceDir::Erase {
         req.input_file
@@ -134,7 +129,7 @@ pub fn execute(req: Request) -> Result<()> {
             .try_for_each(|file_name| super::erase::secure_erase(file_name, 2))?;
     }
 
-    logger.success(format!("Your output file is: {}", req.output_file));
+    success!("Your output file is: {}", req.output_file);
 
     Ok(())
 }

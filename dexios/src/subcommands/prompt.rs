@@ -1,8 +1,7 @@
 use anyhow::{Context, Result};
-use paris::{warn, Logger};
 use std::io::{self, stdin, Write};
 
-use crate::global::states::SkipMode;
+use crate::{global::states::SkipMode, question, warn};
 
 // this handles user-interactivity, specifically getting a "yes" or "no" answer from the user
 // it requires the question itself, if the default is true/false
@@ -15,9 +14,7 @@ pub fn get_answer(prompt: &str, default: bool, skip: bool) -> Result<bool> {
     let switch = if default { "(Y/n)" } else { "(y/N)" };
 
     let answer_bool = loop {
-        let mut logger = Logger::new();
-
-        logger.same().warn(format!("{prompt} {switch}: "));
+        question!("{prompt} {switch}: ");
         io::stdout().flush().context("Unable to flush stdout")?;
 
         let mut answer = String::new();

@@ -4,10 +4,10 @@
 use crate::global::states::{EraseMode, EraseSourceDir, HashMode, HeaderLocation, SkipMode};
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
+use crate::warn;
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 use dexios_core::primitives::Algorithm;
-use paris::warn;
 
 use dexios_core::primitives::ALGORITHMS;
 

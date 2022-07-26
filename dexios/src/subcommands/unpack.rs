@@ -1,11 +1,13 @@
 use anyhow::{Context, Result};
 use rand::distributions::{Alphanumeric, DistString};
 
-use crate::global::{
-    states::{PrintMode, SkipMode},
-    structs::CryptoParams,
+use crate::{
+    global::{
+        states::{PrintMode, SkipMode},
+        structs::CryptoParams,
+    },
+    info, success, warn,
 };
-use paris::Logger;
 use std::fs::File;
 use std::path::PathBuf;
 use std::{str::FromStr, time::Instant};
@@ -22,7 +24,6 @@ pub fn unpack(
     print_mode: &PrintMode,
     params: &CryptoParams, // params for decrypt function
 ) -> Result<()> {
-    let mut logger = Logger::new();
     let random_extension: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
 
     // this is the name of the decrypted zip file
@@ -36,16 +37,13 @@ pub fn unpack(
         .context("Temporary archive can't be opened, is it a zip file?")?;
 
     match std::fs::create_dir(output) {
-        Ok(_) => logger.info(format!("Created output directory: {}", output)),
-        Err(_) => logger.info(format!("Output directory ({}) already exists", output)),
+        Ok(_) => info!("Created output directory: {}", output),
+        Err(_) => info!("Output directory ({}) already exists", output),
     };
 
     let file_count = archive.len();
 
-    logger.info(format!(
-        "Decompressing {} items into {}",
-        file_count, output
-    ));
+    info!("Decompressing {} items into {}", file_count, output);
 
     for i in 0..file_count {
         // recreate the directory structure first
@@ -111,12 +109,12 @@ pub fn unpack(
                     params.skip == SkipMode::HidePrompts,
                 )?;
                 if !answer {
-                    logger.warn(format!("Skipping {}", file_name));
+                    warn!("Skipping {}", file_name);
                     continue;
                 }
             }
             if print_mode == &PrintMode::Verbose {
-                logger.info(format!("Extracting {}", file_name));
+                warn!("Extracting {}", file_name);
             }
 
             let mut output_file =
@@ -127,19 +125,19 @@ pub fn unpack(
     }
 
     let zip_duration = zip_start_time.elapsed();
-    logger.success(format!(
+    success!(
         "Extracted {} items to {} [took {:.2}s]",
         file_count,
         output,
         zip_duration.as_secs_f32()
-    ));
+    );
 
     super::erase::secure_erase(&tmp_name, 2)?; // cleanup the tmp file
 
-    logger.success(format!(
+    success!(
         "Unpacking Successful! You will find your files in {}",
         output
-    ));
+    );
 
     Ok(())
 }

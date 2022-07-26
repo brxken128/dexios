@@ -315,7 +315,6 @@ dependencies = [
  "clap",
  "dexios-core",
  "dexios-domain",
- "paris",
  "rand",
  "rpassword",
  "zip",
@@ -478,12 +477,6 @@ name = "os_str_bytes"
 version = "6.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "648001efe5d5c0102d8cea768e348da85d90af8ba91f0bea908f157951493cd4"
-
-[[package]]
-name = "paris"
-version = "1.5.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2eaf2319cd71dd9ff38c72bebde61b9ea657134abcf26ae4205f54f772a32810"
 
 [[package]]
 name = "password-hash"

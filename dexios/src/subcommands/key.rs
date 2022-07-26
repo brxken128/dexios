@@ -1,10 +1,9 @@
 use anyhow::{Context, Result};
 use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
-use paris::warn;
 use rand::{prelude::StdRng, Rng, SeedableRng};
 
-use crate::global::states::PasswordState;
+use crate::{global::states::PasswordState, warn};
 
 // this interactively gets the user's password from the terminal
 // it takes the password twice, compares, and returns the bytes

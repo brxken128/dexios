@@ -6,11 +6,10 @@
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 use dexios_core::protected::Protected;
-use paris::warn;
 
 use crate::{
     file::get_bytes,
-    subcommands::key::{generate_passphrase, get_password},
+    subcommands::key::{generate_passphrase, get_password}, warn,
 };
 
 #[derive(PartialEq, Eq, Clone, Copy)]

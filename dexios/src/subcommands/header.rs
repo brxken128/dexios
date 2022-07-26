@@ -5,11 +5,10 @@ use std::{
 };
 
 use super::prompt::{get_answer, overwrite_check};
-use crate::global::states::SkipMode;
+use crate::{global::states::SkipMode, error, success, warn};
 use anyhow::{Context, Result};
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
-use paris::Logger;
 
 fn hex_encode(bytes: &[u8]) -> String {
     bytes
@@ -72,8 +71,7 @@ pub fn details(input: &str) -> Result<()> {
 // it's used for extracting an encrypted file's header for backups and such
 // it implements a check to ensure the header is valid
 pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
-    let mut logger = Logger::new();
-    logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
+    warn!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
 
     let mut input_file =
         File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
@@ -81,7 +79,7 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     let header_result = Header::deserialize(&mut input_file);
 
     if header_result.is_err() {
-        logger.error("File does not contain a valid Dexios header - exiting");
+        error!("File does not contain a valid Dexios header - exiting");
         drop(input_file);
         exit(1);
     }
@@ -97,7 +95,7 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
     header.write(&mut output_file)?;
 
-    logger.success(format!("Header dumped to {} successfully.", output));
+    success!("Header dumped to {} successfully.", output);
     Ok(())
 }
 
@@ -107,8 +105,7 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 // this does not work for files encrypted *with* a detached header
 // it implements a check to ensure the header is valid before restoring to a file
 pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
-    let mut logger = Logger::new();
-    logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
+    warn!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
     let prompt = format!(
         "Are you sure you'd like to restore the header in {} to {}?",
         input, output
@@ -124,7 +121,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
     let header_result = Header::deserialize(&mut input_file);
 
     if header_result.is_err() {
-        logger.error("File does not contain a valid Dexios header - exiting");
+        error!("File does not contain a valid Dexios header - exiting");
         drop(input_file);
         exit(1);
     }
@@ -152,10 +149,10 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
     header.write(&mut output_file)?;
 
-    logger.success(format!(
+    success!(
         "Header restored to {} from {} successfully.",
         output, input
-    ));
+    );
     Ok(())
 }
 
@@ -164,8 +161,7 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 // it can be useful for storing the header separate from the file, to make an attacker's life that little bit harder
 // it implements a check to ensure the header is valid before stripping
 pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
-    let mut logger = Logger::new();
-    logger.warn("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
+    warn!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
 
     let prompt = format!("Are you sure you'd like to wipe the header for {}?", input);
     if !get_answer(&prompt, false, skip == SkipMode::HidePrompts)? {
@@ -186,7 +182,7 @@ pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
     let header_result = Header::deserialize(&mut input_file);
 
     if header_result.is_err() {
-        logger.error("File does not contain a valid Dexios header - exiting");
+        error!("File does not contain a valid Dexios header - exiting");
         drop(input_file);
         exit(1);
     }
@@ -210,6 +206,6 @@ pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
         ])
         .with_context(|| format!("Unable to wipe header for file: {}", input))?;
 
-    logger.success(format!("Header stripped from {} successfully.", input));
+    success!("Header stripped from {} successfully.", input);
     Ok(())
 }

@@ -1,10 +1,10 @@
 use super::prompt::overwrite_check;
 use crate::global::states::{EraseMode, HashMode, HeaderLocation, PasswordState};
 use crate::global::structs::CryptoParams;
+use crate::{info, success};
 use anyhow::Result;
 use dexios_core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
 use dexios_core::primitives::{Algorithm, Mode};
-use paris::Logger;
 use std::process::exit;
 use std::sync::Arc;
 use std::time::Instant;
@@ -22,8 +22,6 @@ pub fn stream_mode(
 ) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
     let stor = Arc::new(domain::storage::FileStorage);
-
-    let mut logger = Logger::new();
 
     // 1. validate and prepare options
     if input == output {
@@ -53,8 +51,8 @@ pub fn stream_mode(
         }
     };
 
-    logger.info(format!("Using {} for encryption", algorithm));
-    logger.info(format!("Encrypting {} (this may take a while)", input));
+    info!("Using {} for encryption", algorithm);
+    info!("Encrypting {} (this may take a while)", input);
 
     let start_time = Instant::now();
 
@@ -80,11 +78,11 @@ pub fn stream_mode(
     stor.flush_file(&output_file)?;
 
     let encrypt_duration = start_time.elapsed();
-    logger.success(format!(
+    success!(
         "Encryption successful! File saved as {} [took {:.2}s]",
         output,
         encrypt_duration.as_secs_f32(),
-    ));
+    );
 
     if params.hash_mode == HashMode::CalculateHash {
         super::hashing::hash_stream(&[output.to_string()])?;

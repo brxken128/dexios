@@ -29,3 +29,11 @@ macro_rules! warn {
         println!("[-] {}", format!($($arg)*))
     }
 }
+
+#[macro_export]
+macro_rules! question {
+    ($($arg:tt)*) => {
+        print!("[?] {}", format!($($arg)*));
+        
+    }
+}

@@ -1,7 +1,7 @@
 // TODO(brxken128): give this file a better name
 use std::fs::OpenOptions;
 use dexios_core::header::HashingAlgorithm;
-use domain::keys::RequestType;
+use domain::key_manipulation::RequestType;
 use std::cell::RefCell;
 use crate::global::states::Key;
 use crate::global::states::PasswordState;
@@ -39,7 +39,7 @@ pub fn manipulate_key(input: &str, key_old: &Key, key_new: Option<&Key>, request
     };
 
 
-    domain::keys::execute(domain::keys::Request { request_type, handle: &input_file, hash_algorithm: Some(HashingAlgorithm::Blake3Balloon(5)), raw_key_old, raw_key_new })?;
+    domain::key_manipulation::execute(domain::key_manipulation::Request { request_type, handle: &input_file, hash_algorithm: Some(HashingAlgorithm::Blake3Balloon(5)), raw_key_old, raw_key_new })?;
 
     match request_type {
         RequestType::Add => success!("Key successfully added!"),

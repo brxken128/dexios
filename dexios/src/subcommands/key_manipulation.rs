@@ -8,11 +8,7 @@ use std::fs::OpenOptions;
 
 use crate::{info, success};
 
-pub fn add_key(
-    input: &str,
-    key_old: &Key,
-    key_new: &Key,
-) -> Result<()> {
+pub fn add_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
     let input_file = RefCell::new(
         OpenOptions::new()
             .read(true)
@@ -49,11 +45,7 @@ pub fn add_key(
     Ok(())
 }
 
-pub fn change_key(
-    input: &str,
-    key_old: &Key,
-    key_new: &Key,
-) -> Result<()> {
+pub fn change_key(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
     let input_file = RefCell::new(
         OpenOptions::new()
             .read(true)
@@ -89,10 +81,7 @@ pub fn change_key(
     Ok(())
 }
 
-pub fn delete_key(
-    input: &str,
-    key_old: &Key,
-) -> Result<()> {
+pub fn delete_key(input: &str, key_old: &Key) -> Result<()> {
     let input_file = RefCell::new(
         OpenOptions::new()
             .read(true)
@@ -107,7 +96,6 @@ pub fn delete_key(
         _ => (),
     }
     let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
-
 
     domain::key_manipulation::key_delete::execute(domain::key_manipulation::key_delete::Request {
         handle: &input_file,

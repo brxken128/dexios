@@ -1,16 +1,15 @@
 use std::io::Seek;
 
+use super::Error;
 use dexios_core::header::HashingAlgorithm;
+use dexios_core::header::Keyslot;
 use dexios_core::header::{Header, HeaderVersion};
 use dexios_core::primitives::gen_nonce;
 use dexios_core::primitives::gen_salt;
 use dexios_core::primitives::Mode;
 use dexios_core::protected::Protected;
-use dexios_core::header::Keyslot;
 use std::cell::RefCell;
 use std::io::{Read, Write};
-use super::Error;
-
 
 pub struct Request<'a, W>
 where
@@ -47,10 +46,11 @@ where
     let mut keyslots = header.keyslots.clone().unwrap();
 
     // all of these functions need either the master key, or the index
-    let (master_key, _) =
-        super::decrypt_master_key_with_index(&keyslots, req.raw_key_old, &header.header_type.algorithm)?;
-
-
+    let (master_key, _) = super::decrypt_master_key_with_index(
+        &keyslots,
+        req.raw_key_old,
+        &header.header_type.algorithm,
+    )?;
 
     if keyslots.len() == 4 {
         return Err(Error::TooManyKeyslots);
@@ -59,7 +59,8 @@ where
     let salt = gen_salt();
     let master_key_nonce = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
 
-    let key_new = req.hash_algorithm
+    let key_new = req
+        .hash_algorithm
         .hash(req.raw_key_new, &salt)
         .map_err(|_| Error::KeyHash)?;
 

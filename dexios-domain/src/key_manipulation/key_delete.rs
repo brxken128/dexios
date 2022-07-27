@@ -1,9 +1,9 @@
-use std::io::Seek;
+use super::Error;
 use dexios_core::header::{Header, HeaderVersion};
 use dexios_core::protected::Protected;
 use std::cell::RefCell;
+use std::io::Seek;
 use std::io::{Read, Write};
-use super::Error;
 
 pub struct Request<'a, W>
 where
@@ -38,9 +38,11 @@ where
     let mut keyslots = header.keyslots.clone().unwrap();
 
     // all of these functions need either the master key, or the index
-    let (_, index) =
-        super::decrypt_master_key_with_index(&keyslots, req.raw_key_old, &header.header_type.algorithm)?;
-
+    let (_, index) = super::decrypt_master_key_with_index(
+        &keyslots,
+        req.raw_key_old,
+        &header.header_type.algorithm,
+    )?;
 
     keyslots.remove(index);
 

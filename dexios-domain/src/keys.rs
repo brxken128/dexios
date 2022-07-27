@@ -94,7 +94,7 @@ pub fn decrypt_master_key_with_index(
 
 impl std::error::Error for Error {}
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum RequestType {
     Change,
     Delete,

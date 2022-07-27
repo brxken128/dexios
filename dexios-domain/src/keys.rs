@@ -1,12 +1,6 @@
 // TODO(brxken128): give this file a better name
 use std::{fs::OpenOptions, io::Seek};
 
-use crate::global::states::Key;
-use crate::global::states::PasswordState;
-use crate::info;
-use crate::success;
-use crate::utils::gen_salt;
-use anyhow::{Context, Result};
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
 use dexios_core::key::vec_to_arr;
@@ -107,7 +101,7 @@ pub fn encrypt_master_key(
     key_new: Protected<[u8; 32]>,
     nonce: &[u8],
     algorithm: &Algorithm,
-) -> Result<Protected<[u8; ENCRYPTED_MASTER_KEY_LEN]>> {
+) -> Result<Protected<[u8; ENCRYPTED_MASTER_KEY_LEN]>, Error> {
     let cipher = Ciphers::initialize(key_new, &algorithm)?;
 
     let master_key_result = cipher.encrypt(nonce, master_key.expose().as_slice());

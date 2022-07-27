@@ -29,6 +29,7 @@ pub enum Error {
     Unsupported,
     IncorrectKey,
     MasterKeyEncrypt,
+    TooManyKeyslots,
 }
 
 impl std::fmt::Display for Error {
@@ -36,6 +37,9 @@ impl std::fmt::Display for Error {
         use Error::*;
         match self {
             HeaderSizeParse => f.write_str("Cannot parse header size"),
+            TooManyKeyslots => {
+                f.write_str("There are already too many populated keyslots within this file")
+            }
             MasterKeyEncrypt => f.write_str("Unable to encrypt master key"),
             Unsupported => {
                 f.write_str("The provided request is unsupported with this header version")
@@ -128,6 +132,7 @@ where
     pub raw_key_old: Protected<Vec<u8>>,
     pub raw_key_new: Option<Protected<Vec<u8>>>, // only required for add+change
     pub command: RequestType,
+    pub hash_algorithm: Option<HashingAlgorithm>, // only required for add+change
 }
 
 pub fn execute<W>(req: Request<W>) -> Result<(), Error>
@@ -136,9 +141,7 @@ where
 {
     let (header, _) = dexios_core::header::Header::deserialize(req.handle.get_mut())?;
 
-    if (header.header_type.version < HeaderVersion::V4)
-        || (header.header_type.version < HeaderVersion::V5 && req.command == RequestType::Add)
-    {
+    if header.header_type.version <= HeaderVersion::V4 {
         return Err(Error::Unsupported);
     }
 
@@ -151,32 +154,43 @@ where
         .get_mut()
         .seek(std::io::SeekFrom::Current(-header_size));
 
+    // this gets modified, then any changes from below are written at the end
     let mut keyslots = header.keyslots.clone().unwrap();
 
+    let (master_key, index) =
+        decrypt_master_key_with_index(&keyslots, req.raw_key_old, &header.header_type.algorithm)?;
+
     match req.command {
-        RequestType::Add => {}
-        RequestType::Change => {
-            let (master_key, index) = decrypt_master_key_with_index(
-                &keyslots,
-                req.raw_key_old,
+        RequestType::Add => {
+            let hash_algorithm = req.hash_algorithm.unwrap(); // add error handling
+
+            if keyslots.len() == 4 {
+                return Err(Error::TooManyKeyslots);
+            }
+
+            let salt = gen_salt();
+            let master_key_nonce = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
+
+            let key_new = hash_algorithm.hash(req.raw_key_new.unwrap(), &salt)?;
+
+            let encrypted_master_key = encrypt_master_key(
+                master_key,
+                key_new,
+                &master_key_nonce,
                 &header.header_type.algorithm,
             )?;
 
-            let salt = if header.header_type.version == HeaderVersion::V4 {
-                // we must re-use the salt for V4 headers
-                keyslots[index].salt
-            } else {
-                gen_salt()
+            let keyslot = Keyslot {
+                encrypted_key: encrypted_master_key,
+                nonce: master_key_nonce,
+                salt,
+                hash_algorithm,
             };
+        }
+        RequestType::Change => {
+            let hash_algorithm = req.hash_algorithm.unwrap(); // add error handling
 
-            let hash_algorithm = if header.header_type.version == HeaderVersion::V4 {
-                // V4 headers must re-use the same hashing algorithm (Blake3Balloon(4))
-                keyslots[index].hash_algorithm
-            } else {
-                // TODO(brxken128): allow for different hashing algorithms in V5+
-                HashingAlgorithm::Blake3Balloon(5)
-            };
-
+            let salt = gen_salt();
             let key_new = hash_algorithm.hash(req.raw_key_new.unwrap(), &salt)?;
 
             let master_key_nonce = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
@@ -195,7 +209,9 @@ where
                 hash_algorithm,
             };
         }
-        RequestType::Delete => {}
+        RequestType::Delete => {
+            keyslots.remove(index);
+        }
     }
 
     let header_new = Header {
@@ -207,7 +223,6 @@ where
 
     header_new.write(req.handle.get_mut())?;
 
-    // return err when trying to delete last keyslot in header
     Ok(())
 }
 

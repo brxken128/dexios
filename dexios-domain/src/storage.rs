@@ -64,7 +64,6 @@ where
 
     fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<RW>, Error>;
     fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<RW>, Error>;
-    fn modify_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<RW>, Error>;
     fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<RW>, Error>;
     fn flush_file(&self, file: &Entry<RW>) -> Result<(), Error>;
     fn file_len(&self, file: &Entry<RW>) -> Result<usize, Error>;
@@ -106,20 +105,6 @@ impl Storage<fs::File> for FileStorage {
                 stream: RefCell::new(file),
             }))
         }
-    }
-
-    fn modify_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<fs::File>, Error> {
-        let path = path.as_ref().to_path_buf();
-        let file = fs::File::options()
-            .write(true)
-            .read(true)
-            .open(&path)
-            .map_err(|_| Error::OpenFile(FileMode::Write))?;
-
-        Ok(Entry::File(FileData {
-            path,
-            stream: RefCell::new(file),
-        }))
     }
 
     fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<fs::File>, Error> {

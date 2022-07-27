@@ -66,11 +66,6 @@ pub fn decrypt_master_key_with_index(
             .hash_algorithm
             .hash(raw_key_old.clone(), &keyslot.salt)?;
         let hash_duration = hash_start_time.elapsed();
-        // success!(
-        //     "Successfully hashed your old key [took {:.2}s]",
-        //     hash_duration.as_secs_f32()
-        // );
-
         let cipher = Ciphers::initialize(key_old, &algorithm)?;
 
         let master_key_result = cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
@@ -141,7 +136,7 @@ where
 {
     let (header, _) = dexios_core::header::Header::deserialize(req.handle.get_mut())?;
 
-    if header.header_type.version <= HeaderVersion::V4 {
+    if header.header_type.version < HeaderVersion::V5 {
         return Err(Error::Unsupported);
     }
 
@@ -157,6 +152,7 @@ where
     // this gets modified, then any changes from below are written at the end
     let mut keyslots = header.keyslots.clone().unwrap();
 
+    // all of these functions need either the master key, or the index
     let (master_key, index) =
         decrypt_master_key_with_index(&keyslots, req.raw_key_old, &header.header_type.algorithm)?;
 
@@ -214,6 +210,7 @@ where
         }
     }
 
+    // recreate header and inherit everything (except keyslots)
     let header_new = Header {
         nonce: header.nonce,
         salt: header.salt,
@@ -221,6 +218,7 @@ where
         header_type: header.header_type,
     };
 
+    // write the header to the handle
     header_new.write(req.handle.get_mut())?;
 
     Ok(())

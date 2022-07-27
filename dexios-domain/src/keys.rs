@@ -5,10 +5,13 @@ use crate::global::states::Key;
 use crate::global::states::PasswordState;
 use crate::info;
 use crate::success;
+use crate::utils::gen_salt;
 use anyhow::{Context, Result};
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
 use dexios_core::key::vec_to_arr;
+use dexios_core::primitives::gen_salt;
+use dexios_core::primitives::Algorithm;
 use dexios_core::primitives::Mode;
 use dexios_core::primitives::ENCRYPTED_MASTER_KEY_LEN;
 use dexios_core::primitives::MASTER_KEY_LEN;
@@ -16,8 +19,197 @@ use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
 use dexios_core::{cipher::Ciphers, header::Keyslot};
 use dexios_core::{key::balloon_hash, primitives::gen_nonce};
-use domain::utils::gen_salt;
+use std::cell::RefCell;
+use std::io::{Read, Write};
 use std::time::Instant;
+
+#[derive(Debug)]
+pub enum Error {
+    HeaderSizeParse,
+    Unsupported,
+    IncorrectKey,
+    MasterKeyEncrypt,
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use Error::*;
+        match self {
+            HeaderSizeParse => f.write_str("Cannot parse header size"),
+            MasterKeyEncrypt => f.write_str("Unable to encrypt master key"),
+            Unsupported => {
+                f.write_str("The provided request is unsupported with this header version")
+            }
+            IncorrectKey => {
+                f.write_str("Unable to decrypt the master key (maybe you supplied the wrong key?)")
+            }
+        }
+    }
+}
+
+pub fn decrypt_master_key_with_index(
+    keyslots: &[Keyslot],
+    raw_key_old: Protected<Vec<u8>>,
+    algorithm: &Algorithm,
+) -> Result<(Protected<[u8; MASTER_KEY_LEN]>, usize), Error> {
+    let mut index = 0;
+    let mut master_key = [0u8; MASTER_KEY_LEN];
+
+    // we need the index, so we can't use `decrypt_master_key()`
+    for (i, keyslot) in keyslots.iter().enumerate() {
+        let hash_start_time = Instant::now();
+        let key_old = keyslot
+            .hash_algorithm
+            .hash(raw_key_old.clone(), &keyslot.salt)?;
+        let hash_duration = hash_start_time.elapsed();
+        // success!(
+        //     "Successfully hashed your old key [took {:.2}s]",
+        //     hash_duration.as_secs_f32()
+        // );
+
+        let cipher = Ciphers::initialize(key_old, &algorithm)?;
+
+        let master_key_result = cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
+
+        if master_key_result.is_err() {
+            continue;
+        }
+
+        let mut master_key_decrypted = master_key_result.unwrap();
+        let len = MASTER_KEY_LEN.min(master_key_decrypted.len());
+        master_key[..len].copy_from_slice(&master_key_decrypted[..len]);
+        master_key_decrypted.zeroize();
+
+        index = i;
+
+        drop(cipher);
+        break;
+    }
+
+    if master_key == [0u8; MASTER_KEY_LEN] {
+        return Err(Error::IncorrectKey);
+    }
+
+    Ok((Protected::new(master_key), index))
+}
+
+impl std::error::Error for Error {}
+
+#[derive(PartialEq)]
+pub enum RequestType {
+    Change,
+    Delete,
+    Add,
+}
+
+// TODO(brxken128): make this available in the core
+pub fn encrypt_master_key(
+    master_key: Protected<[u8; MASTER_KEY_LEN]>,
+    key_new: Protected<[u8; 32]>,
+    nonce: &[u8],
+    algorithm: &Algorithm,
+) -> Result<Protected<[u8; ENCRYPTED_MASTER_KEY_LEN]>> {
+    let cipher = Ciphers::initialize(key_new, &algorithm)?;
+
+    let master_key_result = cipher.encrypt(nonce, master_key.expose().as_slice());
+
+    drop(master_key);
+
+    let master_key_encrypted = master_key_result.map_err(|_| Error::MasterKeyEncrypt)?;
+
+    vec_to_arr(master_key_encrypted)
+}
+
+pub struct Request<'a, W>
+where
+    W: Read + Write + Seek,
+{
+    pub handle: &'a RefCell<W>, // header read+write+seek
+    pub raw_key_old: Protected<Vec<u8>>,
+    pub raw_key_new: Option<Protected<Vec<u8>>>, // only required for add+change
+    pub command: RequestType,
+}
+
+pub fn execute<W>(req: Request<W>) -> Result<(), Error>
+where
+    W: Read + Write + Seek,
+{
+    let (header, _) = dexios_core::header::Header::deserialize(req.handle.get_mut())?;
+
+    if (header.header_type.version < HeaderVersion::V4)
+        || (header.header_type.version < HeaderVersion::V5 && req.command == RequestType::Add)
+    {
+        return Err(Error::Unsupported);
+    }
+
+    let header_size: i64 = header
+        .get_size()
+        .try_into()
+        .map_err(|_| Error::HeaderSizeParse)?;
+
+    req.handle
+        .get_mut()
+        .seek(std::io::SeekFrom::Current(-header_size));
+
+    let mut keyslots = header.keyslots.clone().unwrap();
+
+    match req.command {
+        RequestType::Add => {}
+        RequestType::Change => {
+            let (master_key, index) = decrypt_master_key_with_index(
+                &keyslots,
+                req.raw_key_old,
+                &header.header_type.algorithm,
+            )?;
+
+            let salt = if header.header_type.version == HeaderVersion::V4 {
+                // we must re-use the salt for V4 headers
+                keyslots[index].salt
+            } else {
+                gen_salt()
+            };
+
+            let hash_algorithm = if header.header_type.version == HeaderVersion::V4 {
+                // V4 headers must re-use the same hashing algorithm (Blake3Balloon(4))
+                keyslots[index].hash_algorithm
+            } else {
+                // TODO(brxken128): allow for different hashing algorithms in V5+
+                HashingAlgorithm::Blake3Balloon(5)
+            };
+
+            let key_new = hash_algorithm.hash(req.raw_key_new.unwrap(), &salt)?;
+
+            let master_key_nonce = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
+
+            let encrypted_master_key = encrypt_master_key(
+                master_key,
+                key_new,
+                &master_key_nonce,
+                &header.header_type.algorithm,
+            )?;
+
+            keyslots[index] = Keyslot {
+                encrypted_key: encrypted_master_key,
+                nonce: master_key_nonce,
+                salt,
+                hash_algorithm,
+            };
+        }
+        RequestType::Delete => {}
+    }
+
+    let header_new = Header {
+        nonce: header.nonce,
+        salt: header.salt,
+        keyslots: Some(keyslots),
+        header_type: header.header_type,
+    };
+
+    header_new.write(req.handle.get_mut())?;
+
+    // return err when trying to delete last keyslot in header
+    Ok(())
+}
 
 // this functions take both an old and a new key state
 // these key states can be auto generated (new key only), keyfiles or user provided

@@ -3,6 +3,7 @@ use std::io::Seek;
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
 use dexios_core::key::vec_to_arr;
+use dexios_core::primitives::gen_nonce;
 use dexios_core::primitives::gen_salt;
 use dexios_core::primitives::Algorithm;
 use dexios_core::primitives::Mode;
@@ -11,7 +12,6 @@ use dexios_core::primitives::MASTER_KEY_LEN;
 use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
 use dexios_core::{cipher::Ciphers, header::Keyslot};
-use dexios_core::primitives::gen_nonce;
 use std::cell::RefCell;
 use std::io::{Read, Write};
 
@@ -65,7 +65,8 @@ pub fn decrypt_master_key_with_index(
     for (i, keyslot) in keyslots.iter().enumerate() {
         let key_old = keyslot
             .hash_algorithm
-            .hash(raw_key_old.clone(), &keyslot.salt).map_err(|_| Error::KeyHash)?;
+            .hash(raw_key_old.clone(), &keyslot.salt)
+            .map_err(|_| Error::KeyHash)?;
         let cipher = Ciphers::initialize(key_old, &algorithm).map_err(|_| Error::CipherInit)?;
 
         let master_key_result = cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
@@ -134,7 +135,8 @@ pub fn execute<W>(req: Request<W>) -> Result<(), Error>
 where
     W: Read + Write + Seek,
 {
-    let (header, _) = dexios_core::header::Header::deserialize(&mut *req.handle.borrow_mut()).map_err(|_| Error::HeaderDeserialize)?;
+    let (header, _) = dexios_core::header::Header::deserialize(&mut *req.handle.borrow_mut())
+        .map_err(|_| Error::HeaderDeserialize)?;
 
     if header.header_type.version < HeaderVersion::V5 {
         return Err(Error::Unsupported);
@@ -147,7 +149,8 @@ where
 
     req.handle
         .borrow_mut()
-        .seek(std::io::SeekFrom::Current(-header_size)).map_err(|_| Error::Seek)?;
+        .seek(std::io::SeekFrom::Current(-header_size))
+        .map_err(|_| Error::Seek)?;
 
     // this gets modified, then any changes from below are written at the end
     let mut keyslots = header.keyslots.clone().unwrap();
@@ -167,7 +170,9 @@ where
             let salt = gen_salt();
             let master_key_nonce = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
 
-            let key_new = hash_algorithm.hash(req.raw_key_new.unwrap(), &salt).map_err(|_| Error::KeyHash)?;
+            let key_new = hash_algorithm
+                .hash(req.raw_key_new.unwrap(), &salt)
+                .map_err(|_| Error::KeyHash)?;
 
             let encrypted_master_key = encrypt_master_key(
                 master_key,
@@ -189,7 +194,9 @@ where
             let hash_algorithm = req.hash_algorithm.unwrap(); // add error handling
 
             let salt = gen_salt();
-            let key_new = hash_algorithm.hash(req.raw_key_new.unwrap(), &salt).map_err(|_| Error::KeyHash)?;
+            let key_new = hash_algorithm
+                .hash(req.raw_key_new.unwrap(), &salt)
+                .map_err(|_| Error::KeyHash)?;
 
             let master_key_nonce = gen_nonce(&header.header_type.algorithm, &Mode::MemoryMode);
 
@@ -221,7 +228,9 @@ where
     };
 
     // write the header to the handle
-    header_new.write(&mut *req.handle.borrow_mut()).map_err(|_| Error::HeaderWrite)?;
+    header_new
+        .write(&mut *req.handle.borrow_mut())
+        .map_err(|_| Error::HeaderWrite)?;
 
     Ok(())
 }

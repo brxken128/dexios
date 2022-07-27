@@ -93,7 +93,7 @@ fn main() -> Result<()> {
                     &get_param("input", sub_matches_change_key)?,
                     &key_old,
                     Some(&key_new),
-                    domain::key_manipulation::RequestType::Change
+                    domain::key_manipulation::RequestType::Change,
                 )?;
             }
             Some("add") => {
@@ -114,7 +114,12 @@ fn main() -> Result<()> {
                 let sub_matches_del_key = sub_matches.subcommand_matches("del").unwrap();
                 let key = Key::init(sub_matches_del_key, KeyParams::default(), "keyfile")?;
 
-                subcommands::key_manipulation::manipulate_key(&get_param("input", sub_matches_del_key)?, &key, None, domain::key_manipulation::RequestType::Delete)?;
+                subcommands::key_manipulation::manipulate_key(
+                    &get_param("input", sub_matches_del_key)?,
+                    &key,
+                    None,
+                    domain::key_manipulation::RequestType::Delete,
+                )?;
             }
             _ => (),
         },

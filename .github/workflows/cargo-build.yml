@@ -115,8 +115,7 @@ jobs:
         name: Build Android (arm64)
         uses: actions-rs/cargo@v1
         env:
-          TARGET_AR: /usr/local/lib/android/sdk/ndk/24.0.8215888/arm64/bin/aarch64-linux-android-ar
-          TARGET_CC: /usr/local/lib/android/sdk/ndk/24.0.8215888/arm64/bin/aarch64-linux-android-clang
+          PATH: /usr/local/lib/android/sdk/ndk/24.0.8215888/arm64/bin:$PATH
         with:
           command: build
           args: --release --target=aarch64-linux-android

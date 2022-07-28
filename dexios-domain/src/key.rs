@@ -6,9 +6,9 @@ use dexios_core::protected::Protected;
 use dexios_core::Zeroize;
 use dexios_core::{cipher::Ciphers, header::Keyslot};
 
-pub mod key_add;
-pub mod key_change;
-pub mod key_delete;
+pub mod add;
+pub mod change;
+pub mod delete;
 
 #[derive(Debug)]
 pub enum Error {

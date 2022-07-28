@@ -14,7 +14,6 @@ pub mod erase;
 pub mod hashing;
 pub mod header;
 pub mod key;
-pub mod key_manipulation;
 pub mod list;
 pub mod pack;
 pub mod prompt;

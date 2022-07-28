@@ -1,64 +1,120 @@
+// TODO(brxken128): give this file a better name
+use crate::global::states::Key;
+use crate::global::states::PasswordState;
 use anyhow::{Context, Result};
-use dexios_core::protected::Protected;
-use dexios_core::Zeroize;
-use rand::{prelude::StdRng, Rng, SeedableRng};
+use dexios_core::header::HashingAlgorithm;
+use std::cell::RefCell;
+use std::fs::OpenOptions;
 
-use crate::{global::states::PasswordState, warn};
+use crate::{info, success};
 
-// this interactively gets the user's password from the terminal
-// it takes the password twice, compares, and returns the bytes
-// if direct mode is enabled, it just reads the password once and returns it instantly
-pub fn get_password(pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
-    Ok(loop {
-        let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-        if pass_state == &PasswordState::Direct {
-            return Ok(Protected::new(input.into_bytes()));
-        }
+pub fn add(
+    input: &str,
+    key_old: &Key,
+    key_new: &Key,
+) -> Result<()> {
+    let input_file = RefCell::new(
+        OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(input)
+            .with_context(|| format!("Unable to open input file: {}", input))?,
+    );
 
-        let mut input_validation =
-            rpassword::prompt_password("Confirm password: ").context("Unable to read password")?;
+    match key_old {
+        Key::User => info!("Please enter your old key below"),
+        Key::Keyfile(_) => info!("Reading your old keyfile"),
+        _ => (),
+    }
+    let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
 
-        if input == input_validation && !input.is_empty() {
-            input_validation.zeroize();
-            break Protected::new(input.into_bytes());
-        } else if input.is_empty() {
-            warn!("Password cannot be empty, please try again.");
-        } else {
-            warn!("The passwords aren't the same, please try again.");
-        }
-    })
+    match key_new {
+        Key::Generate => info!("Generating a new key"),
+        Key::User => info!("Please enter your new key below"),
+        Key::Keyfile(_) => info!("Reading your new keyfile"),
+        Key::Env => (),
+    }
+
+    let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
+
+    domain::key::add::execute(domain::key::add::Request {
+        handle: &input_file,
+        hash_algorithm: HashingAlgorithm::Blake3Balloon(5),
+        raw_key_old,
+        raw_key_new,
+    })?;
+
+    success!("Key successfully added!");
+
+    Ok(())
 }
 
-// this autogenerates a passphrase, which can be selected with `--auto`
-// it reads the EFF large list of words, and puts them all into a vec
-// 3 words are then chosen at random, and 6 digits are also
-// the 3 words and the digits are separated with -
-// the words are also capitalised
-// this passphrase should provide adequate protection, while not being too hard to remember
-pub fn generate_passphrase() -> Protected<String> {
-    let collection = include_str!("wordlist.lst");
-    let words = collection.lines().collect::<Vec<_>>();
+pub fn change(
+    input: &str,
+    key_old: &Key,
+    key_new: &Key,
+) -> Result<()> {
+    let input_file = RefCell::new(
+        OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(input)
+            .with_context(|| format!("Unable to open input file: {}", input))?,
+    );
 
-    let mut passphrase = String::new();
-
-    for _ in 0..3 {
-        let index = StdRng::from_entropy().gen_range(0..=words.len());
-        let word = words[index];
-        let capitalized_word = word
-            .char_indices()
-            .map(|(i, ch)| match i {
-                0 => ch.to_ascii_uppercase(),
-                _ => ch,
-            })
-            .collect::<String>();
-        passphrase.push_str(&capitalized_word);
-        passphrase.push('-');
+    match key_old {
+        Key::User => info!("Please enter your old key below"),
+        Key::Keyfile(_) => info!("Reading your old keyfile"),
+        _ => (),
+    }
+    let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
+    match key_new {
+        Key::Generate => info!("Generating a new key"),
+        Key::User => info!("Please enter your new key below"),
+        Key::Keyfile(_) => info!("Reading your new keyfile"),
+        Key::Env => (),
     }
 
-    for _ in 0..6 {
-        let number: i64 = StdRng::from_entropy().gen_range(0..=9);
-        passphrase.push_str(&number.to_string());
-    }
+    let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
 
-    Protected::new(passphrase)
+    domain::key::change::execute(domain::key::change::Request {
+        handle: &input_file,
+        hash_algorithm: HashingAlgorithm::Blake3Balloon(5),
+        raw_key_old,
+        raw_key_new,
+    })?;
+
+    success!("Key successfully changed!");
+
+    Ok(())
+}
+
+pub fn delete(
+    input: &str,
+    key_old: &Key,
+) -> Result<()> {
+    let input_file = RefCell::new(
+        OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(input)
+            .with_context(|| format!("Unable to open input file: {}", input))?,
+    );
+
+    match key_old {
+        Key::User => info!("Please enter your old key below"),
+        Key::Keyfile(_) => info!("Reading your old keyfile"),
+        _ => (),
+    }
+    let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
+
+
+    domain::key::delete::execute(domain::key::delete::Request {
+        handle: &input_file,
+        raw_key_old,
+    })?;
+
+    success!("Key successfully deleted!");
+
+    Ok(())
 }

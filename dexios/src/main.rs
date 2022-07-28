@@ -89,7 +89,7 @@ fn main() -> Result<()> {
 
                 let (key_old, key_new) = key_manipulation_params(sub_matches_change_key)?;
 
-                subcommands::key_manipulation::change_key(
+                subcommands::key::change(
                     &get_param("input", sub_matches_change_key)?,
                     &key_old,
                     &key_new,
@@ -100,7 +100,7 @@ fn main() -> Result<()> {
 
                 let (key_old, key_new) = key_manipulation_params(sub_matches_add_key)?;
 
-                subcommands::key_manipulation::add_key(
+                subcommands::key::add(
                     &get_param("input", sub_matches_add_key)?,
                     &key_old,
                     &key_new,
@@ -112,7 +112,7 @@ fn main() -> Result<()> {
                 let sub_matches_del_key = sub_matches.subcommand_matches("del").unwrap();
                 let key = Key::init(sub_matches_del_key, KeyParams::default(), "keyfile")?;
 
-                subcommands::key_manipulation::delete_key(
+                subcommands::key::delete(
                     &get_param("input", sub_matches_del_key)?,
                     &key,
                 )?;

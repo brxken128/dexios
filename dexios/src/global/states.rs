@@ -9,9 +9,9 @@ use dexios_core::protected::Protected;
 
 use crate::{
     file::get_bytes,
-    subcommands::key::{generate_passphrase, get_password},
     warn,
 };
+use super::key::{generate_passphrase, get_password};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {

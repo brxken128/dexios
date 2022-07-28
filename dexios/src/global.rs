@@ -1,6 +1,7 @@
 pub mod parameters;
 pub mod states;
 pub mod structs;
+pub mod key;
 
 #[macro_export]
 macro_rules! info {

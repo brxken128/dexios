@@ -62,7 +62,7 @@ pub fn decrypt_master_key_with_index(
             .hash_algorithm
             .hash(raw_key_old.clone(), &keyslot.salt)
             .map_err(|_| Error::KeyHash)?;
-        let cipher = Ciphers::initialize(key_old, &algorithm).map_err(|_| Error::CipherInit)?;
+        let cipher = Ciphers::initialize(key_old, algorithm).map_err(|_| Error::CipherInit)?;
 
         let master_key_result = cipher.decrypt(&keyslot.nonce, keyslot.encrypted_key.as_slice());
 
@@ -81,6 +81,8 @@ pub fn decrypt_master_key_with_index(
         break;
     }
 
+    drop(raw_key_old);
+
     if master_key == [0u8; MASTER_KEY_LEN] {
         return Err(Error::IncorrectKey);
     }
@@ -97,7 +99,7 @@ pub fn encrypt_master_key(
     nonce: &[u8],
     algorithm: &Algorithm,
 ) -> Result<[u8; ENCRYPTED_MASTER_KEY_LEN], Error> {
-    let cipher = Ciphers::initialize(key_new, &algorithm).map_err(|_| Error::CipherInit)?;
+    let cipher = Ciphers::initialize(key_new, algorithm).map_err(|_| Error::CipherInit)?;
 
     let master_key_result = cipher.encrypt(nonce, master_key.expose().as_slice());
 

@@ -112,6 +112,14 @@ jobs:
           toolchain: stable
       
       - if: matrix.os == 'ubuntu-latest'
+        name: Find aarch64-linux-android-clang (debugging)
+        run: find ~/ | grep aarch64-linux-android-clang
+      
+      - if: matrix.os == 'ubuntu-latest'
+        name: Find aarch64-linux-android-clang (debugging)
+        run: whereis aarch64-linux-android-clang
+      
+      - if: matrix.os == 'ubuntu-latest'
         name: Build Android (arm64)
         uses: actions-rs/cargo@v1
         env:

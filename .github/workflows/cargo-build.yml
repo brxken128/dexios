@@ -109,6 +109,8 @@ jobs:
         with:
           profile: minimal
           target: aarch64-linux-android
+          toolchain: stable
+      
       - if: matrix.os == 'ubuntu-latest'
         name: Build Android (arm64)
         uses: actions-rs/cargo@v1

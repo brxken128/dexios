@@ -114,11 +114,11 @@ jobs:
       - if: matrix.os == 'ubuntu-latest'
         name: Build Android (arm64)
         uses: actions-rs/cargo@v1
+        env:
+          AR: llvm-ar
         with:
           command: build
           args: --release --target=aarch64-linux-android
-          env:
-            AR: llvm-ar
         
       - if: matrix.os != 'windows-latest'
         name: Strip

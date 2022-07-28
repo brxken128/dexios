@@ -112,10 +112,13 @@ jobs:
           toolchain: stable
                   
       - if: matrix.os == 'ubuntu-latest'
+        name: Add Android Tools to PATH
+        run: |
+          echo "/usr/local/lib/android/sdk/ndk/24.0.8215888/arm64/bin" >> $GITHUB_PATH
+      
+      - if: matrix.os == 'ubuntu-latest'
         name: Build Android (arm64)
         uses: actions-rs/cargo@v1
-        env:
-          PATH: /usr/local/lib/android/sdk/ndk/24.0.8215888/arm64/bin:$PATH
         with:
           command: build
           args: --release --target=aarch64-linux-android

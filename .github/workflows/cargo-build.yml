@@ -85,6 +85,7 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
+        
 
       - name: Restore cargo cache
         uses: actions/cache@v2.1.7
@@ -101,6 +102,13 @@ jobs:
           command: build
           args: --release
       
+      
+      - if: matrix.os == 'ubuntu-latest'
+        name: Install Android/arm64 target
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          target: aarch64-linux-android
       - if: matrix.os == 'ubuntu-latest'
         name: Build Android (arm64)
         uses: actions-rs/cargo@v1

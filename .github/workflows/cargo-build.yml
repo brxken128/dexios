@@ -110,16 +110,13 @@ jobs:
           profile: minimal
           target: aarch64-linux-android
           toolchain: stable
-            
-      - if: matrix.os == 'ubuntu-latest'
-        name: Find aarch64-linux-android-clang (debugging)
-        run: whereis aarch64-linux-android-clang
-      
+                  
       - if: matrix.os == 'ubuntu-latest'
         name: Build Android (arm64)
         uses: actions-rs/cargo@v1
         env:
-          AR: llvm-ar
+          TARGET_AR: /usr/local/lib/android/sdk/ndk/24.0.8215888/arm64/bin/aarch64-linux-android-ar
+          TARGET_CC: /usr/local/lib/android/sdk/ndk/24.0.8215888/arm64/bin/aarch64-linux-android-clang
         with:
           command: build
           args: --release --target=aarch64-linux-android

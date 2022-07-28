@@ -110,11 +110,7 @@ jobs:
           profile: minimal
           target: aarch64-linux-android
           toolchain: stable
-      
-      - if: matrix.os == 'ubuntu-latest'
-        name: Find aarch64-linux-android-clang (debugging)
-        run: find ~/ | grep aarch64-linux-android-clang
-      
+            
       - if: matrix.os == 'ubuntu-latest'
         name: Find aarch64-linux-android-clang (debugging)
         run: whereis aarch64-linux-android-clang

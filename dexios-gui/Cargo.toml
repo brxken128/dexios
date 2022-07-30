@@ -1,0 +1,17 @@
+[package]
+name = "dexios-gui"
+description = "Secure, fast and authenticated file encryption with a GUI frontend."
+version = "0.0.0"
+edition = "2021"
+license = "BSD-2-Clause"
+keywords = ["encryption", "secure"]
+categories = ["cryptography"]
+repository = "https://github.com/brxken128/dexios/tree/master/dexios-gui"
+homepage = "https://github.com/brxken128/dexios"
+documentation = "https://brxken128.github.io/dexios"
+readme = "README.md"
+authors = ["brxken128 <brxken128@tutanota.com"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

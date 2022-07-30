@@ -2,6 +2,7 @@
 
 members = [
     "dexios",
+    "dexios-gui",
     "dexios-core",
     "dexios-domain",
 ]

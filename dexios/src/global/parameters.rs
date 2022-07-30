@@ -198,7 +198,7 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
 }
 
 pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {
-    if sub_matches.is_present("skip") {
+    if sub_matches.is_present("force") {
         SkipMode::HidePrompts
     } else {
         SkipMode::ShowPrompts

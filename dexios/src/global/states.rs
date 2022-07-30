@@ -54,9 +54,9 @@ pub enum HashMode {
 }
 
 #[derive(PartialEq, Eq, Copy, Clone)]
-pub enum SkipMode {
-    ShowPrompts,
-    HidePrompts,
+pub enum ForceMode {
+    Force,
+    Prompt,
 }
 
 pub enum Key {

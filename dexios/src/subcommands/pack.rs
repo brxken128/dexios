@@ -43,7 +43,7 @@ pub fn execute(req: Request) -> Result<()> {
         ));
     }
 
-    if !overwrite_check(req.output_file, req.crypto_params.skip)? {
+    if !overwrite_check(req.output_file, req.crypto_params.force)? {
         exit(0);
     }
 
@@ -60,7 +60,7 @@ pub fn execute(req: Request) -> Result<()> {
     let header_file = match &req.crypto_params.header_location {
         HeaderLocation::Embedded => None,
         HeaderLocation::Detached(path) => {
-            if !overwrite_check(path, req.crypto_params.skip)? {
+            if !overwrite_check(path, req.crypto_params.force)? {
                 exit(0);
             }
 

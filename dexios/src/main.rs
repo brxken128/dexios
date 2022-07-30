@@ -3,7 +3,7 @@
 use anyhow::Result;
 use global::parameters::get_param;
 use global::parameters::key_manipulation_params;
-use global::parameters::skipmode;
+use global::parameters::forcemode;
 use subcommands::list::show_values;
 
 use crate::global::states::KeyParams;
@@ -52,29 +52,29 @@ fn main() -> Result<()> {
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
-                let skip = skipmode(sub_matches_dump);
+                let force = forcemode(sub_matches_dump);
 
                 subcommands::header::dump(
                     &get_param("input", sub_matches_dump)?,
                     &get_param("output", sub_matches_dump)?,
-                    skip,
+                    force,
                 )?;
             }
             Some("restore") => {
                 let sub_matches_restore = sub_matches.subcommand_matches("restore").unwrap();
-                let skip = skipmode(sub_matches_restore);
+                let force = forcemode(sub_matches_restore);
 
                 subcommands::header::restore(
                     &get_param("input", sub_matches_restore)?,
                     &get_param("output", sub_matches_restore)?,
-                    skip,
+                    force,
                 )?;
             }
             Some("strip") => {
                 let sub_matches_strip = sub_matches.subcommand_matches("strip").unwrap();
-                let skip = skipmode(sub_matches_strip);
+                let force = forcemode(sub_matches_strip);
 
-                subcommands::header::strip(&get_param("input", sub_matches_strip)?, skip)?;
+                subcommands::header::strip(&get_param("input", sub_matches_strip)?, force)?;
             }
             Some("details") => {
                 let sub_matches_details = sub_matches.subcommand_matches("details").unwrap();

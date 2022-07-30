@@ -27,7 +27,7 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
         ));
     }
 
-    if !overwrite_check(output, params.skip)? {
+    if !overwrite_check(output, params.force)? {
         exit(0);
     }
 

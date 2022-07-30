@@ -30,7 +30,7 @@ pub fn stream_mode(
         ));
     }
 
-    if !overwrite_check(output, params.skip)? {
+    if !overwrite_check(output, params.force)? {
         exit(0);
     }
 
@@ -43,7 +43,7 @@ pub fn stream_mode(
     let header_file = match &params.header_location {
         HeaderLocation::Embedded => None,
         HeaderLocation::Detached(path) => {
-            if !overwrite_check(path, params.skip)? {
+            if !overwrite_check(path, params.force)? {
                 exit(0);
             }
 

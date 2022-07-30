@@ -5,7 +5,7 @@ use std::{
 };
 
 use super::prompt::{get_answer, overwrite_check};
-use crate::{error, global::states::SkipMode, success, warn};
+use crate::{error, global::states::ForceMode, success, warn};
 use anyhow::{Context, Result};
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
@@ -70,7 +70,7 @@ pub fn details(input: &str) -> Result<()> {
 // this function reads the header fromthe input file and writes it to the output file
 // it's used for extracting an encrypted file's header for backups and such
 // it implements a check to ensure the header is valid
-pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
+pub fn dump(input: &str, output: &str, force: ForceMode) -> Result<()> {
     warn!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
 
     let mut input_file =
@@ -86,7 +86,7 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 
     let (header, _) = header_result.context("Error unwrapping the header's result")?; // this should never happen
 
-    if !overwrite_check(output, skip)? {
+    if !overwrite_check(output, force)? {
         std::process::exit(0);
     }
 
@@ -104,14 +104,14 @@ pub fn dump(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 // this can be used for restoring a dumped header to a file that had it's header stripped
 // this does not work for files encrypted *with* a detached header
 // it implements a check to ensure the header is valid before restoring to a file
-pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
+pub fn restore(input: &str, output: &str, force: ForceMode) -> Result<()> {
     warn!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
     let prompt = format!(
         "Are you sure you'd like to restore the header in {} to {}?",
         input, output
     );
 
-    if !get_answer(&prompt, false, skip == SkipMode::HidePrompts)? {
+    if !get_answer(&prompt, false, force == ForceMode::Force)? {
         exit(0);
     }
 
@@ -157,16 +157,16 @@ pub fn restore(input: &str, output: &str, skip: SkipMode) -> Result<()> {
 // the header must be intact for this to work, as the length varies between the versions
 // it can be useful for storing the header separate from the file, to make an attacker's life that little bit harder
 // it implements a check to ensure the header is valid before stripping
-pub fn strip(input: &str, skip: SkipMode) -> Result<()> {
+pub fn strip(input: &str, force: ForceMode) -> Result<()> {
     warn!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
 
     let prompt = format!("Are you sure you'd like to wipe the header for {}?", input);
-    if !get_answer(&prompt, false, skip == SkipMode::HidePrompts)? {
+    if !get_answer(&prompt, false, force == ForceMode::Force)? {
         exit(0);
     }
 
     let prompt = "This can be destructive! Make sure you dumped the header first. Would you like to continue?";
-    if !get_answer(prompt, false, skip == SkipMode::HidePrompts)? {
+    if !get_answer(prompt, false, force == ForceMode::Force)? {
         exit(0);
     }
 

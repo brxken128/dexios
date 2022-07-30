@@ -1,13 +1,11 @@
 use super::prompt::overwrite_check;
 use crate::global::states::{EraseMode, HashMode, HeaderLocation, PasswordState};
 use crate::global::structs::CryptoParams;
-use crate::{info, success};
 use anyhow::Result;
 use dexios_core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
 use dexios_core::primitives::{Algorithm, Mode};
 use std::process::exit;
 use std::sync::Arc;
-use std::time::Instant;
 
 use domain::storage::Storage;
 
@@ -51,11 +49,6 @@ pub fn stream_mode(
         }
     };
 
-    info!("Using {} for encryption", algorithm);
-    info!("Encrypting {} (this may take a while)", input);
-
-    let start_time = Instant::now();
-
     // 2. encrypt file
     let req = domain::encrypt::Request {
         reader: input_file.try_reader()?,
@@ -76,13 +69,6 @@ pub fn stream_mode(
         stor.flush_file(&header_file)?;
     }
     stor.flush_file(&output_file)?;
-
-    let encrypt_duration = start_time.elapsed();
-    success!(
-        "Encryption successful! File saved as {} [took {:.2}s]",
-        output,
-        encrypt_duration.as_secs_f32(),
-    );
 
     if params.hash_mode == HashMode::CalculateHash {
         super::hashing::hash_stream(&[output.to_string()])?;

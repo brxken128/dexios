@@ -6,7 +6,7 @@ use dexios_core::header::HashingAlgorithm;
 use std::cell::RefCell;
 use std::fs::OpenOptions;
 
-use crate::{info, success};
+use crate::info;
 
 pub fn add(
     input: &str,
@@ -43,8 +43,6 @@ pub fn add(
         raw_key_old,
         raw_key_new,
     })?;
-
-    success!("Key successfully added!");
 
     Ok(())
 }
@@ -84,8 +82,6 @@ pub fn change(
         raw_key_new,
     })?;
 
-    success!("Key successfully changed!");
-
     Ok(())
 }
 
@@ -113,8 +109,6 @@ pub fn delete(
         handle: &input_file,
         raw_key_old,
     })?;
-
-    success!("Key successfully deleted!");
 
     Ok(())
 }

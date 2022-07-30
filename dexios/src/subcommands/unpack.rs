@@ -3,7 +3,7 @@ use rand::distributions::{Alphanumeric, DistString};
 
 use crate::{
     global::{
-        states::{PrintMode, SkipMode},
+        states::{PrintMode, ForceMode},
         structs::CryptoParams,
     },
     info, success, warn,
@@ -106,7 +106,7 @@ pub fn unpack(
                 let answer = get_answer(
                     &format!("{} already exists, would you like to overwrite?", file_name),
                     true,
-                    params.skip == SkipMode::HidePrompts,
+                    params.force == ForceMode::Force,
                 )?;
                 if !answer {
                     warn!("Skipping {}", file_name);

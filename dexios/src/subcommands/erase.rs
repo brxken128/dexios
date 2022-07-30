@@ -1,9 +1,6 @@
 use anyhow::Result;
 use domain::storage::Storage;
 use std::sync::Arc;
-use std::time::Instant;
-
-use crate::{info, success};
 
 use super::prompt::get_answer;
 
@@ -25,11 +22,6 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
         std::process::exit(0);
     }
 
-    let start_time = Instant::now();
-    info!(
-        "Erasing {} with {} passes (this may take a while)",
-        input, passes
-    );
 
     if file.is_dir() {
         domain::erase_dir::execute(
@@ -48,13 +40,6 @@ pub fn secure_erase(input: &str, passes: i32) -> Result<()> {
             },
         )?;
     }
-
-    let duration = start_time.elapsed();
-    success!(
-        "Erased {} successfully [took {:.2}s]",
-        input,
-        duration.as_secs_f32()
-    );
 
     Ok(())
 }

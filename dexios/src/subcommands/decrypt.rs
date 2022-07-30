@@ -1,11 +1,9 @@
 use std::process::exit;
 use std::sync::Arc;
-use std::time::Instant;
 
 use super::prompt::overwrite_check;
 use crate::global::states::{EraseMode, HashMode, HeaderLocation, PasswordState};
 use crate::global::structs::CryptoParams;
-use crate::{info, success};
 
 use anyhow::Result;
 
@@ -27,7 +25,7 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
         ));
     }
 
-    if !overwrite_check(output, params.skip)? {
+    if !overwrite_check(output, params.force)? {
         exit(0);
     }
 
@@ -42,29 +40,17 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
         .create_file(output)
         .or_else(|_| stor.write_file(output))?;
 
-    info!("Decrypting {} (this may take a while)", input);
-
     // 2. decrypt file
-    let start_time = Instant::now();
     domain::decrypt::execute(domain::decrypt::Request {
         header_reader: header_file.as_ref().and_then(|h| h.try_reader().ok()),
         reader: input_file.try_reader()?,
         writer: output_file.try_writer()?,
         raw_key,
-        on_decrypted_header: Some(Box::new(move |header_type| {
-            info!("Using {} for decryption", header_type.algorithm);
-        })),
+        on_decrypted_header: None,
     })?;
 
     // 3. flush result
     stor.flush_file(&output_file)?;
-
-    let decrypt_duration = start_time.elapsed();
-    success!(
-        "Decryption successful! File saved as {} [took {:.2}s]",
-        output,
-        decrypt_duration.as_secs_f32(),
-    );
 
     if params.hash_mode == HashMode::CalculateHash {
         super::hashing::hash_stream(&[input.to_string()])?;

@@ -62,11 +62,11 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("Store the header separately from the file"),
         )
         .arg(
-            Arg::new("skip")
-                .short('y')
-                .long("skip")
+            Arg::new("force")
+                .short('f')
+                .long("force")
                 .takes_value(false)
-                .help("Skip all prompts"),
+                .help("Force all actions"),
         )
         .arg(
             Arg::new("aead")
@@ -127,11 +127,11 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("Return a BLAKE3 hash of the encrypted file"),
         )
         .arg(
-            Arg::new("skip")
-                .short('y')
-                .long("skip")
+            Arg::new("force")
+                .short('f')
+                .long("force")
                 .takes_value(false)
-                .help("Skip all prompts"),
+                .help("Force all actions"),
         );
 
     Command::new("dexios")
@@ -262,11 +262,11 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("Return a BLAKE3 hash of the encrypted file"),
             )
             .arg(
-                Arg::new("skip")
-                    .short('y')
-                    .long("skip")
+                Arg::new("force")
+                    .short('f')
+                    .long("force")
                     .takes_value(false)
-                    .help("Skip all prompts"),
+                    .help("Force all actions"),
             )
             .arg(
                 Arg::new("aead")
@@ -335,11 +335,11 @@ pub fn get_matches() -> clap::ArgMatches {
                         .help("Return a BLAKE3 hash of the encrypted file"),
                 )
                 .arg(
-                    Arg::new("skip")
-                        .short('y')
-                        .long("skip")
+                    Arg::new("force")
+                        .short('f')
+                        .long("force")
                         .takes_value(false)
-                        .help("Skip all prompts"),
+                        .help("Force all actions"),
                 )
         )
         .subcommand(Command::new("key")
@@ -459,11 +459,11 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .help("The output file"),
                         )
                         .arg(
-                            Arg::new("skip")
-                                .short('y')
-                                .long("skip")
+                            Arg::new("force")
+                                .short('f')
+                                .long("force")
                                 .takes_value(false)
-                                .help("Skip all prompts"),
+                                .help("Force all actions"),
                         ),
                 )
                 .subcommand(
@@ -485,11 +485,11 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .help("The encrypted file"),
                         )
                         .arg(
-                            Arg::new("skip")
-                                .short('y')
-                                .long("skip")
+                            Arg::new("force")
+                                .short('f')
+                                .long("force")
                                 .takes_value(false)
-                                .help("Skip all prompts"),
+                                .help("Force all actions"),
                         ),
                 )
                 .subcommand(
@@ -504,11 +504,11 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .help("The encrypted file"),
                         )
                         .arg(
-                            Arg::new("skip")
-                                .short('y')
-                                .long("skip")
+                            Arg::new("force")
+                                .short('f')
+                                .long("force")
                                 .takes_value(false)
-                                .help("Skip all prompts"),
+                                .help("Force all actions"),
                         ),
                 )
                 .subcommand(

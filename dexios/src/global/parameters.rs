@@ -1,7 +1,7 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::states::{EraseMode, EraseSourceDir, HashMode, HeaderLocation, SkipMode};
+use crate::global::states::{EraseMode, EraseSourceDir, HashMode, HeaderLocation, ForceMode};
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
 use crate::warn;
@@ -42,7 +42,7 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         HashMode::NoHash
     };
 
-    let skip = skipmode(sub_matches);
+    let force = forcemode(sub_matches);
 
     let erase = if sub_matches.is_present("erase") {
         let result = sub_matches
@@ -74,7 +74,7 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
 
     Ok(CryptoParams {
         hash_mode,
-        skip,
+        force,
         erase,
         key,
         header_location,
@@ -136,7 +136,7 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
         HashMode::NoHash
     };
 
-    let skip = skipmode(sub_matches);
+    let force = forcemode(sub_matches);
 
     let erase = EraseMode::IgnoreFile;
 
@@ -153,7 +153,7 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
 
     let crypto_params = CryptoParams {
         hash_mode,
-        skip,
+        force,
         erase,
         key,
         header_location,
@@ -197,11 +197,11 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
     Ok((crypto_params, pack_params))
 }
 
-pub fn skipmode(sub_matches: &ArgMatches) -> SkipMode {
-    if sub_matches.is_present("skip") {
-        SkipMode::HidePrompts
+pub fn forcemode(sub_matches: &ArgMatches) -> ForceMode {
+    if sub_matches.is_present("force") {
+        ForceMode::Force
     } else {
-        SkipMode::ShowPrompts
+        ForceMode::Prompt
     }
 }
 

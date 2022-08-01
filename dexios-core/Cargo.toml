@@ -27,7 +27,7 @@ visual = ["indicatif"]
 anyhow = "1.0.59"
 
 # AEADS
-aes-gcm = "0.9.4"
+aes-gcm = "0.10.1"
 chacha20poly1305 = "0.9.1"
 deoxys = { version = "0.0.2", optional = true }
 aead = { version = "0.4.3", features = ["stream"] }

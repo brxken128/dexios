@@ -20,7 +20,7 @@
 //! assert_eq!(secret, decrypted_data);
 //! ```
 
-use aead::{Aead, AeadInPlace, NewAead, Payload};
+use aead::{Aead, AeadInPlace, Payload, KeyInit};
 use aes_gcm::Aes256Gcm;
 use chacha20poly1305::XChaCha20Poly1305;
 #[cfg(feature = "deoxys-ii-256")]

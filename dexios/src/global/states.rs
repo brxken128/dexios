@@ -7,11 +7,10 @@ use anyhow::{Context, Result};
 use clap::ArgMatches;
 use dexios_core::protected::Protected;
 
-use crate::{
-    file::get_bytes,
-    warn,
-};
-use super::key::{generate_passphrase, get_password};
+use super::key::get_password;
+use domain::utils::gen_passphrase;
+
+use crate::{file::get_bytes, warn};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {
@@ -103,7 +102,7 @@ impl Key {
             ),
             Key::User => get_password(pass_state)?,
             Key::Generate => {
-                let passphrase = generate_passphrase();
+                let passphrase = gen_passphrase();
                 warn!("Your generated passphrase is: {}", passphrase.expose());
                 let key = Protected::new(passphrase.expose().clone().into_bytes());
                 drop(passphrase);

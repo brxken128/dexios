@@ -24,7 +24,7 @@ visual = ["indicatif"]
 
 [dependencies]
 # for errors, only temporary
-anyhow = "1.0.58"
+anyhow = "1.0.59"
 
 # AEADS
 aes-gcm = "0.9.4"

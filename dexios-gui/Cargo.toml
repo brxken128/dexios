@@ -15,3 +15,8 @@ authors = ["brxken128 <brxken128@tutanota.com"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+eframe = "0.18.0"
+domain = { package = "dexios-domain", version = "0", path = "../dexios-domain" }
+dexios-core = { path = "../dexios-core", version = "1.1.1", default-features = false, features = ["visual"] }
+
+rfd = "0.10.0"

@@ -76,7 +76,7 @@ pub fn unpack(sub_matches: &ArgMatches) -> Result<()> {
     unpack::unpack(
         &get_param("input", sub_matches)?,
         &get_param("output", sub_matches)?,
-        &print_mode,
-        &crypto_params,
+        print_mode,
+        crypto_params,
     )
 }

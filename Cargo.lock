@@ -689,6 +689,7 @@ dependencies = [
  "dexios-domain",
  "eframe",
  "rfd",
+ "zip",
 ]
 
 [[package]]

@@ -358,7 +358,7 @@ impl eframe::App for Dexios {
                     });
                 });
 
-                if ui.button("Encrypt File").clicked() {
+                if ui.button("Decrypt File").clicked() {
                     // encrypty stuff, move to separate function
                     let stor = std::sync::Arc::new(domain::storage::FileStorage);
 

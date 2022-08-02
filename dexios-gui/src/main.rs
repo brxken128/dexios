@@ -1,6 +1,8 @@
 use std::io::Read;
 
-use dexios_core::header::HEADER_VERSION;
+use dexios_core::header::{
+    HashingAlgorithm, ARGON2ID_LATEST, BLAKE3BALLOON_LATEST, HEADER_VERSION,
+};
 use dexios_core::primitives::Algorithm;
 use dexios_core::protected::Protected;
 use domain::storage::Storage;
@@ -13,12 +15,13 @@ fn main() {
     eframe::run_native(
         "DEXIOS",
         options,
-        Box::new(|_cc| Box::new(MyApp::default())),
+        Box::new(|_cc| Box::new(DexiosEncrypt::default())),
     );
 }
 
-struct MyApp {
-    aead: Algorithm, // aead needs renaming to algorithm
+struct DexiosEncrypt {
+    algorithm: Algorithm,
+    hash_algorithm: HashingAlgorithm,
     input_path: String,
     output_path: String,
     key: Key,
@@ -65,7 +68,7 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {}
 
 impl Key {
-    pub fn get_value(&self, values: &MyApp) -> Result<Protected<Vec<u8>>, Error> {
+    pub fn get_value(&self, values: &DexiosEncrypt) -> Result<Protected<Vec<u8>>, Error> {
         match self {
             Key::Password => {
                 if values.password == values.password_validation {
@@ -87,10 +90,11 @@ impl Key {
     }
 }
 
-impl Default for MyApp {
+impl Default for DexiosEncrypt {
     fn default() -> Self {
         Self {
-            aead: Algorithm::XChaCha20Poly1305,
+            algorithm: Algorithm::XChaCha20Poly1305,
+            hash_algorithm: HashingAlgorithm::Blake3Balloon(BLAKE3BALLOON_LATEST),
             input_path: "".to_owned(),
             output_path: "".to_owned(),
             key: Key::Password,
@@ -102,22 +106,44 @@ impl Default for MyApp {
     }
 }
 
-impl eframe::App for MyApp {
+impl eframe::App for DexiosEncrypt {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_visuals(egui::Visuals::dark());
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Encrypt a File");
             ui.horizontal(|ui| {
-                ui.label("Algorithm: ");
+                ui.label("AEAD: ");
                 egui::ComboBox::from_id_source("aead")
-                    .selected_text(format!("{}", self.aead))
+                    .selected_text(format!("{}", self.algorithm))
                     .show_ui(ui, |ui| {
                         ui.selectable_value(
-                            &mut self.aead,
+                            &mut self.algorithm,
                             Algorithm::XChaCha20Poly1305,
                             "XChaCha20-Poly1305",
                         );
-                        ui.selectable_value(&mut self.aead, Algorithm::Aes256Gcm, "AES-256-GCM");
+                        ui.selectable_value(
+                            &mut self.algorithm,
+                            Algorithm::Aes256Gcm,
+                            "AES-256-GCM",
+                        );
+                    });
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Hashing Algorithm: ");
+                egui::ComboBox::from_id_source("hashing")
+                    .selected_text(format!("{}", self.hash_algorithm))
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut self.hash_algorithm,
+                            HashingAlgorithm::Blake3Balloon(BLAKE3BALLOON_LATEST),
+                            "BLAKE3-Balloon",
+                        );
+                        ui.selectable_value(
+                            &mut self.hash_algorithm,
+                            HashingAlgorithm::Argon2id(ARGON2ID_LATEST),
+                            "Argon2id",
+                        );
                     });
             });
 
@@ -222,9 +248,9 @@ impl eframe::App for MyApp {
                     header_type: dexios_core::header::HeaderType {
                         version: HEADER_VERSION,
                         mode: dexios_core::primitives::Mode::StreamMode,
-                        algorithm: self.aead,
+                        algorithm: self.algorithm,
                     },
-                    hashing_algorithm: dexios_core::header::HashingAlgorithm::Blake3Balloon(5),
+                    hashing_algorithm: self.hash_algorithm,
                 };
                 domain::encrypt::execute(req).unwrap();
             }

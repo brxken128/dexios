@@ -9,6 +9,7 @@ use dexios_core::protected::Protected;
 
 #[derive(Debug)]
 pub enum Error {
+    WriteData,
     OpenArchive,
     ResetCursorPosition,
     Storage(storage::Error),
@@ -18,6 +19,7 @@ pub enum Error {
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Error::WriteData => f.write_str("Unable to write data"),
             Error::OpenArchive => f.write_str("Unable to open archive"),
             Error::ResetCursorPosition => f.write_str("Unable to reset cursor position"),
             Error::Storage(inner) => write!(f, "Storage error: {}", inner),
@@ -28,6 +30,9 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
+type OnArchiveInfo = Box<dyn FnOnce(usize)>;
+type OnZipFileFn = Box<dyn Fn(PathBuf) -> bool>;
+
 pub struct Request<'a, R>
 where
     R: Read,
@@ -35,8 +40,10 @@ where
     pub reader: &'a RefCell<R>,
     pub header_reader: Option<&'a RefCell<R>>,
     pub raw_key: Protected<Vec<u8>>,
-    pub on_decrypted_header: Option<decrypt::OnDecryptedHeaderFn>,
     pub output_dir_path: PathBuf,
+    pub on_decrypted_header: Option<decrypt::OnDecryptedHeaderFn>,
+    pub on_archive_info: Option<OnArchiveInfo>,
+    pub on_zip_file: Option<OnZipFileFn>,
 }
 
 pub fn execute<RW: Read + Write + Seek>(
@@ -77,7 +84,7 @@ pub fn execute<RW: Read + Write + Seek>(
         for i in 0..archive.len() {
             let mut full_path = req.output_dir_path.clone();
 
-            let zip_file = archive.by_index(i).map_err(|_| todo!())?;
+            let mut zip_file = archive.by_index(i).map_err(|_| todo!())?;
             match zip_file.enclosed_name() {
                 Some(path) => full_path.push(path),
                 None => continue,
@@ -89,7 +96,18 @@ pub fn execute<RW: Read + Write + Seek>(
                 stor.create_dir_all(full_path).map_err(Error::Storage)?;
             } else {
                 // TODO(pleshevskiy): handle the file's existence
-                stor.create_file(full_path).map_err(Error::Storage)?;
+                if let Some(on_zip_file) = req.on_zip_file.as_ref() {
+                    if !on_zip_file(full_path.clone()) {
+                        continue;
+                    }
+                }
+
+                let file = stor.create_file(full_path).map_err(Error::Storage)?;
+                std::io::copy(
+                    &mut zip_file,
+                    &mut *file.try_writer().map_err(Error::Storage)?.borrow_mut(),
+                )
+                .map_err(|_| Error::WriteData)?;
             }
         }
     }

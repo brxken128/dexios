@@ -19,15 +19,17 @@ fn main() {
     );
 }
 
+#[derive(PartialEq)]
+enum Tab {
+    Encrypt,
+    Decrypt,
+    HeaderDetails,
+}
+
 struct Dexios {
     encrypt: Encrypt,
     decrypt: Decrypt,
-    pack: Pack,
-}
-
-pub struct Pack {
-    encrypt: Encrypt,
-    recursive: bool, // change to enum
+    tab: Tab,
 }
 
 pub struct Encrypt {
@@ -156,11 +158,7 @@ impl Default for Dexios {
         Self {
             encrypt: Encrypt::default(),
             decrypt: Decrypt::default(),
-            pack: Pack {
-                // TODO: impl default here
-                encrypt: Encrypt::default(),
-                recursive: true,
-            },
+            tab: Tab::Encrypt,
         }
     }
 }
@@ -169,8 +167,15 @@ impl eframe::App for Dexios {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_visuals(egui::Visuals::dark());
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Basic Operations");
-            ui.collapsing("Encrypt a file or directory", |ui| {
+            ui.horizontal(|ui| {
+                ui.selectable_value(&mut self.tab, Tab::Encrypt, "Encrypt");
+                ui.selectable_value(&mut self.tab, Tab::Decrypt, "Decrypt");
+                ui.selectable_value(&mut self.tab, Tab::HeaderDetails, "Header Details");
+            });
+
+            ui.separator();
+
+            if self.tab == Tab::Encrypt {
                 ui.horizontal(|ui| {
                     ui.label("AEAD: ");
                     egui::ComboBox::from_id_source("aead")
@@ -239,8 +244,6 @@ impl eframe::App for Dexios {
                         }
                     }
                 });
-
-                ui.separator();
 
                 ui.horizontal(|ui| {
                     ui.radio_value(&mut self.encrypt.key, Key::Password, "Password");
@@ -376,11 +379,9 @@ impl eframe::App for Dexios {
                         stor.flush_file(&output_file).unwrap();
                     }
                 }
-            });
+            }
 
-            ui.separator();
-
-            ui.collapsing("Decrypt a file", |ui| {
+            if self.tab == Tab::Decrypt {
                 ui.horizontal(|ui| {
                     ui.label("Input File: ");
                     ui.add(
@@ -407,8 +408,6 @@ impl eframe::App for Dexios {
                         }
                     }
                 });
-
-                ui.separator();
 
                 ui.horizontal(|ui| {
                     ui.radio_value(&mut self.decrypt.key, Key::Password, "Password");
@@ -463,7 +462,7 @@ impl eframe::App for Dexios {
                     };
                     domain::decrypt::execute(req).unwrap();
                 }
-            });
+            }
         });
     }
 }

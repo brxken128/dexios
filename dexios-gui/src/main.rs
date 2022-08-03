@@ -9,6 +9,16 @@ use domain::storage::Storage;
 use domain::utils::gen_passphrase;
 use eframe::egui;
 
+#[macro_export]
+macro_rules! ui_ok {
+    ($res:expr, $message:expr) => {
+        match $res {
+            Ok(v) => v,
+            _ => return message_box($message),
+        }
+    };
+}
+
 fn main() {
     let mut options = eframe::NativeOptions::default();
     options.resizable = false;
@@ -314,36 +324,30 @@ impl eframe::App for Dexios {
                     // discard the error as the user will be alerted to the issue
                     let _ = std::thread::spawn(move || {
                         let stor = std::sync::Arc::new(domain::storage::FileStorage);
-                        let input_file = match stor.read_file(params.input_path.clone()) {
-                            Ok(input_file) => input_file,
-                            _ => return message_box("Unable to read the input file."),
-                        };
+                        let input_file = ui_ok!(
+                            stor.read_file(params.input_path.clone()),
+                            "Unable to read the input file."
+                        );
+                        let output_file = ui_ok!(
+                            stor.create_file(params.output_path.clone())
+                                .or_else(|_| stor.write_file(params.output_path.clone())),
+                            "Unable to create the output file."
+                        );
 
-                        let output_file = stor
-                            .create_file(params.output_path.clone())
-                            .or_else(|_| stor.write_file(params.output_path.clone()))
-                            .map_err(|_| message_box("Unable to create the output file."))
-                            .unwrap();
-
-                        let raw_key = params
-                            .key
-                            .get_value_for_encrypting(&params)
-                            .map_err(|_| message_box("Unable to get your key"))
-                            .unwrap();
+                        let raw_key = ui_ok!(
+                            params.key.get_value_for_encrypting(&params),
+                            "Unable to get your key."
+                        );
 
                         let req = domain::encrypt::Request {
-                            reader: input_file
-                                .try_reader()
-                                .map_err(|_| {
-                                    message_box("Unable to get a reader from the input file")
-                                })
-                                .unwrap(),
-                            writer: output_file
-                                .try_writer()
-                                .map_err(|_| {
-                                    message_box("Unable to get a writer for the output file")
-                                })
-                                .unwrap(),
+                            reader: ui_ok!(
+                                input_file.try_reader(),
+                                "Unable to get a reader for the input file"
+                            ),
+                            writer: ui_ok!(
+                                output_file.try_writer(),
+                                "Unable to get a writer for the output file"
+                            ),
                             header_writer: None, // need to add a checkbox and enabled_ui for this
                             raw_key,
                             header_type: dexios_core::header::HeaderType {
@@ -353,15 +357,15 @@ impl eframe::App for Dexios {
                             },
                             hashing_algorithm: params.hash_algorithm,
                         };
-                        domain::encrypt::execute(req)
-                            .map_err(|_| {
-                                message_box("There was an error while encrypting your file")
-                            })
-                            .unwrap();
+                        ui_ok!(
+                            domain::encrypt::execute(req),
+                            "There was an error while encrypting your file"
+                        );
 
-                        stor.flush_file(&output_file)
-                            .map_err(|_| message_box("Unable to flush the output file"))
-                            .unwrap();
+                        ui_ok!(
+                            stor.flush_file(&output_file),
+                            "Unable to flush the output file"
+                        );
                     })
                     .join();
                 }

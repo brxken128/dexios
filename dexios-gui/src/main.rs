@@ -438,22 +438,38 @@ impl eframe::App for Dexios {
                         // decrypty stuff, move to separate function, add threading+error handling also
                         let stor = std::sync::Arc::new(domain::storage::FileStorage);
 
-                        let input_file = stor.read_file(params.input_path.clone()).unwrap();
-                        let output_file = stor
-                            .create_file(params.output_path.clone())
-                            .or_else(|_| stor.write_file(params.output_path.clone()))
-                            .unwrap();
+                        let input_file = ui_ok!(
+                            stor.read_file(params.input_path.clone()),
+                            "Unable to find the input file."
+                        );
+                        let output_file = ui_ok!(
+                            stor.create_file(params.output_path.clone())
+                                .or_else(|_| stor.write_file(params.output_path.clone())),
+                            "Unable to create the output file."
+                        );
 
-                        let raw_key = params.key.get_value_for_decrypting(&params).unwrap();
+                        let raw_key = ui_ok!(
+                            params.key.get_value_for_decrypting(&params),
+                            "Unable to get your key."
+                        );
 
                         let req = domain::decrypt::Request {
-                            reader: input_file.try_reader().unwrap(),
-                            writer: output_file.try_writer().unwrap(),
+                            reader: ui_ok!(
+                                input_file.try_reader(),
+                                "Unable to get a reader for the input file"
+                            ),
+                            writer: ui_ok!(
+                                output_file.try_writer(),
+                                "Unable to get a writer for the output file"
+                            ),
                             header_reader: None, // need to add a checkbox and enabled_ui for this
                             raw_key,
                             on_decrypted_header: None,
                         };
-                        domain::decrypt::execute(req).unwrap();
+                        ui_ok!(
+                            domain::decrypt::execute(req),
+                            "There was an error while decrypting your file"
+                        );
                     })
                     .join();
                 }

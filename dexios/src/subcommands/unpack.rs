@@ -1,5 +1,6 @@
 use crate::subcommands::prompt::get_answer;
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 
 use anyhow::Result;
 
@@ -34,9 +35,11 @@ pub fn unpack(
 
     let raw_key = params.key.get_secret(&PasswordState::Direct)?;
 
-    let files_count = Arc::new(Mutex::new(0));
-    let cb_files_count = files_count.clone();
-    let cb_output = output.to_string();
+    let files_count = Arc::new(AtomicUsize::new(0));
+
+    // Prepare the data to move in the `on_archive_info` callback
+    let files_count_clone = files_count.clone();
+    let output_clone = output.to_string();
 
     let zip_start_time = Instant::now();
     domain::unpack::execute(
@@ -50,9 +53,9 @@ pub fn unpack(
                 info!("Using {} for decryption", header_type.algorithm);
             })),
             on_archive_info: Some(Box::new(move |fc| {
-                *cb_files_count.lock().unwrap() = fc;
+                files_count_clone.store(fc, Ordering::Relaxed);
 
-                info!("Decompressing {} items into {}", fc, cb_output);
+                info!("Decompressing {} items into {}", fc, output_clone);
             })),
             on_zip_file: Some(Box::new(move |file_path| {
                 let file_name = file_path
@@ -169,7 +172,7 @@ pub fn unpack(
     let zip_duration = zip_start_time.elapsed();
     success!(
         "Extracted {} items to {} [took {:.2}s]",
-        *files_count.lock().unwrap(),
+        files_count.load(Ordering::Relaxed),
         output,
         zip_duration.as_secs_f32()
     );

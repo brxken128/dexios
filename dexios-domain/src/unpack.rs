@@ -135,7 +135,10 @@ pub fn execute<RW: Read + Write + Seek>(
             .filter(|(_, _, is_dir)| !*is_dir)
             .try_for_each(|(full_path, i, _)| {
                 let mut zip_file = archive.by_index(*i).map_err(|_| Error::OpenArchivedFile)?;
-                let file = stor.create_file(full_path).map_err(Error::Storage)?;
+                let file = stor
+                    .create_file(full_path)
+                    .or_else(|_| stor.write_file(full_path))
+                    .map_err(Error::Storage)?;
                 std::io::copy(
                     &mut zip_file,
                     &mut *file.try_writer().map_err(Error::Storage)?.borrow_mut(),

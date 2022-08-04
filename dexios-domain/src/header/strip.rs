@@ -11,7 +11,7 @@ where
     pub handle: &'a RefCell<RW>,
 }
 
-pub fn execute<RW>(req: Request<RW>) -> Result<(), Error>
+pub fn execute<RW>(req: Request<'_, RW>) -> Result<(), Error>
 where
     RW: Read + Write + Seek,
 {

@@ -13,7 +13,7 @@ where
     pub writer: &'a RefCell<RW>,
 }
 
-pub fn execute<R, RW>(req: Request<R, RW>) -> Result<(), Error>
+pub fn execute<R, RW>(req: Request<'_, R, RW>) -> Result<(), Error>
 where
     R: Read + Seek,
     RW: Read + Write + Seek,
@@ -21,7 +21,13 @@ where
     let (header, _) =
         Header::deserialize(&mut *req.reader.borrow_mut()).map_err(|_| Error::InvalidFile)?;
 
-    let mut header_bytes = vec![0u8; header.get_size() as usize];
+    let mut header_bytes = vec![
+        0u8;
+        header
+            .get_size()
+            .try_into()
+            .map_err(|_| Error::HeaderSizeParse)?
+    ];
     req.writer
         .borrow_mut()
         .read(&mut header_bytes)

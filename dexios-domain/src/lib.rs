@@ -1,3 +1,13 @@
+#![deny(clippy::pedantic, clippy::all)]
+#![allow(
+    clippy::module_name_repetitions,
+    clippy::similar_names,
+    clippy::needless_pass_by_value,
+    // yet
+    clippy::missing_panics_doc,
+    clippy::missing_errors_doc,
+)]
+
 pub mod decrypt;
 pub mod encrypt;
 pub mod erase;

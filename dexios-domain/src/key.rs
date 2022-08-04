@@ -26,22 +26,21 @@ pub enum Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Error::*;
         match self {
-            HeaderSizeParse => f.write_str("Cannot parse header size"),
-            Seek => f.write_str("Unable to seek the data's cursor"),
-            HeaderWrite => f.write_str("Unable to write the header"),
-            HeaderDeserialize => f.write_str("Unable to deserialize the header"),
-            CipherInit => f.write_str("Unable to initialize a cipher"),
-            KeyHash => f.write_str("Unable to hash your key"),
-            TooManyKeyslots => {
+            Error::HeaderSizeParse => f.write_str("Cannot parse header size"),
+            Error::Seek => f.write_str("Unable to seek the data's cursor"),
+            Error::HeaderWrite => f.write_str("Unable to write the header"),
+            Error::HeaderDeserialize => f.write_str("Unable to deserialize the header"),
+            Error::CipherInit => f.write_str("Unable to initialize a cipher"),
+            Error::KeyHash => f.write_str("Unable to hash your key"),
+            Error::TooManyKeyslots => {
                 f.write_str("There are already too many populated keyslots within this file")
             }
-            MasterKeyEncrypt => f.write_str("Unable to encrypt master key"),
-            Unsupported => {
+            Error::MasterKeyEncrypt => f.write_str("Unable to encrypt master key"),
+            Error::Unsupported => {
                 f.write_str("The provided request is unsupported with this header version")
             }
-            IncorrectKey => {
+            Error::IncorrectKey => {
                 f.write_str("Unable to decrypt the master key (maybe you supplied the wrong key?)")
             }
         }

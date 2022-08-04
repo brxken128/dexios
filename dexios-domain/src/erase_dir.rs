@@ -13,12 +13,11 @@ pub enum Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Error::*;
         match self {
-            InvalidFileType => f.write_str("Invalid file type"),
-            EraseFile(inner) => write!(f, "Unable to erase file: {}", inner),
-            ReadDirEntries => f.write_str("Unable to get all dir entries"),
-            RemoveDir => f.write_str("Unable to remove directory recursively"),
+            Error::InvalidFileType => f.write_str("Invalid file type"),
+            Error::EraseFile(inner) => write!(f, "Unable to erase file: {}", inner),
+            Error::ReadDirEntries => f.write_str("Unable to get all dir entries"),
+            Error::RemoveDir => f.write_str("Unable to remove directory recursively"),
         }
     }
 }
@@ -53,9 +52,9 @@ where
             let file_path = f.path().to_path_buf();
             let stor = stor.clone();
             std::thread::spawn(move || -> Result<(), Error> {
-                crate::erase::execute(
+                erase::execute(
                     stor,
-                    crate::erase::Request {
+                    erase::Request {
                         path: file_path,
                         passes: req.passes,
                     },
@@ -81,8 +80,8 @@ mod tests {
     #[test]
     fn should_erase_dir_recursively_with_subfiles() {
         let stor = Arc::new(InMemoryStorage::default());
-        stor.add_hello_txt().unwrap();
-        stor.add_bar_foo_folder().unwrap();
+        stor.add_hello_txt();
+        stor.add_bar_foo_folder();
 
         let file = stor.read_file("bar/").unwrap();
         let file_path = file.path().to_path_buf();

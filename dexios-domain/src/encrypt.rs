@@ -23,16 +23,15 @@ pub enum Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Error::*;
         match self {
-            ResetCursorPosition => f.write_str("Unable to reset cursor position"),
-            HashKey => f.write_str("Cannot hash raw key"),
-            EncryptMasterKey => f.write_str("Cannot encrypt master key"),
-            EncryptFile => f.write_str("Cannot encrypt file"),
-            WriteHeader => f.write_str("Cannot write header"),
-            InitializeStreams => f.write_str("Cannot initialize streams"),
-            InitializeChiphers => f.write_str("Cannot initialize chiphers"),
-            CreateAad => f.write_str("Cannot create AAD"),
+            Error::ResetCursorPosition => f.write_str("Unable to reset cursor position"),
+            Error::HashKey => f.write_str("Cannot hash raw key"),
+            Error::EncryptMasterKey => f.write_str("Cannot encrypt master key"),
+            Error::EncryptFile => f.write_str("Cannot encrypt file"),
+            Error::WriteHeader => f.write_str("Cannot write header"),
+            Error::InitializeStreams => f.write_str("Cannot initialize streams"),
+            Error::InitializeChiphers => f.write_str("Cannot initialize chiphers"),
+            Error::CreateAad => f.write_str("Cannot create AAD"),
         }
     }
 }

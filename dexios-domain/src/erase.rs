@@ -13,11 +13,10 @@ pub enum Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Error::*;
         match self {
-            OpenFile => f.write_str("Unable to open file"),
-            Overwrite(inner) => write!(f, "Unable to overwrite file: {}", inner),
-            RemoveFile => f.write_str("Unable to remove file"),
+            Error::OpenFile => f.write_str("Unable to open file"),
+            Error::Overwrite(inner) => write!(f, "Unable to overwrite file: {}", inner),
+            Error::RemoveFile => f.write_str("Unable to remove file"),
         }
     }
 }
@@ -62,7 +61,7 @@ mod tests {
     #[test]
     fn should_erase_file() {
         let stor = Arc::new(InMemoryStorage::default());
-        stor.add_hello_txt().unwrap();
+        stor.add_hello_txt();
 
         let req = Request {
             path: "hello.txt",

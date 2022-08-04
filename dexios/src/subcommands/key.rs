@@ -3,16 +3,15 @@ use crate::global::states::Key;
 use crate::global::states::PasswordState;
 use anyhow::{Context, Result};
 use dexios_core::header::HashingAlgorithm;
+use dexios_core::header::Header;
+use dexios_core::header::HeaderVersion;
 use std::cell::RefCell;
 use std::fs::OpenOptions;
+use std::io::Seek;
 
 use crate::info;
 
-pub fn add(
-    input: &str,
-    key_old: &Key,
-    key_new: &Key,
-) -> Result<()> {
+pub fn add(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
     let input_file = RefCell::new(
         OpenOptions::new()
             .read(true)
@@ -20,6 +19,19 @@ pub fn add(
             .open(input)
             .with_context(|| format!("Unable to open input file: {}", input))?,
     );
+
+    let (header, _) = Header::deserialize(&mut *input_file.borrow_mut())?;
+
+    if header.header_type.version < HeaderVersion::V5 {
+        return Err(anyhow::anyhow!(
+            "This function is not supported on header versions below V5"
+        ));
+    }
+
+    input_file
+        .borrow_mut()
+        .rewind()
+        .context("Unable to rewind the reader")?;
 
     match key_old {
         Key::User => info!("Please enter your old key below"),
@@ -47,11 +59,7 @@ pub fn add(
     Ok(())
 }
 
-pub fn change(
-    input: &str,
-    key_old: &Key,
-    key_new: &Key,
-) -> Result<()> {
+pub fn change(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
     let input_file = RefCell::new(
         OpenOptions::new()
             .read(true)
@@ -59,6 +67,19 @@ pub fn change(
             .open(input)
             .with_context(|| format!("Unable to open input file: {}", input))?,
     );
+
+    let (header, _) = Header::deserialize(&mut *input_file.borrow_mut())?;
+
+    if header.header_type.version < HeaderVersion::V5 {
+        return Err(anyhow::anyhow!(
+            "This function is not supported on header versions below V5"
+        ));
+    }
+
+    input_file
+        .borrow_mut()
+        .rewind()
+        .context("Unable to rewind the reader")?;
 
     match key_old {
         Key::User => info!("Please enter your old key below"),
@@ -85,10 +106,7 @@ pub fn change(
     Ok(())
 }
 
-pub fn delete(
-    input: &str,
-    key_old: &Key,
-) -> Result<()> {
+pub fn delete(input: &str, key_old: &Key) -> Result<()> {
     let input_file = RefCell::new(
         OpenOptions::new()
             .read(true)
@@ -97,13 +115,25 @@ pub fn delete(
             .with_context(|| format!("Unable to open input file: {}", input))?,
     );
 
+    let (header, _) = Header::deserialize(&mut *input_file.borrow_mut())?;
+
+    if header.header_type.version < HeaderVersion::V5 {
+        return Err(anyhow::anyhow!(
+            "This function is not supported on header versions below V5"
+        ));
+    }
+
+    input_file
+        .borrow_mut()
+        .rewind()
+        .context("Unable to rewind the reader")?;
+
     match key_old {
         Key::User => info!("Please enter your old key below"),
         Key::Keyfile(_) => info!("Reading your old keyfile"),
         _ => (),
     }
     let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
-
 
     domain::key::delete::execute(domain::key::delete::Request {
         handle: &input_file,

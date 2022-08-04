@@ -11,6 +11,7 @@ use dexios_core::protected::Protected;
 pub enum Error {
     WriteData,
     OpenArchive,
+    OpenArchivedFile,
     ResetCursorPosition,
     Storage(storage::Error),
     Decrypt(decrypt::Error),
@@ -21,6 +22,7 @@ impl std::fmt::Display for Error {
         match self {
             Error::WriteData => f.write_str("Unable to write data"),
             Error::OpenArchive => f.write_str("Unable to open archive"),
+            Error::OpenArchivedFile => f.write_str("Unable to open archived file"),
             Error::ResetCursorPosition => f.write_str("Unable to reset cursor position"),
             Error::Storage(inner) => write!(f, "Storage error: {}", inner),
             Error::Decrypt(inner) => write!(f, "Decrypt error: {}", inner),
@@ -47,7 +49,7 @@ where
 }
 
 pub fn execute<RW: Read + Write + Seek>(
-    stor: Arc<impl Storage<RW>>,
+    stor: Arc<impl Storage<RW> + 'static>,
     req: Request<RW>,
 ) -> Result<(), Error> {
     // 1. Create temp zip archive.
@@ -78,42 +80,73 @@ pub fn execute<RW: Read + Write + Seek>(
 
         let mut archive = zip::ZipArchive::new(&mut *reader).map_err(|_| Error::OpenArchive)?;
 
-        stor.create_dir_all(&req.output_dir_path)
-            .map_err(Error::Storage)?;
+        let output_dir = req.output_dir_path.clone();
 
-        for i in 0..archive.len() {
-            let mut full_path = req.output_dir_path.clone();
+        // 4. prepare phase
+        let entities = (0..archive.len())
+            .filter_map(|i| {
+                let zip_file = archive.by_index(i).ok()?;
+                let mut full_path = output_dir.clone();
 
-            let mut zip_file = archive.by_index(i).map_err(|_| todo!())?;
-            match zip_file.enclosed_name() {
-                Some(path) => full_path.push(path),
-                None => continue,
-            }
+                // Prevent zip slip attack
+                //
+                // Source: https://snyk.io/research/zip-slip-vulnerability
+                zip_file.enclosed_name().map(|path| {
+                    full_path.push(path);
 
-            // TODO(pleshevskiy): check slip prevention
-
-            if zip_file.is_dir() {
-                stor.create_dir_all(full_path).map_err(Error::Storage)?;
-            } else {
-                // TODO(pleshevskiy): handle the file's existence
+                    (full_path, i, zip_file.is_dir())
+                })
+            })
+            .filter(|(full_path, ..)| {
                 if let Some(on_zip_file) = req.on_zip_file.as_ref() {
-                    if !on_zip_file(full_path.clone()) {
-                        continue;
-                    }
+                    on_zip_file(full_path.clone())
+                } else {
+                    true
                 }
+            })
+            .collect::<Vec<_>>();
 
+        let files_count = entities.len();
+        if let Some(on_archive_info) = req.on_archive_info {
+            on_archive_info(files_count);
+        }
+
+        // 5. create dirs
+        #[allow(clippy::needless_collect)]
+        let create_dirs_jobs = entities
+            .iter()
+            .filter(|(_, _, is_dir)| *is_dir)
+            .map(|(fp, ..)| fp)
+            .chain([&output_dir])
+            .map(|full_path| {
+                let stor = stor.clone();
+                let full_path = full_path.clone();
+                std::thread::spawn(move || stor.create_dir_all(full_path).map_err(Error::Storage))
+            })
+            .collect::<Vec<_>>();
+
+        create_dirs_jobs
+            .into_iter()
+            .try_for_each(|th| th.join().unwrap())?;
+
+        // 6. create files
+        entities
+            .iter()
+            .filter(|(_, _, is_dir)| !*is_dir)
+            .try_for_each(|(full_path, i, _)| {
+                let mut zip_file = archive.by_index(*i).map_err(|_| Error::OpenArchivedFile)?;
                 let file = stor.create_file(full_path).map_err(Error::Storage)?;
                 std::io::copy(
                     &mut zip_file,
                     &mut *file.try_writer().map_err(Error::Storage)?.borrow_mut(),
                 )
                 .map_err(|_| Error::WriteData)?;
-            }
-        }
+                Ok(())
+            })?;
     }
 
-    // 4. Finally eraze temp zip archive with zeros.
-    overwrite::execute(crate::overwrite::Request {
+    // 7. Finally eraze temp zip archive with zeros.
+    overwrite::execute(overwrite::Request {
         buf_capacity,
         writer: tmp_file
             .try_writer()

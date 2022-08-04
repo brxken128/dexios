@@ -1,11 +1,11 @@
 use std::{
+    cell::RefCell,
     fs::{File, OpenOptions},
-    io::{Read, Seek, Write},
     process::exit,
 };
 
 use super::prompt::{get_answer, overwrite_check};
-use crate::{error, global::states::ForceMode, success, warn};
+use crate::{global::states::ForceMode, warn};
 use anyhow::{Context, Result};
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
@@ -106,41 +106,25 @@ pub fn restore(input: &str, output: &str, force: ForceMode) -> Result<()> {
         exit(0);
     }
 
-    let mut input_file =
-        File::open(input).with_context(|| format!("Unable to open header file: {}", input))?;
+    let stor = std::sync::Arc::new(domain::storage::FileStorage);
 
-    let header_result = Header::deserialize(&mut input_file);
+    let input_file = stor.read_file(input)?;
 
-    if header_result.is_err() {
-        error!("File does not contain a valid Dexios header - exiting");
-        drop(input_file);
-        exit(1);
-    }
+    let output_file = RefCell::new(
+        OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(output)
+            .with_context(|| format!("Unable to open output file: {}", output))?,
+    );
 
-    let (header, _) = header_result.context("Error unwrapping the header's result")?;
+    let req = domain::header::restore::Request {
+        reader: input_file.try_reader()?,
+        writer: &output_file,
+    };
 
-    let mut output_file = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open(output)
-        .with_context(|| format!("Unable to open output file: {}", output))?;
+    domain::header::restore::execute(req)?;
 
-    let mut header_bytes = vec![0u8; header.get_size() as usize];
-    output_file
-        .read(&mut header_bytes)
-        .context("Unable to check for empty bytes at the start of the file")?;
-
-    if !header_bytes.into_iter().all(|b| b == 0) {
-        return Err(anyhow::anyhow!("No empty space found at the start of {}! It's either: not an encrypted file, it already contains a header, or it was encrypted in detached mode (and the header can't be restored)", output));
-    }
-
-    output_file
-        .rewind()
-        .context("Unable to rewind the output file!")?;
-
-    header.write(&mut output_file)?;
-
-    success!("Header restored to {} from {} successfully.", output, input);
     Ok(())
 }
 
@@ -161,39 +145,19 @@ pub fn strip(input: &str, force: ForceMode) -> Result<()> {
         exit(0);
     }
 
-    let mut input_file = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open(input)
-        .with_context(|| format!("Unable to open input file: {}", input))?;
+    let input_file = RefCell::new(
+        OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(input)
+            .with_context(|| format!("Unable to open input file: {}", input))?,
+    );
 
-    let header_result = Header::deserialize(&mut input_file);
+    let req = domain::header::strip::Request {
+        handle: &input_file,
+    };
 
-    if header_result.is_err() {
-        error!("File does not contain a valid Dexios header - exiting");
-        drop(input_file);
-        exit(1);
-    }
+    domain::header::strip::execute(req)?;
 
-    let (header, _) = header_result.context("Error unwrapping the header's result")?; // this should never happen
-    let header_size: i64 = header
-        .get_size()
-        .try_into()
-        .context("Error getting header's size as i64")?;
-
-    input_file
-        .seek(std::io::SeekFrom::Current(-header_size))
-        .context("Unable to seek back to the start of the file")?;
-
-    input_file
-        .write_all(&vec![
-            0;
-            header_size
-                .try_into()
-                .context("Error getting header's size as usize")?
-        ])
-        .with_context(|| format!("Unable to wipe header for file: {}", input))?;
-
-    success!("Header stripped from {} successfully.", input);
     Ok(())
 }

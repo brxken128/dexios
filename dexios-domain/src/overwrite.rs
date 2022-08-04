@@ -32,7 +32,7 @@ pub struct Request<'a, W: Write + Seek> {
     pub passes: i32,
 }
 
-pub fn execute<W: Write + Seek>(req: Request<W>) -> Result<(), Error> {
+pub fn execute<W: Write + Seek>(req: Request<'_, W>) -> Result<(), Error> {
     let mut writer = req.writer.borrow_mut();
     for _ in 0..req.passes {
         writer.rewind().map_err(|_| Error::ResetCursorPosition)?;

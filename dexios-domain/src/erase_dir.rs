@@ -52,9 +52,9 @@ where
             let file_path = f.path().to_path_buf();
             let stor = stor.clone();
             std::thread::spawn(move || -> Result<(), Error> {
-                erase::execute(
+                crate::erase::execute(
                     stor,
-                    erase::Request {
+                    crate::erase::Request {
                         path: file_path,
                         passes: req.passes,
                     },

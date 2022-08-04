@@ -1,3 +1,13 @@
+// Rustc lints
+#![deny(
+    rust_2018_idioms,
+    non_ascii_idents,
+    unsafe_code,
+    unstable_features,
+    unused_imports,
+    unused_qualifications
+)]
+// Clippy lints
 #![deny(clippy::pedantic, clippy::all)]
 #![allow(
     clippy::module_name_repetitions,

@@ -52,7 +52,7 @@ where
     pub hashing_algorithm: HashingAlgorithm,
 }
 
-pub fn execute<R, W>(req: Request<R, W>) -> Result<(), Error>
+pub fn execute<R, W>(req: Request<'_, R, W>) -> Result<(), Error>
 where
     R: Read + Seek,
     W: Write + Seek,

@@ -50,7 +50,7 @@ where
     pub hashing_algorithm: HashingAlgorithm,
 }
 
-pub fn execute<RW>(stor: Arc<impl Storage<RW>>, req: Request<RW>) -> Result<(), Error>
+pub fn execute<RW>(stor: Arc<impl Storage<RW>>, req: Request<'_, RW>) -> Result<(), Error>
 where
     RW: Read + Write + Seek,
 {

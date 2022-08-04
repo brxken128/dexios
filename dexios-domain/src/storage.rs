@@ -201,7 +201,7 @@ impl InMemoryStorage {
         self.mut_files().insert(path.as_ref().to_owned(), im_file);
     }
 
-    pub(crate) fn files(&self) -> RwLockReadGuard<HashMap<PathBuf, IMFile>> {
+    pub(crate) fn files(&self) -> RwLockReadGuard<'_, HashMap<PathBuf, IMFile>> {
         loop {
             match self.files.try_read() {
                 Ok(files) => break files,
@@ -210,7 +210,7 @@ impl InMemoryStorage {
         }
     }
 
-    pub(crate) fn mut_files(&self) -> RwLockWriteGuard<HashMap<PathBuf, IMFile>> {
+    pub(crate) fn mut_files(&self) -> RwLockWriteGuard<'_, HashMap<PathBuf, IMFile>> {
         loop {
             match self.files.try_write() {
                 Ok(files) => break files,

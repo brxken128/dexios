@@ -13,7 +13,7 @@ where
     pub raw_key_old: Protected<Vec<u8>>,
 }
 
-pub fn execute<RW>(req: Request<RW>) -> Result<(), Error>
+pub fn execute<RW>(req: Request<'_, RW>) -> Result<(), Error>
 where
     RW: Read + Write + Seek,
 {

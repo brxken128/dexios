@@ -21,7 +21,7 @@ where
     pub hash_algorithm: HashingAlgorithm,
 }
 
-pub fn execute<RW>(req: Request<RW>) -> Result<(), Error>
+pub fn execute<RW>(req: Request<'_, RW>) -> Result<(), Error>
 where
     RW: Read + Write + Seek,
 {

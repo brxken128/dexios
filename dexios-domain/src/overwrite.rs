@@ -15,12 +15,11 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use Error::*;
         match self {
-            ResetCursorPosition => f.write_str("Unable to reset cursor position"),
-            OverwriteWithRandomBytes => f.write_str("Unable to overwrite with random bytes"),
-            OverwriteWithZeros => f.write_str("Unable to overwrite with zeros"),
-            FlushFile => f.write_str("Unable to flush"),
+            Error::ResetCursorPosition => f.write_str("Unable to reset cursor position"),
+            Error::OverwriteWithRandomBytes => f.write_str("Unable to overwrite with random bytes"),
+            Error::OverwriteWithZeros => f.write_str("Unable to overwrite with zeros"),
+            Error::FlushFile => f.write_str("Unable to flush"),
         }
     }
 }
@@ -33,7 +32,7 @@ pub struct Request<'a, W: Write + Seek> {
     pub passes: i32,
 }
 
-pub fn execute<W: Write + Seek>(req: Request<W>) -> Result<(), Error> {
+pub fn execute<W: Write + Seek>(req: Request<'_, W>) -> Result<(), Error> {
     let mut writer = req.writer.borrow_mut();
     for _ in 0..req.passes {
         writer.rewind().map_err(|_| Error::ResetCursorPosition)?;
@@ -46,10 +45,10 @@ pub fn execute<W: Write + Seek>(req: Request<W>) -> Result<(), Error> {
             rand::thread_rng().fill_bytes(&mut block_buf);
             writer
                 .write_all(&block_buf)
-                .map_err(|_| Error::OverwriteWithRandomBytes)?
+                .map_err(|_| Error::OverwriteWithRandomBytes)?;
         }
 
-        writer.flush().map_err(|_| Error::FlushFile)?
+        writer.flush().map_err(|_| Error::FlushFile)?;
     }
 
     writer.rewind().map_err(|_| Error::ResetCursorPosition)?;
@@ -77,11 +76,11 @@ mod tests {
         };
 
         match execute(req) {
-            Err(_) => unreachable!(),
             Ok(_) => {
                 assert_eq!(buf.len(), capacity);
                 assert_eq!(buf, vec![0].repeat(capacity));
             }
+            _ => unreachable!(),
         }
     }
 

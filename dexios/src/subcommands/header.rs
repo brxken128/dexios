@@ -7,8 +7,7 @@ use std::{
 use super::prompt::{get_answer, overwrite_check};
 use crate::{error, global::states::ForceMode, success, warn};
 use anyhow::{Context, Result};
-use dexios_core::header::{header_version_to_i32, HashingAlgorithm};
-use dexios_core::header::{Header, HeaderVersion};
+use dexios_core::header::{HashingAlgorithm, Header, HeaderVersion};
 
 fn hex_encode(bytes: &[u8]) -> String {
     bytes
@@ -42,7 +41,7 @@ pub fn details(input: &str) -> Result<()> {
             println!("Salt: {} (hex)", hex_encode(&header.salt.unwrap()));
             println!(
                 "Hashing Algorithm: {}",
-                HashingAlgorithm::Argon2id(header_version_to_i32(&header.header_type.version))
+                HashingAlgorithm::Argon2id(header.header_type.version.into())
             );
         }
         HeaderVersion::V4 | HeaderVersion::V5 => {

@@ -4,9 +4,7 @@ use crate::states::{Dexios, Tab};
 use crate::utils::{hex_encode, Key};
 use eframe::egui;
 
-use dexios_core::header::{
-    header_version_to_i32, HashingAlgorithm, Header, ARGON2ID_LATEST, BLAKE3BALLOON_LATEST,
-};
+use dexios_core::header::{HashingAlgorithm, Header, ARGON2ID_LATEST, BLAKE3BALLOON_LATEST};
 use dexios_core::primitives::Algorithm;
 use domain::utils::gen_passphrase;
 
@@ -320,9 +318,7 @@ impl eframe::App for Dexios {
                                                 ui.label(format!(
                                                     "{}",
                                                     HashingAlgorithm::Argon2id(
-                                                        header_version_to_i32(
-                                                            &header.header_type.version
-                                                        )
+                                                        header.header_type.version.into()
                                                     )
                                                 ));
                                             });

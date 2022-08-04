@@ -50,7 +50,7 @@ where
 
 pub fn execute<RW: Read + Write + Seek>(
     stor: Arc<impl Storage<RW> + 'static>,
-    req: Request<RW>,
+    req: Request<'_, RW>,
 ) -> Result<(), Error> {
     // 1. Create temp zip archive.
     let tmp_file = stor.create_temp_file().map_err(Error::Storage)?;

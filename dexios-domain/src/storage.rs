@@ -34,17 +34,16 @@ pub enum Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Error::*;
         match self {
-            CreateDir => f.write_str("Unable to create a new directory"),
-            CreateFile => f.write_str("Unable to create a new file"),
-            OpenFile(mode) => write!(f, "Unable to read the file in {:?} mode", mode),
-            FlushFile => f.write_str("Unable to flush the file"),
-            RemoveFile => f.write_str("Unable to remove the file"),
-            RemoveDir => f.write_str("Unable to remove dir"),
-            DirEntries => f.write_str("Unable to read directory"),
-            FileAccess => f.write_str("Permission denied"),
-            FileLen => f.write_str("Unable to get file length"),
+            Error::CreateDir => f.write_str("Unable to create a new directory"),
+            Error::CreateFile => f.write_str("Unable to create a new file"),
+            Error::OpenFile(mode) => write!(f, "Unable to read the file in {:?} mode", mode),
+            Error::FlushFile => f.write_str("Unable to flush the file"),
+            Error::RemoveFile => f.write_str("Unable to remove the file"),
+            Error::RemoveDir => f.write_str("Unable to remove dir"),
+            Error::DirEntries => f.write_str("Unable to read directory"),
+            Error::FileAccess => f.write_str("Permission denied"),
+            Error::FileLen => f.write_str("Unable to get file length"),
         }
     }
 }
@@ -139,7 +138,7 @@ impl Storage<fs::File> for FileStorage {
     fn file_len(&self, file: &Entry<fs::File>) -> Result<usize, Error> {
         let fs_file = match file {
             Entry::File(FileData { stream, .. }) => stream.borrow(),
-            _ => return Err(Error::FileAccess),
+            Entry::Dir(_) => return Err(Error::FileAccess),
         };
         let file_meta = fs::File::metadata(&fs_file).map_err(|_| Error::FileLen)?;
         file_meta.len().try_into().map_err(|_| Error::FileLen)
@@ -187,7 +186,7 @@ pub struct InMemoryStorage {
 
 #[cfg(test)]
 impl InMemoryStorage {
-    fn save_text_file<P: AsRef<Path>>(&self, path: P, content: &str) -> Result<(), Error> {
+    fn save_text_file<P: AsRef<Path>>(&self, path: P, content: &str) {
         let buf = content.bytes().collect::<Vec<_>>();
         self.save_file(
             path,
@@ -195,15 +194,14 @@ impl InMemoryStorage {
                 len: buf.len(),
                 buf,
             }),
-        )
+        );
     }
 
-    fn save_file<P: AsRef<Path>>(&self, path: P, im_file: IMFile) -> Result<(), Error> {
+    fn save_file<P: AsRef<Path>>(&self, path: P, im_file: IMFile) {
         self.mut_files().insert(path.as_ref().to_owned(), im_file);
-        Ok(())
     }
 
-    pub(crate) fn files(&self) -> RwLockReadGuard<HashMap<PathBuf, IMFile>> {
+    pub(crate) fn files(&self) -> RwLockReadGuard<'_, HashMap<PathBuf, IMFile>> {
         loop {
             match self.files.try_read() {
                 Ok(files) => break files,
@@ -212,7 +210,7 @@ impl InMemoryStorage {
         }
     }
 
-    pub(crate) fn mut_files(&self) -> RwLockWriteGuard<HashMap<PathBuf, IMFile>> {
+    pub(crate) fn mut_files(&self) -> RwLockWriteGuard<'_, HashMap<PathBuf, IMFile>> {
         loop {
             match self.files.try_write() {
                 Ok(files) => break files,
@@ -225,28 +223,26 @@ impl InMemoryStorage {
     // TEST DATA
     // -------------------------------
 
-    pub(crate) fn add_hello_txt(&self) -> Result<(), Error> {
-        self.save_text_file("hello.txt", "hello world")
+    pub(crate) fn add_hello_txt(&self) {
+        self.save_text_file("hello.txt", "hello world");
     }
 
-    pub(crate) fn add_bar_foo_folder(&self) -> Result<(), Error> {
-        self.save_file("bar/", IMFile::Dir)?;
-        self.save_text_file("bar/hello.txt", "hello")?;
-        self.save_text_file("bar/world.txt", "world")?;
-        self.save_file("bar/foo/", IMFile::Dir)?;
-        self.save_text_file("bar/foo/hello.txt", "hello")?;
-        self.save_text_file("bar/foo/world.txt", "world")?;
-        Ok(())
+    pub(crate) fn add_bar_foo_folder(&self) {
+        self.save_file("bar/", IMFile::Dir);
+        self.save_text_file("bar/hello.txt", "hello");
+        self.save_text_file("bar/world.txt", "world");
+        self.save_file("bar/foo/", IMFile::Dir);
+        self.save_text_file("bar/foo/hello.txt", "hello");
+        self.save_text_file("bar/foo/world.txt", "world");
     }
 
-    pub(crate) fn add_bar_foo_folder_with_hidden(&self) -> Result<(), Error> {
-        self.save_file("bar/", IMFile::Dir)?;
-        self.save_text_file("bar/.hello.txt", "hello")?;
-        self.save_text_file("bar/world.txt", "world")?;
-        self.save_file("bar/.foo/", IMFile::Dir)?;
-        self.save_text_file("bar/.foo/hello.txt", "hello")?;
-        self.save_text_file("bar/.foo/world.txt", "world")?;
-        Ok(())
+    pub(crate) fn add_bar_foo_folder_with_hidden(&self) {
+        self.save_file("bar/", IMFile::Dir);
+        self.save_text_file("bar/.hello.txt", "hello");
+        self.save_text_file("bar/world.txt", "world");
+        self.save_file("bar/.foo/", IMFile::Dir);
+        self.save_text_file("bar/.foo/hello.txt", "hello");
+        self.save_text_file("bar/.foo/world.txt", "world");
     }
 }
 
@@ -267,7 +263,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
 
         let cursor = io::Cursor::new(im_file.inner().buf.clone());
 
-        self.save_file(file_path.clone(), im_file)?;
+        self.save_file(file_path.clone(), im_file);
 
         Ok(Entry::File(FileData {
             path: file_path,
@@ -329,7 +325,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
         let len = vec.len();
         let new_file = IMFile::File(InMemoryFile { buf: vec, len });
 
-        self.save_file(file_path, new_file)?;
+        self.save_file(file_path, new_file);
 
         Ok(())
     }
@@ -337,7 +333,7 @@ impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
     fn file_len(&self, file: &Entry<io::Cursor<Vec<u8>>>) -> Result<usize, Error> {
         let cur = match file {
             Entry::File(FileData { stream, .. }) => stream.borrow(),
-            _ => return Err(Error::FileAccess),
+            Entry::Dir(_) => return Err(Error::FileAccess),
         };
 
         Ok(cur.get_ref().len())
@@ -449,14 +445,14 @@ where
     pub fn try_reader(&self) -> Result<&RefCell<RW>, Error> {
         match self {
             Entry::File(file) => Ok(&file.stream),
-            _ => Err(Error::FileAccess),
+            Entry::Dir(_) => Err(Error::FileAccess),
         }
     }
 
     pub fn try_writer(&self) -> Result<&RefCell<RW>, Error> {
         match self {
             Entry::File(file) => Ok(&file.stream),
-            _ => Err(Error::FileAccess),
+            Entry::Dir(_) => Err(Error::FileAccess),
         }
     }
 }
@@ -490,7 +486,7 @@ mod tests {
     #[test]
     fn should_throw_an_error_if_file_already_exist() {
         let stor = InMemoryStorage::default();
-        stor.add_hello_txt().unwrap();
+        stor.add_hello_txt();
 
         match stor.create_file("hello.txt") {
             Err(Error::CreateFile) => {}
@@ -521,7 +517,7 @@ mod tests {
     #[test]
     fn should_open_exist_file_in_read_mode() {
         let stor = InMemoryStorage::default();
-        stor.add_hello_txt().unwrap();
+        stor.add_hello_txt();
 
         match stor.read_file("hello.txt") {
             Ok(file) => {
@@ -541,7 +537,7 @@ mod tests {
     #[test]
     fn should_open_exist_file_in_write_mode() {
         let stor = InMemoryStorage::default();
-        stor.add_hello_txt().unwrap();
+        stor.add_hello_txt();
 
         match stor.write_file("hello.txt") {
             Ok(file) => {
@@ -588,7 +584,7 @@ mod tests {
     #[test]
     fn should_remove_a_file_in_read_mode() {
         let stor = InMemoryStorage::default();
-        stor.add_hello_txt().unwrap();
+        stor.add_hello_txt();
 
         let file = stor.write_file("hello.txt").unwrap();
         let file_path = file.path().to_path_buf();
@@ -605,7 +601,7 @@ mod tests {
     #[test]
     fn should_remove_a_file_in_write_mode() {
         let stor = InMemoryStorage::default();
-        stor.add_hello_txt().unwrap();
+        stor.add_hello_txt();
 
         let file = stor.write_file("hello.txt").unwrap();
         let file_path = file.path().to_path_buf();
@@ -622,7 +618,7 @@ mod tests {
     #[test]
     fn should_get_file_length() {
         let stor = InMemoryStorage::default();
-        stor.add_hello_txt().unwrap();
+        stor.add_hello_txt();
 
         let file = stor.read_file("hello.txt").unwrap();
 
@@ -638,7 +634,7 @@ mod tests {
     #[test]
     fn should_open_dir() {
         let stor = InMemoryStorage::default();
-        stor.add_bar_foo_folder().unwrap();
+        stor.add_bar_foo_folder();
 
         match stor.read_file("bar/foo/") {
             Ok(Entry::Dir(path)) => assert_eq!(path, PathBuf::from("bar/foo/")),
@@ -649,8 +645,8 @@ mod tests {
     #[test]
     fn should_remove_dir_with_subfiles() {
         let stor = InMemoryStorage::default();
-        stor.add_hello_txt().unwrap();
-        stor.add_bar_foo_folder().unwrap();
+        stor.add_hello_txt();
+        stor.add_bar_foo_folder();
 
         let file = stor.read_file("bar/foo/").unwrap();
         let file_path = file.path().to_path_buf();
@@ -663,7 +659,7 @@ mod tests {
                 assert_eq!(
                     sorted_file_names(keys),
                     vec!["bar/", "bar/hello.txt", "bar/world.txt", "hello.txt"]
-                )
+                );
             }
             _ => unreachable!(),
         }
@@ -672,8 +668,8 @@ mod tests {
     #[test]
     fn should_remove_dir_recursively_with_subfiles() {
         let stor = InMemoryStorage::default();
-        stor.add_hello_txt().unwrap();
-        stor.add_bar_foo_folder().unwrap();
+        stor.add_hello_txt();
+        stor.add_bar_foo_folder();
 
         let file = stor.read_file("bar/").unwrap();
         let file_path = file.path().to_path_buf();
@@ -683,7 +679,7 @@ mod tests {
                 assert_eq!(stor.files().get(&file_path).cloned(), None);
                 let files = stor.files();
                 let keys = files.keys().collect();
-                assert_eq!(sorted_file_names(keys), vec!["hello.txt"])
+                assert_eq!(sorted_file_names(keys), vec!["hello.txt"]);
             }
             _ => unreachable!(),
         }
@@ -692,8 +688,8 @@ mod tests {
     #[test]
     fn should_return_file_names_of_dir_subfiles() {
         let stor = InMemoryStorage::default();
-        stor.add_hello_txt().unwrap();
-        stor.add_bar_foo_folder().unwrap();
+        stor.add_hello_txt();
+        stor.add_bar_foo_folder();
 
         let file = stor.read_file("bar/").unwrap();
 
@@ -713,7 +709,7 @@ mod tests {
                         "bar/hello.txt",
                         "bar/world.txt",
                     ]
-                )
+                );
             }
             _ => unreachable!(),
         }
@@ -722,8 +718,8 @@ mod tests {
     #[test]
     fn should_include_hidden_files_names() {
         let stor = InMemoryStorage::default();
-        stor.add_hello_txt().unwrap();
-        stor.add_bar_foo_folder_with_hidden().unwrap();
+        stor.add_hello_txt();
+        stor.add_bar_foo_folder_with_hidden();
 
         let file = stor.read_file("bar/").unwrap();
 
@@ -743,7 +739,7 @@ mod tests {
                         "bar/.hello.txt",
                         "bar/world.txt",
                     ]
-                )
+                );
             }
             _ => unreachable!(),
         }

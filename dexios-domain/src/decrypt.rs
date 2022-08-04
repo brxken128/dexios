@@ -22,16 +22,15 @@ pub enum Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Error::*;
         match self {
-            InitializeChiphers => f.write_str("Cannot initialize chiphers"),
-            InitializeStreams => f.write_str("Cannot initialize streams"),
-            DeserializeHeader => f.write_str("Cannot deserialize header"),
-            ReadEncryptedData => f.write_str("Unable to read encrypted data"),
-            DecryptMasterKey => f.write_str("Cannot decrypt master key"),
-            DecryptData => f.write_str("Unable to decrypt data"),
-            WriteData => f.write_str("Unable to write data"),
-            RewindDataReader => f.write_str("Unable to rewind the reader"),
+            Error::InitializeChiphers => f.write_str("Cannot initialize chiphers"),
+            Error::InitializeStreams => f.write_str("Cannot initialize streams"),
+            Error::DeserializeHeader => f.write_str("Cannot deserialize header"),
+            Error::ReadEncryptedData => f.write_str("Unable to read encrypted data"),
+            Error::DecryptMasterKey => f.write_str("Cannot decrypt master key"),
+            Error::DecryptData => f.write_str("Unable to decrypt data"),
+            Error::WriteData => f.write_str("Unable to write data"),
+            Error::RewindDataReader => f.write_str("Unable to rewind the reader"),
         }
     }
 }
@@ -52,7 +51,7 @@ where
     pub on_decrypted_header: Option<OnDecryptedHeaderFn>,
 }
 
-pub fn execute<R, W>(req: Request<R, W>) -> Result<(), Error>
+pub fn execute<R, W>(req: Request<'_, R, W>) -> Result<(), Error>
 where
     R: Read + Seek,
     W: Write + Seek,
@@ -63,6 +62,7 @@ where
                 .map_err(|_| Error::DeserializeHeader)?;
 
             // Try reading an empty header from the content.
+            #[allow(clippy::cast_possible_truncation)]
             let mut header_bytes = vec![0u8; header.get_size() as usize];
 
             req.reader

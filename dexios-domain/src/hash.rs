@@ -15,10 +15,9 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use Error::*;
         match self {
-            ResetCursorPosition => f.write_str("Unable to reset cursor position"),
-            ReadData => f.write_str("Unable to read data"),
+            Error::ResetCursorPosition => f.write_str("Unable to reset cursor position"),
+            Error::ReadData => f.write_str("Unable to read data"),
         }
     }
 }
@@ -79,6 +78,11 @@ mod tests {
 
     #[test]
     fn should_hash_big_string() {
+        #[allow(
+            clippy::cast_sign_loss,
+            clippy::cast_possible_truncation,
+            clippy::cast_precision_loss
+        )]
         let capacity = (BLOCK_SIZE as f32 * 1.5) as usize;
         let mut buf = Vec::with_capacity(capacity);
         rand::thread_rng().fill_bytes(&mut buf);

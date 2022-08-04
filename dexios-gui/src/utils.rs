@@ -3,6 +3,14 @@ use crate::states::{Decrypt, Encrypt};
 use dexios_core::protected::Protected;
 use std::io::Read;
 
+// TODO(brxken128): put this and subcommands/header.rs in domain
+pub fn hex_encode(bytes: &[u8]) -> String {
+    bytes
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect::<String>()
+}
+
 #[macro_export]
 macro_rules! ui_ok {
     ($res:expr, $message:expr) => {

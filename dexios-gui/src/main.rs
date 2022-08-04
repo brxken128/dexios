@@ -1,8 +1,12 @@
+use std::fs::File;
+
 use crate::states::{Dexios, Tab};
-use crate::utils::Key;
+use crate::utils::{hex_encode, Key};
 use eframe::egui;
 
-use dexios_core::header::{HashingAlgorithm, ARGON2ID_LATEST, BLAKE3BALLOON_LATEST};
+use dexios_core::header::{
+    header_version_to_i32, HashingAlgorithm, Header, ARGON2ID_LATEST, BLAKE3BALLOON_LATEST,
+};
 use dexios_core::primitives::Algorithm;
 use domain::utils::gen_passphrase;
 
@@ -218,6 +222,168 @@ impl eframe::App for Dexios {
                 if ui.button("Decrypt File").clicked() {
                     crate::decrypt::execute(&self.decrypt);
                 }
+            }
+
+            if self.tab == Tab::HeaderDetails {
+                ui.horizontal(|ui| {
+                    ui.label("Input File: ");
+                    ui.add(
+                        egui::TextEdit::singleline(&mut self.header_details.input_path)
+                            .hint_text("Path to the input file"),
+                    );
+                    if ui.button("Select File").clicked() {
+                        if let Some(path) = rfd::FileDialog::new().pick_file() {
+                            self.header_details.input_path = path.as_path().display().to_string();
+                        }
+                    }
+                });
+
+                if ui.button("View Details").clicked() {
+                    let mut reader = File::open(self.header_details.input_path.clone()).unwrap();
+                    let (header, aad) = Header::deserialize(&mut reader).unwrap();
+                    self.header_details.header = Some(header);
+                    self.header_details.aad = Some(aad);
+                }
+
+                ui.separator();
+
+                let text_height = egui::TextStyle::Body.resolve(ui.style()).size;
+
+                use egui_extras::{Size, TableBuilder};
+                TableBuilder::new(ui)
+                    .striped(true)
+                    .column(Size::initial(320.0))
+                    .column(Size::initial(480.0))
+                    .body(|mut body| {
+                        if let Some(header) = &self.header_details.header {
+                            if let Some(aad) = &self.header_details.aad {
+                                body.row(text_height, |mut row| {
+                                    row.col(|ui| {
+                                        ui.label("Header Version:");
+                                    });
+                                    row.col(|ui| {
+                                        ui.label(format!("{}", header.header_type.version));
+                                    });
+                                });
+                                body.row(text_height, |mut row| {
+                                    row.col(|ui| {
+                                        ui.label("Encryption Algorithm:");
+                                    });
+                                    row.col(|ui| {
+                                        ui.label(format!("{}", header.header_type.algorithm));
+                                    });
+                                });
+                                body.row(text_height, |mut row| {
+                                    row.col(|ui| {
+                                        ui.label("Encryption Mode:");
+                                    });
+                                    row.col(|ui| {
+                                        ui.label(format!("{}", header.header_type.mode));
+                                    });
+                                });
+                                body.row(text_height, |mut row| {
+                                    row.col(|ui| {
+                                        ui.label("Encryption Nonce (hex):");
+                                    });
+                                    row.col(|ui| {
+                                        ui.label(format!("{}", hex_encode(&header.nonce)));
+                                    });
+                                });
+                                body.row(text_height, |mut row| {
+                                    row.col(|ui| {
+                                        ui.label("AAD (hex):");
+                                    });
+                                    row.col(|ui| {
+                                        ui.label(format!("{}", hex_encode(&aad)));
+                                    });
+                                });
+
+                                use dexios_core::header::HeaderVersion;
+                                match header.header_type.version {
+                                    HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
+                                        body.row(text_height, |mut row| {
+                                            row.col(|ui| {
+                                                ui.label("Salt (hex):");
+                                            });
+                                            row.col(|ui| {
+                                                ui.label(format!(
+                                                    "{}",
+                                                    hex_encode(&header.salt.unwrap())
+                                                ));
+                                            });
+                                        });
+                                        body.row(text_height, |mut row| {
+                                            row.col(|ui| {
+                                                ui.label("Hashing Algorithm:");
+                                            });
+                                            row.col(|ui| {
+                                                ui.label(format!(
+                                                    "{}",
+                                                    HashingAlgorithm::Argon2id(
+                                                        header_version_to_i32(
+                                                            &header.header_type.version
+                                                        )
+                                                    )
+                                                ));
+                                            });
+                                        });
+                                    }
+                                    HeaderVersion::V4 | HeaderVersion::V5 => {
+                                        for (i, keyslot) in
+                                            header.keyslots.clone().unwrap().iter().enumerate()
+                                        {
+                                            body.row(text_height, |mut row| {
+                                                row.col(|ui| {
+                                                    ui.label(format!("Keyslot {}:", i));
+                                                });
+                                            });
+                                            body.row(text_height, |mut row| {
+                                                row.col(|ui| {
+                                                    ui.label("    Hashing Algorithm::");
+                                                });
+                                                row.col(|ui| {
+                                                    ui.label(format!("{}", keyslot.hash_algorithm));
+                                                });
+                                            });
+                                            body.row(text_height, |mut row| {
+                                                row.col(|ui| {
+                                                    ui.label("    Salt (hex):");
+                                                });
+                                                row.col(|ui| {
+                                                    ui.label(format!(
+                                                        "{}",
+                                                        hex_encode(&keyslot.salt)
+                                                    ));
+                                                });
+                                            });
+                                            body.row(text_height, |mut row| {
+                                                row.col(|ui| {
+                                                    ui.label("    Master Key (hex, encrypted):");
+                                                });
+                                                row.col(|ui| {
+                                                    ui.label(format!(
+                                                        "{}",
+                                                        hex_encode(&keyslot.encrypted_key)
+                                                    ));
+                                                });
+                                            });
+                                            body.row(text_height, |mut row| {
+                                                row.col(|ui| {
+                                                    ui.label("    Master Key Nonce (hex):");
+                                                });
+                                                row.col(|ui| {
+                                                    ui.label(format!(
+                                                        "{}",
+                                                        hex_encode(&keyslot.nonce)
+                                                    ));
+                                                });
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
             }
         });
     }

@@ -1,4 +1,4 @@
-use dexios_core::header::{HashingAlgorithm, BLAKE3BALLOON_LATEST};
+use dexios_core::header::{HashingAlgorithm, Header, BLAKE3BALLOON_LATEST};
 use dexios_core::primitives::Algorithm;
 
 use crate::utils::Key;
@@ -12,6 +12,7 @@ pub enum Tab {
 pub struct Dexios {
     pub encrypt: Encrypt,
     pub decrypt: Decrypt,
+    pub header_details: HeaderDetails,
     pub tab: Tab,
 }
 
@@ -35,6 +36,22 @@ pub struct Decrypt {
     pub key: Key,
     pub keyfile_path: String,
     pub password: String,
+}
+
+pub struct HeaderDetails {
+    pub input_path: String,
+    pub header: Option<Header>,
+    pub aad: Option<Vec<u8>>,
+}
+
+impl Default for HeaderDetails {
+    fn default() -> Self {
+        Self {
+            input_path: "".to_owned(),
+            header: None,
+            aad: None,
+        }
+    }
 }
 
 impl Default for Encrypt {
@@ -70,6 +87,7 @@ impl Default for Dexios {
         Self {
             encrypt: Encrypt::default(),
             decrypt: Decrypt::default(),
+            header_details: HeaderDetails::default(),
             tab: Tab::Encrypt,
         }
     }

@@ -11,19 +11,19 @@ use dexios_core::protected::Protected;
 use std::cell::RefCell;
 use std::io::{Read, Write};
 
-pub struct Request<'a, W>
+pub struct Request<'a, RW>
 where
-    W: Read + Write + Seek,
+    RW: Read + Write + Seek,
 {
-    pub handle: &'a RefCell<W>, // header read+write+seek
+    pub handle: &'a RefCell<RW>, // header read+write+seek
     pub raw_key_old: Protected<Vec<u8>>,
     pub raw_key_new: Protected<Vec<u8>>,
     pub hash_algorithm: HashingAlgorithm,
 }
 
-pub fn execute<W>(req: Request<W>) -> Result<(), Error>
+pub fn execute<RW>(req: Request<RW>) -> Result<(), Error>
 where
-    W: Read + Write + Seek,
+    RW: Read + Write + Seek,
 {
     let (header, _) = dexios_core::header::Header::deserialize(&mut *req.handle.borrow_mut())
         .map_err(|_| Error::HeaderDeserialize)?;

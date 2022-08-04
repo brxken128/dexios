@@ -5,17 +5,17 @@ use std::cell::RefCell;
 use std::io::Seek;
 use std::io::{Read, Write};
 
-pub struct Request<'a, W>
+pub struct Request<'a, RW>
 where
-    W: Read + Write + Seek,
+    RW: Read + Write + Seek,
 {
-    pub handle: &'a RefCell<W>, // header read+write+seek
+    pub handle: &'a RefCell<RW>, // header read+write+seek
     pub raw_key_old: Protected<Vec<u8>>,
 }
 
-pub fn execute<W>(req: Request<'_, W>) -> Result<(), Error>
+pub fn execute<RW>(req: Request<'_, RW>) -> Result<(), Error>
 where
-    W: Read + Write + Seek,
+    RW: Read + Write + Seek,
 {
     let (header, _) = dexios_core::header::Header::deserialize(&mut *req.handle.borrow_mut())
         .map_err(|_| Error::HeaderDeserialize)?;

@@ -38,7 +38,7 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-type OnDecryptedHeaderFn = Box<dyn FnOnce(&HeaderType)>;
+pub type OnDecryptedHeaderFn = Box<dyn FnOnce(&HeaderType)>;
 
 pub struct Request<'a, R, W>
 where

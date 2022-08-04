@@ -8,5 +8,6 @@ pub mod key;
 pub mod overwrite;
 pub mod pack;
 pub mod storage;
+pub mod unpack;
 
 pub mod utils;

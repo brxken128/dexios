@@ -21,6 +21,7 @@ pub enum FileMode {
 
 #[derive(Debug)]
 pub enum Error {
+    CreateDir,
     CreateFile,
     OpenFile(FileMode),
     RemoveFile,
@@ -35,6 +36,7 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use Error::*;
         match self {
+            CreateDir => f.write_str("Unable to create a new directory"),
             CreateFile => f.write_str("Unable to create a new file"),
             OpenFile(mode) => write!(f, "Unable to read the file in {:?} mode", mode),
             FlushFile => f.write_str("Unable to flush the file"),
@@ -62,6 +64,7 @@ where
         self.create_file(path)
     }
 
+    fn create_dir_all<P: AsRef<Path>>(&self, path: P) -> Result<(), Error>;
     fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<RW>, Error>;
     fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<RW>, Error>;
     fn write_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<RW>, Error>;
@@ -76,6 +79,10 @@ where
 pub struct FileStorage;
 
 impl Storage<fs::File> for FileStorage {
+    fn create_dir_all<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+        fs::create_dir_all(&path).map_err(|_| Error::CreateDir)
+    }
+
     fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<fs::File>, Error> {
         let path = path.as_ref().to_path_buf();
         let file = fs::File::options()
@@ -245,6 +252,10 @@ impl InMemoryStorage {
 
 #[cfg(test)]
 impl Storage<io::Cursor<Vec<u8>>> for InMemoryStorage {
+    fn create_dir_all<P: AsRef<Path>>(&self, _path: P) -> Result<(), Error> {
+        todo!();
+    }
+
     fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<io::Cursor<Vec<u8>>>, Error> {
         let file_path = path.as_ref().to_path_buf();
 

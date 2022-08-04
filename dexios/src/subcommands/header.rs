@@ -9,13 +9,8 @@ use crate::{error, global::states::ForceMode, success, warn};
 use anyhow::{Context, Result};
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
-
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes
-        .iter()
-        .map(|b| format!("{:02x}", b))
-        .collect::<String>()
-}
+use domain::storage::Storage;
+use domain::utils::hex_encode;
 
 pub fn details(input: &str) -> Result<()> {
     let mut input_file =
@@ -72,30 +67,26 @@ pub fn details(input: &str) -> Result<()> {
 // it implements a check to ensure the header is valid
 pub fn dump(input: &str, output: &str, force: ForceMode) -> Result<()> {
     warn!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
-
-    let mut input_file =
-        File::open(input).with_context(|| format!("Unable to open input file: {}", input))?;
-
-    let header_result = Header::deserialize(&mut input_file);
-
-    if header_result.is_err() {
-        error!("File does not contain a valid Dexios header - exiting");
-        drop(input_file);
-        exit(1);
-    }
-
-    let (header, _) = header_result.context("Error unwrapping the header's result")?; // this should never happen
+    let stor = std::sync::Arc::new(domain::storage::FileStorage);
+    let input_file = stor.read_file(input)?;
 
     if !overwrite_check(output, force)? {
         std::process::exit(0);
     }
 
-    let mut output_file =
-        File::create(output).with_context(|| format!("Unable to open output file: {}", output))?;
+    let output_file = stor
+        .create_file(output)
+        .or_else(|_| stor.write_file(output))?;
 
-    header.write(&mut output_file)?;
+    let req = domain::header::dump::Request {
+        reader: input_file.try_reader()?,
+        writer: output_file.try_writer()?,
+    };
 
-    success!("Header dumped to {} successfully.", output);
+    domain::header::dump::execute(req)?;
+
+    stor.flush_file(&output_file)?;
+
     Ok(())
 }
 

@@ -13,8 +13,7 @@ mod states;
 mod utils;
 
 fn main() {
-    let mut options = eframe::NativeOptions::default();
-    options.resizable = false;
+    let options = eframe::NativeOptions::default();
     eframe::run_native(
         "DEXIOS",
         options,

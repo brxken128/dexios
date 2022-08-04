@@ -57,6 +57,16 @@ pub enum HeaderVersion {
     V5,
 }
 
+pub fn header_version_to_i32(version: &HeaderVersion) -> i32 {
+    match version {
+        HeaderVersion::V1 => 1,
+        HeaderVersion::V2 => 2,
+        HeaderVersion::V3 => 3,
+        HeaderVersion::V4 => 4,
+        HeaderVersion::V5 => 5,
+    }
+}
+
 impl std::fmt::Display for HeaderVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {

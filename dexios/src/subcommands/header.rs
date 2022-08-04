@@ -7,7 +7,7 @@ use std::{
 use super::prompt::{get_answer, overwrite_check};
 use crate::{error, global::states::ForceMode, success, warn};
 use anyhow::{Context, Result};
-use dexios_core::header::HashingAlgorithm;
+use dexios_core::header::{header_version_to_i32, HashingAlgorithm};
 use dexios_core::header::{Header, HeaderVersion};
 
 fn hex_encode(bytes: &[u8]) -> String {
@@ -38,17 +38,12 @@ pub fn details(input: &str) -> Result<()> {
     println!("AAD: {} (hex)", hex_encode(&aad));
 
     match header.header_type.version {
-        HeaderVersion::V1 => {
+        HeaderVersion::V1 | HeaderVersion::V2 | HeaderVersion::V3 => {
             println!("Salt: {} (hex)", hex_encode(&header.salt.unwrap()));
-            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(1));
-        }
-        HeaderVersion::V2 => {
-            println!("Salt: {} (hex)", hex_encode(&header.salt.unwrap()));
-            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(2));
-        }
-        HeaderVersion::V3 => {
-            println!("Salt: {} (hex)", hex_encode(&header.salt.unwrap()));
-            println!("Hashing Algorithm: {}", HashingAlgorithm::Argon2id(3));
+            println!(
+                "Hashing Algorithm: {}",
+                HashingAlgorithm::Argon2id(header_version_to_i32(&header.header_type.version))
+            );
         }
         HeaderVersion::V4 | HeaderVersion::V5 => {
             for (i, keyslot) in header.keyslots.unwrap().iter().enumerate() {

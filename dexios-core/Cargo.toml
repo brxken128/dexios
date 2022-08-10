@@ -30,7 +30,7 @@ anyhow = "1.0.59"
 aes-gcm = "0.10.1"
 chacha20poly1305 = "0.10.0"
 deoxys = { version = "0.1.0", optional = true }
-aead = { version = "0.5.0", features = ["stream"] }
+aead = { version = "0.5.1", features = ["stream"] }
 
 # for wiping sensitive information from memory
 zeroize = "1.5.0"

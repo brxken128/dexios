@@ -36,9 +36,9 @@ pub fn get_matches() -> clap::ArgMatches {
                 .value_name("# of passes")
                 .takes_value(true)
                 .require_equals(true)
-                .help("Securely erase the input file once complete (default is 2 passes)")
+                .help("Securely erase the input file once complete (default is 1 pass)")
                 .min_values(0)
-                .default_missing_value("2"),
+                .default_missing_value("1"),
         )
         .arg(
             Arg::new("hash")
@@ -113,9 +113,9 @@ pub fn get_matches() -> clap::ArgMatches {
                 .value_name("# of passes")
                 .takes_value(true)
                 .require_equals(true)
-                .help("Securely erase the input file once complete (default is 2 passes)")
+                .help("Securely erase the input file once complete (default is 1 pass)")
                 .min_values(0)
-                .default_missing_value("2"),
+                .default_missing_value("1"),
         )
         .arg(
             Arg::new("hash")
@@ -156,9 +156,9 @@ pub fn get_matches() -> clap::ArgMatches {
                         .value_name("# of passes")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("Specify the number of passes (default is 2)")
+                        .help("Specify the number of passes (default is 1)")
                         .min_values(0)
-                        .default_missing_value("2"),
+                        .default_missing_value("1"),
                 ),
         )
         .subcommand(
@@ -300,9 +300,9 @@ pub fn get_matches() -> clap::ArgMatches {
                         .value_name("# of passes")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("Securely erase the input file once complete (default is 2 passes)")
+                        .help("Securely erase the input file once complete (default is 1 pass)")
                         .min_values(0)
-                        .default_missing_value("2"),
+                        .default_missing_value("1"),
                 )
                 .arg(
                     Arg::new("verbose")

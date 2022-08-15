@@ -126,7 +126,7 @@ pub fn execute(req: Request) -> Result<()> {
     if req.pack_params.erase_source == EraseSourceDir::Erase {
         req.input_file
             .iter()
-            .try_for_each(|file_name| super::erase::secure_erase(file_name, 2))?;
+            .try_for_each(|file_name| super::erase::secure_erase(file_name, 1))?;
     }
 
     success!("Your output file is: {}", req.output_file);

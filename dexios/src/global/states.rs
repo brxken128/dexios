@@ -57,6 +57,7 @@ pub enum ForceMode {
     Prompt,
 }
 
+#[derive(PartialEq)]
 pub enum Key {
     Keyfile(String),
     Env,

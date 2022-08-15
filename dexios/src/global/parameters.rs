@@ -1,7 +1,7 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::states::{EraseMode, EraseSourceDir, HashMode, HeaderLocation, ForceMode};
+use crate::global::states::{EraseMode, EraseSourceDir, ForceMode, HashMode, HeaderLocation};
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
 use crate::warn;
@@ -82,24 +82,10 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
 }
 
 pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Result<Algorithm> {
-    let provided_aead: usize = if sub_matches.is_present("aead") {
-        sub_matches
-            .value_of("aead")
-            .context("Error reading value of --aead")?
-            .parse()
-            .context(
-                "Invalid AEAD selected! Use \"dexios list aead\" to see all possible values.",
-            )?
+    let algorithm = if sub_matches.is_present("aes") {
+        Algorithm::Aes256Gcm
     } else {
-        1
-    };
-
-    let algorithm = if provided_aead < 1 || provided_aead > ALGORITHMS.len() {
-        return Err(anyhow::anyhow!(
-            "Invalid AEAD selected! Use \"dexios list aead\" to see all possible values."
-        ));
-    } else {
-        ALGORITHMS[provided_aead - 1] // -1 to account for indexing starting at 0
+        Algorithm::XChaCha20Poly1305
     };
 
     Ok(algorithm)

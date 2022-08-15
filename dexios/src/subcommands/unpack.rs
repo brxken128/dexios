@@ -1,5 +1,4 @@
 use crate::subcommands::prompt::get_answer;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use anyhow::Result;
@@ -10,9 +9,8 @@ use crate::global::{
     states::{ForceMode, HeaderLocation, PasswordState, PrintMode},
     structs::CryptoParams,
 };
-use crate::{info, success, warn};
+use crate::{info, warn};
 use std::path::PathBuf;
-use std::time::Instant;
 
 // this first decrypts the input file to a temporary zip file
 // it then unpacks that temporary zip file to the target directory
@@ -35,13 +33,6 @@ pub fn unpack(
 
     let raw_key = params.key.get_secret(&PasswordState::Direct)?;
 
-    let files_count = Arc::new(AtomicUsize::new(0));
-
-    // Prepare the data to move in the `on_archive_info` callback
-    let files_count_clone = files_count.clone();
-    let output_clone = output.to_string();
-
-    let zip_start_time = Instant::now();
     domain::unpack::execute(
         stor,
         domain::unpack::Request {
@@ -49,14 +40,8 @@ pub fn unpack(
             reader: input_file.try_reader()?,
             output_dir_path: PathBuf::from(output),
             raw_key,
-            on_decrypted_header: Some(Box::new(move |header_type| {
-                info!("Using {} for decryption", header_type.algorithm);
-            })),
-            on_archive_info: Some(Box::new(move |fc| {
-                files_count_clone.store(fc, Ordering::Relaxed);
-
-                info!("Decompressing {} items into {}", fc, output_clone);
-            })),
+            on_decrypted_header: None,
+            on_archive_info: None,
             on_zip_file: Some(Box::new(move |file_path| {
                 let file_name = file_path
                     .file_name()
@@ -79,26 +64,13 @@ pub fn unpack(
                 }
 
                 if print_mode == PrintMode::Verbose {
-                    warn!("Extracting {}", file_name);
+                    info!("Extracting {}", file_name);
                 }
 
                 true
             })),
         },
     )?;
-
-    let zip_duration = zip_start_time.elapsed();
-    success!(
-        "Extracted {} items to {} [took {:.2}s]",
-        files_count.load(Ordering::Relaxed),
-        output,
-        zip_duration.as_secs_f32()
-    );
-
-    success!(
-        "Unpacking Successful! You will find your files in {}",
-        output
-    );
 
     Ok(())
 }

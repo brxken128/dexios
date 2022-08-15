@@ -467,13 +467,6 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(true)
                                 .required(true)
                                 .help("The encrypted file"),
-                        )
-                        .arg(
-                            Arg::new("force")
-                                .short('f')
-                                .long("force")
-                                .takes_value(false)
-                                .help("Force all actions"),
                         ),
                 )
                 .subcommand(
@@ -486,13 +479,6 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(true)
                                 .required(true)
                                 .help("The encrypted file"),
-                        )
-                        .arg(
-                            Arg::new("force")
-                                .short('f')
-                                .long("force")
-                                .takes_value(false)
-                                .help("Force all actions"),
                         ),
                 )
                 .subcommand(

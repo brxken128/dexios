@@ -58,19 +58,16 @@ fn main() -> Result<()> {
             }
             Some("restore") => {
                 let sub_matches_restore = sub_matches.subcommand_matches("restore").unwrap();
-                let force = forcemode(sub_matches_restore);
 
                 subcommands::header::restore(
                     &get_param("input", sub_matches_restore)?,
                     &get_param("output", sub_matches_restore)?,
-                    force,
                 )?;
             }
             Some("strip") => {
                 let sub_matches_strip = sub_matches.subcommand_matches("strip").unwrap();
-                let force = forcemode(sub_matches_strip);
 
-                subcommands::header::strip(&get_param("input", sub_matches_strip)?, force)?;
+                subcommands::header::strip(&get_param("input", sub_matches_strip)?)?;
             }
             Some("details") => {
                 let sub_matches_details = sub_matches.subcommand_matches("details").unwrap();

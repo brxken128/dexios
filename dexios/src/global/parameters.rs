@@ -9,8 +9,6 @@ use anyhow::{Context, Result};
 use clap::ArgMatches;
 use dexios_core::primitives::Algorithm;
 
-use dexios_core::primitives::ALGORITHMS;
-
 use super::states::{Compression, DirectoryMode, Key, KeyParams, PrintMode};
 
 pub fn get_params(name: &str, sub_matches: &ArgMatches) -> Result<Vec<String>> {

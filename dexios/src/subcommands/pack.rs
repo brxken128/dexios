@@ -1,6 +1,5 @@
 use std::process::exit;
 use std::sync::Arc;
-use std::time::Instant;
 
 use anyhow::Result;
 use dexios_core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
@@ -14,7 +13,6 @@ use crate::{
         structs::{CryptoParams, PackParams},
     },
 };
-use crate::{info, success};
 use domain::storage::Storage;
 
 use super::prompt::overwrite_check;
@@ -88,10 +86,6 @@ pub fn execute(req: Request) -> Result<()> {
         Compression::Zstd => zip::CompressionMethod::Zstd,
     };
 
-    info!("Using {} for encryption", req.algorithm);
-    info!("Encrypting {:?} (this may take a while)", req.input_file);
-
-    let start_time = Instant::now();
     // 2. compress and encrypt files
     domain::pack::execute(
         stor.clone(),
@@ -116,20 +110,11 @@ pub fn execute(req: Request) -> Result<()> {
     }
     stor.flush_file(&output_file)?;
 
-    let encrypt_duration = start_time.elapsed();
-    success!(
-        "Encryption successful! File saved as {} [took {:.2}s]",
-        req.output_file,
-        encrypt_duration.as_secs_f32(),
-    );
-
     if req.pack_params.erase_source == EraseSourceDir::Erase {
         req.input_file
             .iter()
             .try_for_each(|file_name| super::erase::secure_erase(file_name, 1))?;
     }
-
-    success!("Your output file is: {}", req.output_file);
 
     Ok(())
 }

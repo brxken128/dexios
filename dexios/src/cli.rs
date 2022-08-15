@@ -69,12 +69,10 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("Force all actions"),
         )
         .arg(
-            Arg::new("aead")
-                .short('a')
-                .long("aead")
-                .value_name("aead to use for encryption")
-                .takes_value(true)
-                .help("select an AEAD (\"dexios list aead\" to see all possible values)"),
+            Arg::new("aes")
+                .long("aes")
+                .takes_value(false)
+                .help("Use AES-256-GCM for encryption"),
         );
 
     let decrypt = Command::new("decrypt")
@@ -257,12 +255,10 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("Force all actions"),
             )
             .arg(
-                Arg::new("aead")
-                    .short('a')
-                    .long("aead")
-                    .value_name("aead to use for encryption")
-                    .takes_value(true)
-                    .help("select an AEAD (\"dexios list aead\" to see all possible values)"),
+                Arg::new("aes")
+                    .long("aes")
+                    .takes_value(false)
+                    .help("Use AES-256-GCM for encryption"),
             )
         )
         .subcommand(

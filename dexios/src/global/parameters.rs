@@ -30,7 +30,7 @@ pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
 }
 
 pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
-    let key = Key::init(sub_matches, KeyParams::default(), "keyfile")?;
+    let key = Key::init(sub_matches, &KeyParams::default(), "keyfile")?;
 
     let hash_mode = if sub_matches.is_present("hash") {
         //specify to emit hash after operation
@@ -79,14 +79,12 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
     })
 }
 
-pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Result<Algorithm> {
-    let algorithm = if sub_matches.is_present("aes") {
+pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Algorithm {
+    if sub_matches.is_present("aes") {
         Algorithm::Aes256Gcm
     } else {
         Algorithm::XChaCha20Poly1305
-    };
-
-    Ok(algorithm)
+    }
 }
 
 pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
@@ -110,7 +108,7 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
 }
 
 pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams)> {
-    let key = Key::init(sub_matches, KeyParams::default(), "keyfile")?;
+    let key = Key::init(sub_matches, &KeyParams::default(), "keyfile")?;
 
     let hash_mode = if sub_matches.is_present("hash") {
         //specify to emit hash after operation
@@ -192,7 +190,7 @@ pub fn forcemode(sub_matches: &ArgMatches) -> ForceMode {
 pub fn key_manipulation_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
     let key_old = Key::init(
         sub_matches,
-        KeyParams {
+        &KeyParams {
             user: true,
             env: false,
             autogenerate: false,
@@ -203,7 +201,7 @@ pub fn key_manipulation_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
 
     let key_new = Key::init(
         sub_matches,
-        KeyParams {
+        &KeyParams {
             user: true,
             env: false,
             autogenerate: true,

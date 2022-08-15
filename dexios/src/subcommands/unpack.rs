@@ -16,6 +16,7 @@ use std::path::PathBuf;
 // it then unpacks that temporary zip file to the target directory
 // once finished, it erases the temporary file to avoid any residual data
 #[allow(clippy::module_name_repetitions)]
+#[allow(clippy::needless_pass_by_value)]
 pub fn unpack(
     input: &str,  // encrypted zip file
     output: &str, // directory

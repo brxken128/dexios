@@ -57,7 +57,7 @@ pub enum ForceMode {
     Prompt,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum Key {
     Keyfile(String),
     Env,
@@ -119,7 +119,7 @@ impl Key {
 
     pub fn init(
         sub_matches: &ArgMatches,
-        params: KeyParams,
+        params: &KeyParams,
         keyfile_descriptor: &str,
     ) -> Result<Self> {
         let key = if sub_matches.is_present(keyfile_descriptor) && params.keyfile {
@@ -148,6 +148,7 @@ impl Key {
     }
 }
 
+#[allow(clippy::struct_excessive_bools)]
 pub struct KeyParams {
     pub user: bool,
     pub env: bool,

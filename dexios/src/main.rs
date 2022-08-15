@@ -103,7 +103,7 @@ fn main() -> Result<()> {
                 use crate::global::states::Key;
 
                 let sub_matches_del_key = sub_matches.subcommand_matches("del").unwrap();
-                let key = Key::init(sub_matches_del_key, KeyParams::default(), "keyfile")?;
+                let key = Key::init(sub_matches_del_key, &KeyParams::default(), "keyfile")?;
 
                 subcommands::key::delete(&get_param("input", sub_matches_del_key)?, &key)?;
             }

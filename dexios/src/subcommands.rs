@@ -20,7 +20,7 @@ pub mod unpack;
 
 pub fn encrypt(sub_matches: &ArgMatches) -> Result<()> {
     let params = parameter_handler(sub_matches)?;
-    let algorithm = encrypt_additional_params(sub_matches)?;
+    let algorithm = encrypt_additional_params(sub_matches);
 
     // stream mode is the only mode to encrypt (v8.5.0+)
     encrypt::stream_mode(
@@ -50,9 +50,9 @@ pub fn erase(sub_matches: &ArgMatches) -> Result<()> {
 
 pub fn pack(sub_matches: &ArgMatches) -> Result<()> {
     let (crypto_params, pack_params) = pack_params(sub_matches)?;
-    let algorithm = encrypt_additional_params(sub_matches)?;
+    let algorithm = encrypt_additional_params(sub_matches);
 
-    pack::execute(pack::Request {
+    pack::execute(&pack::Request {
         input_file: &get_params("input", sub_matches)?,
         output_file: &get_param("output", sub_matches)?,
         pack_params,

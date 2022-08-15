@@ -192,6 +192,7 @@ pub fn vec_to_arr<const N: usize>(mut master_key_vec: Vec<u8>) -> [u8; N] {
 // the 3 words and the digits are separated with -
 // the words are also capitalised
 // this passphrase should provide adequate protection, while not being too hard to remember
+#[must_use]
 pub fn generate_passphrase() -> Protected<String> {
     let collection = include_str!("wordlist.lst");
     let words = collection.lines().collect::<Vec<_>>();

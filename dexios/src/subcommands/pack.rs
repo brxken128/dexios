@@ -30,7 +30,7 @@ pub struct Request<'a> {
 // it compresses all of the files into the temporary archive
 // once compressed, it encrypts the zip file
 // it erases the temporary archive afterwards, to stop any residual data from remaining
-pub fn execute(req: Request) -> Result<()> {
+pub fn execute(req: &Request) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
     let stor = Arc::new(domain::storage::FileStorage);
 

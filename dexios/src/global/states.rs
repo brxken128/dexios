@@ -7,11 +7,9 @@ use anyhow::{Context, Result};
 use clap::ArgMatches;
 use dexios_core::protected::Protected;
 
-use crate::{
-    file::get_bytes,
-    warn,
-};
-use super::key::{generate_passphrase, get_password};
+use super::key::get_password;
+use crate::{file::get_bytes, warn};
+use dexios_core::key::generate_passphrase;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {

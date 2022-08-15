@@ -175,18 +175,6 @@ pub fn get_matches() -> clap::ArgMatches {
             ),
         )
         .subcommand(
-            Command::new("list")
-                .short_flag('l')
-                .about("List Dexios values")
-                .arg(
-                    Arg::new("input")
-                        .value_name("input")
-                        .takes_value(true)
-                        .required(true)
-                        .help("The item to list"),
-                ),
-        )
-        .subcommand(
             Command::new("pack")
             .about("Pack and encrypt an entire directory")
             .short_flag('p')

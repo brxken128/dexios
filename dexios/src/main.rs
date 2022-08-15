@@ -1,10 +1,9 @@
 #![deny(clippy::all)]
 
 use anyhow::Result;
+use global::parameters::forcemode;
 use global::parameters::get_param;
 use global::parameters::key_manipulation_params;
-use global::parameters::forcemode;
-use subcommands::list::show_values;
 
 use crate::global::states::KeyParams;
 
@@ -45,9 +44,6 @@ fn main() -> Result<()> {
             };
 
             subcommands::hashing::hash_stream(&files)?;
-        }
-        Some(("list", sub_matches)) => {
-            show_values(&get_param("input", sub_matches)?)?;
         }
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("dump") => {
@@ -112,10 +108,7 @@ fn main() -> Result<()> {
                 let sub_matches_del_key = sub_matches.subcommand_matches("del").unwrap();
                 let key = Key::init(sub_matches_del_key, KeyParams::default(), "keyfile")?;
 
-                subcommands::key::delete(
-                    &get_param("input", sub_matches_del_key)?,
-                    &key,
-                )?;
+                subcommands::key::delete(&get_param("input", sub_matches_del_key)?, &key)?;
             }
             _ => (),
         },

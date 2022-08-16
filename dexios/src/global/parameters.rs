@@ -1,15 +1,13 @@
 // this file handles getting parameters from clap's ArgMatches
 // it returns information (e.g. CryptoParams) to functions that require it
 
-use crate::global::states::{EraseMode, EraseSourceDir, HashMode, HeaderLocation, ForceMode};
+use crate::global::states::{EraseMode, EraseSourceDir, ForceMode, HashMode, HeaderLocation};
 use crate::global::structs::CryptoParams;
 use crate::global::structs::PackParams;
 use crate::warn;
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 use dexios_core::primitives::Algorithm;
-
-use dexios_core::primitives::ALGORITHMS;
 
 use super::states::{Compression, DirectoryMode, Key, KeyParams, PrintMode};
 
@@ -32,7 +30,7 @@ pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
 }
 
 pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
-    let key = Key::init(sub_matches, KeyParams::default(), "keyfile")?;
+    let key = Key::init(sub_matches, &KeyParams::default(), "keyfile")?;
 
     let hash_mode = if sub_matches.is_present("hash") {
         //specify to emit hash after operation
@@ -81,28 +79,12 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
     })
 }
 
-pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Result<Algorithm> {
-    let provided_aead: usize = if sub_matches.is_present("aead") {
-        sub_matches
-            .value_of("aead")
-            .context("Error reading value of --aead")?
-            .parse()
-            .context(
-                "Invalid AEAD selected! Use \"dexios list aead\" to see all possible values.",
-            )?
+pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Algorithm {
+    if sub_matches.is_present("aes") {
+        Algorithm::Aes256Gcm
     } else {
-        1
-    };
-
-    let algorithm = if provided_aead < 1 || provided_aead > ALGORITHMS.len() {
-        return Err(anyhow::anyhow!(
-            "Invalid AEAD selected! Use \"dexios list aead\" to see all possible values."
-        ));
-    } else {
-        ALGORITHMS[provided_aead - 1] // -1 to account for indexing starting at 0
-    };
-
-    Ok(algorithm)
+        Algorithm::XChaCha20Poly1305
+    }
 }
 
 pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
@@ -115,18 +97,18 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
             value
         } else {
             warn!("Unable to read number of passes provided - using the default.");
-            2
+            1
         }
     } else {
         warn!("Number of passes not provided - using the default.");
-        2
+        1
     };
 
     Ok(passes)
 }
 
 pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams)> {
-    let key = Key::init(sub_matches, KeyParams::default(), "keyfile")?;
+    let key = Key::init(sub_matches, &KeyParams::default(), "keyfile")?;
 
     let hash_mode = if sub_matches.is_present("hash") {
         //specify to emit hash after operation
@@ -208,7 +190,7 @@ pub fn forcemode(sub_matches: &ArgMatches) -> ForceMode {
 pub fn key_manipulation_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
     let key_old = Key::init(
         sub_matches,
-        KeyParams {
+        &KeyParams {
             user: true,
             env: false,
             autogenerate: false,
@@ -219,7 +201,7 @@ pub fn key_manipulation_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
 
     let key_new = Key::init(
         sub_matches,
-        KeyParams {
+        &KeyParams {
             user: true,
             env: false,
             autogenerate: true,

@@ -1,11 +1,10 @@
 use std::{
     cell::RefCell,
     fs::{File, OpenOptions},
-    process::exit,
 };
 
-use super::prompt::{get_answer, overwrite_check};
-use crate::{global::states::ForceMode, warn};
+use super::prompt::overwrite_check;
+use crate::global::states::ForceMode;
 use anyhow::{Context, Result};
 use dexios_core::header::HashingAlgorithm;
 use dexios_core::header::{Header, HeaderVersion};
@@ -20,7 +19,7 @@ pub fn details(input: &str) -> Result<()> {
 
     if header_result.is_err() {
         return Err(anyhow::anyhow!(
-            "This does not seem like a valid Dexios header, exiting"
+            "This does not seem like a valid Dexios header"
         ));
     }
 
@@ -66,7 +65,6 @@ pub fn details(input: &str) -> Result<()> {
 // it's used for extracting an encrypted file's header for backups and such
 // it implements a check to ensure the header is valid
 pub fn dump(input: &str, output: &str, force: ForceMode) -> Result<()> {
-    warn!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
     let stor = std::sync::Arc::new(domain::storage::FileStorage);
     let input_file = stor.read_file(input)?;
 
@@ -95,17 +93,7 @@ pub fn dump(input: &str, output: &str, force: ForceMode) -> Result<()> {
 // this can be used for restoring a dumped header to a file that had it's header stripped
 // this does not work for files encrypted *with* a detached header
 // it implements a check to ensure the header is valid before restoring to a file
-pub fn restore(input: &str, output: &str, force: ForceMode) -> Result<()> {
-    warn!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
-    let prompt = format!(
-        "Are you sure you'd like to restore the header in {} to {}?",
-        input, output
-    );
-
-    if !get_answer(&prompt, false, force == ForceMode::Force)? {
-        exit(0);
-    }
-
+pub fn restore(input: &str, output: &str) -> Result<()> {
     let stor = std::sync::Arc::new(domain::storage::FileStorage);
 
     let input_file = stor.read_file(input)?;
@@ -132,19 +120,7 @@ pub fn restore(input: &str, output: &str, force: ForceMode) -> Result<()> {
 // the header must be intact for this to work, as the length varies between the versions
 // it can be useful for storing the header separate from the file, to make an attacker's life that little bit harder
 // it implements a check to ensure the header is valid before stripping
-pub fn strip(input: &str, force: ForceMode) -> Result<()> {
-    warn!("THIS FEATURE IS FOR ADVANCED USERS ONLY AND MAY RESULT IN A LOSS OF DATA - PROCEED WITH CAUTION");
-
-    let prompt = format!("Are you sure you'd like to wipe the header for {}?", input);
-    if !get_answer(&prompt, false, force == ForceMode::Force)? {
-        exit(0);
-    }
-
-    let prompt = "This can be destructive! Make sure you dumped the header first. Would you like to continue?";
-    if !get_answer(prompt, false, force == ForceMode::Force)? {
-        exit(0);
-    }
-
+pub fn strip(input: &str) -> Result<()> {
     let input_file = RefCell::new(
         OpenOptions::new()
             .read(true)

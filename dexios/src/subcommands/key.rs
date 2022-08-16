@@ -33,18 +33,14 @@ pub fn add(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
         .rewind()
         .context("Unable to rewind the reader")?;
 
-    match key_old {
-        Key::User => info!("Please enter your old key below"),
-        Key::Keyfile(_) => info!("Reading your old keyfile"),
-        _ => (),
+    if key_old == &Key::User {
+        info!("Please enter your old key below");
     }
+
     let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
 
-    match key_new {
-        Key::Generate => info!("Generating a new key"),
-        Key::User => info!("Please enter your new key below"),
-        Key::Keyfile(_) => info!("Reading your new keyfile"),
-        Key::Env => (),
+    if key_new == &Key::User {
+        info!("Please enter your new key below");
     }
 
     let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
@@ -81,17 +77,14 @@ pub fn change(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
         .rewind()
         .context("Unable to rewind the reader")?;
 
-    match key_old {
-        Key::User => info!("Please enter your old key below"),
-        Key::Keyfile(_) => info!("Reading your old keyfile"),
-        _ => (),
+    if key_old == &Key::User {
+        info!("Please enter your old key below");
     }
+
     let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
-    match key_new {
-        Key::Generate => info!("Generating a new key"),
-        Key::User => info!("Please enter your new key below"),
-        Key::Keyfile(_) => info!("Reading your new keyfile"),
-        Key::Env => (),
+
+    if key_new == &Key::User {
+        info!("Please enter your new key below");
     }
 
     let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
@@ -128,11 +121,10 @@ pub fn delete(input: &str, key_old: &Key) -> Result<()> {
         .rewind()
         .context("Unable to rewind the reader")?;
 
-    match key_old {
-        Key::User => info!("Please enter your old key below"),
-        Key::Keyfile(_) => info!("Reading your old keyfile"),
-        _ => (),
+    if key_old == &Key::User {
+        info!("Please enter your old key below");
     }
+
     let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
 
     domain::key::delete::execute(domain::key::delete::Request {

@@ -1,10 +1,9 @@
 #![deny(clippy::all)]
 
 use anyhow::Result;
+use global::parameters::forcemode;
 use global::parameters::get_param;
 use global::parameters::key_manipulation_params;
-use global::parameters::forcemode;
-use subcommands::list::show_values;
 
 use crate::global::states::KeyParams;
 
@@ -46,9 +45,6 @@ fn main() -> Result<()> {
 
             subcommands::hashing::hash_stream(&files)?;
         }
-        Some(("list", sub_matches)) => {
-            show_values(&get_param("input", sub_matches)?)?;
-        }
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("dump") => {
                 let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
@@ -62,19 +58,16 @@ fn main() -> Result<()> {
             }
             Some("restore") => {
                 let sub_matches_restore = sub_matches.subcommand_matches("restore").unwrap();
-                let force = forcemode(sub_matches_restore);
 
                 subcommands::header::restore(
                     &get_param("input", sub_matches_restore)?,
                     &get_param("output", sub_matches_restore)?,
-                    force,
                 )?;
             }
             Some("strip") => {
                 let sub_matches_strip = sub_matches.subcommand_matches("strip").unwrap();
-                let force = forcemode(sub_matches_strip);
 
-                subcommands::header::strip(&get_param("input", sub_matches_strip)?, force)?;
+                subcommands::header::strip(&get_param("input", sub_matches_strip)?)?;
             }
             Some("details") => {
                 let sub_matches_details = sub_matches.subcommand_matches("details").unwrap();
@@ -110,12 +103,9 @@ fn main() -> Result<()> {
                 use crate::global::states::Key;
 
                 let sub_matches_del_key = sub_matches.subcommand_matches("del").unwrap();
-                let key = Key::init(sub_matches_del_key, KeyParams::default(), "keyfile")?;
+                let key = Key::init(sub_matches_del_key, &KeyParams::default(), "keyfile")?;
 
-                subcommands::key::delete(
-                    &get_param("input", sub_matches_del_key)?,
-                    &key,
-                )?;
+                subcommands::key::delete(&get_param("input", sub_matches_del_key)?, &key)?;
             }
             _ => (),
         },

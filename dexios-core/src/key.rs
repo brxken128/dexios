@@ -11,6 +11,7 @@
 //! let key = argon2id_hash(raw_key, &salt, &HeaderVersion::V3).unwrap();
 //! ```
 use anyhow::Result;
+use rand::{prelude::StdRng, Rng, SeedableRng};
 use zeroize::Zeroize;
 
 use crate::cipher::Ciphers;
@@ -183,4 +184,39 @@ pub fn vec_to_arr<const N: usize>(mut master_key_vec: Vec<u8>) -> [u8; N] {
     master_key[..len].copy_from_slice(&master_key_vec[..len]);
     master_key_vec.zeroize();
     master_key
+}
+
+// this autogenerates a passphrase, which can be selected with `--auto`
+// it reads the EFF large list of words, and puts them all into a vec
+// 3 words are then chosen at random, and 6 digits are also
+// the 3 words and the digits are separated with -
+// the words are also capitalised
+// this passphrase should provide adequate protection, while not being too hard to remember
+#[must_use]
+pub fn generate_passphrase() -> Protected<String> {
+    let collection = include_str!("wordlist.lst");
+    let words = collection.lines().collect::<Vec<_>>();
+
+    let mut passphrase = String::new();
+
+    for _ in 0..3 {
+        let index = StdRng::from_entropy().gen_range(0..=words.len());
+        let word = words[index];
+        let capitalized_word = word
+            .char_indices()
+            .map(|(i, ch)| match i {
+                0 => ch.to_ascii_uppercase(),
+                _ => ch,
+            })
+            .collect::<String>();
+        passphrase.push_str(&capitalized_word);
+        passphrase.push('-');
+    }
+
+    for _ in 0..6 {
+        let number: i64 = StdRng::from_entropy().gen_range(0..=9);
+        passphrase.push_str(&number.to_string());
+    }
+
+    Protected::new(passphrase)
 }

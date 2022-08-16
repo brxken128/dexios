@@ -154,7 +154,7 @@ pub fn execute<RW: Read + Write + Seek>(
         writer: tmp_file
             .try_writer()
             .expect("We sure that file in write mode"),
-        passes: 2,
+        passes: 1,
     })
     .ok();
 

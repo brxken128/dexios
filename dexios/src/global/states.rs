@@ -7,11 +7,9 @@ use anyhow::{Context, Result};
 use clap::ArgMatches;
 use dexios_core::protected::Protected;
 
-use crate::{
-    file::get_bytes,
-    warn,
-};
-use super::key::{generate_passphrase, get_password};
+use super::key::get_password;
+use crate::{file::get_bytes, warn};
+use dexios_core::key::generate_passphrase;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {
@@ -59,6 +57,7 @@ pub enum ForceMode {
     Prompt,
 }
 
+#[derive(PartialEq, Eq)]
 pub enum Key {
     Keyfile(String),
     Env,
@@ -120,7 +119,7 @@ impl Key {
 
     pub fn init(
         sub_matches: &ArgMatches,
-        params: KeyParams,
+        params: &KeyParams,
         keyfile_descriptor: &str,
     ) -> Result<Self> {
         let key = if sub_matches.is_present(keyfile_descriptor) && params.keyfile {
@@ -149,6 +148,7 @@ impl Key {
     }
 }
 
+#[allow(clippy::struct_excessive_bools)]
 pub struct KeyParams {
     pub user: bool,
     pub env: bool,

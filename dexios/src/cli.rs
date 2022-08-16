@@ -36,9 +36,9 @@ pub fn get_matches() -> clap::ArgMatches {
                 .value_name("# of passes")
                 .takes_value(true)
                 .require_equals(true)
-                .help("Securely erase the input file once complete (default is 2 passes)")
+                .help("Securely erase the input file once complete (default is 1 pass)")
                 .min_values(0)
-                .default_missing_value("2"),
+                .default_missing_value("1"),
         )
         .arg(
             Arg::new("hash")
@@ -69,12 +69,10 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("Force all actions"),
         )
         .arg(
-            Arg::new("aead")
-                .short('a')
-                .long("aead")
-                .value_name("aead to use for encryption")
-                .takes_value(true)
-                .help("select an AEAD (\"dexios list aead\" to see all possible values)"),
+            Arg::new("aes")
+                .long("aes")
+                .takes_value(false)
+                .help("Use AES-256-GCM for encryption"),
         );
 
     let decrypt = Command::new("decrypt")
@@ -115,9 +113,9 @@ pub fn get_matches() -> clap::ArgMatches {
                 .value_name("# of passes")
                 .takes_value(true)
                 .require_equals(true)
-                .help("Securely erase the input file once complete (default is 2 passes)")
+                .help("Securely erase the input file once complete (default is 1 pass)")
                 .min_values(0)
-                .default_missing_value("2"),
+                .default_missing_value("1"),
         )
         .arg(
             Arg::new("hash")
@@ -158,9 +156,9 @@ pub fn get_matches() -> clap::ArgMatches {
                         .value_name("# of passes")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("Specify the number of passes (default is 2)")
+                        .help("Specify the number of passes (default is 1)")
                         .min_values(0)
-                        .default_missing_value("2"),
+                        .default_missing_value("1"),
                 ),
         )
         .subcommand(
@@ -173,18 +171,6 @@ pub fn get_matches() -> clap::ArgMatches {
                     .min_values(1)
                     .multiple_occurrences(true),
             ),
-        )
-        .subcommand(
-            Command::new("list")
-                .short_flag('l')
-                .about("List Dexios values")
-                .arg(
-                    Arg::new("input")
-                        .value_name("input")
-                        .takes_value(true)
-                        .required(true)
-                        .help("The item to list"),
-                ),
         )
         .subcommand(
             Command::new("pack")
@@ -269,12 +255,10 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("Force all actions"),
             )
             .arg(
-                Arg::new("aead")
-                    .short('a')
-                    .long("aead")
-                    .value_name("aead to use for encryption")
-                    .takes_value(true)
-                    .help("select an AEAD (\"dexios list aead\" to see all possible values)"),
+                Arg::new("aes")
+                    .long("aes")
+                    .takes_value(false)
+                    .help("Use AES-256-GCM for encryption"),
             )
         )
         .subcommand(
@@ -316,9 +300,9 @@ pub fn get_matches() -> clap::ArgMatches {
                         .value_name("# of passes")
                         .takes_value(true)
                         .require_equals(true)
-                        .help("Securely erase the input file once complete (default is 2 passes)")
+                        .help("Securely erase the input file once complete (default is 1 pass)")
                         .min_values(0)
-                        .default_missing_value("2"),
+                        .default_missing_value("1"),
                 )
                 .arg(
                     Arg::new("verbose")
@@ -483,13 +467,6 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(true)
                                 .required(true)
                                 .help("The encrypted file"),
-                        )
-                        .arg(
-                            Arg::new("force")
-                                .short('f')
-                                .long("force")
-                                .takes_value(false)
-                                .help("Force all actions"),
                         ),
                 )
                 .subcommand(
@@ -502,13 +479,6 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(true)
                                 .required(true)
                                 .help("The encrypted file"),
-                        )
-                        .arg(
-                            Arg::new("force")
-                                .short('f')
-                                .long("force")
-                                .takes_value(false)
-                                .help("Force all actions"),
                         ),
                 )
                 .subcommand(

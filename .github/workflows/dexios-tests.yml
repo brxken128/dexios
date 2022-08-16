@@ -53,13 +53,13 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt in stream mode (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile --aead 1 100MB.bin 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile 100MB.bin 100MB.enc
     - name: Decrypt in stream mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHfk keyfile 100MB.enc 100MB.bin
     - name: Generate test file
       run: dd if=/dev/urandom of=100MB.bin bs=1M count=100
     - name: Encrypt in stream mode (AES-256-GCM)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile --aead 2 100MB.bin 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile --aes 100MB.bin 100MB.enc
     - name: Decrypt in stream mode (AES-256-GCM)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHfk keyfile 100MB.enc 100MB.bin
   header-tests:
@@ -81,15 +81,15 @@ jobs:
     - name: Encrypt in stream mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile 100MB.bin 100MB.enc
     - name: Dump Header
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header dump -f 100MB.enc 100MB.enc.header
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header dump 100MB.enc 100MB.enc.header
     - name: Strip Header
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header strip -f 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header strip 100MB.enc
     - name: Restore Header
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header restore -f 100MB.enc.header 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header restore 100MB.enc.header 100MB.enc
     - name: Decrypt in stream mode (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHfk keyfile 100MB.enc 100MB.bin
     - name: Strip Header
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header strip -f 100MB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios header strip 100MB.enc
     - name: Decrypt in stream mode with detached header (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHfk keyfile --header 100MB.enc.header 100MB.enc 100MB.bin
     - name: Encrypt in stream mode to detached header (XChaCha20-Poly1305)
@@ -151,13 +151,13 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt 1GB file (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile --aead 1 1GB.bin 1GB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile 1GB.bin 1GB.enc
     - name: Decrypt 1GB file (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHfk keyfile 1GB.enc 1GB.bin
     - name: Generate test file
       run: dd if=/dev/urandom of=1GB.bin bs=1M count=1000
     - name: Encrypt 1GB file (AES-256-GCM)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile --aead 2 1GB.bin 1GB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile --aes 1GB.bin 1GB.enc
     - name: Decrypt 1GB file (AES-256-GCM)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHfk keyfile 1GB.enc 1GB.bin
   small-file:
@@ -176,13 +176,13 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Encrypt 1KB file (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile --aead 1 1KB.bin 1KB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile 1KB.bin 1KB.enc
     - name: Decrypt 1KB file (XChaCha20-Poly1305)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHfk keyfile 1KB.enc 1KB.bin
     - name: Generate test file
       run: dd if=/dev/urandom of=1KB.bin bs=1 count=1024
     - name: Encrypt 1KB file (AES-256-GCM)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile --aead 2 1KB.bin 1KB.enc
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -eHfk keyfile --aes 1KB.bin 1KB.enc
     - name: Decrypt 1KB file (AES-256-GCM)
       run: /home/runner/work/dexios/dexios/target/release/dexios/dexios -dHfk keyfile 1KB.enc 1KB.bin
   pack:
@@ -204,7 +204,7 @@ jobs:
     - name: Generate keyfile
       run: dd if=/dev/urandom of=keyfile bs=1 count=4096
     - name: Pack+Encrypt test directory (XChaCha20-Poly1305)
-      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack -fk keyfile --aead 1 test/ output.zip
+      run: /home/runner/work/dexios/dexios/target/release/dexios/dexios pack -fk keyfile test/ output.zip
     - name: Remove Directory
       run: rm -rf test/
     - name: Decrypt+Unpack archive (XChaCha20-Poly1305)

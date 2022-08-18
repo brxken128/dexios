@@ -24,7 +24,7 @@ rand = "0.8.5"
 domain = { package = "dexios-domain", version = "0", path = "../dexios-domain" }
 dexios-core = { path = "../dexios-core", version = "1.1.1" }
 
-clap = { version = "3.2.15", features = ["cargo"] }
+clap = { version = "3.2.17", features = ["cargo"] }
 anyhow = "1.0.62"
 
 zip = { version = "0.6.2", default-features = false, features = ["zstd"] }

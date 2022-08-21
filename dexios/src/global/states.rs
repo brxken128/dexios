@@ -1,7 +1,6 @@
 // this file contains enums found all around the codebase
 // they act as toggles for certain features, so they can be
 // enabled if selected by the user
-// some enums are used purely by dexios to handle things (e.g. detached header files)
 
 use anyhow::{Context, Result};
 use clap::ArgMatches;

@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use crate::storage::{self, Storage};
 use crate::{decrypt, overwrite};
-use dexios_core::protected::Protected;
+use core::protected::Protected;
 
 #[derive(Debug)]
 pub enum Error {

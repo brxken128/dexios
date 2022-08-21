@@ -1,10 +1,10 @@
-use dexios_core::key::vec_to_arr;
-use dexios_core::primitives::Algorithm;
-use dexios_core::primitives::ENCRYPTED_MASTER_KEY_LEN;
-use dexios_core::primitives::MASTER_KEY_LEN;
-use dexios_core::protected::Protected;
-use dexios_core::Zeroize;
-use dexios_core::{cipher::Ciphers, header::Keyslot};
+use core::key::vec_to_arr;
+use core::primitives::Algorithm;
+use core::primitives::ENCRYPTED_MASTER_KEY_LEN;
+use core::primitives::MASTER_KEY_LEN;
+use core::protected::Protected;
+use core::Zeroize;
+use core::{cipher::Ciphers, header::Keyslot};
 
 pub mod add;
 pub mod change;

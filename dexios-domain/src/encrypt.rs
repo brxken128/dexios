@@ -1,11 +1,11 @@
 use std::cell::RefCell;
 use std::io::{Read, Seek, Write};
 
-use dexios_core::cipher::Ciphers;
-use dexios_core::header::{HashingAlgorithm, Header, HeaderType, Keyslot};
-use dexios_core::primitives::{Mode, ENCRYPTED_MASTER_KEY_LEN};
-use dexios_core::protected::Protected;
-use dexios_core::stream::EncryptionStreams;
+use core::cipher::Ciphers;
+use core::header::{HashingAlgorithm, Header, HeaderType, Keyslot};
+use core::primitives::{Mode, ENCRYPTED_MASTER_KEY_LEN};
+use core::protected::Protected;
+use core::stream::EncryptionStreams;
 
 use crate::utils::{gen_master_key, gen_nonce, gen_salt};
 
@@ -153,8 +153,8 @@ where
 pub mod tests {
     use std::io::Cursor;
 
-    use dexios_core::header::HeaderVersion;
-    use dexios_core::primitives::Algorithm;
+    use core::header::HeaderVersion;
+    use core::primitives::Algorithm;
 
     use super::*;
 

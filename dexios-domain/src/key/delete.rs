@@ -1,6 +1,6 @@
 use super::Error;
-use dexios_core::header::{Header, HeaderVersion};
-use dexios_core::protected::Protected;
+use core::header::{Header, HeaderVersion};
+use core::protected::Protected;
 use std::cell::RefCell;
 use std::io::Seek;
 use std::io::{Read, Write};
@@ -17,7 +17,7 @@ pub fn execute<RW>(req: Request<'_, RW>) -> Result<(), Error>
 where
     RW: Read + Write + Seek,
 {
-    let (header, _) = dexios_core::header::Header::deserialize(&mut *req.handle.borrow_mut())
+    let (header, _) = core::header::Header::deserialize(&mut *req.handle.borrow_mut())
         .map_err(|_| Error::HeaderDeserialize)?;
 
     if header.header_type.version < HeaderVersion::V5 {

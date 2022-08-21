@@ -1,4 +1,4 @@
-use dexios_core::primitives::BLOCK_SIZE;
+use core::primitives::BLOCK_SIZE;
 use std::fmt;
 use std::{
     cell::RefCell,

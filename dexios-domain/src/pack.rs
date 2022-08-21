@@ -2,9 +2,9 @@ use std::cell::RefCell;
 use std::io::{BufWriter, Read, Seek, Write};
 use std::sync::Arc;
 
-use dexios_core::header::{HashingAlgorithm, HeaderType};
-use dexios_core::primitives::BLOCK_SIZE;
-use dexios_core::protected::Protected;
+use core::header::{HashingAlgorithm, HeaderType};
+use core::primitives::BLOCK_SIZE;
+use core::protected::Protected;
 use zip::write::FileOptions;
 
 use crate::storage::Storage;
@@ -131,8 +131,8 @@ mod tests {
     use super::*;
     use std::io::Read;
 
-    use dexios_core::header::{HeaderType, HeaderVersion};
-    use dexios_core::primitives::{Algorithm, Mode};
+    use core::header::{HeaderType, HeaderVersion};
+    use core::primitives::{Algorithm, Mode};
 
     use crate::encrypt::tests::PASSWORD;
     use crate::storage::{InMemoryStorage, Storage};

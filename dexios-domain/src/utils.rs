@@ -2,8 +2,8 @@
 
 #[cfg(test)]
 mod test {
-    use dexios_core::primitives::{get_nonce_len, Algorithm, Mode, MASTER_KEY_LEN, SALT_LEN};
-    use dexios_core::protected::Protected;
+    use core::primitives::{get_nonce_len, Algorithm, Mode, MASTER_KEY_LEN, SALT_LEN};
+    use core::protected::Protected;
     use rand::{prelude::StdRng, RngCore, SeedableRng};
 
     const SALT_SEED: u64 = 123_456;
@@ -49,8 +49,8 @@ pub use test::gen_nonce;
 pub use test::gen_salt;
 
 #[cfg(not(test))]
-pub use dexios_core::primitives::gen_master_key;
+pub use core::primitives::gen_master_key;
 #[cfg(not(test))]
-pub use dexios_core::primitives::gen_nonce;
+pub use core::primitives::gen_nonce;
 #[cfg(not(test))]
-pub use dexios_core::primitives::gen_salt;
+pub use core::primitives::gen_salt;

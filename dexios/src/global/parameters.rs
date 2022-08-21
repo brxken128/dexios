@@ -29,6 +29,7 @@ pub fn get_param(name: &str, sub_matches: &ArgMatches) -> Result<String> {
     Ok(value)
 }
 
+// the main parameter handler for encrypt/decrypt
 pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
     let key = Key::init(sub_matches, &KeyParams::default(), "keyfile")?;
 
@@ -79,7 +80,8 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
     })
 }
 
-pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Algorithm {
+// gets the algorithm, primarily for encrypt functions
+pub fn algorithm(sub_matches: &ArgMatches) -> Algorithm {
     if sub_matches.is_present("aes") {
         Algorithm::Aes256Gcm
     } else {
@@ -87,7 +89,7 @@ pub fn encrypt_additional_params(sub_matches: &ArgMatches) -> Algorithm {
     }
 }
 
-pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
+pub fn erase_params(sub_matches: &ArgMatches) -> Result<(i32, ForceMode)> {
     let passes = if sub_matches.is_present("passes") {
         let result = sub_matches
             .value_of("passes")
@@ -104,7 +106,9 @@ pub fn erase_params(sub_matches: &ArgMatches) -> Result<i32> {
         1
     };
 
-    Ok(passes)
+    let force = forcemode(sub_matches);
+
+    Ok((passes, force))
 }
 
 pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams)> {

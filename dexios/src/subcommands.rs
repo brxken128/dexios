@@ -5,7 +5,7 @@ use clap::ArgMatches;
 // it gets params and sends them to the appropriate functions
 
 use crate::global::{parameters::{
-    encrypt_additional_params, erase_params, get_param, get_params, pack_params, parameter_handler, forcemode, key_manipulation_params,
+    algorithm, erase_params, get_param, get_params, pack_params, parameter_handler, forcemode, key_manipulation_params,
 }, states::{KeyParams, Key}};
 
 pub mod decrypt;
@@ -20,7 +20,7 @@ pub mod unpack;
 
 pub fn encrypt(sub_matches: &ArgMatches) -> Result<()> {
     let params = parameter_handler(sub_matches)?;
-    let algorithm = encrypt_additional_params(sub_matches);
+    let algorithm = algorithm(sub_matches);
 
     // stream mode is the only mode to encrypt (v8.5.0+)
     encrypt::stream_mode(
@@ -43,15 +43,14 @@ pub fn decrypt(sub_matches: &ArgMatches) -> Result<()> {
 }
 
 pub fn erase(sub_matches: &ArgMatches) -> Result<()> {
-    let passes = erase_params(sub_matches)?;
-    let force = forcemode(sub_matches);
+    let (passes, force) = erase_params(sub_matches)?;
 
     erase::secure_erase(&get_param("input", sub_matches)?, passes, &force)
 }
 
 pub fn pack(sub_matches: &ArgMatches) -> Result<()> {
     let (crypto_params, pack_params) = pack_params(sub_matches)?;
-    let algorithm = encrypt_additional_params(sub_matches);
+    let algorithm = algorithm(sub_matches);
 
     pack::execute(&pack::Request {
         input_file: &get_params("input", sub_matches)?,

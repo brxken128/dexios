@@ -35,14 +35,7 @@ fn main() -> Result<()> {
             subcommands::unpack(sub_matches)?;
         }
         Some(("hash", sub_matches)) => {
-            let files: Vec<String> = if sub_matches.is_present("input") {
-                let list: Vec<&str> = sub_matches.values_of("input").unwrap().collect();
-                list.iter().map(std::string::ToString::to_string).collect()
-            } else {
-                Vec::new()
-            };
-
-            subcommands::hashing::hash_stream(&files)?;
+            subcommands::hash_stream(sub_matches)?;
         }
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("dump") => {

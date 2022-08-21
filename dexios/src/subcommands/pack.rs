@@ -2,8 +2,8 @@ use std::process::exit;
 use std::sync::Arc;
 
 use anyhow::Result;
-use dexios_core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
-use dexios_core::primitives::{Algorithm, Mode};
+use core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
+use core::primitives::{Algorithm, Mode};
 
 use crate::global::states::{HeaderLocation, PasswordState};
 use crate::{

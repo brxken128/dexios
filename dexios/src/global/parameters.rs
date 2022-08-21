@@ -7,7 +7,7 @@ use crate::global::structs::PackParams;
 use crate::warn;
 use anyhow::{Context, Result};
 use clap::ArgMatches;
-use dexios_core::primitives::Algorithm;
+use core::primitives::Algorithm;
 
 use super::states::{Compression, DirectoryMode, Key, KeyParams, PrintMode};
 

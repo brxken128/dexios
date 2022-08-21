@@ -4,11 +4,11 @@
 
 use anyhow::{Context, Result};
 use clap::ArgMatches;
-use dexios_core::protected::Protected;
-use dexios_core::Zeroize;
+use core::protected::Protected;
+use core::Zeroize;
 
 use crate::warn;
-use dexios_core::key::generate_passphrase;
+use core::key::generate_passphrase;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {

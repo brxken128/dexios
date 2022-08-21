@@ -6,8 +6,8 @@ use crate::{global::states::ForceMode, question, warn};
 // this handles user-interactivity, specifically getting a "yes" or "no" answer from the user
 // it requires the question itself, if the default is true/false
 // if force is enabled then it will just return the `default`
-pub fn get_answer(prompt: &str, default: bool, force: bool) -> Result<bool> {
-    if force {
+pub fn get_answer(prompt: &str, default: bool, force: &ForceMode) -> Result<bool> {
+    if force == &ForceMode::Force {
         return Ok(true);
     }
 
@@ -47,7 +47,7 @@ pub fn get_answer(prompt: &str, default: bool, force: bool) -> Result<bool> {
 pub fn overwrite_check(name: &str, force: ForceMode) -> Result<bool> {
     let answer = if std::fs::metadata(name).is_ok() {
         let prompt = format!("{} already exists, would you like to overwrite?", name);
-        get_answer(&prompt, true, force == ForceMode::Force)?
+        get_answer(&prompt, true, &force)?
     } else {
         true
     };

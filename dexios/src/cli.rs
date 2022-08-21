@@ -151,6 +151,13 @@ pub fn get_matches() -> clap::ArgMatches {
                         .help("The file to erase"),
                 )
                 .arg(
+                    Arg::new("force")
+                        .short('f')
+                        .long("force")
+                        .takes_value(false)
+                        .help("Force all actions"),
+                )
+                .arg(
                     Arg::new("passes")
                         .long("passes")
                         .value_name("# of passes")

@@ -57,7 +57,7 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
     }
 
     if let EraseMode::EraseFile(passes) = params.erase {
-        super::erase::secure_erase(input, passes)?;
+        super::erase::secure_erase(input, passes, &params.force)?;
     }
 
     Ok(())

@@ -6,7 +6,7 @@ use anyhow::Result;
 use domain::storage::Storage;
 
 use crate::global::{
-    states::{ForceMode, HeaderLocation, PasswordState, PrintMode},
+    states::{HeaderLocation, PasswordState, PrintMode},
     structs::CryptoParams,
 };
 use crate::{info, warn};
@@ -55,7 +55,7 @@ pub fn unpack(
                     let answer = get_answer(
                         &format!("{} already exists, would you like to overwrite?", file_name),
                         true,
-                        params.force == ForceMode::Force,
+                        &params.force,
                     )
                     .expect("Unable to read answer");
                     if !answer {

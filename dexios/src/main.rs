@@ -8,7 +8,6 @@ use global::parameters::key_manipulation_params;
 use crate::global::states::KeyParams;
 
 mod cli;
-mod file;
 mod global;
 mod subcommands;
 

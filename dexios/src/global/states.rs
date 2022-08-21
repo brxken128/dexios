@@ -8,7 +8,7 @@ use clap::ArgMatches;
 use dexios_core::protected::Protected;
 
 use super::key::get_password;
-use crate::{file::get_bytes, warn};
+use crate::warn;
 use dexios_core::key::generate_passphrase;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -72,6 +72,14 @@ pub enum PasswordState {
 }
 
 impl Key {
+    fn get_bytes<R: std::io::Read>(reader: &mut R) -> Result<Protected<Vec<u8>>> {
+        let mut data = Vec::new();
+        reader
+            .read_to_end(&mut data)
+            .context("Unable to read data")?;
+        Ok(Protected::new(data))
+    }
+    
     // this handles getting the secret, and returning it
     // it relies on `parameters.rs`' handling and logic to determine which route to get the key
     // it can handle keyfiles, env variables, automatically generating and letting the user enter a key
@@ -80,7 +88,7 @@ impl Key {
         let secret = match self {
             Key::Keyfile(path) if path == "-" => {
                 let mut reader = std::io::stdin();
-                let secret = get_bytes(&mut reader)?;
+                let secret = Self::get_bytes(&mut reader)?;
                 if secret.is_empty() {
                     return Err(anyhow::anyhow!("STDIN is empty"));
                 }
@@ -89,7 +97,7 @@ impl Key {
             Key::Keyfile(path) => {
                 let mut reader = std::fs::File::open(path)
                     .with_context(|| format!("Unable to read file: {}", path))?;
-                let secret = get_bytes(&mut reader)?;
+                let secret = Self::get_bytes(&mut reader)?;
                 if secret.is_empty() {
                     return Err(anyhow::anyhow!(format!("Keyfile '{}' is empty", path)));
                 }

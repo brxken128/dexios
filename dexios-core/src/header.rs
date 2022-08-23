@@ -102,7 +102,10 @@ pub struct Header {
     pub keyslots: Option<Vec<Keyslot>>,
 }
 
-#[derive(Clone)]
+pub const ARGON2ID_LATEST: i32 = 4;
+pub const BLAKE3BALLOON_LATEST: i32 = 5;
+
+#[derive(Clone, Copy, PartialEq)]
 pub enum HashingAlgorithm {
     Argon2id(i32),
     Blake3Balloon(i32),

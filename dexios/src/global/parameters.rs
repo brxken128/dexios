@@ -7,9 +7,11 @@ use crate::global::structs::PackParams;
 use crate::warn;
 use anyhow::{Context, Result};
 use clap::ArgMatches;
+use core::header::{HashingAlgorithm, ARGON2ID_LATEST, BLAKE3BALLOON_LATEST};
 use core::primitives::Algorithm;
 
 use super::states::{Compression, DirectoryMode, Key, KeyParams, PrintMode};
+use super::structs::KeyManipulationParams;
 
 pub fn get_params(name: &str, sub_matches: &ArgMatches) -> Result<Vec<String>> {
     let values = sub_matches
@@ -71,13 +73,24 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
         HeaderLocation::Embedded
     };
 
+    let hashing_algorithm = hashing_algorithm(sub_matches);
+
     Ok(CryptoParams {
         hash_mode,
         force,
         erase,
         key,
         header_location,
+        hashing_algorithm,
     })
+}
+
+pub fn hashing_algorithm(sub_matches: &ArgMatches) -> HashingAlgorithm {
+    if sub_matches.is_present("argon") {
+        HashingAlgorithm::Argon2id(ARGON2ID_LATEST)
+    } else {
+        HashingAlgorithm::Blake3Balloon(BLAKE3BALLOON_LATEST)
+    }
 }
 
 // gets the algorithm, primarily for encrypt functions
@@ -137,12 +150,15 @@ pub fn pack_params(sub_matches: &ArgMatches) -> Result<(CryptoParams, PackParams
         HeaderLocation::Embedded
     };
 
+    let hashing_algorithm = hashing_algorithm(sub_matches);
+
     let crypto_params = CryptoParams {
         hash_mode,
         force,
         erase,
         key,
         header_location,
+        hashing_algorithm,
     };
 
     let print_mode = if sub_matches.is_present("verbose") {
@@ -191,7 +207,7 @@ pub fn forcemode(sub_matches: &ArgMatches) -> ForceMode {
     }
 }
 
-pub fn key_manipulation_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
+pub fn key_manipulation_params(sub_matches: &ArgMatches) -> Result<KeyManipulationParams> {
     let key_old = Key::init(
         sub_matches,
         &KeyParams {
@@ -214,5 +230,7 @@ pub fn key_manipulation_params(sub_matches: &ArgMatches) -> Result<(Key, Key)> {
         "keyfile-new",
     )?;
 
-    Ok((key_old, key_new))
+    let hashing_algorithm = hashing_algorithm(sub_matches);
+
+    Ok(KeyManipulationParams { key_old, key_new, hashing_algorithm })
 }

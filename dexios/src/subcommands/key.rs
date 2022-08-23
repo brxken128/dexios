@@ -1,8 +1,8 @@
 // TODO(brxken128): give this file a better name
 use crate::global::states::Key;
 use crate::global::states::PasswordState;
+use crate::global::structs::KeyManipulationParams;
 use anyhow::{Context, Result};
-use core::header::HashingAlgorithm;
 use core::header::Header;
 use core::header::HeaderVersion;
 use std::cell::RefCell;
@@ -11,7 +11,7 @@ use std::io::Seek;
 
 use crate::info;
 
-pub fn add(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
+pub fn add(input: &str, params: &KeyManipulationParams) -> Result<()> {
     let input_file = RefCell::new(
         OpenOptions::new()
             .read(true)
@@ -33,21 +33,21 @@ pub fn add(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
         .rewind()
         .context("Unable to rewind the reader")?;
 
-    if key_old == &Key::User {
+    if params.key_old == Key::User {
         info!("Please enter your old key below");
     }
 
-    let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
+    let raw_key_old = params.key_old.get_secret(&PasswordState::Direct)?;
 
-    if key_new == &Key::User {
+    if params.key_new == Key::User {
         info!("Please enter your new key below");
     }
 
-    let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
+    let raw_key_new = params.key_new.get_secret(&PasswordState::Validate)?;
 
     domain::key::add::execute(domain::key::add::Request {
         handle: &input_file,
-        hash_algorithm: HashingAlgorithm::Blake3Balloon(5),
+        hash_algorithm: params.hashing_algorithm,
         raw_key_old,
         raw_key_new,
     })?;
@@ -55,7 +55,7 @@ pub fn add(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
     Ok(())
 }
 
-pub fn change(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
+pub fn change(input: &str, params: &KeyManipulationParams) -> Result<()> {
     let input_file = RefCell::new(
         OpenOptions::new()
             .read(true)
@@ -77,21 +77,21 @@ pub fn change(input: &str, key_old: &Key, key_new: &Key) -> Result<()> {
         .rewind()
         .context("Unable to rewind the reader")?;
 
-    if key_old == &Key::User {
+    if params.key_old == Key::User {
         info!("Please enter your old key below");
     }
 
-    let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
+    let raw_key_old = params.key_old.get_secret(&PasswordState::Direct)?;
 
-    if key_new == &Key::User {
+    if params.key_new == Key::User {
         info!("Please enter your new key below");
     }
 
-    let raw_key_new = key_new.get_secret(&PasswordState::Validate)?;
+    let raw_key_new = params.key_new.get_secret(&PasswordState::Validate)?;
 
     domain::key::change::execute(domain::key::change::Request {
         handle: &input_file,
-        hash_algorithm: HashingAlgorithm::Blake3Balloon(5),
+        hash_algorithm: params.hashing_algorithm,
         raw_key_old,
         raw_key_new,
     })?;

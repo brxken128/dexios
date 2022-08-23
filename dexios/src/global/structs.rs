@@ -21,3 +21,9 @@ pub struct PackParams {
     pub erase_source: EraseSourceDir,
     pub compression: Compression,
 }
+
+pub struct KeyManipulationParams {
+    pub key_old: Key,
+    pub key_new: Key,
+    pub hashing_algorithm: HashingAlgorithm,
+}

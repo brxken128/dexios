@@ -2,7 +2,7 @@ use crate::cli::prompt::overwrite_check;
 use crate::global::states::{EraseMode, HashMode, HeaderLocation, PasswordState};
 use crate::global::structs::CryptoParams;
 use anyhow::Result;
-use core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
+use core::header::{HeaderType, HEADER_VERSION};
 use core::primitives::{Algorithm, Mode};
 use std::process::exit;
 use std::sync::Arc;
@@ -60,7 +60,7 @@ pub fn stream_mode(
             mode: Mode::StreamMode,
             algorithm,
         },
-        hashing_algorithm: HashingAlgorithm::Blake3Balloon(5),
+        hashing_algorithm: params.hashing_algorithm,
     };
     domain::encrypt::execute(req)?;
 

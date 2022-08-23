@@ -1,3 +1,5 @@
+use core::header::HashingAlgorithm;
+
 use crate::global::states::{ForceMode, HashMode};
 
 use super::states::{
@@ -10,6 +12,7 @@ pub struct CryptoParams {
     pub erase: EraseMode,
     pub key: Key,
     pub header_location: HeaderLocation,
+    pub hashing_algorithm: HashingAlgorithm,
 }
 
 pub struct PackParams {
@@ -17,4 +20,10 @@ pub struct PackParams {
     pub print_mode: PrintMode,
     pub erase_source: EraseSourceDir,
     pub compression: Compression,
+}
+
+pub struct KeyManipulationParams {
+    pub key_old: Key,
+    pub key_new: Key,
+    pub hashing_algorithm: HashingAlgorithm,
 }

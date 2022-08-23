@@ -129,25 +129,17 @@ pub fn header_details(sub_matches: &ArgMatches) -> Result<()> {
 pub fn key_change(sub_matches: &ArgMatches) -> Result<()> {
     let sub_matches_change_key = sub_matches.subcommand_matches("change").unwrap();
 
-    let (key_old, key_new) = key_manipulation_params(sub_matches_change_key)?;
+    let params = key_manipulation_params(sub_matches_change_key)?;
 
-    key::change(
-        &get_param("input", sub_matches_change_key)?,
-        &key_old,
-        &key_new,
-    )
+    key::change(&get_param("input", sub_matches_change_key)?, &params)
 }
 
 pub fn key_add(sub_matches: &ArgMatches) -> Result<()> {
     let sub_matches_add_key = sub_matches.subcommand_matches("add").unwrap();
 
-    let (key_old, key_new) = key_manipulation_params(sub_matches_add_key)?;
+    let params = key_manipulation_params(sub_matches_add_key)?;
 
-    key::add(
-        &get_param("input", sub_matches_add_key)?,
-        &key_old,
-        &key_new,
-    )
+    key::add(&get_param("input", sub_matches_add_key)?, &params)
 }
 
 pub fn key_del(sub_matches: &ArgMatches) -> Result<()> {

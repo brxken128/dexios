@@ -11,14 +11,10 @@
 
 Dexios is a fast, secure, and open source command-line encryption tool. It's
 written entirely in Rust and prioritises security, performance and convenience
-the most. It uses modern cryptographic AEADs (XChaCha20-Poly1305, AES-256-GCM,
-and Deoxys-II-256), with audited backends to ensure the safety and integrity of
-your data. It's extremely easy to use Dexios before uploading your files to a
+the most. It uses modern cryptographic AEADs (XChaCha20-Poly1305 and AES-256-GCM),
+with audited backends to ensure the safety and integrity of your data. It's
+extremely easy to use Dexios before uploading your files to a
 cloud service, to ensure that no prying eyes can read them.
-
-For notes on Deoxys-II, please see the
-[Security Notices](https://brxken128.github.io/dexios/Introduction.html#security-notices)
-section of the Documentation.
 
 You can install Dexios through cargo, with:
 
@@ -63,10 +59,6 @@ in the near future (keyfiles and environment variables still work flawlessly!)
 Please [open a Github issue](https://github.com/brxken128/dexios/issues) if you
 encounter anything not outlined here.
 
-On Windows, I highly recommend using Windows Terminal, or another terminal
-program, as `cmd` can't display the icons used by Dexios for command-line
-output.
-
 Android 12 was tested, and Dexios was installed within Termux. Everything is in
 working order, but please
 [open a Github issue](https://github.com/brxken128/dexios/issues) if you find
@@ -103,7 +95,7 @@ By running the simple command `dexios -e input.txt output.enc`, you are using
 the following:
 
 - `XChaCha20-Poly1305`
-- `BLAKE3-Balloon` hashing
+- `BLAKE3-Balloon` hashing, with appropriately-hard parameters
 - Sensitive data being completely erased from memory
 - A tamper-resistant header that is authenticated along with every block of
   encrypted data

@@ -8,7 +8,7 @@
 //! The only way to access the data within a `Protected` value is to call `.expose()` - this is to prevent accidental leakage.
 //! This also makes any `Protected` value easier to audit, as you are able to quickly view wherever the data is accessed.
 //!
-//! `Protected` values are not able to be copied or cloned within memory, to prevent accidental leakage.
+//! `Protected` values are not able to be copied within memory, to prevent accidental leakage. They are able to be `cloned` however - but this is always explicit and you will be aware of it.
 //!
 //! I'd like to give a huge thank you to the authors of the [secrecy crate](https://crates.io/crates/secrecy),
 //! as that crate's functionality inspired this implementation.

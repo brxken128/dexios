@@ -1,6 +1,6 @@
 [package]
 name = "dexios-domain"
-description = "A library that contains the inner-workings of Dexios."
+description = "A library that contains the inner-workings and core logic for Dexios."
 version = "0.1.0"
 edition = "2021"
 license = "BSD-2-Clause"
@@ -13,6 +13,10 @@ readme = "README.md"
 authors = ["brxken128 <brxken128@tutanota.com"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# this is for sites other than crates.io, who may still use it
+[badges]
+maintenance = { status = "actively-developed" }
 
 [dependencies]
 dcore = { package = "dexios-core", path = "../dexios-core", version = "1.1.1" }

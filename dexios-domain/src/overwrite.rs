@@ -1,3 +1,7 @@
+//! This contains the actual logic for "shredding" a file.
+//! 
+//! This will not be effective on flash storage, and if you are planning to release a program that uses this function, I'd recommend putting the default number of passes to 1.
+
 use rand::RngCore;
 use std::cell::RefCell;
 use std::fmt;

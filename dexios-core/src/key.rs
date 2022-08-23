@@ -133,6 +133,14 @@ pub fn balloon_hash(
     Ok(Protected::new(key))
 }
 
+
+/// This is a helper function for retrieving the key used for encrypting the data
+/// 
+/// In header versions below V4, this is just the hashed password
+/// 
+/// In header versions >= V4, this is a cryptographically-secure random value
+/// 
+/// In header versions >= V4, this function will iterate through all available keyslots, looking for a match. If it finds a match, it will return the decrypted master key.
 #[allow(clippy::module_name_repetitions)]
 pub fn decrypt_master_key(
     raw_key: Protected<Vec<u8>>,
@@ -177,6 +185,7 @@ pub fn decrypt_master_key(
 }
 
 // TODO: choose better place for this util
+/// This is a simple helper function, used for converting the 32-byte master key `Vec<u8>`s to `[u8; 32]`
 #[must_use]
 pub fn vec_to_arr<const N: usize>(mut master_key_vec: Vec<u8>) -> [u8; N] {
     let mut master_key = [0u8; N];
@@ -186,12 +195,13 @@ pub fn vec_to_arr<const N: usize>(mut master_key_vec: Vec<u8>) -> [u8; N] {
     master_key
 }
 
-// this autogenerates a passphrase, which can be selected with `--auto`
-// it reads the EFF large list of words, and puts them all into a vec
-// 3 words are then chosen at random, and 6 digits are also
-// the 3 words and the digits are separated with -
-// the words are also capitalised
-// this passphrase should provide adequate protection, while not being too hard to remember
+/// This function is used for autogenerating a passphrase, from a wordlist
+/// 
+/// It consists of 3 words, from the EFF wordlist, and 6 random digits appended to the end
+/// 
+/// Each word, and the block of digits, are separated with `-`
+/// 
+/// This provides adequate protection, while also remaining somewhat memorable.
 #[must_use]
 pub fn generate_passphrase() -> Protected<String> {
     let collection = include_str!("wordlist.lst");

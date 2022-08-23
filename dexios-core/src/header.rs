@@ -102,7 +102,7 @@ pub struct Header {
     pub keyslots: Option<Vec<Keyslot>>,
 }
 
-pub const ARGON2ID_LATEST: i32 = 4;
+pub const ARGON2ID_LATEST: i32 = 3;
 pub const BLAKE3BALLOON_LATEST: i32 = 5;
 
 #[derive(Clone, Copy, PartialEq)]

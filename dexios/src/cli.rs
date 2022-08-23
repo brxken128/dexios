@@ -50,6 +50,12 @@ pub fn get_matches() -> clap::ArgMatches {
                 .help("Return a BLAKE3 hash of the encrypted file"),
         )
         .arg(
+            Arg::new("argon")
+                .long("argon")
+                .takes_value(false)
+                .help("Use argon2id for password hashing"),
+        )
+        .arg(
             Arg::new("autogenerate")
                 .long("auto")
                 .takes_value(false)
@@ -207,6 +213,12 @@ pub fn get_matches() -> clap::ArgMatches {
                     .help("Securely erase every file from the source directory, before deleting the directory")
             )
             .arg(
+                Arg::new("argon")
+                    .long("argon")
+                    .takes_value(false)
+                    .help("Use argon2id for password hashing"),
+            )
+            .arg(
                 Arg::new("verbose")
                     .short('v')
                     .long("verbose")
@@ -357,6 +369,12 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .conflicts_with("keyfile-new"),
                         )
                         .arg(
+                            Arg::new("argon")
+                                .long("argon")
+                                .takes_value(false)
+                                .help("Use argon2id for password hashing"),
+                        )
+                        .arg(
                             Arg::new("keyfile-old")
                                 .short('k')
                                 .long("keyfile-old")
@@ -383,6 +401,12 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .takes_value(true)
                                 .required(true)
                                 .help("The encrypted file"),
+                        )
+                        .arg(
+                            Arg::new("argon")
+                                .long("argon")
+                                .takes_value(false)
+                                .help("Use argon2id for password hashing"),
                         )
                         .arg(
                             Arg::new("autogenerate")

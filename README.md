@@ -11,8 +11,8 @@
 
 Dexios is a fast, secure, and open source command-line encryption tool. It's
 written entirely in Rust and prioritises security, performance and convenience
-the most. It uses modern cryptographic AEADs (XChaCha20-Poly1305, AES-256-GCM,
-and Deoxys-II-256), with audited backends to ensure the safety and integrity of
+the most. It uses modern cryptographic AEADs (XChaCha20-Poly1305 + AES-256-GCM),
+with audited backends to ensure the safety and integrity of
 your data. It's extremely easy to use Dexios before uploading your files to a
 cloud service, to ensure that no prying eyes can read them.
 
@@ -27,12 +27,13 @@ You can install Dexios through cargo, with:
 Or you can download a pre-compiled binary from
 [the releases page](https://github.com/brxken128/dexios/releases)!
 
-This repo also contains the Dexios-Core library - it's used by Dexios itself for
+This repo also contains the Dexios-Core and Dexios-Domain libraries
+- they're used by Dexios itself for
 managing headers and cryptographic functions. This allows us to keep them
 isolated, and ensure that security-critical pieces of code remain maintainable.
 
-You may view more information about [Dexios](dexios/README.md) and
-[Dexios-Core](dexios-core/README.md) in their respective folders. You can also
+You may view more information about [Dexios](dexios/README.md),
+[Dexios-Core](dexios-core/README.md) and [Dexios-Domain](dexios-domain/README.md) in their respective folders. You can also
 [view the documentation](https://brxken128.github.io/dexios/) for the technical
 info!
 

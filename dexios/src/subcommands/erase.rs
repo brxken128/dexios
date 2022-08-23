@@ -10,7 +10,7 @@ use crate::cli::prompt::get_answer;
 // read the docs for some caveats with file-erasure on flash storage
 // it takes the file name/relative path, and the number of times to go over the file's contents with random bytes
 #[allow(clippy::module_name_repetitions)]
-pub fn secure_erase(input: &str, passes: i32, force: &ForceMode) -> Result<()> {
+pub fn secure_erase(input: &str, passes: i32, force: ForceMode) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
     let stor = Arc::new(domain::storage::FileStorage);
 

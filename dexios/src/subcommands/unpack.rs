@@ -55,7 +55,7 @@ pub fn unpack(
                     let answer = get_answer(
                         &format!("{} already exists, would you like to overwrite?", file_name),
                         true,
-                        &params.force,
+                        params.force,
                     )
                     .expect("Unable to read answer");
                     if !answer {

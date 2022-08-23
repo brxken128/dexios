@@ -1,7 +1,10 @@
 use anyhow::{Context, Result};
 use std::io::{self, stdin, Write};
 
-use crate::{global::states::{ForceMode, PasswordState}, question, warn};
+use crate::{
+    global::states::{ForceMode, PasswordState},
+    question, warn,
+};
 
 use core::protected::Protected;
 use core::Zeroize;

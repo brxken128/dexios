@@ -4,9 +4,13 @@ use clap::ArgMatches;
 // this is called from main.rs
 // it gets params and sends them to the appropriate functions
 
-use crate::global::{parameters::{
-    algorithm, erase_params, get_param, get_params, pack_params, parameter_handler, forcemode, key_manipulation_params,
-}, states::{KeyParams, Key}};
+use crate::global::{
+    parameters::{
+        algorithm, erase_params, forcemode, get_param, get_params, key_manipulation_params,
+        pack_params, parameter_handler,
+    },
+    states::{Key, KeyParams},
+};
 
 pub mod decrypt;
 pub mod encrypt;

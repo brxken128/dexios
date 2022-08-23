@@ -2,7 +2,7 @@ use std::process::exit;
 use std::sync::Arc;
 
 use anyhow::Result;
-use core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
+use core::header::{HeaderType, HEADER_VERSION};
 use core::primitives::{Algorithm, Mode};
 
 use crate::global::states::{HeaderLocation, PasswordState};
@@ -100,7 +100,7 @@ pub fn execute(req: &Request) -> Result<()> {
                 mode: Mode::StreamMode,
                 algorithm: req.algorithm,
             },
-            hashing_algorithm: HashingAlgorithm::Blake3Balloon(5),
+            hashing_algorithm: req.crypto_params.hashing_algorithm,
         },
     )?;
 

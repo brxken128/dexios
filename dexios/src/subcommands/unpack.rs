@@ -1,4 +1,4 @@
-use crate::subcommands::prompt::get_answer;
+use crate::cli::prompt::get_answer;
 use std::sync::Arc;
 
 use anyhow::Result;

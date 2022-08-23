@@ -5,8 +5,8 @@
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 use core::protected::Protected;
-use core::Zeroize;
 
+use crate::cli::prompt::get_password;
 use crate::warn;
 use core::key::generate_passphrase;
 
@@ -70,36 +70,15 @@ pub enum PasswordState {
     Direct, // maybe not the best name
 }
 
-impl Key {
-    fn get_bytes<R: std::io::Read>(reader: &mut R) -> Result<Protected<Vec<u8>>> {
-        let mut data = Vec::new();
-        reader
-            .read_to_end(&mut data)
-            .context("Unable to read data")?;
-        Ok(Protected::new(data))
-    }
+fn get_bytes<R: std::io::Read>(reader: &mut R) -> Result<Protected<Vec<u8>>> {
+    let mut data = Vec::new();
+    reader
+        .read_to_end(&mut data)
+        .context("Unable to read data")?;
+    Ok(Protected::new(data))
+}
 
-    fn get_password(pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
-        Ok(loop {
-            let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
-            if pass_state == &PasswordState::Direct {
-                return Ok(Protected::new(input.into_bytes()));
-            }
-    
-            let mut input_validation =
-                rpassword::prompt_password("Confirm password: ").context("Unable to read password")?;
-    
-            if input == input_validation && !input.is_empty() {
-                input_validation.zeroize();
-                break Protected::new(input.into_bytes());
-            } else if input.is_empty() {
-                warn!("Password cannot be empty, please try again.");
-            } else {
-                warn!("The passwords aren't the same, please try again.");
-            }
-        })
-    }
-    
+impl Key {
     // this handles getting the secret, and returning it
     // it relies on `parameters.rs`' handling and logic to determine which route to get the key
     // it can handle keyfiles, env variables, automatically generating and letting the user enter a key
@@ -108,7 +87,7 @@ impl Key {
         let secret = match self {
             Key::Keyfile(path) if path == "-" => {
                 let mut reader = std::io::stdin();
-                let secret = Self::get_bytes(&mut reader)?;
+                let secret = get_bytes(&mut reader)?;
                 if secret.is_empty() {
                     return Err(anyhow::anyhow!("STDIN is empty"));
                 }
@@ -117,7 +96,7 @@ impl Key {
             Key::Keyfile(path) => {
                 let mut reader = std::fs::File::open(path)
                     .with_context(|| format!("Unable to read file: {}", path))?;
-                let secret = Self::get_bytes(&mut reader)?;
+                let secret = get_bytes(&mut reader)?;
                 if secret.is_empty() {
                     return Err(anyhow::anyhow!(format!("Keyfile '{}' is empty", path)));
                 }
@@ -128,7 +107,7 @@ impl Key {
                     .context("Unable to read DEXIOS_KEY from environment variable")?
                     .into_bytes(),
             ),
-            Key::User => Self::get_password(pass_state)?,
+            Key::User => get_password(pass_state)?,
             Key::Generate => {
                 let passphrase = generate_passphrase();
                 warn!("Your generated passphrase is: {}", passphrase.expose());

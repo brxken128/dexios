@@ -15,7 +15,7 @@ use crate::{
 };
 use domain::storage::Storage;
 
-use super::prompt::overwrite_check;
+use crate::cli::prompt::overwrite_check;
 
 pub struct Request<'a> {
     pub input_file: &'a Vec<String>,

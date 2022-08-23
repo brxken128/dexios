@@ -1,5 +1,7 @@
 use clap::{Arg, Command};
 
+pub mod prompt;
+
 // this defines all of the clap subcommands and arguments
 // it's long, and clunky, but i feel that's just the nature of the clap builder api
 // it returns the ArgMatches so that a match statement can send everything to the correct place

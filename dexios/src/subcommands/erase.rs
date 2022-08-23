@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::global::states::ForceMode;
 
-use super::prompt::get_answer;
+use crate::cli::prompt::get_answer;
 
 // this function securely erases a file
 // read the docs for some caveats with file-erasure on flash storage

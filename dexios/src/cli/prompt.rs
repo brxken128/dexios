@@ -1,7 +1,10 @@
 use anyhow::{Context, Result};
 use std::io::{self, stdin, Write};
 
-use crate::{global::states::ForceMode, question, warn};
+use crate::{global::states::{ForceMode, PasswordState}, question, warn};
+
+use core::protected::Protected;
+use core::Zeroize;
 
 // this handles user-interactivity, specifically getting a "yes" or "no" answer from the user
 // it requires the question itself, if the default is true/false
@@ -52,4 +55,25 @@ pub fn overwrite_check(name: &str, force: ForceMode) -> Result<bool> {
         true
     };
     Ok(answer)
+}
+
+pub fn get_password(pass_state: &PasswordState) -> Result<Protected<Vec<u8>>> {
+    Ok(loop {
+        let input = rpassword::prompt_password("Password: ").context("Unable to read password")?;
+        if pass_state == &PasswordState::Direct {
+            return Ok(Protected::new(input.into_bytes()));
+        }
+
+        let mut input_validation =
+            rpassword::prompt_password("Confirm password: ").context("Unable to read password")?;
+
+        if input == input_validation && !input.is_empty() {
+            input_validation.zeroize();
+            break Protected::new(input.into_bytes());
+        } else if input.is_empty() {
+            warn!("Password cannot be empty, please try again.");
+        } else {
+            warn!("The passwords aren't the same, please try again.");
+        }
+    })
 }

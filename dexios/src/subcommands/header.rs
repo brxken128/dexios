@@ -3,7 +3,7 @@ use std::{
     fs::{File, OpenOptions},
 };
 
-use super::prompt::overwrite_check;
+use crate::cli::prompt::overwrite_check;
 use crate::global::states::ForceMode;
 use anyhow::{Context, Result};
 use core::header::HashingAlgorithm;

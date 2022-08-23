@@ -1,4 +1,4 @@
-use super::prompt::overwrite_check;
+use crate::cli::prompt::overwrite_check;
 use crate::global::states::{EraseMode, HashMode, HeaderLocation, PasswordState};
 use crate::global::structs::CryptoParams;
 use anyhow::Result;

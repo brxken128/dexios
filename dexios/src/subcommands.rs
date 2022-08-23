@@ -15,7 +15,6 @@ pub mod hashing;
 pub mod header;
 pub mod key;
 pub mod pack;
-pub mod prompt;
 pub mod unpack;
 
 pub fn encrypt(sub_matches: &ArgMatches) -> Result<()> {

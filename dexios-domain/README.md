@@ -14,14 +14,14 @@ You may find the audits for both AES-256-GCM and XChaCha20-Poly1305 on [the NCC 
 
 <sup>1</sup> Deoxys-II-256 does not have an official audit, so use it at your own risk
 
-## Who uses Dexios-Core?
+## Who uses Dexios-Domain?
 
 This library is implemented by [Dexios](https://github.com/brxken128/dexios), a secure command-line file
 encryption utility.
 
 This crate was made to separate the logic away from the end-user application.
 
-It also allows for more things to be built on top of the core functionality, such as a GUI application.
+It also allows for more things to be built on top of the core logic functionality, such as a GUI application.
 
 ## Donating
 
@@ -33,8 +33,4 @@ BTC: bc1q8x0r7khrfj40qd0zr5xv3t9nl92rz2387pu48u
 ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD
 ```
 
-You can read more about Dexios, Dexios-Core and the technical details [in the project's main documentation](https://brxken128.github.io/dexios/)!
-
-## Thank you!
-
-Dexios-Core exclusively uses AEADs provided by the [RustCrypto Team](https://github.com/RustCrypto), so I'd like to give them a huge thank you for their hard work (this wouldn't have been possible without them!)
+You can read more about Dexios, Dexios-Core, Dexios-Domain and the technical details [in the project's main documentation](https://brxken128.github.io/dexios/)!

@@ -1,4 +1,4 @@
- //! ## What is it?
+//! ## What is it?
 //!
 //! Dexios-Domain is a library used for managing the core logic behind Dexios, and any applications that require easy integration with the Dexios format.
 //!
@@ -10,7 +10,7 @@
 //!
 //! <sup>1</sup> Deoxys-II-256 does not have an official audit, so use it at your own risk
 //!
-//! ## Who uses Dexios-Core?
+//! ## Who uses Dexios-Domain?
 //!
 //! This library is implemented by [Dexios](https://github.com/brxken128/dexios), a secure command-line file
 //! encryption utility.
@@ -29,11 +29,8 @@
 //! ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD
 //! ```
 //!
-//! You can read more about Dexios, Dexios-Core and the technical details [in the project's main documentation](https://brxken128.github.io/dexios/)!
+//! You can read more about Dexios, Dexios-Core, Dexios-Domain and the technical details [in the project's main documentation](https://brxken128.github.io/dexios/)!
 //!
-//! ## Thank you!
-//!
-//! Dexios-Core exclusively uses AEADs provided by the [RustCrypto Team](https://github.com/RustCrypto), so I'd like to give them a huge thank you for their hard work (this wouldn't have been possible without them!)
 
 // Rustc lints
 #![deny(

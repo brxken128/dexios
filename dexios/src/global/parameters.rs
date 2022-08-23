@@ -232,5 +232,9 @@ pub fn key_manipulation_params(sub_matches: &ArgMatches) -> Result<KeyManipulati
 
     let hashing_algorithm = hashing_algorithm(sub_matches);
 
-    Ok(KeyManipulationParams { key_old, key_new, hashing_algorithm })
+    Ok(KeyManipulationParams {
+        key_old,
+        key_new,
+        hashing_algorithm,
+    })
 }

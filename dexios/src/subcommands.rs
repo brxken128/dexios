@@ -131,10 +131,7 @@ pub fn key_change(sub_matches: &ArgMatches) -> Result<()> {
 
     let params = key_manipulation_params(sub_matches_change_key)?;
 
-    key::change(
-        &get_param("input", sub_matches_change_key)?,
-        &params,
-    )
+    key::change(&get_param("input", sub_matches_change_key)?, &params)
 }
 
 pub fn key_add(sub_matches: &ArgMatches) -> Result<()> {
@@ -142,10 +139,7 @@ pub fn key_add(sub_matches: &ArgMatches) -> Result<()> {
 
     let params = key_manipulation_params(sub_matches_add_key)?;
 
-    key::add(
-        &get_param("input", sub_matches_add_key)?,
-        &params,
-    )
+    key::add(&get_param("input", sub_matches_add_key)?, &params)
 }
 
 pub fn key_del(sub_matches: &ArgMatches) -> Result<()> {

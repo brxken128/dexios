@@ -1,12 +1,12 @@
 use std::cell::RefCell;
 use std::io::{Read, Seek, Write};
 
-use dexios_core::cipher::Ciphers;
-use dexios_core::header::{Header, HeaderType};
-use dexios_core::key::decrypt_master_key;
-use dexios_core::primitives::Mode;
-use dexios_core::protected::Protected;
-use dexios_core::stream::DecryptionStreams;
+use core::cipher::Ciphers;
+use core::header::{Header, HeaderType};
+use core::key::decrypt_master_key;
+use core::primitives::Mode;
+use core::protected::Protected;
+use core::stream::DecryptionStreams;
 
 #[derive(Debug)]
 pub enum Error {
@@ -109,7 +109,7 @@ where
             let ciphers = Ciphers::initialize(master_key, &header.header_type.algorithm)
                 .map_err(|_| Error::InitializeChiphers)?;
 
-            let payload = dexios_core::Payload {
+            let payload = core::Payload {
                 aad: &aad,
                 msg: &encrypted_data,
             };

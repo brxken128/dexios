@@ -1,14 +1,8 @@
 #![deny(clippy::all)]
 
 use anyhow::Result;
-use global::parameters::forcemode;
-use global::parameters::get_param;
-use global::parameters::key_manipulation_params;
-
-use crate::global::states::KeyParams;
 
 mod cli;
-mod file;
 mod global;
 mod subcommands;
 
@@ -36,76 +30,32 @@ fn main() -> Result<()> {
             subcommands::unpack(sub_matches)?;
         }
         Some(("hash", sub_matches)) => {
-            let files: Vec<String> = if sub_matches.is_present("input") {
-                let list: Vec<&str> = sub_matches.values_of("input").unwrap().collect();
-                list.iter().map(std::string::ToString::to_string).collect()
-            } else {
-                Vec::new()
-            };
-
-            subcommands::hashing::hash_stream(&files)?;
+            subcommands::hash_stream(sub_matches)?;
         }
         Some(("header", sub_matches)) => match sub_matches.subcommand_name() {
             Some("dump") => {
-                let sub_matches_dump = sub_matches.subcommand_matches("dump").unwrap();
-                let force = forcemode(sub_matches_dump);
-
-                subcommands::header::dump(
-                    &get_param("input", sub_matches_dump)?,
-                    &get_param("output", sub_matches_dump)?,
-                    force,
-                )?;
+                subcommands::header_dump(sub_matches)?;
             }
             Some("restore") => {
-                let sub_matches_restore = sub_matches.subcommand_matches("restore").unwrap();
-
-                subcommands::header::restore(
-                    &get_param("input", sub_matches_restore)?,
-                    &get_param("output", sub_matches_restore)?,
-                )?;
+                subcommands::header_restore(sub_matches)?;
             }
             Some("strip") => {
-                let sub_matches_strip = sub_matches.subcommand_matches("strip").unwrap();
-
-                subcommands::header::strip(&get_param("input", sub_matches_strip)?)?;
+                subcommands::header_strip(sub_matches)?;
             }
             Some("details") => {
-                let sub_matches_details = sub_matches.subcommand_matches("details").unwrap();
-
-                subcommands::header::details(&get_param("input", sub_matches_details)?)?;
+                subcommands::header_details(sub_matches)?;
             }
             _ => (),
         },
         Some(("key", sub_matches)) => match sub_matches.subcommand_name() {
             Some("change") => {
-                let sub_matches_change_key = sub_matches.subcommand_matches("change").unwrap();
-
-                let (key_old, key_new) = key_manipulation_params(sub_matches_change_key)?;
-
-                subcommands::key::change(
-                    &get_param("input", sub_matches_change_key)?,
-                    &key_old,
-                    &key_new,
-                )?;
+                subcommands::key_change(sub_matches)?;
             }
             Some("add") => {
-                let sub_matches_add_key = sub_matches.subcommand_matches("add").unwrap();
-
-                let (key_old, key_new) = key_manipulation_params(sub_matches_add_key)?;
-
-                subcommands::key::add(
-                    &get_param("input", sub_matches_add_key)?,
-                    &key_old,
-                    &key_new,
-                )?;
+                subcommands::key_add(sub_matches)?;
             }
             Some("del") => {
-                use crate::global::states::Key;
-
-                let sub_matches_del_key = sub_matches.subcommand_matches("del").unwrap();
-                let key = Key::init(sub_matches_del_key, &KeyParams::default(), "keyfile")?;
-
-                subcommands::key::delete(&get_param("input", sub_matches_del_key)?, &key)?;
+                subcommands::key_del(sub_matches)?;
             }
             _ => (),
         },

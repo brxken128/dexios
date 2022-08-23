@@ -2,9 +2,9 @@
 use crate::global::states::Key;
 use crate::global::states::PasswordState;
 use anyhow::{Context, Result};
-use dexios_core::header::HashingAlgorithm;
-use dexios_core::header::Header;
-use dexios_core::header::HeaderVersion;
+use core::header::HashingAlgorithm;
+use core::header::Header;
+use core::header::HeaderVersion;
 use std::cell::RefCell;
 use std::fs::OpenOptions;
 use std::io::Seek;

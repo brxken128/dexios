@@ -2,8 +2,8 @@ use std::process::exit;
 use std::sync::Arc;
 
 use anyhow::Result;
-use dexios_core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
-use dexios_core::primitives::{Algorithm, Mode};
+use core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
+use core::primitives::{Algorithm, Mode};
 
 use crate::global::states::{HeaderLocation, PasswordState};
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
 };
 use domain::storage::Storage;
 
-use super::prompt::overwrite_check;
+use crate::cli::prompt::overwrite_check;
 
 pub struct Request<'a> {
     pub input_file: &'a Vec<String>,
@@ -111,9 +111,9 @@ pub fn execute(req: &Request) -> Result<()> {
     stor.flush_file(&output_file)?;
 
     if req.pack_params.erase_source == EraseSourceDir::Erase {
-        req.input_file
-            .iter()
-            .try_for_each(|file_name| super::erase::secure_erase(file_name, 1))?;
+        req.input_file.iter().try_for_each(|file_name| {
+            super::erase::secure_erase(file_name, 1, req.crypto_params.force)
+        })?;
     }
 
     Ok(())

@@ -1,13 +1,13 @@
 use std::io::Seek;
 
 use super::Error;
-use dexios_core::header::HashingAlgorithm;
-use dexios_core::header::Keyslot;
-use dexios_core::header::{Header, HeaderVersion};
-use dexios_core::primitives::gen_nonce;
-use dexios_core::primitives::gen_salt;
-use dexios_core::primitives::Mode;
-use dexios_core::protected::Protected;
+use core::header::HashingAlgorithm;
+use core::header::Keyslot;
+use core::header::{Header, HeaderVersion};
+use core::primitives::gen_nonce;
+use core::primitives::gen_salt;
+use core::primitives::Mode;
+use core::protected::Protected;
 use std::cell::RefCell;
 use std::io::{Read, Write};
 
@@ -25,7 +25,7 @@ pub fn execute<RW>(req: Request<'_, RW>) -> Result<(), Error>
 where
     RW: Read + Write + Seek,
 {
-    let (header, _) = dexios_core::header::Header::deserialize(&mut *req.handle.borrow_mut())
+    let (header, _) = core::header::Header::deserialize(&mut *req.handle.borrow_mut())
         .map_err(|_| Error::HeaderDeserialize)?;
 
     if header.header_type.version < HeaderVersion::V5 {

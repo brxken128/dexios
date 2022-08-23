@@ -3,11 +3,11 @@ use std::{
     fs::{File, OpenOptions},
 };
 
-use super::prompt::overwrite_check;
+use crate::cli::prompt::overwrite_check;
 use crate::global::states::ForceMode;
 use anyhow::{Context, Result};
-use dexios_core::header::HashingAlgorithm;
-use dexios_core::header::{Header, HeaderVersion};
+use core::header::HashingAlgorithm;
+use core::header::{Header, HeaderVersion};
 use domain::storage::Storage;
 use domain::utils::hex_encode;
 

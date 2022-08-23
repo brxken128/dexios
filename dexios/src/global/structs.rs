@@ -1,4 +1,4 @@
-use crate::global::states::{HashMode, ForceMode};
+use crate::global::states::{ForceMode, HashMode};
 
 use super::states::{
     Compression, DirectoryMode, EraseMode, EraseSourceDir, HeaderLocation, Key, PrintMode,

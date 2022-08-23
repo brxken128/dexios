@@ -1,15 +1,14 @@
 // this file contains enums found all around the codebase
 // they act as toggles for certain features, so they can be
 // enabled if selected by the user
-// some enums are used purely by dexios to handle things (e.g. detached header files)
 
 use anyhow::{Context, Result};
 use clap::ArgMatches;
-use dexios_core::protected::Protected;
+use core::protected::Protected;
 
-use super::key::get_password;
-use crate::{file::get_bytes, warn};
-use dexios_core::key::generate_passphrase;
+use crate::cli::prompt::get_password;
+use crate::warn;
+use core::key::generate_passphrase;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {
@@ -69,6 +68,14 @@ pub enum Key {
 pub enum PasswordState {
     Validate,
     Direct, // maybe not the best name
+}
+
+fn get_bytes<R: std::io::Read>(reader: &mut R) -> Result<Protected<Vec<u8>>> {
+    let mut data = Vec::new();
+    reader
+        .read_to_end(&mut data)
+        .context("Unable to read data")?;
+    Ok(Protected::new(data))
 }
 
 impl Key {

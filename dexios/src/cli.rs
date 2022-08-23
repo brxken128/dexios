@@ -1,5 +1,7 @@
 use clap::{Arg, Command};
 
+pub mod prompt;
+
 // this defines all of the clap subcommands and arguments
 // it's long, and clunky, but i feel that's just the nature of the clap builder api
 // it returns the ArgMatches so that a match statement can send everything to the correct place
@@ -149,6 +151,13 @@ pub fn get_matches() -> clap::ArgMatches {
                         .takes_value(true)
                         .required(true)
                         .help("The file to erase"),
+                )
+                .arg(
+                    Arg::new("force")
+                        .short('f')
+                        .long("force")
+                        .takes_value(false)
+                        .help("Force all actions"),
                 )
                 .arg(
                     Arg::new("passes")

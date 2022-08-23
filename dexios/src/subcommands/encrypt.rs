@@ -1,9 +1,9 @@
-use super::prompt::overwrite_check;
+use crate::cli::prompt::overwrite_check;
 use crate::global::states::{EraseMode, HashMode, HeaderLocation, PasswordState};
 use crate::global::structs::CryptoParams;
 use anyhow::Result;
-use dexios_core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
-use dexios_core::primitives::{Algorithm, Mode};
+use core::header::{HashingAlgorithm, HeaderType, HEADER_VERSION};
+use core::primitives::{Algorithm, Mode};
 use std::process::exit;
 use std::sync::Arc;
 
@@ -75,7 +75,7 @@ pub fn stream_mode(
     }
 
     if let EraseMode::EraseFile(passes) = params.erase {
-        super::erase::secure_erase(input, passes)?;
+        super::erase::secure_erase(input, passes, params.force)?;
     }
 
     Ok(())

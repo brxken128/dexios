@@ -1,13 +1,13 @@
 use std::io::Seek;
 
 use super::Error;
-use core::header::HashingAlgorithm;
-use core::header::Keyslot;
-use core::header::{Header, HeaderVersion};
-use core::primitives::gen_nonce;
-use core::primitives::gen_salt;
-use core::primitives::Mode;
-use core::protected::Protected;
+use dcore::header::HashingAlgorithm;
+use dcore::header::Keyslot;
+use dcore::header::{Header, HeaderVersion};
+use dcore::primitives::gen_nonce;
+use dcore::primitives::gen_salt;
+use dcore::primitives::Mode;
+use dcore::protected::Protected;
 use std::cell::RefCell;
 use std::io::{Read, Write};
 
@@ -25,7 +25,7 @@ pub fn execute<RW>(req: Request<'_, RW>) -> Result<(), Error>
 where
     RW: Read + Write + Seek,
 {
-    let (header, _) = core::header::Header::deserialize(&mut *req.handle.borrow_mut())
+    let (header, _) = dcore::header::Header::deserialize(&mut *req.handle.borrow_mut())
         .map_err(|_| Error::HeaderDeserialize)?;
 
     if header.header_type.version < HeaderVersion::V5 {

@@ -2,8 +2,8 @@ use std::process::exit;
 use std::sync::Arc;
 
 use anyhow::Result;
-use core::header::{HeaderType, HEADER_VERSION};
-use core::primitives::{Algorithm, Mode};
+use dcore::header::{HeaderType, HEADER_VERSION};
+use dcore::primitives::{Algorithm, Mode};
 
 use crate::global::states::{HeaderLocation, PasswordState};
 use crate::{

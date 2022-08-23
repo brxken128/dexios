@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use crate::storage::{self, Storage};
 use crate::{decrypt, overwrite};
-use core::protected::Protected;
+use dcore::protected::Protected;
 
 #[derive(Debug)]
 pub enum Error {

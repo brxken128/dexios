@@ -1,4 +1,4 @@
-use core::primitives::BLOCK_SIZE;
+use dcore::primitives::BLOCK_SIZE;
 use std::fmt;
 use std::{
     cell::RefCell,

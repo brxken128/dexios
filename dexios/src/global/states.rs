@@ -4,11 +4,11 @@
 
 use anyhow::{Context, Result};
 use clap::ArgMatches;
-use core::protected::Protected;
+use dcore::protected::Protected;
 
 use crate::cli::prompt::get_password;
 use crate::warn;
-use core::key::generate_passphrase;
+use dcore::key::generate_passphrase;
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum DirectoryMode {

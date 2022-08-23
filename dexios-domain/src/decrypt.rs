@@ -1,12 +1,12 @@
 use std::cell::RefCell;
 use std::io::{Read, Seek, Write};
 
-use core::cipher::Ciphers;
-use core::header::{Header, HeaderType};
-use core::key::decrypt_master_key;
-use core::primitives::Mode;
-use core::protected::Protected;
-use core::stream::DecryptionStreams;
+use dcore::cipher::Ciphers;
+use dcore::header::{Header, HeaderType};
+use dcore::key::decrypt_master_key;
+use dcore::primitives::Mode;
+use dcore::protected::Protected;
+use dcore::stream::DecryptionStreams;
 
 #[derive(Debug)]
 pub enum Error {
@@ -109,7 +109,7 @@ where
             let ciphers = Ciphers::initialize(master_key, &header.header_type.algorithm)
                 .map_err(|_| Error::InitializeChiphers)?;
 
-            let payload = core::Payload {
+            let payload = dcore::Payload {
                 aad: &aad,
                 msg: &encrypted_data,
             };

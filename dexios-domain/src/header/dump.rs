@@ -2,7 +2,7 @@ use super::Error;
 use std::cell::RefCell;
 use std::io::{Read, Seek, Write};
 
-use core::header::Header;
+use dcore::header::Header;
 
 pub struct Request<'a, R, W>
 where

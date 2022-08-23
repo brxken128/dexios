@@ -105,6 +105,9 @@ pub struct Header {
 pub const ARGON2ID_LATEST: i32 = 3;
 pub const BLAKE3BALLOON_LATEST: i32 = 5;
 
+
+/// This is in place to make `Keyslot` handling a **lot** easier
+/// You may use the constants `ARGON2ID_LATEST` and `BLAKE3BALLOON_LATEST` for defining versions
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum HashingAlgorithm {
     Argon2id(i32),
@@ -121,6 +124,7 @@ impl std::fmt::Display for HashingAlgorithm {
 }
 
 impl HashingAlgorithm {
+    /// A simple helper function that will hash a value with the appropriate algorithm and version
     pub fn hash(
         &self,
         raw_key: Protected<Vec<u8>>,
@@ -146,6 +150,8 @@ impl HashingAlgorithm {
     }
 }
 
+/// This defines a keyslot that is used with header V4 and above.
+/// A keyslot contains information about the key, and the encrypted key itself
 #[derive(Clone)]
 pub struct Keyslot {
     pub hash_algorithm: HashingAlgorithm,
@@ -155,6 +161,7 @@ pub struct Keyslot {
 }
 
 impl Keyslot {
+    /// This is used to convert a keyslot into bytes - ideal for writing headers
     #[must_use]
     pub fn serialize(&self) -> [u8; 2] {
         match self.hash_algorithm {
@@ -558,7 +565,7 @@ impl Header {
 
     /// This is a private function (called by `serialize()`)
     ///
-    /// It serializes V4 headers
+    /// It serializes V5 headers
     fn serialize_v5(&self, tag: &HeaderTag) -> Vec<u8> {
         let padding =
             vec![0u8; 26 - get_nonce_len(&self.header_type.algorithm, &self.header_type.mode)];
@@ -640,6 +647,8 @@ impl Header {
     /// It only has support for V3 headers and above
     ///
     /// It will return the bytes used for AAD
+    /// 
+    /// You may view more about what is used as AAD [here](https://brxken128.github.io/dexios/dexios-core/Headers.html#authenticating-the-header-with-aad-v840).
     pub fn create_aad(&self) -> Result<Vec<u8>> {
         let tag = self.get_tag();
         match self.header_type.version {

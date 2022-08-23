@@ -1,4 +1,4 @@
-use core::header::HashingAlgorithm;
+use dcore::header::HashingAlgorithm;
 
 use crate::global::states::{ForceMode, HashMode};
 

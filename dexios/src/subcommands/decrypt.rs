@@ -7,7 +7,7 @@ use crate::global::structs::CryptoParams;
 
 use anyhow::Result;
 
-use domain::storage::Storage;
+use ddomain::storage::Storage;
 
 // this function is for decrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files, or redirecting to memory mode if
@@ -16,7 +16,7 @@ use domain::storage::Storage;
 // it creates the stream object and uses the convenience function provided by dexios-core
 pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
-    let stor = Arc::new(domain::storage::FileStorage);
+    let stor = Arc::new(ddomain::storage::FileStorage);
 
     // 1. validate and prepare options
     if input == output {
@@ -41,7 +41,7 @@ pub fn stream_mode(input: &str, output: &str, params: &CryptoParams) -> Result<(
         .or_else(|_| stor.write_file(output))?;
 
     // 2. decrypt file
-    domain::decrypt::execute(domain::decrypt::Request {
+    ddomain::decrypt::execute(ddomain::decrypt::Request {
         header_reader: header_file.as_ref().and_then(|h| h.try_reader().ok()),
         reader: input_file.try_reader()?,
         writer: output_file.try_writer()?,

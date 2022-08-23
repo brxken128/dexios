@@ -2,9 +2,9 @@ use std::cell::RefCell;
 use std::io::{BufWriter, Read, Seek, Write};
 use std::sync::Arc;
 
-use core::header::{HashingAlgorithm, HeaderType};
-use core::primitives::BLOCK_SIZE;
-use core::protected::Protected;
+use dcore::header::{HashingAlgorithm, HeaderType};
+use dcore::primitives::BLOCK_SIZE;
+use dcore::protected::Protected;
 use zip::write::FileOptions;
 
 use crate::storage::Storage;
@@ -131,8 +131,8 @@ mod tests {
     use super::*;
     use std::io::Read;
 
-    use core::header::{HeaderType, HeaderVersion};
-    use core::primitives::{Algorithm, Mode};
+    use dcore::header::{HeaderType, HeaderVersion};
+    use dcore::primitives::{Algorithm, Mode};
 
     use crate::encrypt::tests::PASSWORD;
     use crate::storage::{InMemoryStorage, Storage};

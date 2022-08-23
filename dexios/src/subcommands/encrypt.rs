@@ -2,12 +2,12 @@ use crate::cli::prompt::overwrite_check;
 use crate::global::states::{EraseMode, HashMode, HeaderLocation, PasswordState};
 use crate::global::structs::CryptoParams;
 use anyhow::Result;
-use core::header::{HeaderType, HEADER_VERSION};
-use core::primitives::{Algorithm, Mode};
+use dcore::header::{HeaderType, HEADER_VERSION};
+use dcore::primitives::{Algorithm, Mode};
 use std::process::exit;
 use std::sync::Arc;
 
-use domain::storage::Storage;
+use ddomain::storage::Storage;
 
 // this function is for encrypting a file in stream mode
 // it handles any user-facing interactiveness, opening files
@@ -19,7 +19,7 @@ pub fn stream_mode(
     algorithm: Algorithm,
 ) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
-    let stor = Arc::new(domain::storage::FileStorage);
+    let stor = Arc::new(ddomain::storage::FileStorage);
 
     // 1. validate and prepare options
     if input == output {
@@ -50,7 +50,7 @@ pub fn stream_mode(
     };
 
     // 2. encrypt file
-    let req = domain::encrypt::Request {
+    let req = ddomain::encrypt::Request {
         reader: input_file.try_reader()?,
         writer: output_file.try_writer()?,
         header_writer: header_file.as_ref().and_then(|f| f.try_writer().ok()),
@@ -62,7 +62,7 @@ pub fn stream_mode(
         },
         hashing_algorithm: params.hashing_algorithm,
     };
-    domain::encrypt::execute(req)?;
+    ddomain::encrypt::execute(req)?;
 
     // 3. flush result
     if let Some(header_file) = header_file {

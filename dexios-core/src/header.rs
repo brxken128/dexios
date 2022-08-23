@@ -105,7 +105,7 @@ pub struct Header {
 pub const ARGON2ID_LATEST: i32 = 3;
 pub const BLAKE3BALLOON_LATEST: i32 = 5;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum HashingAlgorithm {
     Argon2id(i32),
     Blake3Balloon(i32),

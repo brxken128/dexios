@@ -1,7 +1,7 @@
 [package]
 name = "dexios-domain"
 description = "A library that contains the inner-workings and core logic for Dexios."
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 license = "BSD-2-Clause"
 keywords = ["encryption", "secure"]
@@ -19,7 +19,7 @@ authors = ["brxken128 <brxken128@tutanota.com"]
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-dcore = { package = "dexios-core", path = "../dexios-core", version = "1.1.1" }
+dcore = { package = "dexios-core", path = "../dexios-core", version = "1.2.0" }
 
 rand = "0.8.5"
 blake3 = "1.3.1"

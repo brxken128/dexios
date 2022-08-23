@@ -310,7 +310,7 @@ dependencies = [
 
 [[package]]
 name = "dexios"
-version = "8.7.0"
+version = "8.8.0"
 dependencies = [
  "anyhow",
  "blake3",
@@ -324,7 +324,7 @@ dependencies = [
 
 [[package]]
 name = "dexios-core"
-version = "1.1.1"
+version = "1.2.0"
 dependencies = [
  "aead",
  "aes-gcm",
@@ -341,7 +341,7 @@ dependencies = [
 
 [[package]]
 name = "dexios-domain"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "blake3",
  "dexios-core",

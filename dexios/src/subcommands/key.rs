@@ -45,7 +45,7 @@ pub fn add(input: &str, params: &KeyManipulationParams) -> Result<()> {
 
     let raw_key_new = params.key_new.get_secret(&PasswordState::Validate)?;
 
-    ddomain::key::add::execute(ddomain::key::add::Request {
+    domain::key::add::execute(domain::key::add::Request {
         handle: &input_file,
         hash_algorithm: params.hashing_algorithm,
         raw_key_old,
@@ -89,7 +89,7 @@ pub fn change(input: &str, params: &KeyManipulationParams) -> Result<()> {
 
     let raw_key_new = params.key_new.get_secret(&PasswordState::Validate)?;
 
-    ddomain::key::change::execute(ddomain::key::change::Request {
+    domain::key::change::execute(domain::key::change::Request {
         handle: &input_file,
         hash_algorithm: params.hashing_algorithm,
         raw_key_old,
@@ -127,7 +127,7 @@ pub fn delete(input: &str, key_old: &Key) -> Result<()> {
 
     let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
 
-    ddomain::key::delete::execute(ddomain::key::delete::Request {
+    domain::key::delete::execute(domain::key::delete::Request {
         handle: &input_file,
         raw_key_old,
     })?;

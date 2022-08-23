@@ -1,5 +1,5 @@
 use anyhow::Result;
-use ddomain::storage::Storage;
+use domain::storage::Storage;
 use std::sync::Arc;
 
 use crate::global::states::ForceMode;
@@ -12,7 +12,7 @@ use crate::cli::prompt::get_answer;
 #[allow(clippy::module_name_repetitions)]
 pub fn secure_erase(input: &str, passes: i32, force: ForceMode) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
-    let stor = Arc::new(ddomain::storage::FileStorage);
+    let stor = Arc::new(domain::storage::FileStorage);
 
     let file = stor.read_file(input)?;
     if file.is_dir()
@@ -26,17 +26,17 @@ pub fn secure_erase(input: &str, passes: i32, force: ForceMode) -> Result<()> {
     }
 
     if file.is_dir() {
-        ddomain::erase_dir::execute(
+        domain::erase_dir::execute(
             stor,
-            ddomain::erase_dir::Request {
+            domain::erase_dir::Request {
                 entry: file,
                 passes,
             },
         )?;
     } else {
-        ddomain::erase::execute(
+        domain::erase::execute(
             stor,
-            ddomain::erase::Request {
+            domain::erase::Request {
                 path: input,
                 passes,
             },

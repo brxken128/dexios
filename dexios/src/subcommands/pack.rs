@@ -13,7 +13,7 @@ use crate::{
         structs::{CryptoParams, PackParams},
     },
 };
-use ddomain::storage::Storage;
+use domain::storage::Storage;
 
 use crate::cli::prompt::overwrite_check;
 
@@ -32,7 +32,7 @@ pub struct Request<'a> {
 // it erases the temporary archive afterwards, to stop any residual data from remaining
 pub fn execute(req: &Request) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
-    let stor = Arc::new(ddomain::storage::FileStorage);
+    let stor = Arc::new(domain::storage::FileStorage);
 
     // 1. validate and prepare options
     if req.input_file.iter().any(|f| f == req.output_file) {
@@ -87,9 +87,9 @@ pub fn execute(req: &Request) -> Result<()> {
     };
 
     // 2. compress and encrypt files
-    ddomain::pack::execute(
+    domain::pack::execute(
         stor.clone(),
-        ddomain::pack::Request {
+        domain::pack::Request {
             compress_files,
             compression_method,
             writer: output_file.try_writer()?,

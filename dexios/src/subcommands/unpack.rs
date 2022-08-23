@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 
-use ddomain::storage::Storage;
+use domain::storage::Storage;
 
 use crate::global::{
     states::{HeaderLocation, PasswordState, PrintMode},
@@ -24,7 +24,7 @@ pub fn unpack(
     params: CryptoParams, // params for decrypt function
 ) -> Result<()> {
     // TODO: It is necessary to raise it to a higher level
-    let stor = Arc::new(ddomain::storage::FileStorage);
+    let stor = Arc::new(domain::storage::FileStorage);
 
     let input_file = stor.read_file(input)?;
     let header_file = match &params.header_location {
@@ -34,9 +34,9 @@ pub fn unpack(
 
     let raw_key = params.key.get_secret(&PasswordState::Direct)?;
 
-    ddomain::unpack::execute(
+    domain::unpack::execute(
         stor,
-        ddomain::unpack::Request {
+        domain::unpack::Request {
             header_reader: header_file.as_ref().and_then(|h| h.try_reader().ok()),
             reader: input_file.try_reader()?,
             output_dir_path: PathBuf::from(output),

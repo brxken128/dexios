@@ -8,8 +8,8 @@ use crate::global::states::ForceMode;
 use anyhow::{Context, Result};
 use dcore::header::HashingAlgorithm;
 use dcore::header::{Header, HeaderVersion};
-use ddomain::storage::Storage;
-use ddomain::utils::hex_encode;
+use domain::storage::Storage;
+use domain::utils::hex_encode;
 
 pub fn details(input: &str) -> Result<()> {
     let mut input_file =
@@ -65,7 +65,7 @@ pub fn details(input: &str) -> Result<()> {
 // it's used for extracting an encrypted file's header for backups and such
 // it implements a check to ensure the header is valid
 pub fn dump(input: &str, output: &str, force: ForceMode) -> Result<()> {
-    let stor = std::sync::Arc::new(ddomain::storage::FileStorage);
+    let stor = std::sync::Arc::new(domain::storage::FileStorage);
     let input_file = stor.read_file(input)?;
 
     if !overwrite_check(output, force)? {
@@ -76,12 +76,12 @@ pub fn dump(input: &str, output: &str, force: ForceMode) -> Result<()> {
         .create_file(output)
         .or_else(|_| stor.write_file(output))?;
 
-    let req = ddomain::header::dump::Request {
+    let req = domain::header::dump::Request {
         reader: input_file.try_reader()?,
         writer: output_file.try_writer()?,
     };
 
-    ddomain::header::dump::execute(req)?;
+    domain::header::dump::execute(req)?;
 
     stor.flush_file(&output_file)?;
 
@@ -94,7 +94,7 @@ pub fn dump(input: &str, output: &str, force: ForceMode) -> Result<()> {
 // this does not work for files encrypted *with* a detached header
 // it implements a check to ensure the header is valid before restoring to a file
 pub fn restore(input: &str, output: &str) -> Result<()> {
-    let stor = std::sync::Arc::new(ddomain::storage::FileStorage);
+    let stor = std::sync::Arc::new(domain::storage::FileStorage);
 
     let input_file = stor.read_file(input)?;
 
@@ -106,12 +106,12 @@ pub fn restore(input: &str, output: &str) -> Result<()> {
             .with_context(|| format!("Unable to open output file: {}", output))?,
     );
 
-    let req = ddomain::header::restore::Request {
+    let req = domain::header::restore::Request {
         reader: input_file.try_reader()?,
         writer: &output_file,
     };
 
-    ddomain::header::restore::execute(req)?;
+    domain::header::restore::execute(req)?;
 
     Ok(())
 }
@@ -129,11 +129,11 @@ pub fn strip(input: &str) -> Result<()> {
             .with_context(|| format!("Unable to open input file: {}", input))?,
     );
 
-    let req = ddomain::header::strip::Request {
+    let req = domain::header::strip::Request {
         handle: &input_file,
     };
 
-    ddomain::header::strip::execute(req)?;
+    domain::header::strip::execute(req)?;
 
     Ok(())
 }

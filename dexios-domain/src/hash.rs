@@ -1,3 +1,5 @@
+//! This provides functionality for hashing a file with `BLAKE3`, using a stream reader to keep memory usage low.
+
 use dcore::primitives::BLOCK_SIZE;
 use std::fmt;
 use std::{

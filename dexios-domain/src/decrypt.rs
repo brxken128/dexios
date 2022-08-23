@@ -1,3 +1,5 @@
+//! This provides functionality for decryption that adheres to the Dexios format.
+
 use std::cell::RefCell;
 use std::io::{Read, Seek, Write};
 

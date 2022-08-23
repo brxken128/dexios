@@ -1,3 +1,40 @@
+ //! ## What is it?
+//!
+//! Dexios-Domain is a library used for managing the core logic behind Dexios, and any applications that require easy integration with the Dexios format.
+//!
+//! ## Security
+//!
+//! Dexios-Domain is built on top of Dexios-Core - which uses modern, secure and audited<sup>1</sup> AEADs for encryption and decryption.
+//!
+//! You may find the audits for both AES-256-GCM and XChaCha20-Poly1305 on [the NCC Group's website](https://research.nccgroup.com/2020/02/26/public-report-rustcrypto-aes-gcm-and-chacha20poly1305-implementation-review/).
+//!
+//! <sup>1</sup> Deoxys-II-256 does not have an official audit, so use it at your own risk
+//!
+//! ## Who uses Dexios-Core?
+//!
+//! This library is implemented by [Dexios](https://github.com/brxken128/dexios), a secure command-line file
+//! encryption utility.
+//!
+//! This crate was made to separate the logic away from the end-user application.
+//! 
+//! It also allows for more things to be built on top of the core functionality, such as a GUI application.
+//!
+//! ## Donating
+//!
+//! If you like my work, and want to help support Dexios, Dexios-Core or Dexios-Domain, feel free to donate! This is not necessary by any means, so please don't feel obliged to do so.
+//!
+//! ```text
+//! XMR: 84zSGS18aHtT3CZjZUnnWpCsz1wmA5f65G6BXisbrvAiH7PxZpP8GorbdjAQYRtfeiANZywwUPjZcHu8eXJeWdafJQFK46G
+//! BTC: bc1q8x0r7khrfj40qd0zr5xv3t9nl92rz2387pu48u
+//! ETH: 0x9630f95F11dFa8703b71DbF746E5c83A31A3F2DD
+//! ```
+//!
+//! You can read more about Dexios, Dexios-Core and the technical details [in the project's main documentation](https://brxken128.github.io/dexios/)!
+//!
+//! ## Thank you!
+//!
+//! Dexios-Core exclusively uses AEADs provided by the [RustCrypto Team](https://github.com/RustCrypto), so I'd like to give them a huge thank you for their hard work (this wouldn't have been possible without them!)
+
 // Rustc lints
 #![deny(
     rust_2018_idioms,

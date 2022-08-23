@@ -1,3 +1,7 @@
+//! This provides functionality for "shredding" a file.
+//! 
+//! This will not be effective on flash storage, and if you are planning to release a program that uses this function, I'd recommend putting the default number of passes to 1.
+
 use std::io::{Read, Seek, Write};
 use std::path::Path;
 use std::sync::Arc;

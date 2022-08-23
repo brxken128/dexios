@@ -1,3 +1,5 @@
+//! This provides functionality for restoring a dumped header that adheres to the Dexios format, provided the target file contains enough empty bytes at the start to do so.
+
 use super::Error;
 use std::cell::RefCell;
 use std::io::{Read, Seek, Write};

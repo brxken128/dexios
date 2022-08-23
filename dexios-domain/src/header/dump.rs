@@ -1,3 +1,5 @@
+//! This provides functionality for dumping a header that adheres to the Dexios format.
+
 use super::Error;
 use std::cell::RefCell;
 use std::io::{Read, Seek, Write};

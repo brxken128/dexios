@@ -1,3 +1,5 @@
+//! This provides functionality for adding a key to a header that both adheres to the Dexios format, and is using a version >= V5.
+
 use super::Error;
 use dcore::header::{Header, HeaderVersion};
 use dcore::protected::Protected;

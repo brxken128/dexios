@@ -87,7 +87,7 @@ where
                     .map_err(|_| Error::AddFileToArchive)?;
 
                 let mut reader = f.try_reader().map_err(|_| Error::ReadData)?.borrow_mut();
-                let mut buffer = [0u8; BLOCK_SIZE];
+                let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
                 loop {
                     let read_count = reader.read(&mut buffer).map_err(|_| Error::ReadData)?;
                     zip_writer

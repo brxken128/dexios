@@ -98,9 +98,7 @@ impl Storage<fs::File> for FileStorage {
 
     fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<Entry<fs::File>, Error> {
         let path = path.as_ref().to_path_buf();
-        let file_meta = fs::metadata(&path).map_err(|_| Error::OpenFile(FileMode::Read))?;
-
-        if file_meta.is_dir() {
+        if path.is_dir() {
             Ok(Entry::Dir(path))
         } else {
             let file = fs::File::open(&path).map_err(|_| Error::OpenFile(FileMode::Read))?;

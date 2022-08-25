@@ -3,11 +3,11 @@
 use std::cell::RefCell;
 use std::io::{Read, Seek, Write};
 
-use dcore::cipher::Ciphers;
-use dcore::header::{HashingAlgorithm, Header, HeaderType, Keyslot};
-use dcore::primitives::{Mode, ENCRYPTED_MASTER_KEY_LEN};
-use dcore::protected::Protected;
-use dcore::stream::EncryptionStreams;
+use core::cipher::Ciphers;
+use core::header::{HashingAlgorithm, Header, HeaderType, Keyslot};
+use core::primitives::{Mode, ENCRYPTED_MASTER_KEY_LEN};
+use core::protected::Protected;
+use core::stream::EncryptionStreams;
 
 use crate::utils::{gen_master_key, gen_nonce, gen_salt};
 
@@ -155,8 +155,8 @@ where
 pub mod tests {
     use std::io::Cursor;
 
-    use dcore::header::HeaderVersion;
-    use dcore::primitives::Algorithm;
+    use core::header::HeaderVersion;
+    use core::primitives::Algorithm;
 
     use super::*;
 

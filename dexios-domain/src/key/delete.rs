@@ -1,8 +1,8 @@
 //! This provides functionality for adding a key to a header that both adheres to the Dexios format, and is using a version >= V5.
 
 use super::Error;
-use dcore::header::{Header, HeaderVersion};
-use dcore::protected::Protected;
+use core::header::{Header, HeaderVersion};
+use core::protected::Protected;
 use std::cell::RefCell;
 use std::io::Seek;
 use std::io::{Read, Write};
@@ -19,7 +19,7 @@ pub fn execute<RW>(req: Request<'_, RW>) -> Result<(), Error>
 where
     RW: Read + Write + Seek,
 {
-    let (header, _) = dcore::header::Header::deserialize(&mut *req.handle.borrow_mut())
+    let (header, _) = core::header::Header::deserialize(&mut *req.handle.borrow_mut())
         .map_err(|_| Error::HeaderDeserialize)?;
 
     if header.header_type.version < HeaderVersion::V5 {

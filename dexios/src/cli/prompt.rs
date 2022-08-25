@@ -6,8 +6,8 @@ use crate::{
     question, warn,
 };
 
-use dcore::protected::Protected;
-use dcore::Zeroize;
+use core::protected::Protected;
+use core::Zeroize;
 
 // this handles user-interactivity, specifically getting a "yes" or "no" answer from the user
 // it requires the question itself, if the default is true/false

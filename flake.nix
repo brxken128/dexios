@@ -1,23 +1,27 @@
 {
   inputs = {
-    naersk.url = "github:nix-community/naersk/master";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, utils, naersk }:
+  outputs = { self, nixpkgs, utils }:
     utils.lib.eachDefaultSystem (system:
       let
         name = "dexios";
         pkgs = import nixpkgs { inherit system; };
-        naersk-lib = pkgs.callPackage naersk { };
+        dexiosCargoToml = with builtins; (fromTOML (readFile ./dexios/Cargo.toml));
       in
       rec {
         # Executes by `nix build .#<name>`
         packages = {
-         ${name} = naersk.lib.${system}.buildPackage {
-            pname = name;
-            root = ./.;
+          ${name} = pkgs.rustPlatform.buildRustPackage {
+            inherit (dexiosCargoToml.package) name version;
+
+            src = nixpkgs.lib.cleanSource ./.;
+
+            doCheck = true;
+
+            cargoLock.lockFile = ./Cargo.lock;
           };
         };
         # Executes by `nix build .`

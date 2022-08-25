@@ -7,8 +7,8 @@ use crate::global::structs::PackParams;
 use crate::warn;
 use anyhow::{Context, Result};
 use clap::ArgMatches;
-use dcore::header::{HashingAlgorithm, ARGON2ID_LATEST, BLAKE3BALLOON_LATEST};
-use dcore::primitives::Algorithm;
+use core::header::{HashingAlgorithm, ARGON2ID_LATEST, BLAKE3BALLOON_LATEST};
+use core::primitives::Algorithm;
 
 use super::states::{Compression, DirectoryMode, Key, KeyParams, PrintMode};
 use super::structs::KeyManipulationParams;

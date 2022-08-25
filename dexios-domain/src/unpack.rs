@@ -1,5 +1,5 @@
 //! This contains the logic for decrypting a zip file, and extracting each file to the target directory. The temporary zip file is then erased with one pass.
-//! 
+//!
 //! This is known as "unpacking" within Dexios.
 
 use std::cell::RefCell;
@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use crate::storage::{self, Storage};
 use crate::{decrypt, overwrite};
-use dcore::protected::Protected;
+use core::protected::Protected;
 
 #[derive(Debug)]
 pub enum Error {

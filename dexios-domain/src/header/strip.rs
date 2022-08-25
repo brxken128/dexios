@@ -4,7 +4,7 @@ use super::Error;
 use std::cell::RefCell;
 use std::io::{Read, Seek, Write};
 
-use dcore::header::Header;
+use core::header::Header;
 
 pub struct Request<'a, RW>
 where

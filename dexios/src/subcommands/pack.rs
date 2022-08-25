@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::process::exit;
 use std::sync::Arc;
 
@@ -38,6 +39,12 @@ pub fn execute(req: &Request) -> Result<()> {
     if req.input_file.iter().any(|f| f == req.output_file) {
         return Err(anyhow::anyhow!(
             "Input and output files cannot have the same name."
+        ));
+    }
+    
+    if req.input_file.iter().any(|f| PathBuf::from(f).is_file()) {
+        return Err(anyhow::anyhow!(
+            "Input path cannot be a file."
         ));
     }
 

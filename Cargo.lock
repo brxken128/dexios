@@ -196,9 +196,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "3.2.17"
+version = "3.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29e724a68d9319343bb3328c9cc2dfde263f4b3142ee1059a9980580171c954b"
+checksum = "b15f2ea93df33549dbe2e8eecd1ca55269d63ae0b3ba1f55db030817d1c2867f"
 dependencies = [
  "atty",
  "bitflags",
@@ -310,7 +310,7 @@ dependencies = [
 
 [[package]]
 name = "dexios"
-version = "8.8.0"
+version = "8.8.1"
 dependencies = [
  "anyhow",
  "blake3",
@@ -341,7 +341,7 @@ dependencies = [
 
 [[package]]
 name = "dexios-domain"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "blake3",
  "dexios-core",

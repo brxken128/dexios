@@ -310,7 +310,7 @@ dependencies = [
 
 [[package]]
 name = "dexios"
-version = "8.8.0"
+version = "8.8.1"
 dependencies = [
  "anyhow",
  "blake3",
@@ -341,7 +341,7 @@ dependencies = [
 
 [[package]]
 name = "dexios-domain"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "blake3",
  "dexios-core",

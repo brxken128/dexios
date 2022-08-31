@@ -1,10 +1,10 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = github:NixOS/nixpkgs/nixpkgs-unstable;
+    utils.url = github:numtide/flake-utils;
   };
 
-  outputs = { self, nixpkgs, utils }:
+  outputs = { self, nixpkgs, utils, fenix }:
     utils.lib.eachDefaultSystem (system:
       let
         name = "dexios";
@@ -43,7 +43,7 @@
 
         # Used by `nix develop`
         devShell = with pkgs; mkShell {
-          buildInputs = [ cargo rustc rustfmt pre-commit rustPackages.clippy ];
+          packages = [ cargo rustc rustfmt clippy rust-analyzer ];
           RUST_SRC_PATH = rustPlatform.rustLibSrc;
         };
       });

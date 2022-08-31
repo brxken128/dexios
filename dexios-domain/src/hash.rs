@@ -36,7 +36,7 @@ pub fn execute<R: Read + Seek>(mut hasher: impl Hasher, req: Request<R>) -> Resu
         .rewind()
         .map_err(|_| Error::ResetCursorPosition)?;
 
-    let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();;
+    let mut buffer = vec![0u8; BLOCK_SIZE].into_boxed_slice();
 
     loop {
         let read_count = req

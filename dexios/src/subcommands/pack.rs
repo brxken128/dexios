@@ -6,7 +6,7 @@ use anyhow::Result;
 use core::header::{HeaderType, HEADER_VERSION};
 use core::primitives::{Algorithm, Mode};
 
-use crate::global::states::{HeaderLocation, PasswordState};
+use crate::global::states::{HashMode, HeaderLocation, PasswordState};
 use crate::{
     global::states::EraseSourceDir,
     global::{
@@ -41,11 +41,9 @@ pub fn execute(req: &Request) -> Result<()> {
             "Input and output files cannot have the same name."
         ));
     }
-    
+
     if req.input_file.iter().any(|f| PathBuf::from(f).is_file()) {
-        return Err(anyhow::anyhow!(
-            "Input path cannot be a file."
-        ));
+        return Err(anyhow::anyhow!("Input path cannot be a file."));
     }
 
     if !overwrite_check(req.output_file, req.crypto_params.force)? {
@@ -116,6 +114,10 @@ pub fn execute(req: &Request) -> Result<()> {
         stor.flush_file(&header_file)?;
     }
     stor.flush_file(&output_file)?;
+
+    if req.crypto_params.hash_mode == HashMode::CalculateHash {
+        super::hashing::hash_stream(&[req.output_file.to_string()])?;
+    }
 
     if req.pack_params.erase_source == EraseSourceDir::Erase {
         req.input_file.iter().try_for_each(|file_name| {

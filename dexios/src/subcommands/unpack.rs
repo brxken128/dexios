@@ -1,4 +1,4 @@
-use crate::cli::prompt::get_answer;
+use crate::{cli::prompt::get_answer, global::states::HashMode};
 use std::sync::Arc;
 
 use anyhow::Result;
@@ -72,6 +72,10 @@ pub fn unpack(
             })),
         },
     )?;
+
+    if params.hash_mode == HashMode::CalculateHash {
+        super::hashing::hash_stream(&[input.to_string()])?;
+    }
 
     Ok(())
 }

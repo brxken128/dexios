@@ -359,7 +359,7 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .value_name("input")
                                 .takes_value(true)
                                 .required(true)
-                                .help("The encrypted file"),
+                                .help("The encrypted file/header file"),
                         )
                         .arg(
                             Arg::new("autogenerate")
@@ -400,7 +400,7 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .value_name("input")
                                 .takes_value(true)
                                 .required(true)
-                                .help("The encrypted file"),
+                                .help("The encrypted file/header file"),
                         )
                         .arg(
                             Arg::new("argon")
@@ -441,7 +441,7 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .value_name("input")
                                 .takes_value(true)
                                 .required(true)
-                                .help("The encrypted file"),
+                                .help("The encrypted file/header file"),
                         )
                         .arg(
                             Arg::new("keyfile")
@@ -461,7 +461,7 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .value_name("input")
                                 .takes_value(true)
                                 .required(true)
-                                .help("The encrypted file"),
+                                .help("The encrypted file/header file"),
                         )
                         .arg(
                             Arg::new("keyfile")

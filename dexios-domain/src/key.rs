@@ -9,6 +9,7 @@ use core::{cipher::Ciphers, header::Keyslot};
 pub mod add;
 pub mod change;
 pub mod delete;
+pub mod verify;
 
 #[derive(Debug)]
 pub enum Error {
@@ -47,7 +48,7 @@ impl std::fmt::Display for Error {
     }
 }
 
-pub fn decrypt_master_key_with_index(
+pub fn decrypt_v5_master_key_with_index(
     keyslots: &[Keyslot],
     raw_key_old: Protected<Vec<u8>>,
     algorithm: &Algorithm,

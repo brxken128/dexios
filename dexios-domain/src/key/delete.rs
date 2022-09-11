@@ -40,7 +40,7 @@ where
     let mut keyslots = header.keyslots.clone().unwrap();
 
     // all of these functions need either the master key, or the index
-    let (_, index) = super::decrypt_master_key_with_index(
+    let (_, index) = super::decrypt_v5_master_key_with_index(
         &keyslots,
         req.raw_key_old,
         &header.header_type.algorithm,

@@ -122,7 +122,7 @@ pub fn delete(input: &str, key_old: &Key) -> Result<()> {
         .context("Unable to rewind the reader")?;
 
     if key_old == &Key::User {
-        info!("Please enter your old key below");
+        info!("Please enter your key below");
     }
 
     let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
@@ -157,7 +157,7 @@ pub fn verify(input: &str, key: &Key) -> Result<()> {
         .context("Unable to rewind the reader")?;
 
     if key == &Key::User {
-        info!("Please enter your old key below");
+        info!("Please enter your key below");
     }
 
     let raw_key = key.get_secret(&PasswordState::Direct)?;

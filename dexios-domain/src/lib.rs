@@ -33,10 +33,11 @@
 //!
 
 // Rustc lints
+#![forbid(unsafe_code)]
+
 #![deny(
     rust_2018_idioms,
     non_ascii_idents,
-    unsafe_code,
     unstable_features,
     unused_imports,
     unused_qualifications

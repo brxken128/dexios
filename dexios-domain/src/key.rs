@@ -42,7 +42,7 @@ impl std::fmt::Display for Error {
                 f.write_str("The provided request is unsupported with this header version")
             }
             Error::IncorrectKey => {
-                f.write_str("Unable to decrypt the master key (maybe you supplied the wrong key?)")
+                f.write_str("The provided key is incorrect")
             }
         }
     }

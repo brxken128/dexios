@@ -105,7 +105,6 @@ pub struct Header {
 pub const ARGON2ID_LATEST: i32 = 3;
 pub const BLAKE3BALLOON_LATEST: i32 = 5;
 
-
 /// This is in place to make `Keyslot` handling a **lot** easier
 /// You may use the constants `ARGON2ID_LATEST` and `BLAKE3BALLOON_LATEST` for defining versions
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -647,7 +646,7 @@ impl Header {
     /// It only has support for V3 headers and above
     ///
     /// It will return the bytes used for AAD
-    /// 
+    ///
     /// You may view more about what is used as AAD [here](https://brxken128.github.io/dexios/dexios-core/Headers.html#authenticating-the-header-with-aad-v840).
     pub fn create_aad(&self) -> Result<Vec<u8>> {
         let tag = self.get_tag();

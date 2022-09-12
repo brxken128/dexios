@@ -133,13 +133,12 @@ pub fn balloon_hash(
     Ok(Protected::new(key))
 }
 
-
 /// This is a helper function for retrieving the key used for encrypting the data
-/// 
+///
 /// In header versions below V4, this is just the hashed password
-/// 
+///
 /// In header versions >= V4, this is a cryptographically-secure random value
-/// 
+///
 /// In header versions >= V4, this function will iterate through all available keyslots, looking for a match. If it finds a match, it will return the decrypted master key.
 #[allow(clippy::module_name_repetitions)]
 pub fn decrypt_master_key(
@@ -196,11 +195,11 @@ pub fn vec_to_arr<const N: usize>(mut master_key_vec: Vec<u8>) -> [u8; N] {
 }
 
 /// This function is used for autogenerating a passphrase, from a wordlist
-/// 
+///
 /// It consists of 3 words, from the EFF wordlist, and 6 random digits appended to the end
-/// 
+///
 /// Each word, and the block of digits, are separated with `-`
-/// 
+///
 /// This provides adequate protection, while also remaining somewhat memorable.
 #[must_use]
 pub fn generate_passphrase() -> Protected<String> {

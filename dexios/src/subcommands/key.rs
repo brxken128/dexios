@@ -122,7 +122,7 @@ pub fn delete(input: &str, key_old: &Key) -> Result<()> {
         .context("Unable to rewind the reader")?;
 
     if key_old == &Key::User {
-        info!("Please enter your old key below");
+        info!("Please enter your key below");
     }
 
     let raw_key_old = key_old.get_secret(&PasswordState::Direct)?;
@@ -130,6 +130,41 @@ pub fn delete(input: &str, key_old: &Key) -> Result<()> {
     domain::key::delete::execute(domain::key::delete::Request {
         handle: &input_file,
         raw_key_old,
+    })?;
+
+    Ok(())
+}
+
+pub fn verify(input: &str, key: &Key) -> Result<()> {
+    let input_file = RefCell::new(
+        OpenOptions::new()
+            .read(true)
+            .open(input)
+            .with_context(|| format!("Unable to open input file: {}", input))?,
+    );
+
+    let (header, _) = Header::deserialize(&mut *input_file.borrow_mut())?;
+
+    if header.header_type.version < HeaderVersion::V5 {
+        return Err(anyhow::anyhow!(
+            "This function is not supported on header versions below V5"
+        ));
+    }
+
+    input_file
+        .borrow_mut()
+        .rewind()
+        .context("Unable to rewind the reader")?;
+
+    if key == &Key::User {
+        info!("Please enter your key below");
+    }
+
+    let raw_key = key.get_secret(&PasswordState::Direct)?;
+
+    domain::key::verify::execute(domain::key::verify::Request {
+        handle: &input_file,
+        raw_key,
     })?;
 
     Ok(())

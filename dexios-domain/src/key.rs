@@ -9,6 +9,7 @@ use core::{cipher::Ciphers, header::Keyslot};
 pub mod add;
 pub mod change;
 pub mod delete;
+pub mod verify;
 
 #[derive(Debug)]
 pub enum Error {
@@ -40,14 +41,12 @@ impl std::fmt::Display for Error {
             Error::Unsupported => {
                 f.write_str("The provided request is unsupported with this header version")
             }
-            Error::IncorrectKey => {
-                f.write_str("Unable to decrypt the master key (maybe you supplied the wrong key?)")
-            }
+            Error::IncorrectKey => f.write_str("The provided key is incorrect"),
         }
     }
 }
 
-pub fn decrypt_master_key_with_index(
+pub fn decrypt_v5_master_key_with_index(
     keyslots: &[Keyslot],
     raw_key_old: Protected<Vec<u8>>,
     algorithm: &Algorithm,

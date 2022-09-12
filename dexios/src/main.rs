@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #![deny(clippy::all)]
 
 use anyhow::Result;
@@ -56,6 +57,9 @@ fn main() -> Result<()> {
             }
             Some("del") => {
                 subcommands::key_del(sub_matches)?;
+            }
+            Some("verify") => {
+                subcommands::key_verify(sub_matches)?;
             }
             _ => (),
         },

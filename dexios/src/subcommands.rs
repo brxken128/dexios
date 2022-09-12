@@ -148,3 +148,10 @@ pub fn key_del(sub_matches: &ArgMatches) -> Result<()> {
 
     key::delete(&get_param("input", sub_matches_del_key)?, &key)
 }
+
+pub fn key_verify(sub_matches: &ArgMatches) -> Result<()> {
+    let sub_matches_verify_key = sub_matches.subcommand_matches("verify").unwrap();
+    let key = Key::init(sub_matches_verify_key, &KeyParams::default(), "keyfile")?;
+
+    key::verify(&get_param("input", sub_matches_verify_key)?, &key)
+}

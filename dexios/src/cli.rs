@@ -359,7 +359,7 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .value_name("input")
                                 .takes_value(true)
                                 .required(true)
-                                .help("The encrypted file"),
+                                .help("The encrypted file/header file"),
                         )
                         .arg(
                             Arg::new("autogenerate")
@@ -400,7 +400,7 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .value_name("input")
                                 .takes_value(true)
                                 .required(true)
-                                .help("The encrypted file"),
+                                .help("The encrypted file/header file"),
                         )
                         .arg(
                             Arg::new("argon")
@@ -441,15 +441,35 @@ pub fn get_matches() -> clap::ArgMatches {
                                 .value_name("input")
                                 .takes_value(true)
                                 .required(true)
-                                .help("The encrypted file"),
+                                .help("The encrypted file/header file"),
                         )
                         .arg(
                             Arg::new("keyfile")
                                 .short('k')
-                                .long("keyfile-old")
+                                .long("keyfile")
                                 .value_name("file")
                                 .takes_value(true)
-                                .help("Use an old keyfile to decrypt the master key"),
+                                .help("Use a keyfile to identify the key you want to delete"),
+                        ),
+                )
+                .subcommand(
+                    Command::new("verify")
+                        .about("Verify that a key is correct")
+                        .arg_required_else_help(true)
+                        .arg(
+                            Arg::new("input")
+                                .value_name("input")
+                                .takes_value(true)
+                                .required(true)
+                                .help("The encrypted file/header file"),
+                        )
+                        .arg(
+                            Arg::new("keyfile")
+                                .short('k')
+                                .long("keyfile")
+                                .value_name("file")
+                                .takes_value(true)
+                                .help("Verify a keyfile"),
                         ),
                 )
          )

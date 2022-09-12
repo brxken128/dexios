@@ -155,4 +155,3 @@ pub fn key_verify(sub_matches: &ArgMatches) -> Result<()> {
 
     key::verify(&get_param("input", sub_matches_verify_key)?, &key)
 }
-

@@ -16,7 +16,7 @@
 //! encryption utility.
 //!
 //! This crate was made to separate the logic away from the end-user application.
-//! 
+//!
 //! It also allows for more things to be built on top of the core functionality, such as a GUI application.
 //!
 //! ## Donating
@@ -34,7 +34,6 @@
 
 // Rustc lints
 #![forbid(unsafe_code)]
-
 #![deny(
     rust_2018_idioms,
     non_ascii_idents,

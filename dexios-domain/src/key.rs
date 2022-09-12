@@ -41,9 +41,7 @@ impl std::fmt::Display for Error {
             Error::Unsupported => {
                 f.write_str("The provided request is unsupported with this header version")
             }
-            Error::IncorrectKey => {
-                f.write_str("The provided key is incorrect")
-            }
+            Error::IncorrectKey => f.write_str("The provided key is incorrect"),
         }
     }
 }

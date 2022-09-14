@@ -25,7 +25,7 @@ domain = { package = "dexios-domain", version = "1.0.1", path = "../dexios-domai
 core = { package = "dexios-core", path = "../dexios-core", version = "1.2.0" }
 
 clap = { version = "3.2.21", features = ["cargo"] }
-anyhow = "1.0.64"
+anyhow = "1.0.65"
 
 zip = { version = "0.6.2", default-features = false, features = ["zstd"] }
 rpassword = "7.0"

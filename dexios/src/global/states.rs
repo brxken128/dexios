@@ -60,7 +60,7 @@ pub enum ForceMode {
 pub enum Key {
     Keyfile(String),
     Env,
-    Generate,
+    Generate(i32),
     User,
 }
 
@@ -108,8 +108,8 @@ impl Key {
                     .into_bytes(),
             ),
             Key::User => get_password(pass_state)?,
-            Key::Generate => {
-                let passphrase = generate_passphrase();
+            Key::Generate(i) => {
+                let passphrase = generate_passphrase(i);
                 warn!("Your generated passphrase is: {}", passphrase.expose());
                 let key = Protected::new(passphrase.expose().clone().into_bytes());
                 drop(passphrase);
@@ -142,7 +142,13 @@ impl Key {
             sub_matches.try_contains_id("autogenerate"),
             params.autogenerate,
         ) {
-            Key::Generate
+            let result = sub_matches.value_of("autogenerate").context("No amount of words specified")?.parse::<i32>();
+            if let Ok(value) = result {
+                Key::Generate(value)
+            } else {
+                warn!("No amount of words specified - using the default.");
+                Key::Generate(7)
+            }
         } else if params.user {
             Key::User
         } else {

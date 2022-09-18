@@ -58,8 +58,12 @@ pub fn get_matches() -> clap::ArgMatches {
         .arg(
             Arg::new("autogenerate")
                 .long("auto")
-                .takes_value(false)
-                .help("Autogenerate a passphrase")
+                .value_name("# of words")
+                .min_values(0)
+                .default_missing_value("7")
+                .takes_value(true)
+                .require_equals(true)
+                .help("Autogenerate a passphrase (default is 7 words)")
                 .conflicts_with("keyfile"),
         )
         .arg(
@@ -228,8 +232,12 @@ pub fn get_matches() -> clap::ArgMatches {
             .arg(
                 Arg::new("autogenerate")
                     .long("auto")
-                    .takes_value(false)
-                    .help("Autogenerate a passphrase")
+                    .value_name("# of words")
+                    .min_values(0)
+                    .default_missing_value("7")
+                    .takes_value(true)
+                    .require_equals(true)
+                    .help("Autogenerate a passphrase (default is 7 words)")
                     .conflicts_with("keyfile"),
             )
             .arg(
@@ -364,9 +372,13 @@ pub fn get_matches() -> clap::ArgMatches {
                         .arg(
                             Arg::new("autogenerate")
                                 .long("auto")
-                                .takes_value(false)
-                                .help("Autogenerate a passphrase (this will be your new key)")
-                                .conflicts_with("keyfile-new"),
+                                .value_name("# of words")
+                                .min_values(0)
+                                .default_missing_value("7")
+                                .takes_value(true)
+                                .require_equals(true)
+                                .help("Autogenerate a passphrase (default is 7 words)")
+                                .conflicts_with("keyfile"),
                         )
                         .arg(
                             Arg::new("argon")
@@ -411,9 +423,13 @@ pub fn get_matches() -> clap::ArgMatches {
                         .arg(
                             Arg::new("autogenerate")
                                 .long("auto")
-                                .takes_value(false)
-                                .help("Autogenerate a passphrase (this will be your new key)")
-                                .conflicts_with("keyfile-new"),
+                                .value_name("# of words")
+                                .min_values(0)
+                                .default_missing_value("7")
+                                .takes_value(true)
+                                .require_equals(true)
+                                .help("Autogenerate a passphrase (default is 7 words)")
+                                .conflicts_with("keyfile"),
                         )
                         .arg(
                             Arg::new("keyfile-old")

@@ -196,35 +196,25 @@ pub fn vec_to_arr<const N: usize>(mut master_key_vec: Vec<u8>) -> [u8; N] {
 
 /// This function is used for autogenerating a passphrase, from a wordlist
 ///
-/// It consists of 3 words, from the EFF wordlist, and 6 random digits appended to the end
+/// It consists of n words, from the EFF large wordlist. The default amount of words is 7.
 ///
-/// Each word, and the block of digits, are separated with `-`
+/// Each word is separated with `-`.
 ///
 /// This provides adequate protection, while also remaining somewhat memorable.
 #[must_use]
-pub fn generate_passphrase() -> Protected<String> {
+pub fn generate_passphrase(total_words: &i32) -> Protected<String> {
     let collection = include_str!("wordlist.lst");
     let words = collection.lines().collect::<Vec<_>>();
 
     let mut passphrase = String::new();
 
-    for _ in 0..3 {
+    for i in 0..*total_words {
         let index = StdRng::from_entropy().gen_range(0..=words.len());
         let word = words[index];
-        let capitalized_word = word
-            .char_indices()
-            .map(|(i, ch)| match i {
-                0 => ch.to_ascii_uppercase(),
-                _ => ch,
-            })
-            .collect::<String>();
-        passphrase.push_str(&capitalized_word);
-        passphrase.push('-');
-    }
-
-    for _ in 0..6 {
-        let number: i64 = StdRng::from_entropy().gen_range(0..=9);
-        passphrase.push_str(&number.to_string());
+        passphrase.push_str(word);
+        if i < total_words - 1 {
+            passphrase.push('-');
+        }
     }
 
     Protected::new(passphrase)

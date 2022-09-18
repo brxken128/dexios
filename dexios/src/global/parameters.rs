@@ -53,7 +53,6 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
 
         if let Ok(value) = result {
             EraseMode::EraseFile(value)
-
         } else {
             warn!("No amount of passes provided - using the default.");
             EraseMode::EraseFile(1)

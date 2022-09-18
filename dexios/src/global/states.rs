@@ -142,7 +142,10 @@ impl Key {
             sub_matches.try_contains_id("autogenerate"),
             params.autogenerate,
         ) {
-            let result = sub_matches.value_of("autogenerate").context("No amount of words specified")?.parse::<i32>();
+            let result = sub_matches
+                .value_of("autogenerate")
+                .context("No amount of words specified")?
+                .parse::<i32>();
             if let Ok(value) = result {
                 Key::Generate(value)
             } else {

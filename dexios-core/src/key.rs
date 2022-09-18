@@ -211,14 +211,7 @@ pub fn generate_passphrase(total_words: &i32) -> Protected<String> {
     for i in 0..*total_words {
         let index = StdRng::from_entropy().gen_range(0..=words.len());
         let word = words[index];
-        let capitalized_word = word
-            .char_indices()
-            .map(|(i, ch)| match i {
-                0 => ch.to_ascii_uppercase(),
-                _ => ch,
-            })
-            .collect::<String>();
-        passphrase.push_str(&capitalized_word);
+        passphrase.push_str(word);
         if i < total_words - 1 {
             passphrase.push('-');
         }

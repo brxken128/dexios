@@ -8,8 +8,7 @@ use core::header::{HashingAlgorithm, Header, ARGON2ID_LATEST, BLAKE3BALLOON_LATE
 use core::primitives::Algorithm;
 use core::key::generate_passphrase;
 
-mod decrypt;
-mod encrypt;
+mod commands;
 mod error;
 mod states;
 mod utils;
@@ -31,6 +30,8 @@ impl eframe::App for Dexios {
                 ui.selectable_value(&mut self.tab, Tab::Encrypt, "Encrypt");
                 ui.selectable_value(&mut self.tab, Tab::Decrypt, "Decrypt");
                 ui.selectable_value(&mut self.tab, Tab::HeaderDetails, "Header Details");
+                ui.selectable_value(&mut self.tab, Tab::HeaderDump, "Header Dump");
+                ui.selectable_value(&mut self.tab, Tab::HeaderStrip, "Header Strip");
             });
 
             ui.separator();
@@ -153,7 +154,7 @@ impl eframe::App for Dexios {
                 }
 
                 if ui.button("Encrypt File").clicked() {
-                    crate::encrypt::execute(&self.encrypt);
+                    crate::commands::encrypt::execute(&self.encrypt);
                 }
             }
 
@@ -218,7 +219,58 @@ impl eframe::App for Dexios {
                 }
 
                 if ui.button("Decrypt File").clicked() {
-                    crate::decrypt::execute(&self.decrypt);
+                    crate::commands::decrypt::execute(&self.decrypt);
+                }
+            }
+
+            if self.tab == Tab::HeaderDump {
+                ui.horizontal(|ui| {
+                    ui.label("Input File: ");
+                    ui.add(
+                        egui::TextEdit::singleline(&mut self.header_dump.input_path)
+                            .hint_text("Path to the input file"),
+                    );
+                    if ui.button("Select File").clicked() {
+                        if let Some(path) = rfd::FileDialog::new().pick_file() {
+                            self.header_dump.input_path = path.as_path().display().to_string();
+                        }
+                    }
+                });
+
+                ui.horizontal(|ui| {
+                    ui.label("Output File: ");
+                    ui.add(
+                        egui::TextEdit::singleline(&mut self.header_dump.output_path)
+                            .hint_text("Path to the output file"),
+                    );
+                    if ui.button("Select File").clicked() {
+                        if let Some(path) = rfd::FileDialog::new().pick_file() {
+                            self.header_dump.output_path = path.as_path().display().to_string();
+                        }
+                    }
+                });
+
+                if ui.button("Dump Header").clicked() {
+                    crate::commands::header::dump::execute(&self.header_dump);
+                }
+            }
+
+            if self.tab == Tab::HeaderStrip {
+                ui.horizontal(|ui| {
+                    ui.label("Input File: ");
+                    ui.add(
+                        egui::TextEdit::singleline(&mut self.header_strip.input_path)
+                            .hint_text("Path to the input file"),
+                    );
+                    if ui.button("Select File").clicked() {
+                        if let Some(path) = rfd::FileDialog::new().pick_file() {
+                            self.header_strip.input_path = path.as_path().display().to_string();
+                        }
+                    }
+                });
+
+                if ui.button("Strip Header").clicked() {
+                    crate::commands::header::strip::execute(&self.header_strip);
                 }
             }
 

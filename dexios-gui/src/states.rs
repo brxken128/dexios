@@ -7,12 +7,16 @@ pub enum Tab {
     Encrypt,
     Decrypt,
     HeaderDetails,
+    HeaderDump,
+    HeaderStrip,
 }
 
 pub struct Dexios {
     pub encrypt: Encrypt,
     pub decrypt: Decrypt,
     pub header_details: HeaderDetails,
+    pub header_dump: HeaderDump,
+    pub header_strip: HeaderStrip,
     pub tab: Tab,
 }
 
@@ -36,6 +40,17 @@ pub struct Decrypt {
     pub key: Key,
     pub keyfile_path: String,
     pub password: String,
+}
+
+#[derive(Clone)]
+pub struct HeaderDump {
+    pub input_path: String,
+    pub output_path: String,
+}
+
+#[derive(Clone)]
+pub struct HeaderStrip {
+    pub input_path: String,
 }
 
 pub struct HeaderDetails {
@@ -82,12 +97,31 @@ impl Default for Decrypt {
     }
 }
 
+impl Default for HeaderDump {
+    fn default() -> Self {
+        Self {
+            input_path: "".to_owned(),
+            output_path: "".to_owned(),
+        }
+    }
+}
+
+impl Default for HeaderStrip {
+    fn default() -> Self {
+        Self {
+            input_path: "".to_owned(),
+        }
+    }
+}
+
 impl Default for Dexios {
     fn default() -> Self {
         Self {
             encrypt: Encrypt::default(),
             decrypt: Decrypt::default(),
             header_details: HeaderDetails::default(),
+            header_dump: HeaderDump::default(),
+            header_strip: HeaderStrip::default(),
             tab: Tab::Encrypt,
         }
     }

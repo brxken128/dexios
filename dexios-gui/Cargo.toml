@@ -15,3 +15,11 @@ authors = ["brxken128 <brxken128@tutanota.com"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+eframe = "0.19.0"
+egui_extras = "0.19.0"
+domain = { package = "dexios-domain", version = "1.0.1", path = "../dexios-domain" }
+core = { package = "dexios-core", path = "../dexios-core", version = "1.2.0", default-features = false }
+
+rfd = "0.10.0"
+
+zip = { version = "0.6.2", default-features = false, features = ["zstd"] }

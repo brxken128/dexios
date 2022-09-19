@@ -6,7 +6,6 @@ use domain::storage::Storage;
 pub fn execute(decrypt: &Decrypt) {
     let params = decrypt.clone();
     let _ = std::thread::spawn(move || {
-        // decrypty stuff, move to separate function, add threading+error handling also
         let stor = std::sync::Arc::new(domain::storage::FileStorage);
 
         let input_file = ui_ok!(

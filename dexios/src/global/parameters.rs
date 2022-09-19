@@ -51,13 +51,12 @@ pub fn parameter_handler(sub_matches: &ArgMatches) -> Result<CryptoParams> {
             .context("No amount of passes specified")?
             .parse();
 
-        let passes = if let Ok(value) = result {
-            value
+        if let Ok(value) = result {
+            EraseMode::EraseFile(value)
         } else {
-            warn!("Unable to read number of passes provided - using the default.");
-            2
-        };
-        EraseMode::EraseFile(passes)
+            warn!("No amount of passes provided - using the default.");
+            EraseMode::EraseFile(1)
+        }
     } else {
         EraseMode::IgnoreFile
     };

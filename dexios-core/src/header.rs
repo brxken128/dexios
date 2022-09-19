@@ -149,6 +149,18 @@ impl HashingAlgorithm {
     }
 }
 
+impl From<HeaderVersion> for i32 {
+    fn from(version: HeaderVersion) -> i32 {
+        match version {
+            HeaderVersion::V1 => 1,
+            HeaderVersion::V2 => 2,
+            HeaderVersion::V3 => 3,
+            HeaderVersion::V4 => 4,
+            HeaderVersion::V5 => 5,
+        }
+    }
+}
+
 /// This defines a keyslot that is used with header V4 and above.
 /// A keyslot contains information about the key, and the encrypted key itself
 #[derive(Clone)]

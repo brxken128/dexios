@@ -1,5 +1,8 @@
 .cargo/
 
+.envrc
+.direnv/
+
 /notes.md
 /dexios/CHANGELOG.md
 /target

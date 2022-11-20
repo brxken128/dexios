@@ -11,7 +11,7 @@ pub struct Args {
     input: PathBuf,
 }
 
-pub fn details(args: Args) -> Result<()> {
+pub fn execute(args: Args) -> Result<()> {
     let mut input_file = File::open(args.input).with_context(|| {
         format!(
             "Unable to open input file: {}",

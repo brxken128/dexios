@@ -1,32 +1,38 @@
-use std::{
-    cell::RefCell,
-    fs::{File, OpenOptions},
-};
+use std::{cell::RefCell, fs::OpenOptions, path::PathBuf};
 
-use crate::cli::prompt::overwrite_check;
-use crate::global::states::ForceMode;
 use anyhow::{Context, Result};
-use core::header::HashingAlgorithm;
-use core::header::{Header, HeaderVersion};
 use domain::storage::Storage;
-use domain::utils::hex_encode;
+
+#[derive(clap::Args)]
+pub struct Args {
+    #[clap(help = "The dumped header file")]
+    input: PathBuf,
+
+    #[clap(help = "The encrypted file")]
+    output: PathBuf,
+}
 
 // this function reads the header from the input file
 // it then writes the header to the start of the ouput file
 // this can be used for restoring a dumped header to a file that had it's header stripped
 // this does not work for files encrypted *with* a detached header
 // it implements a check to ensure the header is valid before restoring to a file
-pub fn restore(input: &str, output: &str) -> Result<()> {
+pub fn restore(args: Args) -> Result<()> {
     let stor = std::sync::Arc::new(domain::storage::FileStorage);
 
-    let input_file = stor.read_file(input)?;
+    let input_file = stor.read_file(args.input)?;
 
     let output_file = RefCell::new(
         OpenOptions::new()
             .read(true)
             .write(true)
-            .open(output)
-            .with_context(|| format!("Unable to open output file: {}", output))?,
+            .open(args.output)
+            .with_context(|| {
+                format!(
+                    "Unable to open output file: {}",
+                    args.output.to_str().unwrap()
+                )
+            })?,
     );
 
     let req = domain::header::restore::Request {

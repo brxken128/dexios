@@ -1,11 +1,8 @@
 use std::path::PathBuf;
 
 use crate::ui::prompt::overwrite_check;
-use anyhow::{Context, Result};
-use core::header::HashingAlgorithm;
-use core::header::{Header, HeaderVersion};
+use anyhow::Result;
 use domain::storage::Storage;
-use domain::utils::hex_encode;
 
 #[derive(clap::Args)]
 pub struct Args {
@@ -24,15 +21,15 @@ pub struct Args {
 // it implements a check to ensure the header is valid
 pub fn execute(args: Args) -> Result<()> {
     let stor = std::sync::Arc::new(domain::storage::FileStorage);
-    let input_file = stor.read_file(input)?;
+    let input_file = stor.read_file(args.input)?;
 
-    if !overwrite_check(output, force)? {
+    if !overwrite_check(&args.output, args.force)? {
         std::process::exit(0);
     }
 
     let output_file = stor
-        .create_file(output)
-        .or_else(|_| stor.write_file(output))?;
+        .create_file(args.output)
+        .or_else(|_| stor.write_file(args.output))?;
 
     let req = domain::header::dump::Request {
         reader: input_file.try_reader()?,

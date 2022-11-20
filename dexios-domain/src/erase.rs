@@ -29,7 +29,7 @@ impl std::error::Error for Error {}
 
 pub struct Request<P: AsRef<Path>> {
     pub path: P,
-    pub passes: i32,
+    pub passes: u32,
 }
 
 pub fn execute<RW, P>(stor: Arc<impl Storage<RW> + 'static>, req: Request<P>) -> Result<(), Error>

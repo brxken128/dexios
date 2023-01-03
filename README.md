@@ -22,7 +22,9 @@ section of the Documentation.
 
 You can install Dexios through cargo, with:
 
-`cargo install dexios`
+```
+cargo install dexios --locked
+```
 
 Or you can download a pre-compiled binary from
 [the releases page](https://github.com/brxken128/dexios/releases)!

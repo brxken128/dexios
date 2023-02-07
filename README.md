@@ -3,7 +3,6 @@
 </p>
 
 [![Dexios Tests](https://img.shields.io/github/actions/workflow/status/brxken128/dexios/dexios-tests.yml?branch=master&label=tests&style=flat-square)](https://github.com/brxken128/dexios/actions/workflows/dexios-tests.yml)
-[![Build and Upload](https://img.shields.io/github/actions/workflow/status/brxken128/dexios/cargo-build.yml?branch=master?style=flat-square)](https://github.com/brxken128/dexios/actions/workflows/cargo-build.yml)
 [![Dexios Crate](https://img.shields.io/crates/v/dexios.svg?style=flat-square)](https://lib.rs/crates/dexios)
 [![BSD-2-Clause](https://img.shields.io/badge/License-BSD_2--Clause-blue.svg?style=flat-square)](https://opensource.org/licenses/BSD-2-Clause)
 

@@ -2,10 +2,13 @@
   <img src="https://github.com/brxken128/dexios/raw/master/assets/long-logo.png" width="320" />
 </p>
 
-[![Dexios Tests](https://img.shields.io/github/workflow/status/brxken128/dexios/Dexios%20Tests?label=Dexios%20Tests&style=flat-square)](https://github.com/brxken128/dexios/actions/workflows/dexios-tests.yml)
-[![Build and Upload](https://img.shields.io/github/workflow/status/brxken128/dexios/Build%20and%20Upload?style=flat-square)](https://github.com/brxken128/dexios/actions/workflows/cargo-build.yml)
+[![Dexios Tests](https://img.shields.io/github/actions/workflow/status/brxken128/dexios/dexios-tests.yml?branch=master&label=tests&style=flat-square)](https://github.com/brxken128/dexios/actions/workflows/dexios-tests.yml)
 [![Dexios Crate](https://img.shields.io/crates/v/dexios.svg?style=flat-square)](https://lib.rs/crates/dexios)
 [![BSD-2-Clause](https://img.shields.io/badge/License-BSD_2--Clause-blue.svg?style=flat-square)](https://opensource.org/licenses/BSD-2-Clause)
+
+## Update Status
+
+Dexios will continue to receive updates. Things are stable for the time being and I consider none of the code broken. In the (somewhat) near future I plan to change the backend entirely and give the CLI a re-write, so that things are both easier to maintain and understand. This will regrettably not be backwards-compatible, but the performance improvements and stability guarantees will be extremely worthwhile.
 
 ## Dexios - What is it?
 

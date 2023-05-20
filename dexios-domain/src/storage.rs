@@ -37,7 +37,7 @@ impl std::fmt::Display for Error {
         match self {
             Error::CreateDir => f.write_str("Unable to create a new directory"),
             Error::CreateFile => f.write_str("Unable to create a new file"),
-            Error::OpenFile(mode) => write!(f, "Unable to read the file in {:?} mode", mode),
+            Error::OpenFile(mode) => write!(f, "Unable to read the file in {mode:?} mode"),
             Error::FlushFile => f.write_str("Unable to flush the file"),
             Error::RemoveFile => f.write_str("Unable to remove the file"),
             Error::RemoveDir => f.write_str("Unable to remove dir"),
@@ -457,7 +457,7 @@ where
 mod tests {
     use super::*;
 
-    fn sorted_file_names(file_names: Vec<&PathBuf>) -> Vec<&str> {
+    fn sorted_file_names(file_names: &[PathBuf]) -> Vec<&str> {
         let mut keys = file_names
             .iter()
             .map(|k| k.to_str().unwrap())
@@ -651,9 +651,9 @@ mod tests {
             Ok(()) => {
                 assert_eq!(stor.files().get(&file_path).cloned(), None);
                 let files = stor.files();
-                let keys = files.keys().collect::<Vec<_>>();
+                let keys = files.keys().cloned().collect::<Vec<_>>();
                 assert_eq!(
-                    sorted_file_names(keys),
+                    sorted_file_names(&keys),
                     vec!["bar/", "bar/hello.txt", "bar/world.txt", "hello.txt"]
                 );
             }
@@ -674,8 +674,8 @@ mod tests {
             Ok(()) => {
                 assert_eq!(stor.files().get(&file_path).cloned(), None);
                 let files = stor.files();
-                let keys = files.keys().collect();
-                assert_eq!(sorted_file_names(keys), vec!["hello.txt"]);
+                let keys = files.keys().cloned().collect::<Vec<PathBuf>>();
+                assert_eq!(sorted_file_names(&keys), vec!["hello.txt"]);
             }
             _ => unreachable!(),
         }
@@ -696,7 +696,7 @@ mod tests {
                     .map(|f| f.path().to_path_buf())
                     .collect::<Vec<_>>();
                 assert_eq!(
-                    sorted_file_names(file_names.iter().collect()),
+                    sorted_file_names(&file_names),
                     vec![
                         "bar/",
                         "bar/foo/",
@@ -722,11 +722,11 @@ mod tests {
         match stor.read_dir(&file) {
             Ok(files) => {
                 let file_names = files
-                    .iter()
+                    .into_iter()
                     .map(|f| f.path().to_path_buf())
                     .collect::<Vec<_>>();
                 assert_eq!(
-                    sorted_file_names(file_names.iter().collect()),
+                    sorted_file_names(&file_names),
                     vec![
                         "bar/",
                         "bar/.foo/",

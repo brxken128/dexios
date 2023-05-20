@@ -16,8 +16,7 @@ use super::structs::KeyManipulationParams;
 pub fn get_params(name: &str, sub_matches: &ArgMatches) -> Result<Vec<String>> {
     let values = sub_matches
         .get_many::<String>(name)
-        .with_context(|| format!("No {} provided", name))?
-        .into_iter()
+        .with_context(|| format!("No {name} provided"))?
         .map(String::from)
         .collect();
     Ok(values)

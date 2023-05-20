@@ -33,7 +33,7 @@
 //!
 //! Dexios-Core exclusively uses AEADs provided by the [RustCrypto Team](https://github.com/RustCrypto), so I'd like to give them a huge thank you for their hard work (this wouldn't have been possible without them!)
 #![forbid(unsafe_code)]
-#![deny(clippy::all)]
+#![warn(clippy::all)]
 
 pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 

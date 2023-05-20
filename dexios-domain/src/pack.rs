@@ -35,7 +35,7 @@ impl std::fmt::Display for Error {
             Error::FinishArchive => f.write_str("Unable to finish archive"),
             Error::ReadData => f.write_str("Unable to read data"),
             Error::WriteData => f.write_str("Unable to write data"),
-            Error::Encrypt(inner) => write!(f, "Unable to encrypt archive: {}", inner),
+            Error::Encrypt(inner) => write!(f, "Unable to encrypt archive: {inner}"),
         }
     }
 }

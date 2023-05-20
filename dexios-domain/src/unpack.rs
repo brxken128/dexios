@@ -28,8 +28,8 @@ impl std::fmt::Display for Error {
             Error::OpenArchive => f.write_str("Unable to open archive"),
             Error::OpenArchivedFile => f.write_str("Unable to open archived file"),
             Error::ResetCursorPosition => f.write_str("Unable to reset cursor position"),
-            Error::Storage(inner) => write!(f, "Storage error: {}", inner),
-            Error::Decrypt(inner) => write!(f, "Decrypt error: {}", inner),
+            Error::Storage(inner) => write!(f, "Storage error: {inner}"),
+            Error::Decrypt(inner) => write!(f, "Decrypt error: {inner}"),
         }
     }
 }

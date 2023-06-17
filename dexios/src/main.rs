@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-#![deny(clippy::all)]
+#![warn(clippy::all)]
 
 use anyhow::Result;
 

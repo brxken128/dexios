@@ -19,7 +19,7 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::InvalidFileType => f.write_str("Invalid file type"),
-            Error::EraseFile(inner) => write!(f, "Unable to erase file: {}", inner),
+            Error::EraseFile(inner) => write!(f, "Unable to erase file: {inner}"),
             Error::ReadDirEntries => f.write_str("Unable to get all dir entries"),
             Error::RemoveDir => f.write_str("Unable to remove directory recursively"),
         }

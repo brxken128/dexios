@@ -261,7 +261,7 @@ pub mod tests {
                 assert_eq!(output_content, V4_ENCRYPTED_CONTENT.to_vec());
             }
             Err(e) => {
-                println!("{:?}", e);
+                println!("{e:?}");
                 unreachable!()
             }
         }
@@ -293,7 +293,7 @@ pub mod tests {
                 assert_eq!(output_content, V5_ENCRYPTED_CONTENT.to_vec());
             }
             Err(e) => {
-                println!("{:?}", e);
+                println!("{e:?}");
                 unreachable!()
             }
         }
@@ -329,7 +329,7 @@ pub mod tests {
                 assert_eq!(output_header, V5_ENCRYPTED_DETACHED_HEADER.to_vec());
             }
             Err(e) => {
-                println!("{:?}", e);
+                println!("{e:?}");
                 unreachable!()
             }
         }

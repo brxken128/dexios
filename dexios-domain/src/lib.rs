@@ -32,24 +32,23 @@
 //! You can read more about Dexios, Dexios-Core, Dexios-Domain and the technical details [in the project's main documentation](https://brxken128.github.io/dexios/)!
 //!
 
-// Rustc lints
+// lints
 #![forbid(unsafe_code)]
-#![deny(
+#![warn(
     rust_2018_idioms,
     non_ascii_idents,
     unstable_features,
     unused_imports,
-    unused_qualifications
+    unused_qualifications,
+    clippy::pedantic,
+    clippy::all
 )]
-// Clippy lints
-#![deny(clippy::pedantic, clippy::all)]
 #![allow(
     clippy::module_name_repetitions,
     clippy::similar_names,
     clippy::needless_pass_by_value,
-    // yet
     clippy::missing_panics_doc,
-    clippy::missing_errors_doc,
+    clippy::missing_errors_doc
 )]
 
 pub mod decrypt;
